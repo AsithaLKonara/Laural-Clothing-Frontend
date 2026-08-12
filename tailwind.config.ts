@@ -10,7 +10,8 @@ const config: Config = {
     extend: {
       fontFamily: {
         poppins: ["var(--font-poppins)"],
-        signature: ["var(--font-orange-avenue)"],
+        signature: ["var(--font-signature)"],
+        inria: ["var(--font-inria)", "serif"],
       },
       colors: {
         stone: {

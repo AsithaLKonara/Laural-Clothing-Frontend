@@ -1,7 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import CollectionsSection from "@/components/CollectionsSection";
-import ProductCard from "@/components/ProductCard";
+import NewArrivalsSection from "@/components/NewArrivalsSection";
 
 export default function Home() {
   return (
@@ -9,11 +9,7 @@ export default function Home() {
       <Navbar />
       <Hero />
       <CollectionsSection />
-      
-      {/* Temporary Test Wrapper */}
-      <div className="p-20 flex justify-center">
-        <ProductCard />
-      </div>
+      <NewArrivalsSection />
     </main>
   );
 }

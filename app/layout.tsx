@@ -1,23 +1,29 @@
 import type { Metadata } from "next";
-import { Inter, Poppins } from "next/font/google";
+import { Poppins, Inria_Serif } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const poppins = Poppins({ 
-  weight: ["200", "400", "600", "700"],
+const poppins = Poppins({
+  variable: "--font-poppins",
   subsets: ["latin"],
-  variable: "--font-poppins" 
+  weight: ["300", "400", "500", "600", "700"],
+});
+
+const inriaSerif = Inria_Serif({
+  variable: "--font-inria",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  style: ["normal", "italic"],
 });
 
 const orangeAvenue = localFont({
   src: "../public/fonts/orange-avenue-demo.regular.otf",
-  variable: "--font-orange-avenue",
+  variable: "--font-signature",
 });
 
 export const metadata: Metadata = {
   title: "Laural Clothing",
-  description: "E-Commerce Storefront",
+  description: "Pieces edited for quiet luxury — cut clean, worn easy.",
 };
 
 export default function RootLayout({
@@ -27,7 +33,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${poppins.variable} ${orangeAvenue.variable} font-sans bg-stone-50 text-stone-900`}>
+      <body
+        className={`${poppins.variable} ${orangeAvenue.variable} ${inriaSerif.variable} antialiased bg-stone-50 text-stone-900`}
+      >
         {children}
       </body>
     </html>
