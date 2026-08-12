@@ -4,6 +4,7 @@ import CollectionsSection from "@/components/CollectionsSection";
 import NewArrivalsSection from "@/components/NewArrivalsSection";
 import AdBannerSection from "@/components/AdBannerSection";
 import OfferCollectionSection from "@/components/OfferCollectionSection";
+import BrandStorySection from "@/components/BrandStorySection";
 
 export default function Home() {
   return (
@@ -14,6 +15,7 @@ export default function Home() {
       <NewArrivalsSection />
       <AdBannerSection />
       <OfferCollectionSection />
+      <BrandStorySection />
     </main>
   );
 }
