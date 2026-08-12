@@ -8,6 +8,10 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        poppins: ["var(--font-poppins)"],
+        signature: ["var(--font-orange-avenue)"],
+      },
       colors: {
         stone: {
           50: '#fafaf9',
