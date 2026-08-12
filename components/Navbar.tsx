@@ -10,7 +10,14 @@ export default function Navbar() {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
+  const navLinks = [
+    { name: "HOME", href: "/" },
+    { name: "SHOP", href: "/shop" },
+    { name: "ABOUT US", href: "/about" },
+    { name: "CONTACT US", href: "/contact" },
+  ];
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
@@ -32,11 +39,23 @@ export default function Navbar() {
       <div className="w-full px-[120px] h-[83px] grid grid-cols-3 items-center">
         
         {/* Left Links */}
-        <div className="flex items-center space-x-[40px] text-stone-900 text-[12px] font-bold font-poppins">
-          <Link href="/" className="hover:text-stone-500 transition-colors">HOME</Link>
-          <Link href="/shop" className="hover:text-stone-500 transition-colors">SHOP</Link>
-          <Link href="/about" className="hover:text-stone-500 transition-colors">ABOUT US</Link>
-          <Link href="/contact" className="hover:text-stone-500 transition-colors">CONTACT US</Link>
+        <div className="flex items-center space-x-[40px] text-[12px] font-bold font-poppins">
+          {navLinks.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <Link 
+                key={link.name} 
+                href={link.href} 
+                className={`transition-colors hover:text-stone-500 ${
+                  isActive 
+                    ? "text-stone-900 underline underline-offset-8 decoration-2" 
+                    : "text-stone-900"
+                }`}
+              >
+                {link.name}
+              </Link>
+            );
+          })}
         </div>
 
         {/* Center Logo */}
@@ -59,7 +78,17 @@ export default function Navbar() {
           </Link>
           
           <div className="flex items-center space-x-1">
-            <button className="p-2.5 hover:bg-stone-100 rounded-full transition-colors">
+            <div className={`flex items-center overflow-hidden transition-all duration-300 ease-in-out ${isSearchOpen ? 'w-48 opacity-100 mr-2' : 'w-0 opacity-0'}`}>
+              <input 
+                type="text" 
+                placeholder="Search..." 
+                className="w-full bg-transparent border-b border-stone-900 focus:outline-none text-[12px] font-poppins py-1 text-stone-900 placeholder:text-stone-500" 
+              />
+            </div>
+            <button 
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              className="p-2.5 hover:bg-stone-100 rounded-full transition-colors"
+            >
               <Search size={20} className="text-stone-900" />
             </button>
             <Link href="/wishlist" className="p-2.5 hover:bg-stone-100 rounded-full transition-colors">
