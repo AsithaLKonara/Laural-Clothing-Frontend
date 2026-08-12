@@ -9,10 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "next": "15.0.0",
+    "next": "^15.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "lucide-react": "^0.450.0",
+    "lucide-react": "latest",
     "tailwindcss": "^3.4.0",
     "zod": "^3.23.8",
     "@tanstack/react-query": "^5.0.0",
