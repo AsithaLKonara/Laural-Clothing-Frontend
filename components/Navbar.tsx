@@ -5,12 +5,14 @@ import Image from "next/image";
 import { Search, Heart, ShoppingCart } from "lucide-react";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { useCart } from "@/components/CartProvider";
 
 export default function Navbar() {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { openCart, openWishlist } = useCart();
 
   const navLinks = [
     { name: "HOME", href: "/" },
@@ -91,14 +93,17 @@ export default function Navbar() {
             >
               <Search size={20} className="text-stone-900" />
             </button>
-            <Link href="/wishlist" className="p-2.5 hover:bg-stone-100 rounded-full transition-colors">
+            <button 
+              onClick={openWishlist}
+              className="p-2.5 hover:bg-stone-100 rounded-full transition-colors"
+            >
               <Heart size={20} className="text-stone-900" />
-            </Link>
+            </button>
             
-            <Link href="/cart" className="flex items-center space-x-2 p-2.5 hover:bg-stone-100 rounded-full transition-colors">
+            <button onClick={openCart} className="flex items-center space-x-2 p-2.5 hover:bg-stone-100 rounded-full transition-colors">
               <ShoppingCart size={20} className="text-stone-900" />
               <span className="font-bold text-[12px] font-poppins text-stone-800">Rs: 0.00</span>
-            </Link>
+            </button>
           </div>
         </div>
         
