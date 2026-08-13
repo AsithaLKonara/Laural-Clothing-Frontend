@@ -15,10 +15,43 @@ const config: Config = {
         urbanist: ["var(--font-urbanist)", "sans-serif"],
       },
       colors: {
+        background: 'var(--background)',
+        foreground: 'var(--foreground)',
+        surface: {
+          DEFAULT: 'var(--surface)',
+          elevated: 'var(--surface-elevated)',
+        },
+        primary: {
+          DEFAULT: 'var(--primary)',
+          hover: 'var(--primary-hover)',
+        },
+        accent: {
+          DEFAULT: 'var(--accent)',
+          soft: 'var(--accent-soft)',
+        },
+        muted: 'var(--muted)',
+        border: 'var(--border)',
+        success: {
+          DEFAULT: 'var(--success)',
+          soft: 'var(--success-soft)',
+        },
+        warning: {
+          DEFAULT: 'var(--warning)',
+          soft: 'var(--warning-soft)',
+        },
+        error: {
+          DEFAULT: 'var(--error)',
+          soft: 'var(--error-soft)',
+        },
+        info: {
+          DEFAULT: 'var(--info)',
+          soft: 'var(--info-soft)',
+        },
         stone: {
           50: '#fafaf9',
           100: '#f5f5f4',
           200: '#e7e5e4',
+          300: '#d6d3d1',
           400: '#a8a29e',
           500: '#78716c',
           600: '#57534e',
@@ -26,14 +59,6 @@ const config: Config = {
           800: '#292524',
           900: '#1c1917',
         },
-        primary: {
-          DEFAULT: '#1C1917',
-          hover: '#292524',
-        },
-        accent: {
-          DEFAULT: '#C19A5B',
-        },
-        background: '#FAFAF9',
       },
     },
   },
