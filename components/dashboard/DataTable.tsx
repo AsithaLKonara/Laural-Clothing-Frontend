@@ -32,11 +32,11 @@ export default function DataTable<T>({
       <div className="overflow-x-auto w-full">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-stone-50 border-b border-stone-200">
+            <tr className="bg-background border-b border-border">
               {columns.map((col, idx) => (
                 <th 
                   key={idx} 
-                  className="px-6 py-3.5 font-inter font-semibold text-[11px] uppercase tracking-wider text-stone-400 whitespace-nowrap"
+                  className="px-6 py-3.5 font-inter font-semibold text-[11px] uppercase tracking-wider text-muted whitespace-nowrap"
                 >
                   {col.header}
                 </th>
@@ -48,14 +48,14 @@ export default function DataTable<T>({
               <tr 
                 key={keyExtractor(row)}
                 onClick={() => onRowClick && onRowClick(row)}
-                className={`border-b border-stone-100 last:border-0 transition-colors ${
-                  onRowClick ? 'cursor-pointer hover:bg-stone-50' : 'hover:bg-stone-50/50'
-                } ${rowIdx % 2 === 0 ? 'bg-white' : 'bg-stone-50/30'}`}
+                className={`border-b border-border/50 last:border-0 transition-colors ${
+                  onRowClick ? 'cursor-pointer hover:bg-background' : 'hover:bg-background/50'
+                } ${rowIdx % 2 === 0 ? 'bg-surface' : 'bg-background/30'}`}
               >
                 {columns.map((col, idx) => (
                   <td 
                     key={idx}
-                    className={`px-6 py-4 font-inter text-sm text-stone-700 ${col.className || ''}`}
+                    className={`px-6 py-4 font-inter text-sm text-foreground ${col.className || ''}`}
                   >
                     {typeof col.accessor === 'function' 
                       ? col.accessor(row) 
@@ -67,8 +67,8 @@ export default function DataTable<T>({
             {data.length === 0 && (
               <tr>
                 <td colSpan={columns.length} className="px-6 py-16 text-center">
-                  <p className="text-stone-400 text-sm font-inter font-medium">No records found</p>
-                  <p className="text-stone-300 text-xs font-inter mt-1">Try adjusting your filters or search term</p>
+                  <p className="text-muted text-sm font-inter font-medium">No records found</p>
+                  <p className="text-muted/70 text-xs font-inter mt-1">Try adjusting your filters or search term</p>
                 </td>
               </tr>
             )}
@@ -78,15 +78,15 @@ export default function DataTable<T>({
 
       {/* Pagination Footer */}
       {pagination && (
-        <div className="px-6 py-4 border-t border-stone-200 flex items-center justify-between bg-stone-50 shrink-0">
-          <span className="font-inter text-xs text-stone-500">
+        <div className="px-6 py-4 border-t border-border flex items-center justify-between bg-background shrink-0">
+          <span className="font-inter text-xs text-muted">
             Page {pagination.currentPage} of {pagination.totalPages}
           </span>
           <div className="flex items-center gap-2">
             <button 
               disabled={pagination.currentPage <= 1}
               onClick={() => pagination.onPageChange?.(pagination.currentPage - 1)}
-              className="p-1.5 rounded-lg border border-stone-200 text-stone-600 hover:bg-white hover:border-stone-300 hover:shadow-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              className="p-1.5 rounded-lg border border-border text-muted hover:bg-surface hover:border-primary hover:text-primary hover:shadow-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >
               <ChevronLeft size={16} />
             </button>
@@ -98,21 +98,21 @@ export default function DataTable<T>({
                 onClick={() => pagination.onPageChange?.(page)}
                 className={`w-8 h-8 rounded-lg text-xs font-medium font-inter transition-all ${
                   page === pagination.currentPage
-                    ? "bg-stone-900 text-white shadow-sm"
-                    : "border border-stone-200 text-stone-600 hover:bg-white hover:border-stone-300"
+                    ? "bg-primary text-white shadow-sm"
+                    : "border border-border text-muted hover:bg-surface hover:border-primary hover:text-primary"
                 }`}
               >
                 {page}
               </button>
             ))}
             {pagination.totalPages > 5 && (
-              <span className="text-stone-400 text-xs">…{pagination.totalPages}</span>
+              <span className="text-muted text-xs">…{pagination.totalPages}</span>
             )}
             
             <button 
               disabled={pagination.currentPage >= pagination.totalPages}
               onClick={() => pagination.onPageChange?.(pagination.currentPage + 1)}
-              className="p-1.5 rounded-lg border border-stone-200 text-stone-600 hover:bg-white hover:border-stone-300 hover:shadow-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              className="p-1.5 rounded-lg border border-border text-muted hover:bg-surface hover:border-primary hover:text-primary hover:shadow-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >
               <ChevronRight size={16} />
             </button>

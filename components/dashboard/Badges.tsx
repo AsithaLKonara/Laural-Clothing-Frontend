@@ -10,23 +10,23 @@ interface BadgeProps {
 export function StatusBadge({ label, variant = 'neutral', icon, dot = false }: BadgeProps) {
   const getStyles = () => {
     switch (variant) {
-      case 'success': return 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-emerald-100';
-      case 'warning': return 'bg-amber-50 text-amber-700 border-amber-200 ring-amber-100';
-      case 'error': return 'bg-red-50 text-red-600 border-red-200 ring-red-100';
-      case 'info': return 'bg-blue-50 text-blue-700 border-blue-200 ring-blue-100';
-      case 'purple': return 'bg-violet-50 text-violet-700 border-violet-200 ring-violet-100';
-      default: return 'bg-stone-100 text-stone-600 border-stone-200 ring-stone-100';
+      case 'success': return 'bg-success-soft text-success border-success/30 ring-success/20';
+      case 'warning': return 'bg-warning-soft text-warning border-warning/30 ring-warning/20';
+      case 'error': return 'bg-error-soft text-error border-error/30 ring-error/20';
+      case 'info': return 'bg-info-soft text-info border-info/30 ring-info/20';
+      case 'purple': return 'bg-accent-soft text-accent border-accent/30 ring-accent/20';
+      default: return 'bg-background text-muted border-border ring-border/20';
     }
   };
 
   const getDotColor = () => {
     switch (variant) {
-      case 'success': return 'bg-emerald-500';
-      case 'warning': return 'bg-amber-500';
-      case 'error': return 'bg-red-500';
-      case 'info': return 'bg-blue-500';
-      case 'purple': return 'bg-violet-500';
-      default: return 'bg-stone-400';
+      case 'success': return 'bg-success';
+      case 'warning': return 'bg-warning';
+      case 'error': return 'bg-error';
+      case 'info': return 'bg-info';
+      case 'purple': return 'bg-accent';
+      default: return 'bg-muted';
     }
   };
 
@@ -47,19 +47,19 @@ export function PaymentGatewayBadge({ gateway, status = 'paid' }: { gateway: str
   
   switch(status) {
     case 'paid': 
-      icon = <CheckCircle2 size={12} className="text-emerald-600" />;
+      icon = <CheckCircle2 size={12} className="text-success" />;
       variant = 'success';
       break;
     case 'pending': 
-      icon = <Clock size={12} className="text-amber-600" />;
+      icon = <Clock size={12} className="text-warning" />;
       variant = 'warning';
       break;
     case 'failed': 
-      icon = <XCircle size={12} className="text-red-600" />;
+      icon = <XCircle size={12} className="text-error" />;
       variant = 'error';
       break;
     case 'refunded': 
-      icon = <Undo2 size={12} className="text-stone-500" />;
+      icon = <Undo2 size={12} className="text-muted" />;
       break;
   }
 
@@ -75,7 +75,7 @@ export function BranchBadge({ branch }: { branch: string }) {
     <StatusBadge 
       label={branch} 
       variant="neutral" 
-      icon={<MapPin size={11} className="text-stone-400" />} 
+      icon={<MapPin size={11} className="text-muted" />} 
     />
   );
 }
