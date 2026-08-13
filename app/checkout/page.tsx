@@ -3,9 +3,10 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { TicketPercent, CreditCard, Banknote, ShieldCheck } from "lucide-react";
+import { TicketPercent, CreditCard, Banknote, ShieldCheck, Award } from "lucide-react";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
+import LoyaltyPointsModal from "../../components/LoyaltyPointsModal";
 
 type PaymentMethod = "cod" | "mintpay" | "koko" | "payzy" | "onepay";
 
@@ -15,6 +16,8 @@ export default function CheckoutPage() {
   const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
   const [discountCode, setDiscountCode] = useState("");
+  const [isLoyaltyModalOpen, setIsLoyaltyModalOpen] = useState(false);
+  const [appliedLoyaltyPoints, setAppliedLoyaltyPoints] = useState<number>(0);
 
   const handlePlaceOrder = (e: React.FormEvent) => {
     e.preventDefault();
@@ -293,6 +296,15 @@ export default function CheckoutPage() {
             </button>
           </div>
 
+          {/* Loyalty Points Button */}
+          <button 
+            onClick={() => setIsLoyaltyModalOpen(true)}
+            className="flex items-center justify-center gap-2 w-full h-[54px] bg-[#FAFAF9] border border-stone-300 hover:bg-stone-100 transition-colors rounded-full font-poppins font-medium text-[15px] text-[#1C1917]"
+          >
+            <Award size={18} className="text-[#C19A5B]" />
+            Check Loyalty Points
+          </button>
+
           {/* Order Totals */}
           <div className="flex flex-col w-full gap-3 py-6 border-y border-stone-200">
             <div className="flex justify-between items-center w-full">
@@ -303,13 +315,15 @@ export default function CheckoutPage() {
               <span className="font-poppins text-[14px] text-stone-500">Shipping</span>
               <span className="font-poppins font-medium text-[14px] text-[#1C1917]">Rs. 350.00</span>
             </div>
-            <div className="flex justify-between items-center w-full">
-              <span className="font-poppins text-[14px] text-stone-500">Loyalty Points</span>
-              <span className="font-poppins font-medium text-[14px] text-emerald-600">-Rs. 100.00</span>
-            </div>
+            {appliedLoyaltyPoints > 0 && (
+              <div className="flex justify-between items-center w-full">
+                <span className="font-poppins text-[14px] text-stone-500">Loyalty Points ({appliedLoyaltyPoints})</span>
+                <span className="font-poppins font-medium text-[14px] text-emerald-600">-Rs. {appliedLoyaltyPoints}.00</span>
+              </div>
+            )}
             <div className="flex justify-between items-center w-full mt-2 pt-4 border-t border-stone-100">
               <span className="font-poppins font-semibold text-[16px] text-[#1C1917]">Total</span>
-              <span className="font-poppins font-bold text-[20px] text-[#1C1917]">Rs. 5440.00</span>
+              <span className="font-poppins font-bold text-[20px] text-[#1C1917]">Rs. {5540 - appliedLoyaltyPoints}.00</span>
             </div>
           </div>
 
@@ -432,6 +446,12 @@ export default function CheckoutPage() {
           background: #a8a29e;
         }
       `}</style>
+      <LoyaltyPointsModal 
+        isOpen={isLoyaltyModalOpen} 
+        onClose={() => setIsLoyaltyModalOpen(false)} 
+        onApplyPoints={(points) => setAppliedLoyaltyPoints(points)} 
+      />
+
     </main>
   );
 }
