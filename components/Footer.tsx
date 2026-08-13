@@ -13,7 +13,7 @@ export default function Footer() {
     <footer className="relative flex flex-col items-center w-full bg-stone-900 text-[#FAFAF9]">
       
       {/* Main Footer Section with Image Background */}
-      <div className="relative flex flex-col items-center w-full pt-[72px]">
+      <div className="relative flex flex-col items-center w-full pt-10 md:pt-[72px]">
         {/* Background Layer */}
         <div className="absolute inset-0 z-0">
           <Image
@@ -26,7 +26,7 @@ export default function Footer() {
         </div>
 
         {/* Content Row */}
-        <div className="relative z-10 flex flex-row items-start justify-between w-full max-w-[1280px] px-[120px] gap-[64px]">
+        <div className="relative z-10 flex flex-col md:flex-row flex-wrap items-start justify-between w-full max-w-[1280px] px-4 md:px-8 lg:px-[120px] gap-10 md:gap-[64px]">
           
           {/* Brand Col */}
           <div className="flex flex-col items-start gap-[20px] w-[320px]">
@@ -53,7 +53,7 @@ export default function Footer() {
           </div>
 
           {/* Links Cols */}
-          <div className="flex flex-row gap-[48px] flex-1">
+          <div className="flex flex-col sm:flex-row gap-8 lg:gap-[48px] flex-1">
             {/* Shop Col */}
             <div className="flex flex-col gap-[25px]">
               <div className="flex flex-col gap-[16px]">
@@ -84,7 +84,7 @@ export default function Footer() {
           </div>
 
           {/* Newsletter Col */}
-          <div className="flex flex-col gap-[16px] w-[360px]">
+          <div className="flex flex-col gap-[16px] w-full md:w-[360px]">
             <h4 className="font-inter font-bold text-[14px] tracking-[0.02em] uppercase text-[#FAFAF9]">Newsletter</h4>
             <p className="font-inter text-[14px] leading-[21px] text-[#FAFAF9]/90">
               Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.
@@ -106,10 +106,10 @@ export default function Footer() {
         </div>
 
         {/* Legal & Social Pre-Bottom */}
-        <div className="relative z-10 flex flex-col items-center w-full max-w-[1280px] px-[120px] mt-[48px]">
+        <div className="relative z-10 flex flex-col items-center w-full max-w-[1280px] px-4 md:px-8 lg:px-[120px] mt-8 md:mt-[48px]">
           <div className="w-full h-[1px] bg-[#FAFAF9]/20" />
-          <div className="flex flex-row justify-between items-center w-full py-[20px]">
-            <div className="flex items-center gap-[16px]">
+          <div className="flex flex-col md:flex-row justify-between items-center w-full py-[20px] gap-6 md:gap-0">
+            <div className="flex flex-wrap justify-center md:justify-start items-center gap-[16px]">
               {["About", "Privacy Policy", "Terms & Conditions"].map(link => (
                 <Link href="#" key={link} className="font-inter text-[13px] text-[#FAFAF9]/85 hover:text-white transition-colors">{link}</Link>
               ))}
@@ -135,12 +135,12 @@ export default function Footer() {
       </div>
 
       {/* True Bottom Bar */}
-      <div className="flex justify-between items-center w-full h-[40px] px-[120px] bg-[#FAFAF9]">
-        <p className="font-inter text-[13px] text-[#1C1917]/85">
+      <div className="flex flex-col md:flex-row justify-between items-center w-full py-4 md:py-0 min-h-[40px] px-4 md:px-8 lg:px-[120px] bg-[#FAFAF9] gap-4 md:gap-0">
+        <p className="font-inter text-[13px] text-[#1C1917]/85 text-center md:text-left">
           © 2026 Laural Clothing. All Rights Reserved. Developed by ScriptLK Digital
         </p>
         <div className="relative w-[309px] h-[24px]">
-          <Image src="/footer/payments.webp" alt="Payment Methods" fill className="object-contain object-right" />
+          <Image src="/footer/payments.webp" alt="Payment Methods" fill className="object-contain md:object-right" />
         </div>
       </div>
     </footer>

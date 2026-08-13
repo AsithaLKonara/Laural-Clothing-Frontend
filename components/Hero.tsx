@@ -21,7 +21,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="relative w-full h-[829px] overflow-hidden bg-stone-100">
+    <section className="relative w-full h-[600px] md:h-[829px] overflow-hidden bg-stone-100">
       {/* Carousel Images */}
       {HERO_IMAGES.map((src, index) => (
         <Image
@@ -50,12 +50,12 @@ export default function Hero() {
         }}
       />
       {/* Text Overlay */}
-      <div className="absolute inset-0 z-20 flex flex-col items-center justify-end text-stone-900 px-[120px] py-[60px]">
-        <h2 className="font-poppins text-[12px] tracking-[0.2em] uppercase mb-2 font-semibold">
+      <div className="absolute inset-0 z-20 flex flex-col items-center justify-end text-stone-900 px-4 md:px-8 lg:px-[120px] pb-10 md:py-[60px]">
+        <h2 className="font-poppins text-[10px] md:text-[12px] tracking-[0.2em] uppercase mb-2 font-semibold text-center">
           Timeless silhouettes. Refined details. Effortless confidence.
         </h2>
         
-        <h1 className="font-signature text-[80px] mb-4 mt-1 text-stone-900 tracking-wide">
+        <h1 className="font-signature text-[48px] sm:text-[60px] lg:text-[80px] mb-4 mt-1 text-stone-900 tracking-wide text-center">
           Elegance, Redefined.
         </h1>
         

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Search, Heart, ShoppingCart } from "lucide-react";
+import { Search, Heart, ShoppingCart, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/components/CartProvider";
@@ -13,6 +13,7 @@ export default function Navbar() {
   const isAuth = pathname === "/login";
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { openCart, openWishlist } = useCart();
 
   const navLinks = [
@@ -54,10 +55,20 @@ export default function Navbar() {
 
   return (
     <nav className={`fixed top-0 w-full z-50 transition-colors duration-300 ${navBgClass}`}>
-      <div className="w-full px-[120px] h-[83px] grid grid-cols-3 items-center">
+      <div className="w-full px-4 md:px-8 lg:px-[120px] h-[83px] flex md:grid md:grid-cols-3 justify-between items-center relative">
         
-        {/* Left Links */}
-        <div className="flex items-center space-x-[40px] text-[12px] font-bold font-poppins">
+        {/* Mobile Hamburger (Left) */}
+        <div className="flex md:hidden flex-1 items-center">
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className={`p-2 -ml-2 rounded-full transition-colors ${hoverBgClass}`}
+          >
+            {isMobileMenuOpen ? <X size={24} className={textColorClass} /> : <Menu size={24} className={textColorClass} />}
+          </button>
+        </div>
+
+        {/* Desktop Left Links */}
+        <div className="hidden md:flex items-center space-x-[40px] text-[12px] font-bold font-poppins">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
@@ -77,9 +88,9 @@ export default function Navbar() {
         </div>
 
         {/* Center Logo */}
-        <div className="flex justify-center">
+        <div className="flex justify-center flex-1 md:flex-none">
           <Link href="/">
-            <div className="relative w-[180px] h-[26px]">
+            <div className="relative w-[140px] md:w-[180px] h-[22px] md:h-[26px]">
               <Image 
                 src={logoImage}
                 alt="Laural Clothing"
@@ -92,34 +103,56 @@ export default function Navbar() {
         </div>
 
         {/* Right Actions */}
-        <div className="flex justify-end">
-          <div className="flex items-center gap-[4px] space-x-4 mr-4">
+        <div className="flex justify-end flex-1 items-center">
+          <div className="hidden lg:flex items-center gap-[4px] space-x-4 mr-4">
             <Link href="/login" className={`font-poppins font-bold text-[12px] tracking-wide uppercase transition-colors hover:opacity-70 ${textColorClass}`}>
               LOGIN/REGISTER
             </Link>
           </div>
-          <div className="flex items-center gap-[4px]">
+          <div className="flex items-center gap-1 md:gap-[4px]">
             <button 
               onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className={`p-2.5 rounded-full transition-colors ${hoverBgClass}`}
+              className={`p-2 md:p-2.5 rounded-full transition-colors ${hoverBgClass}`}
             >
               <Search size={20} className={textColorClass} />
             </button>
             <button 
               onClick={openWishlist}
-              className={`p-2.5 rounded-full transition-colors ${hoverBgClass}`}
+              className={`p-2 md:p-2.5 rounded-full transition-colors ${hoverBgClass}`}
             >
               <Heart size={20} className={textColorClass} />
             </button>
             
-            <button onClick={openCart} className={`flex items-center space-x-2 p-2.5 rounded-full transition-colors ${hoverBgClass}`}>
+            <button onClick={openCart} className={`flex items-center space-x-1 md:space-x-2 p-2 md:p-2.5 rounded-full transition-colors ${hoverBgClass}`}>
               <ShoppingCart size={20} className={textColorClass} />
-              <span className={`font-bold text-[12px] font-poppins ${textColorClass}`}>Rs: 0.00</span>
+              <span className={`hidden sm:inline font-bold text-[12px] font-poppins ${textColorClass}`}>Rs: 0.00</span>
             </button>
           </div>
         </div>
-        
       </div>
+
+      {/* Mobile Menu Dropdown */}
+      {isMobileMenuOpen && (
+        <div className="absolute top-[83px] left-0 w-full bg-[#FAFAF9] shadow-lg border-b border-stone-200 flex flex-col p-4 md:hidden">
+          {navLinks.map((link) => (
+            <Link 
+              key={link.name} 
+              href={link.href} 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="py-3 px-4 text-stone-900 font-poppins font-bold text-[14px] border-b border-stone-100"
+            >
+              {link.name}
+            </Link>
+          ))}
+          <Link 
+            href="/login" 
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="py-3 px-4 text-stone-900 font-poppins font-bold text-[14px]"
+          >
+            LOGIN/REGISTER
+          </Link>
+        </div>
+      )}
     </nav>
   );
 }

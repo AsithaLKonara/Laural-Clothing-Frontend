@@ -8,12 +8,12 @@ export default function ProductCard() {
 
   return (
     <div 
-      className="flex flex-col items-start p-[12px] gap-[8px] w-[245px] bg-white rounded-[5px]"
+      className="flex flex-col items-start p-[12px] gap-[8px] w-full max-w-[245px] bg-white rounded-[5px]"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Top Image Container */}
-      <div className="relative w-[221px] h-[281px] bg-stone-100 flex flex-col justify-between overflow-hidden">
+      <div className="relative w-full aspect-[221/281] bg-stone-100 flex flex-col justify-between overflow-hidden">
         
         {/* Default Image */}
         <Image
