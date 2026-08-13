@@ -12,7 +12,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen w-full bg-background overflow-hidden">
+    <div className="dashboard-theme flex h-screen w-full bg-background overflow-hidden">
       
       {/* Fixed Sidebar */}
       <Sidebar />

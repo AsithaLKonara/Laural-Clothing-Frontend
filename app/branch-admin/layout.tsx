@@ -22,7 +22,7 @@ export default function BranchAdminLayout({ children }: { children: React.ReactN
   ];
 
   return (
-    <div className="flex h-screen w-full bg-background overflow-hidden">
+    <div className="dashboard-theme flex h-screen w-full bg-background overflow-hidden">
       
       {/* Sidebar */}
       <div className="w-[224px] h-screen bg-surface flex flex-col shrink-0 text-text-secondary overflow-y-auto border-r border-border">

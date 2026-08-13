@@ -10,8 +10,8 @@
     --surface: #FFFFFF;
     --surface-elevated: #FFFFFF;
 
-    --primary: #F97316;
-    --primary-hover: #EA580C;
+    --primary: #111827;
+    --primary-hover: #1F2937;
 
     --accent: #F97316;
     --accent-soft: #FFEDD5;
@@ -33,5 +33,12 @@
 
     --info: #3B82F6;
     --info-soft: #DBEAFE;
+  }
+
+  .dashboard-theme {
+    --primary: #F97316;
+    --primary-hover: #EA580C;
+    --accent: #F97316;
+    --accent-soft: #FFEDD5;
   }
 }
