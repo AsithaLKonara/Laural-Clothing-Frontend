@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 
 export default function ProductCard() {
@@ -16,20 +17,21 @@ export default function ProductCard() {
       <div className="relative w-full aspect-[221/281] bg-stone-100 flex flex-col justify-between overflow-hidden">
         
         {/* Default Image */}
-        <Image
-          src="/products/default.jpg"
-          alt="Product Image"
-          fill
-          className={`object-cover transition-opacity duration-300 ${isHovered ? 'opacity-0' : 'opacity-100'}`}
-        />
-        
-        {/* Hover Image */}
-        <Image
-          src="/products/hover.jpg"
-          alt="Product Image Hover"
-          fill
-          className={`object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
-        />
+        <Link href="/product/vesper-long-sleeve-top" className="absolute inset-0 z-0">
+          <Image
+            src="/products/default.jpg"
+            alt="Product Image"
+            fill
+            className={`object-cover transition-opacity duration-300 ${isHovered ? 'opacity-0' : 'opacity-100'}`}
+          />
+          {/* Hover Image */}
+          <Image
+            src="/products/hover.jpg"
+            alt="Product Image Hover"
+            fill
+            className={`object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+          />
+        </Link>
         
         {/* Discount Tag */}
         <div className="absolute top-0 right-0 p-[10px] z-10">
@@ -71,9 +73,11 @@ export default function ProductCard() {
         
         {/* Pricing & Title Block */}
         <div className="flex flex-col items-center justify-center gap-[4px] w-full">
-          <h3 className="font-inter font-bold text-[11px] leading-[13px] text-black text-center">
-            Vesper Long Sleeve Top – Pink
-          </h3>
+          <Link href="/product/vesper-long-sleeve-top" className="hover:underline">
+            <h3 className="font-inter font-bold text-[11px] leading-[13px] text-black text-center">
+              Vesper Long Sleeve Top – Pink
+            </h3>
+          </Link>
           
           <div className="flex items-center gap-[10px] h-[20px]">
             {/* Old Price */}

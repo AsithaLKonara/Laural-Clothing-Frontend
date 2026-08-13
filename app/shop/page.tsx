@@ -3,28 +3,17 @@
 import { useState } from "react";
 import FilterSidebar from "@/components/FilterSidebar";
 import ProductCard from "@/components/ProductCard";
+import CategoryBar from "@/components/CategoryBar";
 import { SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function ShopPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  const subNavLinks = [
-    "DRESSES", "HANDBAG", "NEW ARRIVALS", "PANTS", "SALE", "SHIRTS", "SHORTS", "SKIRTS", "TOPS"
-  ];
-
   return (
     <main className="relative flex flex-col w-full min-h-screen bg-[#FAFAF9] pt-[83px]">
       
       {/* Sub Navbar */}
-      <div className="w-full bg-[#E7E5E4]">
-        <div className="flex flex-row justify-center items-center flex-wrap gap-x-[30px] gap-y-[10px] w-full max-w-[1280px] mx-auto py-[16px] px-[20px] md:px-[120px]">
-          {subNavLinks.map((link) => (
-            <button key={link} className="font-urbanist font-black text-[14px] text-[#1C1917] hover:text-[#5E3122] transition-colors">
-              {link}
-            </button>
-          ))}
-        </div>
-      </div>
+      <CategoryBar />
 
       {/* Breadcrumbs & Tool Bar */}
       <div className="w-full bg-[#FAFAF9] border-b border-[#44403B]/10">

@@ -1,0 +1,23 @@
+import Link from "next/link";
+
+const CATEGORIES = [
+  "DRESSES", "HANDBAG", "NEW ARRIVALS", "PANTS", "SALE", "SHIRTS", "SHORTS", "SKIRTS", "TOPS"
+];
+
+export default function CategoryBar() {
+  return (
+    <div className="w-full bg-[#E7E5E4]">
+      <div className="flex flex-row justify-center items-center flex-wrap gap-x-[30px] gap-y-[10px] w-full max-w-[1280px] mx-auto py-[16px] px-[20px] md:px-[120px]">
+        {CATEGORIES.map((link) => (
+          <Link 
+            href={`/category/${link.toLowerCase().replace(' ', '-')}`} 
+            key={link} 
+            className="font-urbanist font-black text-[14px] text-[#1C1917] hover:text-[#5E3122] transition-colors"
+          >
+            {link}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
