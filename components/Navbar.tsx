@@ -10,6 +10,7 @@ import { useCart } from "@/components/CartProvider";
 export default function Navbar() {
   const pathname = usePathname();
   const isHome = pathname === "/";
+  const isAuth = pathname === "/login";
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { openCart, openWishlist } = useCart();
@@ -30,14 +31,29 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Styling based on route and scroll state
   const isTransparent = isHome && !isScrolled;
+  
+  const navBgClass = isAuth
+    ? "bg-black/20 backdrop-blur-md border-b border-white/5"
+    : isTransparent
+    ? "bg-transparent"
+    : "bg-[#FAFAF9] shadow-sm border-b border-stone-200";
+
+  const textColorClass = isAuth
+    ? "text-stone-50"
+    : "text-stone-900";
+
+  const hoverBgClass = isAuth
+    ? "hover:bg-white/10"
+    : "hover:bg-stone-100";
+
+  const logoImage = isAuth
+    ? "/logo-white.png"
+    : "/logo.webp";
 
   return (
-    <nav className={`fixed top-0 w-full z-50 transition-colors duration-300 ${
-      isTransparent 
-        ? "bg-transparent border-transparent" 
-        : "bg-stone-50 border-b border-stone-200"
-    }`}>
+    <nav className={`fixed top-0 w-full z-50 transition-colors duration-300 ${navBgClass}`}>
       <div className="w-full px-[120px] h-[83px] grid grid-cols-3 items-center">
         
         {/* Left Links */}
@@ -50,8 +66,8 @@ export default function Navbar() {
                 href={link.href} 
                 className={`transition-colors hover:text-stone-500 ${
                   isActive 
-                    ? "text-stone-900 underline underline-offset-8 decoration-2" 
-                    : "text-stone-900"
+                    ? `${textColorClass} underline underline-offset-8 decoration-2` 
+                    : textColorClass
                 }`}
               >
                 {link.name}
@@ -63,46 +79,42 @@ export default function Navbar() {
         {/* Center Logo */}
         <div className="flex justify-center">
           <Link href="/">
-            <Image 
-              src="/logo.webp" 
-              alt="Laural Clothing" 
-              width={140} 
-              height={40} 
-              className="object-contain"
-            />
+            <div className="relative w-[180px] h-[26px]">
+              <Image 
+                src={logoImage}
+                alt="Laural Clothing"
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
           </Link>
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center justify-end space-x-8">
-          <Link href="/login" className="text-stone-900 text-[12px] font-bold font-poppins hover:text-stone-500 transition-colors">
-            LOGIN/REGISTER
-          </Link>
-          
-          <div className="flex items-center space-x-1">
-            <div className={`flex items-center overflow-hidden transition-all duration-300 ease-in-out ${isSearchOpen ? 'w-48 opacity-100 mr-2' : 'w-0 opacity-0'}`}>
-              <input 
-                type="text" 
-                placeholder="Search..." 
-                className="w-full bg-transparent border-b border-stone-900 focus:outline-none text-[12px] font-poppins py-1 text-stone-900 placeholder:text-stone-500" 
-              />
-            </div>
+        <div className="flex justify-end">
+          <div className="flex items-center gap-[4px] space-x-4 mr-4">
+            <Link href="/login" className={`font-poppins font-bold text-[12px] tracking-wide uppercase transition-colors hover:opacity-70 ${textColorClass}`}>
+              LOGIN/REGISTER
+            </Link>
+          </div>
+          <div className="flex items-center gap-[4px]">
             <button 
               onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="p-2.5 hover:bg-stone-100 rounded-full transition-colors"
+              className={`p-2.5 rounded-full transition-colors ${hoverBgClass}`}
             >
-              <Search size={20} className="text-stone-900" />
+              <Search size={20} className={textColorClass} />
             </button>
             <button 
               onClick={openWishlist}
-              className="p-2.5 hover:bg-stone-100 rounded-full transition-colors"
+              className={`p-2.5 rounded-full transition-colors ${hoverBgClass}`}
             >
-              <Heart size={20} className="text-stone-900" />
+              <Heart size={20} className={textColorClass} />
             </button>
             
-            <button onClick={openCart} className="flex items-center space-x-2 p-2.5 hover:bg-stone-100 rounded-full transition-colors">
-              <ShoppingCart size={20} className="text-stone-900" />
-              <span className="font-bold text-[12px] font-poppins text-stone-800">Rs: 0.00</span>
+            <button onClick={openCart} className={`flex items-center space-x-2 p-2.5 rounded-full transition-colors ${hoverBgClass}`}>
+              <ShoppingCart size={20} className={textColorClass} />
+              <span className={`font-bold text-[12px] font-poppins ${textColorClass}`}>Rs: 0.00</span>
             </button>
           </div>
         </div>

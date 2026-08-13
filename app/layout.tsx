@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { Poppins, Inria_Serif } from "next/font/google";
+import { Poppins, Inria_Serif, Urbanist } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
+import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { CartProvider } from "@/components/CartProvider";
 
@@ -23,6 +24,12 @@ const orangeAvenue = localFont({
   variable: "--font-signature",
 });
 
+const urbanist = Urbanist({
+  variable: "--font-urbanist",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
 export const metadata: Metadata = {
   title: "Laural Clothing",
   description: "Pieces edited for quiet luxury — cut clean, worn easy.",
@@ -36,9 +43,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${poppins.variable} ${orangeAvenue.variable} ${inriaSerif.variable} antialiased bg-stone-50 text-stone-900`}
+        className={`${poppins.variable} ${orangeAvenue.variable} ${inriaSerif.variable} ${urbanist.variable} antialiased bg-stone-50 text-stone-900`}
       >
         <CartProvider>
+          <Navbar />
           {children}
           <Footer />
         </CartProvider>

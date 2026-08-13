@@ -1,8 +1,14 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Phone, Mail } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export default function Footer() {
+  const pathname = usePathname();
+  if (pathname === "/login") return null;
+
   return (
     <footer className="relative flex flex-col items-center w-full bg-stone-900 text-[#FAFAF9]">
       
@@ -26,7 +32,7 @@ export default function Footer() {
           <div className="flex flex-col items-start gap-[20px] w-[320px]">
             {/* Logo */}
             <div className="relative w-[180px] h-[40px]">
-               <Image src="/logo.webp" alt="Laural Clothing" fill className="object-contain object-left brightness-0 invert" />
+               <Image src="/logo-white.png" alt="Laural Clothing" fill className="object-contain object-left" />
             </div>
             
             {/* Contact Items */}
