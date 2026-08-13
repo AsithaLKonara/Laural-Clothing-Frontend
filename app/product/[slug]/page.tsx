@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { ChevronLeft, ChevronRight, LayoutGrid, Info, ArrowLeftRight, Heart, Ruler, Send, MessageCircle } from "lucide-react";
 import CategoryBar from "@/components/CategoryBar";
 import ProductGallery from "@/components/ProductGallery";
 import ProductTabs from "@/components/ProductTabs";
@@ -35,10 +36,15 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
       <CategoryBar />
 
       {/* Breadcrumbs */}
-      <div className="w-full max-w-[1280px] mx-auto py-4 px-4 md:px-[120px]">
-        <span className="font-urbanist text-[14px] text-[#1C1917] hover:text-[#5E3122] transition-colors cursor-pointer">
-          Home / Shop / Tops / Vesper Long Sleeve Top
+      <div className="w-full max-w-[1280px] mx-auto py-6 px-4 md:px-[120px] flex justify-between items-center">
+        <span className="font-urbanist text-[14px] text-[#79716B]">
+          Home / Dresses / <span className="text-[#1C1917] font-semibold">Era Dress - Yellow</span>
         </span>
+        <div className="hidden md:flex gap-4 text-[#1C1917]">
+          <button className="hover:text-stone-500"><ChevronLeft size={18} strokeWidth={1.5} /></button>
+          <button className="hover:text-stone-500"><LayoutGrid size={18} strokeWidth={1.5} /></button>
+          <button className="hover:text-stone-500"><ChevronRight size={18} strokeWidth={1.5} /></button>
+        </div>
       </div>
 
       {/* Top Section: Gallery & Info */}
@@ -50,74 +56,52 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
         </div>
 
         {/* Right: Product Info */}
-        <div className="flex flex-col flex-1 w-full gap-[30px]">
+        <div className="flex flex-col flex-1 w-full gap-[24px]">
           
           {/* Header & Pricing */}
-          <div className="flex flex-col gap-2 border-b border-stone-200 pb-6">
-            <h1 className="font-poppins text-[28px] md:text-[32px] font-normal text-[#1C1917] leading-tight">
-              Vesper Long Sleeve Top – Pink
+          <div className="flex flex-col gap-2 pb-2">
+            <h1 className="font-poppins text-[28px] md:text-[36px] font-normal text-[#1C1917] leading-tight">
+              Era Dress – Yellow
             </h1>
             <div className="flex items-center gap-4 mt-2">
-              <span className="font-poppins text-[20px] md:text-[24px] line-through text-[#79716B]">Rs: 2,300</span>
-              <span className="font-poppins text-[20px] md:text-[24px] font-bold text-[#1C1917]">Rs: 2,260</span>
+              <span className="font-poppins text-[22px] md:text-[26px] font-bold text-[#1C1917]">Rs 2,790.00</span>
             </div>
-            <p className="font-poppins text-[15px] md:text-[16px] leading-[1.4] text-[#79716B] mt-4 max-w-[557px]">
-              This graphic t-shirt which is perfect for any occasion. Crafted from a soft and breathable fabric, it offers superior comfort and style.
-            </p>
           </div>
 
           {/* Installments */}
-          <div className="flex flex-col gap-2 w-full max-w-[206px]">
-            <div className="flex items-center justify-between text-[14px] text-[#1C1917] px-4 py-1 rounded-full border border-stone-200">
-              <span>3 X Rs. 730.00 with</span>
-              <div className="w-[40px] h-[16px] bg-stone-300 rounded-sm ml-2 flex items-center justify-center text-[8px] font-bold">MINT</div>
+          <div className="flex flex-col gap-3 w-full border-b border-stone-200 pb-8">
+            <div className="flex items-center text-[16px] text-[#79716B] font-poppins">
+              <span>3 X Rs. 930.00 with</span>
+              <div className="w-[50px] h-[20px] bg-[#0E1E2B] rounded-full mx-2 flex items-center justify-center text-[10px] text-white font-bold tracking-widest">MINTPAY</div>
+              <Info size={14} className="text-[#1C1917]" fill="currentColor" color="white" />
             </div>
-            <div className="flex items-center justify-between text-[14px] text-[#1C1917] px-4 py-1 rounded-full border border-stone-200">
-              <span>4 X Rs. 547.50 with</span>
-              <div className="w-[40px] h-[16px] bg-stone-300 rounded-sm ml-2 flex items-center justify-center text-[8px] font-bold">PAYZY</div>
+            <div className="flex items-center text-[16px] text-[#79716B] font-poppins">
+              <span>or 3 X Rs 930.00 with</span>
+              <div className="w-[40px] h-[16px] mx-2 flex items-center justify-center text-[11px] text-[#0033cc] font-black italic">KOKO</div>
+              <Info size={14} className="text-[#1C1917]" fill="currentColor" color="white" />
+            </div>
+            <div className="flex items-center text-[16px] text-[#79716B] font-poppins">
+              <span>or up to 4 X Rs 697.50 with</span>
+              <div className="w-[50px] h-[20px] mx-2 flex items-center justify-center text-[12px] text-[#00aaff] font-black italic tracking-tighter">Payzy</div>
+              <Info size={14} className="text-[#1C1917]" fill="currentColor" color="white" />
             </div>
           </div>
 
           {/* Selections */}
-          <div className="flex flex-col md:flex-row gap-10 border-b border-stone-200 pb-8">
+          <div className="flex flex-col gap-4 mt-2">
             
-            {/* Color Select */}
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <span className="font-poppins text-[16px] text-[#44403B]">Select Colors</span>
-              </div>
-              <div className="flex gap-4">
-                {['pink', 'black', 'white'].map(color => (
-                  <button 
-                    key={color}
-                    onClick={() => setSelectedColor(color)}
-                    className={`w-8 h-8 rounded-full border-2 ${selectedColor === color ? 'border-[#1C1917] ring-2 ring-white/50' : 'border-transparent'}`}
-                    style={{ backgroundColor: color === 'pink' ? '#FFC0CB' : color === 'black' ? '#1C1917' : '#F5F5F4' }}
-                  />
-                ))}
-              </div>
-            </div>
-
             {/* Size Select */}
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <span className="font-poppins text-[16px] text-[#44403B]">Select Size</span>
-                <button 
-                  onClick={() => setIsSizeGuideOpen(true)}
-                  className="font-poppins text-[14px] text-[#44403B] hover:text-black underline underline-offset-2"
-                >
-                  Size Guide &gt;
-                </button>
-              </div>
+            <div className="flex items-center gap-4">
+              <span className="font-poppins font-bold text-[16px] text-[#1C1917]">Size :</span>
               <div className="flex gap-3">
-                {['S', 'M', 'L', 'XL'].map(size => (
+                {['UK 08', 'UK 10', 'UK 12', 'UK 14'].map(size => (
                   <button 
                     key={size}
                     onClick={() => setSelectedSize(size)}
-                    className={`min-w-[40px] h-[40px] px-3 rounded-full flex items-center justify-center font-poppins text-[14px] transition-colors ${
+                    className={`h-[34px] px-4 rounded-full flex items-center justify-center font-poppins text-[14px] transition-colors border ${
                       selectedSize === size 
-                        ? 'bg-[#1C1917] text-white font-medium' 
-                        : 'bg-[#D6D3D1] text-[#1C1917] hover:bg-[#c2beb9]'
+                        ? 'border-[#1C1917] text-[#1C1917]' 
+                        : 'border-stone-200 text-[#1C1917] hover:border-stone-400'
                     }`}
                   >
                     {size}
@@ -128,23 +112,48 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col sm:flex-row items-center gap-4 w-full max-w-[500px]">
+          <div className="flex flex-row items-center gap-4 w-full mt-4 pb-6 border-b border-stone-200">
             {/* Qty Selector */}
-            <div className="flex items-center justify-between bg-[#D6D3D1] rounded-full px-4 h-[44px] w-[120px] flex-shrink-0">
-              <button onClick={() => setQty(Math.max(1, qty - 1))} className="text-[18px] text-[#1C1917] font-medium">-</button>
-              <span className="font-poppins font-medium text-[16px] text-[#1C1917]">{qty}</span>
-              <button onClick={() => setQty(qty + 1)} className="text-[18px] text-[#1C1917] font-medium">+</button>
+            <div className="flex items-center border border-stone-300 rounded-sm h-[44px] w-[110px] flex-shrink-0">
+              <button onClick={() => setQty(Math.max(1, qty - 1))} className="flex-1 text-[18px] text-[#79716B] border-r border-stone-300 h-full hover:bg-stone-50">-</button>
+              <span className="flex-1 font-poppins text-[15px] text-[#1C1917] flex items-center justify-center h-full">{qty}</span>
+              <button onClick={() => setQty(qty + 1)} className="flex-1 text-[18px] text-[#79716B] border-l border-stone-300 h-full hover:bg-stone-50">+</button>
             </div>
             
             {/* Add to Cart */}
-            <button className="flex-1 w-full h-[44px] rounded-full border border-[#79716B] font-poppins font-medium text-[15px] text-[#1C1917] hover:bg-stone-100 transition-colors">
+            <button className="h-[44px] px-8 rounded-sm bg-[#1C1917] font-poppins font-semibold text-[14px] text-white hover:bg-stone-800 transition-colors uppercase tracking-wide">
               Add to Cart
             </button>
-            
-            {/* Buy Now */}
-            <button className="flex-1 w-full h-[44px] rounded-full bg-[#1C1917] font-poppins font-bold text-[15px] text-[#FAFAF9] hover:bg-stone-800 transition-colors">
-              Buy Now
+          </div>
+
+          {/* Secondary Actions */}
+          <div className="flex items-center gap-6 pb-6">
+            <button className="flex items-center gap-2 font-poppins font-medium text-[15px] text-[#1C1917] hover:text-[#C19A5B] transition-colors">
+              <ArrowLeftRight size={18} strokeWidth={1.5} /> Compare
             </button>
+            <button className="flex items-center gap-2 font-poppins font-medium text-[15px] text-[#1C1917] hover:text-[#C19A5B] transition-colors">
+              <Heart size={18} strokeWidth={1.5} /> Add to wishlist
+            </button>
+            <button onClick={() => setIsSizeGuideOpen(true)} className="flex items-center gap-2 font-poppins font-medium text-[15px] text-[#1C1917] hover:text-[#C19A5B] transition-colors">
+              <Ruler size={18} strokeWidth={1.5} /> Size Guide
+            </button>
+          </div>
+          
+          <div className="w-full h-[1px] bg-stone-200 mb-2"></div>
+
+          {/* Meta Data */}
+          <div className="flex flex-col gap-4 font-poppins text-[15px] text-[#1C1917]">
+            <p><span className="font-bold">SKU:</span> <span className="text-[#79716B]">N/A</span></p>
+            <p><span className="font-bold">Categories:</span> <span className="text-[#79716B]">Dresses , July 01 , july Dresses , New arrivals</span></p>
+            <div className="flex items-center gap-3 mt-1">
+              <span className="font-bold">Share:</span>
+              <div className="flex gap-4 text-stone-600">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" className="cursor-pointer hover:text-[#1C1917]"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" className="cursor-pointer hover:text-[#1C1917]"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" className="cursor-pointer hover:text-[#1C1917]"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+                <Send size={16} fill="currentColor" className="cursor-pointer hover:text-[#1C1917]" />
+              </div>
+            </div>
           </div>
           
         </div>
@@ -173,6 +182,16 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
       </div>
 
       <SizeGuideModal isOpen={isSizeGuideOpen} onClose={() => setIsSizeGuideOpen(false)} />
+
+      {/* Floating WhatsApp Widget */}
+      <div className="fixed bottom-6 right-6 flex items-center gap-2 z-50">
+        <div className="bg-white border border-stone-200 shadow-md rounded-full px-4 py-2 flex items-center justify-center font-poppins text-[15px] text-[#1C1917]">
+          Contact us
+        </div>
+        <button className="w-14 h-14 bg-[#25D366] rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
+          <MessageCircle size={32} color="white" />
+        </button>
+      </div>
     </main>
   );
 }
