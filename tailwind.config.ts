@@ -26,6 +26,14 @@ const config: Config = {
           800: '#292524',
           900: '#1c1917',
         },
+        primary: {
+          DEFAULT: '#1C1917',
+          hover: '#292524',
+        },
+        accent: {
+          DEFAULT: '#C19A5B',
+        },
+        background: '#FAFAF9',
       },
     },
   },

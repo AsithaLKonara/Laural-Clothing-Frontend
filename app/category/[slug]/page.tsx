@@ -16,23 +16,23 @@ export default function CategoryPage() {
   const categoryName = slug ? slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : 'Category';
 
   return (
-    <main className="relative flex flex-col w-full min-h-screen bg-[#FAFAF9] pt-[83px]">
+    <main className="relative flex flex-col w-full min-h-screen bg-background pt-[83px]">
       
       {/* Sub Navbar */}
       <CategoryBar />
 
       {/* Category Header */}
-      <div className="w-full bg-[#1C1917] py-12 px-4 flex flex-col items-center justify-center text-center">
-        <h1 className="font-poppins font-semibold text-[32px] md:text-[40px] text-[#FAFAF9] leading-tight mb-2">
+      <div className="w-full bg-primary py-12 px-4 flex flex-col items-center justify-center text-center">
+        <h1 className="font-poppins font-semibold text-4xl md:text-5xl text-background leading-tight mb-2">
           {categoryName}
         </h1>
-        <p className="font-poppins text-[15px] text-[#FAFAF9]/70 max-w-[600px]">
+        <p className="font-poppins text-sm text-background/70 max-w-[600px]">
           Explore our latest collection of {categoryName.toLowerCase()} designed with unparalleled craftsmanship.
         </p>
       </div>
 
       {/* Tool Bar */}
-      <div className="w-full bg-[#FAFAF9] border-b border-[#44403B]/10">
+      <div className="w-full bg-background border-b border-[#44403B]/10">
         <div className="flex flex-row justify-between items-center w-full max-w-[1280px] mx-auto h-[54px] px-[20px] md:px-[120px]">
           <Breadcrumbs items={[
             { label: "Home", href: "/" },
@@ -40,7 +40,7 @@ export default function CategoryPage() {
             { label: categoryName }
           ]} />
           
-          <span className="font-urbanist text-[14px] text-[#1C1917] text-right">
+          <span className="font-urbanist text-sm text-primary text-right">
             Showing 1–12 of 145 results
           </span>
         </div>
@@ -70,7 +70,7 @@ export default function CategoryPage() {
           </div>
 
           <div className="flex justify-center w-full mt-12 mb-8">
-            <button className="h-[52px] px-10 flex justify-center items-center border border-[#1C1917] hover:bg-[#1C1917] hover:text-[#FAFAF9] text-[#1C1917] transition-colors rounded-full font-poppins font-semibold text-[14px] uppercase tracking-widest">
+            <button className="h-[52px] px-10 flex justify-center items-center border border-primary hover:bg-primary hover:text-background text-primary transition-colors rounded-full font-poppins font-semibold text-sm uppercase tracking-widest">
               Load More
             </button>
           </div>

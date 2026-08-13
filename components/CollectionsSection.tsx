@@ -28,13 +28,13 @@ export default function CollectionsSection() {
       
       {/* Header Area */}
       <div className="flex flex-col items-center text-center mb-6 w-full">
-        <span className="text-[14px] md:text-[16px] font-poppins text-stone-200 block mb-2">
+        <span className="text-sm md:text-base font-poppins text-stone-200 block mb-2">
           Shop by Category
         </span>
-        <h2 className="text-[28px] md:text-[36px] font-signature text-stone-50 tracking-wide mb-2">
+        <h2 className="text-3xl md:text-[36px] font-signature text-stone-50 tracking-wide mb-2">
           Collections
         </h2>
-        <p className="text-[14px] md:text-[16px] font-poppins text-stone-200 font-extralight">
+        <p className="text-sm md:text-base font-poppins text-stone-200 font-extralight">
           Pieces edited for quiet luxury — cut clean, worn easy.
         </p>
       </div>
@@ -43,7 +43,7 @@ export default function CollectionsSection() {
       <div className="flex justify-end w-full mb-6">
         <Link 
           href="/collections" 
-          className="text-[14px] md:text-[16px] font-signature text-stone-50 hover:text-stone-300 transition-colors tracking-wider"
+          className="text-sm md:text-base font-signature text-stone-50 hover:text-stone-300 transition-colors tracking-wider"
         >
           Explore more
         </Link>

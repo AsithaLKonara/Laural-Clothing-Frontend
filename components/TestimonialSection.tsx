@@ -3,18 +3,18 @@ import ReviewCard from "./ReviewCard";
 
 export default function TestimonialSection() {
   return (
-    <section className="flex flex-col items-center justify-center w-full bg-[#FAFAF9] py-20 px-4 md:px-12 lg:px-24">
+    <section className="flex flex-col items-center justify-center w-full bg-background py-20 px-4 md:px-12 lg:px-24">
       <div className="flex flex-col items-center w-full max-w-[1280px]">
         
         {/* Header */}
         <div className="flex flex-col items-center text-center mb-16 max-w-[800px]">
-          <span className="font-urbanist font-medium text-[14px] text-[#C19A5B] uppercase tracking-[0.2em] mb-4">
+          <span className="font-urbanist font-medium text-sm text-accent uppercase tracking-[0.2em] mb-4">
             Customer Testimonials
           </span>
-          <h2 className="font-poppins font-semibold text-[32px] md:text-[42px] text-[#1C1917] leading-tight mb-4">
+          <h2 className="font-poppins font-semibold text-4xl md:text-[42px] text-primary leading-tight mb-4">
             Loved by Thousands
           </h2>
-          <p className="font-poppins text-[16px] text-stone-600">
+          <p className="font-poppins text-base text-stone-600">
             Discover why our community loves Laural Clothing. Real reviews from our verified customers who have experienced the difference in quality and style.
           </p>
         </div>

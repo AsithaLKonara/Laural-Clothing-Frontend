@@ -51,19 +51,19 @@ export default function Hero() {
       />
       {/* Text Overlay */}
       <div className="absolute inset-0 z-20 flex flex-col items-center justify-end text-stone-900 px-4 md:px-8 lg:px-[120px] pb-10 md:py-[60px]">
-        <h2 className="font-poppins text-[10px] md:text-[12px] tracking-[0.2em] uppercase mb-2 font-semibold text-center">
+        <h2 className="font-poppins text-[10px] md:text-xs tracking-[0.2em] uppercase mb-2 font-semibold text-center">
           Timeless silhouettes. Refined details. Effortless confidence.
         </h2>
         
-        <h1 className="font-signature text-[48px] sm:text-[60px] lg:text-[80px] mb-4 mt-1 text-stone-900 tracking-wide text-center">
+        <h1 className="font-signature text-5xl sm:text-[60px] lg:text-[80px] mb-4 mt-1 text-stone-900 tracking-wide text-center">
           Elegance, Redefined.
         </h1>
         
-        <p className="font-poppins font-extralight text-[14px] max-w-2xl text-center mb-5 leading-relaxed text-stone-900">
+        <p className="font-poppins font-extralight text-sm max-w-2xl text-center mb-5 leading-relaxed text-stone-900">
           Discover a curated collection of sophisticated women’s wear, thoughtfully designed for those who appreciate understated luxury, impeccable style, and effortless elegance.
         </p>
         
-        <button className="bg-[#1c1917] text-[#f5f5f4] font-sans font-bold text-[12px] uppercase px-[42px] py-[13px] rounded-full hover:bg-stone-700 transition-colors">
+        <button className="bg-primary text-[#f5f5f4] font-sans font-bold text-xs uppercase px-[42px] py-[13px] rounded-full hover:bg-stone-700 transition-colors">
           Explore The Collections
         </button>
       </div>

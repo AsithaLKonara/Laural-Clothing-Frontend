@@ -28,7 +28,7 @@ export default function SizeGuideModal({ isOpen, onClose }: SizeGuideModalProps)
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-      <div className="relative w-full max-w-[600px] bg-[#FAFAF9] shadow-2xl rounded-sm p-6 md:p-8 animate-in fade-in zoom-in duration-300">
+      <div className="relative w-full max-w-[600px] bg-background shadow-2xl rounded-sm p-6 md:p-8 animate-in fade-in zoom-in duration-300">
         
         {/* Close Button */}
         <button 
@@ -38,19 +38,19 @@ export default function SizeGuideModal({ isOpen, onClose }: SizeGuideModalProps)
           <X size={24} />
         </button>
 
-        <h2 className="font-signature text-[32px] text-[#1C1917] mb-6">Size Guide</h2>
+        <h2 className="font-signature text-4xl text-primary mb-6">Size Guide</h2>
         
         <div className="w-full overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b-2 border-stone-800 text-stone-900 font-urbanist font-bold text-[14px] uppercase tracking-wider">
+              <tr className="border-b-2 border-stone-800 text-stone-900 font-urbanist font-bold text-sm uppercase tracking-wider">
                 <th className="py-4 pr-4">Size</th>
                 <th className="py-4 px-4">Chest (in)</th>
                 <th className="py-4 px-4">Waist (in)</th>
                 <th className="py-4 px-4">Hips (in)</th>
               </tr>
             </thead>
-            <tbody className="font-poppins text-[15px] text-stone-700">
+            <tbody className="font-poppins text-sm text-stone-700">
               <tr className="border-b border-stone-200">
                 <td className="py-4 pr-4 font-bold">Small (S)</td>
                 <td className="py-4 px-4">34 - 36</td>
@@ -79,7 +79,7 @@ export default function SizeGuideModal({ isOpen, onClose }: SizeGuideModalProps)
           </table>
         </div>
         
-        <p className="font-poppins text-stone-500 text-[13px] mt-6 italic">
+        <p className="font-poppins text-stone-500 text-xs mt-6 italic">
           * Note: Measurements are for reference only. Fit may vary depending on the style.
         </p>
 

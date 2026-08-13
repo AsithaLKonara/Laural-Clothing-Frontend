@@ -23,7 +23,7 @@ export default function CategoryCard({ title, imageUrl, href }: CategoryCardProp
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
       
       <div className="absolute bottom-4 left-0 w-full text-center">
-        <h3 className="font-signature text-[24px] text-white">
+        <h3 className="font-signature text-2xl text-white">
           {title}
         </h3>
       </div>

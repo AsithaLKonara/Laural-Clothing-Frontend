@@ -24,8 +24,8 @@ export default function EmptyState({
       <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center text-stone-400 mb-6">
         <Icon size={32} />
       </div>
-      <h3 className="font-poppins font-semibold text-[20px] text-[#1C1917] mb-2">{title}</h3>
-      <p className="font-poppins text-[15px] text-stone-500 max-w-[400px] mb-8">
+      <h3 className="font-poppins font-semibold text-xl text-primary mb-2">{title}</h3>
+      <p className="font-poppins text-sm text-stone-500 max-w-[400px] mb-8">
         {description}
       </p>
       
@@ -33,14 +33,14 @@ export default function EmptyState({
         actionHref ? (
           <Link 
             href={actionHref}
-            className="h-[52px] px-8 flex justify-center items-center bg-[#1C1917] hover:bg-stone-800 transition-colors rounded-full font-poppins font-semibold text-[14px] text-white uppercase tracking-widest"
+            className="h-[52px] px-8 flex justify-center items-center bg-primary hover:bg-stone-800 transition-colors rounded-full font-poppins font-semibold text-sm text-white uppercase tracking-widest"
           >
             {actionText}
           </Link>
         ) : (
           <button 
             onClick={onAction}
-            className="h-[52px] px-8 flex justify-center items-center bg-[#1C1917] hover:bg-stone-800 transition-colors rounded-full font-poppins font-semibold text-[14px] text-white uppercase tracking-widest"
+            className="h-[52px] px-8 flex justify-center items-center bg-primary hover:bg-stone-800 transition-colors rounded-full font-poppins font-semibold text-sm text-white uppercase tracking-widest"
           >
             {actionText}
           </button>

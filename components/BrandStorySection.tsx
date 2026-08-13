@@ -35,7 +35,7 @@ export default function BrandStorySection() {
           </span>
           
           {/* Main Headline */}
-          <h2 className="font-signature font-normal text-[40px] md:text-[56px] leading-[1.1] text-left text-stone-900 -mt-2">
+          <h2 className="font-signature font-normal text-5xl md:text-6xl leading-[1.1] text-left text-stone-900 -mt-2">
             your style deserves <br className="hidden md:block" /> to shine
           </h2>
           
@@ -44,10 +44,10 @@ export default function BrandStorySection() {
 
           {/* Elevated Luxury Copy */}
           <div className="flex flex-col gap-4">
-            <p className="font-inria italic text-[18px] md:text-[22px] leading-[1.6] text-stone-800">
+            <p className="font-inria italic text-lg md:text-[22px] leading-[1.6] text-stone-800">
               "We believe true luxury lies in effortless elegance."
             </p>
-            <p className="font-poppins font-light text-[14px] md:text-[16px] leading-[1.8] text-stone-600">
+            <p className="font-poppins font-light text-sm md:text-base leading-[1.8] text-stone-600">
               At Laural Clothing, every stitch is a testament to our dedication to quality. 
               We curate collections that transcend fleeting trends, offering pieces designed 
               to empower your everyday confidence. Discover garments crafted with precision, 

@@ -22,18 +22,18 @@ export default function Breadcrumbs({ items }: BreadcrumbsProps) {
             {item.href && !isLast ? (
               <Link 
                 href={item.href} 
-                className="font-urbanist text-[13px] text-[#1C1917]/70 hover:text-[#1C1917] transition-colors"
+                className="font-urbanist text-xs text-primary/70 hover:text-primary transition-colors"
               >
                 {item.label}
               </Link>
             ) : (
-              <span className={`font-urbanist text-[13px] ${isLast ? "text-[#1C1917] font-medium" : "text-[#1C1917]/70"}`}>
+              <span className={`font-urbanist text-xs ${isLast ? "text-primary font-medium" : "text-primary/70"}`}>
                 {item.label}
               </span>
             )}
 
             {!isLast && (
-              <ChevronRight size={14} className="text-[#1C1917]/40 flex-shrink-0" />
+              <ChevronRight size={14} className="text-primary/40 flex-shrink-0" />
             )}
           </React.Fragment>
         );

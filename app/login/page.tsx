@@ -30,7 +30,7 @@ export default function LoginPage() {
               <span className="italic text-stone-300 font-light">Luxury.</span>
             </h1>
             
-            <p className="font-poppins font-light text-[16px] lg:text-[18px] leading-[1.6] text-stone-300 max-w-[400px]">
+            <p className="font-poppins font-light text-base lg:text-lg leading-[1.6] text-stone-300 max-w-[400px]">
               At Laural Clothing, we believe fashion is more than just clothing—it's a form of self-expression. Discover pieces edited for absolute perfection.
             </p>
 

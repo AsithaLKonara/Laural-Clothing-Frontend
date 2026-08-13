@@ -25,13 +25,13 @@ export default function CheckoutPage() {
   };
 
   return (
-    <main className="flex flex-col items-center w-full min-h-screen bg-[#FAFAF9] pt-[83px]">
+    <main className="flex flex-col items-center w-full min-h-screen bg-background pt-[83px]">
       <div className="flex flex-col lg:flex-row w-full max-w-[1280px] mx-auto py-[60px] px-4 md:px-[80px] lg:px-[120px] gap-12 lg:gap-[60px]">
         
         {/* Left Column: Forms */}
         <div className="flex flex-col flex-1 w-full lg:pr-[60px] lg:border-r lg:border-stone-200 gap-10">
           <div className="flex flex-col gap-2">
-            <h1 className="font-poppins font-medium text-[32px] md:text-[40px] text-[#1C1917] leading-tight">
+            <h1 className="font-poppins font-medium text-4xl md:text-5xl text-primary leading-tight">
               Checkout
             </h1>
           </div>
@@ -40,51 +40,51 @@ export default function CheckoutPage() {
             
             {/* Shipping Information */}
             <div className="flex flex-col gap-6 w-full">
-              <h2 className="font-poppins font-medium text-[20px] text-[#1C1917]">
+              <h2 className="font-poppins font-medium text-xl text-primary">
                 Shipping Information
               </h2>
               
               <div className="flex flex-col gap-5 w-full">
                 {/* Full Name */}
                 <div className="flex flex-col gap-2 w-full">
-                  <label className="font-poppins font-medium text-[13px] uppercase tracking-wider text-stone-500">
-                    Full name <span className="text-[#C19A5B]">*</span>
+                  <label className="font-poppins font-medium text-xs uppercase tracking-wider text-stone-500">
+                    Full name <span className="text-accent">*</span>
                   </label>
                   <input 
                     type="text" 
                     placeholder="Enter full name"
-                    className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-[15px] text-[#1C1917] outline-none focus:border-[#C19A5B] focus:ring-1 focus:ring-[#C19A5B] transition-all placeholder:text-stone-400"
+                    className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400"
                     required
                   />
                 </div>
 
                 {/* Address Lines */}
                 <div className="flex flex-col gap-2 w-full">
-                  <label className="font-poppins font-medium text-[13px] uppercase tracking-wider text-stone-500">
-                    Address <span className="text-[#C19A5B]">*</span>
+                  <label className="font-poppins font-medium text-xs uppercase tracking-wider text-stone-500">
+                    Address <span className="text-accent">*</span>
                   </label>
                   <input 
                     type="text" 
                     placeholder="Address Line 1"
-                    className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-[15px] text-[#1C1917] outline-none focus:border-[#C19A5B] focus:ring-1 focus:ring-[#C19A5B] transition-all placeholder:text-stone-400 mb-2"
+                    className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400 mb-2"
                     required
                   />
                   <input 
                     type="text" 
                     placeholder="Address Line 2 (Optional)"
-                    className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-[15px] text-[#1C1917] outline-none focus:border-[#C19A5B] focus:ring-1 focus:ring-[#C19A5B] transition-all placeholder:text-stone-400"
+                    className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400"
                   />
                 </div>
 
                 {/* City */}
                 <div className="flex flex-col gap-2 w-full">
-                  <label className="font-poppins font-medium text-[13px] uppercase tracking-wider text-stone-500">
-                    City <span className="text-[#C19A5B]">*</span>
+                  <label className="font-poppins font-medium text-xs uppercase tracking-wider text-stone-500">
+                    City <span className="text-accent">*</span>
                   </label>
                   <input 
                     type="text" 
                     placeholder="Enter city"
-                    className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-[15px] text-[#1C1917] outline-none focus:border-[#C19A5B] focus:ring-1 focus:ring-[#C19A5B] transition-all placeholder:text-stone-400"
+                    className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400"
                     required
                   />
                 </div>
@@ -93,17 +93,17 @@ export default function CheckoutPage() {
                 <div className="flex flex-col md:flex-row gap-5 w-full">
                   {/* Phone */}
                   <div className="flex flex-col gap-2 w-full flex-1">
-                    <label className="font-poppins font-medium text-[13px] uppercase tracking-wider text-stone-500">
-                      Phone number <span className="text-[#C19A5B]">*</span>
+                    <label className="font-poppins font-medium text-xs uppercase tracking-wider text-stone-500">
+                      Phone number <span className="text-accent">*</span>
                     </label>
                     <PhoneInput 
                       placeholder="Enter phone number"
                       value={shippingPhone}
                       onChange={setShippingPhone}
                       defaultCountry="LK"
-                      className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-[15px] text-[#1C1917] outline-none focus-within:border-[#C19A5B] focus-within:ring-1 focus-within:ring-[#C19A5B] transition-all"
+                      className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-all"
                       numberInputProps={{
-                        className: "w-full h-full bg-transparent border-none outline-none text-[#1C1917] font-poppins text-[15px] placeholder:text-stone-400 pl-4",
+                        className: "w-full h-full bg-transparent border-none outline-none text-primary font-poppins text-sm placeholder:text-stone-400 pl-4",
                         required: true
                       }}
                     />
@@ -111,13 +111,13 @@ export default function CheckoutPage() {
 
                   {/* Email */}
                   <div className="flex flex-col gap-2 w-full flex-1">
-                    <label className="font-poppins font-medium text-[13px] uppercase tracking-wider text-stone-500">
-                      Email address <span className="text-[#C19A5B]">*</span>
+                    <label className="font-poppins font-medium text-xs uppercase tracking-wider text-stone-500">
+                      Email address <span className="text-accent">*</span>
                     </label>
                     <input 
                       type="email" 
                       placeholder="Enter email address"
-                      className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-[15px] text-[#1C1917] outline-none focus:border-[#C19A5B] focus:ring-1 focus:ring-[#C19A5B] transition-all placeholder:text-stone-400"
+                      className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400"
                       required
                     />
                   </div>
@@ -133,21 +133,21 @@ export default function CheckoutPage() {
                 className="w-5 h-5 accent-[#1C1917] rounded-sm cursor-pointer"
                 required
               />
-              <label htmlFor="terms" className="font-poppins text-[14px] text-[#1C1917] cursor-pointer select-none mt-1">
+              <label htmlFor="terms" className="font-poppins text-sm text-primary cursor-pointer select-none mt-1">
                 I have read and agree to the Terms and Conditions.
               </label>
             </div>
 
             {/* Billing Address Toggle */}
             <div className="flex flex-col gap-4 w-full">
-              <h2 className="font-poppins font-medium text-[20px] text-[#1C1917]">
-                Billing Address <span className="text-[#C19A5B]">*</span>
+              <h2 className="font-poppins font-medium text-xl text-primary">
+                Billing Address <span className="text-accent">*</span>
               </h2>
               <div className="flex flex-col border border-stone-200 rounded-[24px] overflow-hidden bg-white shadow-sm">
                 
                 {/* Same as Shipping */}
                 <label className="flex items-center gap-4 p-4 cursor-pointer hover:bg-stone-50 transition-colors border-b border-stone-200">
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${billingSameAsShipping ? 'border-[#1C1917] bg-[#1C1917]' : 'border-stone-300 bg-white'}`}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${billingSameAsShipping ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
                     {billingSameAsShipping && <div className="w-2 h-2 rounded-full bg-white" />}
                   </div>
                   <input 
@@ -157,12 +157,12 @@ export default function CheckoutPage() {
                     onChange={() => setBillingSameAsShipping(true)} 
                     className="hidden" 
                   />
-                  <span className="font-poppins text-[15px] text-[#1C1917] font-medium">Same as shipping address</span>
+                  <span className="font-poppins text-sm text-primary font-medium">Same as shipping address</span>
                 </label>
 
                 {/* Different Billing */}
                 <label className="flex items-center gap-4 p-4 cursor-pointer hover:bg-stone-50 transition-colors">
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${!billingSameAsShipping ? 'border-[#1C1917] bg-[#1C1917]' : 'border-stone-300 bg-white'}`}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${!billingSameAsShipping ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
                     {!billingSameAsShipping && <div className="w-2 h-2 rounded-full bg-white" />}
                   </div>
                   <input 
@@ -172,7 +172,7 @@ export default function CheckoutPage() {
                     onChange={() => setBillingSameAsShipping(false)} 
                     className="hidden" 
                   />
-                  <span className="font-poppins text-[15px] text-[#1C1917] font-medium">Use a different billing address</span>
+                  <span className="font-poppins text-sm text-primary font-medium">Use a different billing address</span>
                 </label>
 
               </div>
@@ -182,40 +182,40 @@ export default function CheckoutPage() {
             {!billingSameAsShipping && (
               <div className="flex flex-col gap-5 w-full animate-in fade-in slide-in-from-top-4 duration-300 bg-white p-6 rounded-[24px] border border-stone-200 shadow-sm">
                 <div className="flex flex-col gap-2 w-full">
-                  <label className="font-poppins font-medium text-[13px] uppercase tracking-wider text-stone-500">
-                    Billing Address <span className="text-[#C19A5B]">*</span>
+                  <label className="font-poppins font-medium text-xs uppercase tracking-wider text-stone-500">
+                    Billing Address <span className="text-accent">*</span>
                   </label>
                   <input 
                     type="text" 
                     placeholder="Address Line 1"
-                    className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-[15px] text-[#1C1917] outline-none focus:border-[#C19A5B] focus:ring-1 focus:ring-[#C19A5B] transition-all placeholder:text-stone-400"
+                    className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400"
                     required
                   />
                 </div>
                 <div className="flex flex-col md:flex-row gap-5 w-full">
                   <div className="flex flex-col gap-2 w-full flex-1">
-                    <label className="font-poppins font-medium text-[13px] uppercase tracking-wider text-stone-500">
-                      City <span className="text-[#C19A5B]">*</span>
+                    <label className="font-poppins font-medium text-xs uppercase tracking-wider text-stone-500">
+                      City <span className="text-accent">*</span>
                     </label>
                     <input 
                       type="text" 
                       placeholder="Enter city"
-                      className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-[15px] text-[#1C1917] outline-none focus:border-[#C19A5B] focus:ring-1 focus:ring-[#C19A5B] transition-all placeholder:text-stone-400"
+                      className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400"
                       required
                     />
                   </div>
                   <div className="flex flex-col gap-2 w-full flex-1">
-                    <label className="font-poppins font-medium text-[13px] uppercase tracking-wider text-stone-500">
-                      Phone <span className="text-[#C19A5B]">*</span>
+                    <label className="font-poppins font-medium text-xs uppercase tracking-wider text-stone-500">
+                      Phone <span className="text-accent">*</span>
                     </label>
                     <PhoneInput 
                       placeholder="Enter phone number"
                       value={billingPhone}
                       onChange={setBillingPhone}
                       defaultCountry="LK"
-                      className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-[15px] text-[#1C1917] outline-none focus-within:border-[#C19A5B] focus-within:ring-1 focus-within:ring-[#C19A5B] transition-all"
+                      className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-all"
                       numberInputProps={{
-                        className: "w-full h-full bg-transparent border-none outline-none text-[#1C1917] font-poppins text-[15px] placeholder:text-stone-400 pl-4",
+                        className: "w-full h-full bg-transparent border-none outline-none text-primary font-poppins text-sm placeholder:text-stone-400 pl-4",
                         required: true
                       }}
                     />
@@ -228,7 +228,7 @@ export default function CheckoutPage() {
             <div className="flex lg:hidden w-full pt-4">
                <button 
                 type="submit"
-                className="w-full h-[54px] flex justify-center items-center bg-[#1C1917] hover:bg-stone-800 transition-colors rounded-full font-poppins font-semibold text-[14px] text-white uppercase tracking-widest"
+                className="w-full h-[54px] flex justify-center items-center bg-primary hover:bg-stone-800 transition-colors rounded-full font-poppins font-semibold text-sm text-white uppercase tracking-widest"
               >
                 Place Order
               </button>
@@ -240,7 +240,7 @@ export default function CheckoutPage() {
         {/* Right Column: Order Summary & Payment */}
         <div className="flex flex-col w-full lg:w-[420px] gap-8">
           
-          <h2 className="font-poppins font-medium text-[20px] text-[#1C1917]">
+          <h2 className="font-poppins font-medium text-xl text-primary">
             Review your cart
           </h2>
 
@@ -252,12 +252,12 @@ export default function CheckoutPage() {
                 <Image src="/DSC06483-640x800.jpg" alt="Vesper Long Sleeve Top" fill className="object-cover object-top" />
               </div>
               <div className="flex flex-col flex-1 justify-center gap-1">
-                <h4 className="font-poppins font-medium text-[13px] text-[#1C1917] leading-tight">
+                <h4 className="font-poppins font-medium text-xs text-primary leading-tight">
                   Vesper Long Sleeve Top – Pink
                 </h4>
                 <div className="flex items-center justify-between mt-1">
-                  <span className="font-poppins text-[12px] text-stone-500">UK : 08</span>
-                  <span className="font-poppins font-medium text-[12px] text-[#1C1917]">1 × Rs: 2190.00</span>
+                  <span className="font-poppins text-xs text-stone-500">UK : 08</span>
+                  <span className="font-poppins font-medium text-xs text-primary">1 × Rs: 2190.00</span>
                 </div>
               </div>
             </div>
@@ -268,12 +268,12 @@ export default function CheckoutPage() {
                 <Image src="/DSC03204-scaled.jpg" alt="Basic White Tee" fill className="object-cover object-top" />
               </div>
               <div className="flex flex-col flex-1 justify-center gap-1">
-                <h4 className="font-poppins font-medium text-[13px] text-[#1C1917] leading-tight">
+                <h4 className="font-poppins font-medium text-xs text-primary leading-tight">
                   Basic White Tee
                 </h4>
                 <div className="flex items-center justify-between mt-1">
-                  <span className="font-poppins text-[12px] text-stone-500">UK : 10</span>
-                  <span className="font-poppins font-medium text-[12px] text-[#1C1917]">2 × Rs: 1500.00</span>
+                  <span className="font-poppins text-xs text-stone-500">UK : 10</span>
+                  <span className="font-poppins font-medium text-xs text-primary">2 × Rs: 1500.00</span>
                 </div>
               </div>
             </div>
@@ -289,9 +289,9 @@ export default function CheckoutPage() {
               placeholder="Discount code" 
               value={discountCode}
               onChange={(e) => setDiscountCode(e.target.value)}
-              className="flex-1 h-[44px] bg-transparent border-none outline-none px-3 font-poppins text-[14px] text-[#1C1917] placeholder:text-stone-400"
+              className="flex-1 h-[44px] bg-transparent border-none outline-none px-3 font-poppins text-sm text-primary placeholder:text-stone-400"
             />
-            <button className="h-[44px] px-6 bg-stone-100 hover:bg-stone-200 transition-colors rounded-full font-poppins font-medium text-[13px] text-[#1C1917]">
+            <button className="h-[44px] px-6 bg-stone-100 hover:bg-stone-200 transition-colors rounded-full font-poppins font-medium text-xs text-primary">
               Apply
             </button>
           </div>
@@ -299,37 +299,37 @@ export default function CheckoutPage() {
           {/* Loyalty Points Button */}
           <button 
             onClick={() => setIsLoyaltyModalOpen(true)}
-            className="flex items-center justify-center gap-2 w-full h-[54px] bg-[#FAFAF9] border border-stone-300 hover:bg-stone-100 transition-colors rounded-full font-poppins font-medium text-[15px] text-[#1C1917]"
+            className="flex items-center justify-center gap-2 w-full h-[54px] bg-background border border-stone-300 hover:bg-stone-100 transition-colors rounded-full font-poppins font-medium text-sm text-primary"
           >
-            <Award size={18} className="text-[#C19A5B]" />
+            <Award size={18} className="text-accent" />
             Check Loyalty Points
           </button>
 
           {/* Order Totals */}
           <div className="flex flex-col w-full gap-3 py-6 border-y border-stone-200">
             <div className="flex justify-between items-center w-full">
-              <span className="font-poppins text-[14px] text-stone-500">Subtotal</span>
-              <span className="font-poppins font-medium text-[14px] text-[#1C1917]">Rs. 5190.00</span>
+              <span className="font-poppins text-sm text-stone-500">Subtotal</span>
+              <span className="font-poppins font-medium text-sm text-primary">Rs. 5190.00</span>
             </div>
             <div className="flex justify-between items-center w-full">
-              <span className="font-poppins text-[14px] text-stone-500">Shipping</span>
-              <span className="font-poppins font-medium text-[14px] text-[#1C1917]">Rs. 350.00</span>
+              <span className="font-poppins text-sm text-stone-500">Shipping</span>
+              <span className="font-poppins font-medium text-sm text-primary">Rs. 350.00</span>
             </div>
             {appliedLoyaltyPoints > 0 && (
               <div className="flex justify-between items-center w-full">
-                <span className="font-poppins text-[14px] text-stone-500">Loyalty Points ({appliedLoyaltyPoints})</span>
-                <span className="font-poppins font-medium text-[14px] text-emerald-600">-Rs. {appliedLoyaltyPoints}.00</span>
+                <span className="font-poppins text-sm text-stone-500">Loyalty Points ({appliedLoyaltyPoints})</span>
+                <span className="font-poppins font-medium text-sm text-emerald-600">-Rs. {appliedLoyaltyPoints}.00</span>
               </div>
             )}
             <div className="flex justify-between items-center w-full mt-2 pt-4 border-t border-stone-100">
-              <span className="font-poppins font-semibold text-[16px] text-[#1C1917]">Total</span>
-              <span className="font-poppins font-bold text-[20px] text-[#1C1917]">Rs. {5540 - appliedLoyaltyPoints}.00</span>
+              <span className="font-poppins font-semibold text-base text-primary">Total</span>
+              <span className="font-poppins font-bold text-xl text-primary">Rs. {5540 - appliedLoyaltyPoints}.00</span>
             </div>
           </div>
 
           {/* Payment Methods */}
           <div className="flex flex-col gap-3 w-full pb-[100px]">
-            <h3 className="font-poppins font-medium text-[15px] text-[#1C1917] uppercase tracking-wider mb-2">
+            <h3 className="font-poppins font-medium text-sm text-primary uppercase tracking-wider mb-2">
               Payment Method
             </h3>
             
@@ -338,13 +338,13 @@ export default function CheckoutPage() {
               {/* Cash on Delivery */}
               <label className={`flex flex-col p-4 cursor-pointer hover:bg-stone-50 transition-colors border-b border-stone-200 ${paymentMethod === 'cod' ? 'bg-stone-50/50' : ''}`}>
                 <div className="flex items-center gap-4">
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === 'cod' ? 'border-[#1C1917] bg-[#1C1917]' : 'border-stone-300 bg-white'}`}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === 'cod' ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
                     {paymentMethod === 'cod' && <div className="w-2 h-2 rounded-full bg-white" />}
                   </div>
                   <input type="radio" name="payment" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="hidden" />
                   <div className="flex items-center gap-2">
                     <Banknote size={18} className="text-stone-500" />
-                    <span className="font-poppins text-[15px] text-[#1C1917] font-medium">Cash on delivery</span>
+                    <span className="font-poppins text-sm text-primary font-medium">Cash on delivery</span>
                   </div>
                 </div>
               </label>
@@ -353,11 +353,11 @@ export default function CheckoutPage() {
               <label className={`flex flex-col p-4 cursor-pointer hover:bg-stone-50 transition-colors border-b border-stone-200 ${paymentMethod === 'mintpay' ? 'bg-stone-50/50' : ''}`}>
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-4">
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === 'mintpay' ? 'border-[#1C1917] bg-[#1C1917]' : 'border-stone-300 bg-white'}`}>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === 'mintpay' ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
                       {paymentMethod === 'mintpay' && <div className="w-2 h-2 rounded-full bg-white" />}
                     </div>
                     <input type="radio" name="payment" checked={paymentMethod === 'mintpay'} onChange={() => setPaymentMethod('mintpay')} className="hidden" />
-                    <span className="font-poppins text-[15px] text-[#1C1917] font-medium">Mintpay</span>
+                    <span className="font-poppins text-sm text-primary font-medium">Mintpay</span>
                   </div>
                   <span className="font-poppins text-[11px] font-semibold tracking-wider uppercase text-emerald-600 bg-emerald-50 px-2 py-1 rounded-sm">Pay Later</span>
                 </div>
@@ -367,11 +367,11 @@ export default function CheckoutPage() {
               <label className={`flex flex-col p-4 cursor-pointer hover:bg-stone-50 transition-colors border-b border-stone-200 ${paymentMethod === 'koko' ? 'bg-stone-50/50' : ''}`}>
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-4">
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === 'koko' ? 'border-[#1C1917] bg-[#1C1917]' : 'border-stone-300 bg-white'}`}>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === 'koko' ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
                       {paymentMethod === 'koko' && <div className="w-2 h-2 rounded-full bg-white" />}
                     </div>
                     <input type="radio" name="payment" checked={paymentMethod === 'koko'} onChange={() => setPaymentMethod('koko')} className="hidden" />
-                    <span className="font-poppins text-[15px] text-[#1C1917] font-medium">Koko: BNPL</span>
+                    <span className="font-poppins text-sm text-primary font-medium">Koko: BNPL</span>
                   </div>
                   <span className="font-poppins text-[11px] font-semibold tracking-wider uppercase text-emerald-600 bg-emerald-50 px-2 py-1 rounded-sm">Pay Later</span>
                 </div>
@@ -380,24 +380,24 @@ export default function CheckoutPage() {
               {/* Payzy */}
               <label className={`flex flex-col p-4 cursor-pointer hover:bg-stone-50 transition-colors border-b border-stone-200 ${paymentMethod === 'payzy' ? 'bg-stone-50/50' : ''}`}>
                 <div className="flex items-center gap-4">
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === 'payzy' ? 'border-[#1C1917] bg-[#1C1917]' : 'border-stone-300 bg-white'}`}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === 'payzy' ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
                     {paymentMethod === 'payzy' && <div className="w-2 h-2 rounded-full bg-white" />}
                   </div>
                   <input type="radio" name="payment" checked={paymentMethod === 'payzy'} onChange={() => setPaymentMethod('payzy')} className="hidden" />
-                  <span className="font-poppins text-[15px] text-[#1C1917] font-medium">Payzy</span>
+                  <span className="font-poppins text-sm text-primary font-medium">Payzy</span>
                 </div>
               </label>
 
               {/* Credit Card / Bank Account */}
               <label className={`flex flex-col p-4 cursor-pointer hover:bg-stone-50 transition-colors ${paymentMethod === 'onepay' ? 'bg-stone-50/50' : ''}`}>
                 <div className="flex items-center gap-4">
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === 'onepay' ? 'border-[#1C1917] bg-[#1C1917]' : 'border-stone-300 bg-white'}`}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === 'onepay' ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
                     {paymentMethod === 'onepay' && <div className="w-2 h-2 rounded-full bg-white" />}
                   </div>
                   <input type="radio" name="payment" checked={paymentMethod === 'onepay'} onChange={() => setPaymentMethod('onepay')} className="hidden" />
                   <div className="flex items-center gap-2">
                     <CreditCard size={18} className="text-stone-500" />
-                    <span className="font-poppins text-[15px] text-[#1C1917] font-medium">Bank Card / Bank Account</span>
+                    <span className="font-poppins text-sm text-primary font-medium">Bank Card / Bank Account</span>
                   </div>
                 </div>
                 
@@ -420,7 +420,7 @@ export default function CheckoutPage() {
                   const form = document.querySelector('form');
                   if (form) form.requestSubmit();
                 }}
-                className="w-full h-[54px] flex justify-center items-center bg-[#1C1917] hover:bg-stone-800 transition-colors rounded-full font-poppins font-semibold text-[14px] text-white uppercase tracking-widest shadow-lg hover:shadow-xl"
+                className="w-full h-[54px] flex justify-center items-center bg-primary hover:bg-stone-800 transition-colors rounded-full font-poppins font-semibold text-sm text-white uppercase tracking-widest shadow-lg hover:shadow-xl"
               >
                 Place Order
               </button>

@@ -12,7 +12,7 @@ export default function CategoryBar() {
           <Link 
             href={`/category/${link.toLowerCase().replace(' ', '-')}`} 
             key={link} 
-            className="font-urbanist font-black text-[14px] text-[#1C1917] hover:text-[#5E3122] transition-colors"
+            className="font-urbanist font-black text-sm text-primary hover:text-[#5E3122] transition-colors"
           >
             {link}
           </Link>

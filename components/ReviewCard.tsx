@@ -10,12 +10,12 @@ interface ReviewCardProps {
 
 export default function ReviewCard({ name, rating, text, date, verified = true }: ReviewCardProps) {
   return (
-    <div className="flex flex-col items-start p-7 gap-[24px] w-full max-w-[420px] bg-[#FAFAF9] border border-[#F5F5F4] shadow-sm rounded-sm">
+    <div className="flex flex-col items-start p-7 gap-[24px] w-full max-w-[420px] bg-background border border-[#F5F5F4] shadow-sm rounded-sm">
       <div className="flex flex-col w-full gap-[15px]">
         {/* Header: Name and Verified Badge */}
         <div className="flex flex-row justify-between items-center w-full">
           <div className="flex flex-row items-center gap-[4px]">
-            <span className="font-poppins font-bold text-[20px] text-[#1C1917]">
+            <span className="font-poppins font-bold text-xl text-primary">
               {name}
             </span>
             {verified && (
@@ -36,12 +36,12 @@ export default function ReviewCard({ name, rating, text, date, verified = true }
         </div>
 
         {/* Review Text */}
-        <p className="font-poppins font-normal text-[16px] leading-[22px] text-[#79716B]">
+        <p className="font-poppins font-normal text-base leading-[22px] text-[#79716B]">
           "{text}"
         </p>
 
         {/* Date */}
-        <span className="font-poppins font-medium text-[16px] text-[#79716B] mt-2">
+        <span className="font-poppins font-medium text-base text-[#79716B] mt-2">
           Posted on {date}
         </span>
       </div>

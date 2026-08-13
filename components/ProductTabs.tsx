@@ -24,10 +24,10 @@ export default function ProductTabs() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`whitespace-nowrap px-4 py-4 font-poppins text-[16px] md:text-[20px] transition-all ${
+            className={`whitespace-nowrap px-4 py-4 font-poppins text-base md:text-xl transition-all ${
               activeTab === tab 
-                ? "text-[#1C1917] font-medium border-b-2 border-[#1C1917]" 
-                : "text-[#79716B] font-normal border-b-2 border-transparent hover:text-[#1C1917]"
+                ? "text-primary font-medium border-b-2 border-primary" 
+                : "text-[#79716B] font-normal border-b-2 border-transparent hover:text-primary"
             }`}
           >
             {tab}
@@ -39,11 +39,11 @@ export default function ProductTabs() {
       <div className="flex flex-col w-full py-[40px]">
         {activeTab === "Product Details" && (
           <div className="flex flex-col items-center text-center max-w-[800px] mx-auto animate-in fade-in duration-500">
-            <h3 className="font-poppins font-semibold text-[24px] text-[#1C1917] mb-4">Exceptional Craftsmanship</h3>
-            <p className="font-poppins font-light text-[16px] leading-[1.8] text-stone-600 mb-6">
+            <h3 className="font-poppins font-semibold text-2xl text-primary mb-4">Exceptional Craftsmanship</h3>
+            <p className="font-poppins font-light text-base leading-[1.8] text-stone-600 mb-6">
               Our Vesper Long Sleeve Top is designed for both elegance and supreme comfort. Woven from a proprietary blend of sustainably sourced cotton and elastane, it provides a tailored fit that breathes beautifully throughout the day.
             </p>
-            <ul className="text-left font-poppins font-light text-[16px] leading-[1.8] text-stone-600 list-disc pl-6 space-y-2">
+            <ul className="text-left font-poppins font-light text-base leading-[1.8] text-stone-600 list-disc pl-6 space-y-2">
               <li>95% Organic Cotton, 5% Elastane</li>
               <li>Machine wash cold, tumble dry low</li>
               <li>Ribbed cuffs and subtle neckline detailing</li>
@@ -76,27 +76,27 @@ export default function ProductTabs() {
             </div>
             
             <div className="flex justify-center w-full mt-[40px]">
-              <button className="border-b border-[#1C1917] pb-1 font-poppins text-[16px] text-[#1C1917]">
+              <button className="border-b border-primary pb-1 font-poppins text-base text-primary">
                 Load More Reviews
               </button>
             </div>
 
             {/* Interactive Review Form */}
             <div className="flex flex-col items-center w-full max-w-[600px] mx-auto mt-16 pt-10 border-t border-stone-200">
-              <h3 className="font-poppins font-medium text-[24px] text-[#1C1917] mb-6">Write a Review</h3>
+              <h3 className="font-poppins font-medium text-2xl text-primary mb-6">Write a Review</h3>
               
               {isReviewSubmitted ? (
                 <div className="bg-stone-50 border border-stone-200 p-6 rounded-2xl flex flex-col items-center gap-3 w-full text-center">
-                  <div className="w-12 h-12 bg-[#1C1917] text-white rounded-full flex items-center justify-center mb-2">
+                  <div className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center mb-2">
                     <Star size={24} fill="currentColor" />
                   </div>
-                  <h4 className="font-poppins font-medium text-[18px] text-[#1C1917]">Thank you for your feedback!</h4>
-                  <p className="font-poppins text-stone-600 text-[14px]">Your review has been submitted and is awaiting moderation.</p>
+                  <h4 className="font-poppins font-medium text-lg text-primary">Thank you for your feedback!</h4>
+                  <p className="font-poppins text-stone-600 text-sm">Your review has been submitted and is awaiting moderation.</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-6 w-full">
                   <div className="flex flex-col items-center gap-2">
-                    <label className="font-poppins text-[14px] text-stone-600">Rate this product</label>
+                    <label className="font-poppins text-sm text-stone-600">Rate this product</label>
                     <div className="flex items-center gap-2">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
@@ -106,7 +106,7 @@ export default function ProductTabs() {
                           onMouseLeave={() => setHoverRating(0)}
                           onClick={() => setRating(star)}
                           className={`transition-colors ${
-                            star <= (hoverRating || rating) ? "text-[#C19A5B]" : "text-stone-300"
+                            star <= (hoverRating || rating) ? "text-accent" : "text-stone-300"
                           }`}
                         >
                           <Star size={32} fill="currentColor" stroke="none" />
@@ -116,13 +116,13 @@ export default function ProductTabs() {
                   </div>
 
                   <div className="flex flex-col gap-2 w-full">
-                    <label className="font-poppins text-[14px] text-stone-600 text-left">Your review</label>
+                    <label className="font-poppins text-sm text-stone-600 text-left">Your review</label>
                     <textarea 
                       rows={4}
                       value={reviewText}
                       onChange={(e) => setReviewText(e.target.value)}
                       placeholder="What did you like or dislike?"
-                      className="w-full p-4 border border-stone-200 rounded-xl bg-white font-poppins text-[15px] text-[#1C1917] outline-none focus:border-[#C19A5B] focus:ring-1 focus:ring-[#C19A5B] transition-all resize-none placeholder:text-stone-400"
+                      className="w-full p-4 border border-stone-200 rounded-xl bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all resize-none placeholder:text-stone-400"
                     />
                   </div>
 
@@ -131,7 +131,7 @@ export default function ProductTabs() {
                       if (rating > 0 && reviewText.length > 0) setIsReviewSubmitted(true);
                     }}
                     disabled={rating === 0 || reviewText.length === 0}
-                    className="w-full h-[52px] flex justify-center items-center bg-[#1C1917] hover:bg-stone-800 disabled:bg-stone-300 transition-colors rounded-full font-poppins font-semibold text-[14px] text-white uppercase tracking-widest mt-2"
+                    className="w-full h-[52px] flex justify-center items-center bg-primary hover:bg-stone-800 disabled:bg-stone-300 transition-colors rounded-full font-poppins font-semibold text-sm text-white uppercase tracking-widest mt-2"
                   >
                     Submit Review
                   </button>
@@ -144,14 +144,14 @@ export default function ProductTabs() {
         {activeTab === "FAQs" && (
           <div className="flex flex-col max-w-[800px] mx-auto w-full gap-6 animate-in fade-in duration-500">
             <div className="border-b border-stone-200 pb-4">
-              <h4 className="font-poppins font-medium text-[18px] text-[#1C1917] mb-2">How long does shipping take?</h4>
-              <p className="font-poppins font-light text-[15px] text-stone-600">
+              <h4 className="font-poppins font-medium text-lg text-primary mb-2">How long does shipping take?</h4>
+              <p className="font-poppins font-light text-sm text-stone-600">
                 Standard shipping takes 3-5 business days within Sri Lanka. International shipping can take up to 14 days.
               </p>
             </div>
             <div className="border-b border-stone-200 pb-4">
-              <h4 className="font-poppins font-medium text-[18px] text-[#1C1917] mb-2">What is your return policy?</h4>
-              <p className="font-poppins font-light text-[15px] text-stone-600">
+              <h4 className="font-poppins font-medium text-lg text-primary mb-2">What is your return policy?</h4>
+              <p className="font-poppins font-light text-sm text-stone-600">
                 We accept returns within 14 days of delivery. Items must be unworn and in their original packaging.
               </p>
             </div>

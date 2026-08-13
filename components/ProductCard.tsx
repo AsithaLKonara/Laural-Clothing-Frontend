@@ -3,15 +3,18 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function ProductCard() {
   const [isHovered, setIsHovered] = useState(false);
+  const router = useRouter();
 
   return (
     <div 
-      className="flex flex-col items-start p-[12px] gap-[8px] w-full max-w-[245px] bg-white rounded-[5px]"
+      className="flex flex-col items-start p-[12px] gap-[8px] w-full max-w-[245px] bg-white rounded-[5px] cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={() => router.push("/product/vesper-long-sleeve-top")}
     >
       {/* Top Image Container */}
       <div className="relative w-full aspect-[221/281] bg-stone-100 flex flex-col justify-between overflow-hidden">
@@ -52,7 +55,7 @@ export default function ProductCard() {
           >
             <div className="flex gap-[6px]">
               {['S', 'M', 'L'].map(size => (
-                <div key={size} className="flex justify-center items-center w-[36px] h-[22px] bg-black/80 border border-white/20 rounded-full cursor-pointer hover:bg-black transition-colors">
+                <div key={size} onClick={(e) => e.stopPropagation()} className="flex justify-center items-center w-[36px] h-[22px] bg-black/80 border border-white/20 rounded-full cursor-pointer hover:bg-black transition-colors">
                   <span className="font-inter font-bold text-[11px] text-white">{size}</span>
                 </div>
               ))}
@@ -60,8 +63,14 @@ export default function ProductCard() {
           </div>
           
           {/* Add to Cart Button (Always Visible) */}
-          <button className="flex justify-center items-center w-full p-[10px] bg-black hover:bg-stone-900 transition-colors pointer-events-auto">
-            <span className="font-inter font-bold text-[12px] leading-[15px] text-white">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              // Add to cart logic would go here
+            }}
+            className="flex justify-center items-center w-full p-[10px] bg-black hover:bg-stone-900 transition-colors pointer-events-auto"
+          >
+            <span className="font-inter font-bold text-xs leading-[15px] text-white">
               + Add to cart
             </span>
           </button>
@@ -82,13 +91,13 @@ export default function ProductCard() {
           <div className="flex items-center gap-[10px] h-[20px]">
             {/* Old Price */}
             <div className="flex items-center px-[8px] py-[2px] rounded-full">
-              <span className="font-inter font-light italic text-[13px] leading-[16px] line-through text-[#5E3122]">
+              <span className="font-inter font-light italic text-xs leading-[16px] line-through text-[#5E3122]">
                 Rs: 2,190
               </span>
             </div>
             {/* New Price */}
             <div className="flex items-center px-[8px] py-[2px] bg-[#F7EAE0] rounded-full">
-              <span className="font-inter font-bold text-[13px] leading-[16px] text-[#5E3122]">
+              <span className="font-inter font-bold text-xs leading-[16px] text-[#5E3122]">
                 Rs: 1,990
               </span>
             </div>
@@ -126,6 +135,7 @@ export default function ProductCard() {
           {['#FBBB00', '#FDFD96', '#60D66A', '#8A38F5'].map((color, i) => (
             <div 
               key={i} 
+              onClick={(e) => e.stopPropagation()}
               className="w-[14px] h-[14px] rounded-full border border-stone-300 shadow-sm cursor-pointer hover:scale-110 transition-transform"
               style={{ backgroundColor: color }}
             />

@@ -1,56 +1,35 @@
+
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
 import FilterSidebar from "@/components/FilterSidebar";
 import ProductCard from "@/components/ProductCard";
 import Breadcrumbs from "@/components/Breadcrumbs";
-import Image from "next/image";
 
-export default function CollectionPage() {
+export default function ClientContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const params = useParams();
-  const slug = params.slug as string;
-  
-  const collectionName = slug ? slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : 'Collection';
 
   return (
     <main className="relative flex flex-col w-full min-h-screen bg-background pt-[83px]">
       
-      {/* Editorial Hero Banner for Collection */}
-      <div className="relative w-full h-[400px] md:h-[500px] flex flex-col items-center justify-center text-center overflow-hidden">
-        <Image 
-          src="/hero_image_3.jpg" 
-          alt={collectionName} 
-          fill 
-          className="object-cover object-center"
-          priority
-        />
-        <div className="absolute inset-0 bg-black/40"></div>
-        <div className="relative z-10 flex flex-col items-center px-4">
-          <span className="font-urbanist font-medium text-sm text-white uppercase tracking-[0.3em] mb-4">
-            Curated Collection
-          </span>
-          <h1 className="font-poppins font-semibold text-5xl md:text-6xl text-white leading-tight mb-4">
-            {collectionName}
-          </h1>
-          <p className="font-poppins text-base text-white/90 max-w-[600px]">
-            Discover the narrative behind our most exclusive pieces, designed to elevate your everyday wardrobe.
-          </p>
-        </div>
+      {/* Hero Banner for Sale */}
+      <div className="w-full bg-[#5E3122] py-20 px-4 flex flex-col items-center justify-center text-center relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/noise-pattern-with-subtle-cross-lines.png')] mix-blend-overlay"></div>
+        <h1 className="font-poppins font-semibold text-5xl md:text-6xl text-background leading-tight mb-4 relative z-10 tracking-tight">
+          End of Season Sale
+        </h1>
+        <p className="font-poppins text-base md:text-lg text-background/90 max-w-[600px] relative z-10">
+          Up to 50% off selected luxury pieces. Limited time only.
+        </p>
       </div>
 
       {/* Tool Bar */}
       <div className="w-full bg-background border-b border-[#44403B]/10">
         <div className="flex flex-row justify-between items-center w-full max-w-[1280px] mx-auto h-[54px] px-[20px] md:px-[120px]">
-          <Breadcrumbs items={[
-            { label: "Home", href: "/" },
-            { label: "Collections", href: "/shop" },
-            { label: collectionName }
-          ]} />
+          <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Sale" }]} />
           
           <span className="font-urbanist text-sm text-primary text-right">
-            Showing 1–12 of 32 results
+            Showing 1–12 of 84 results
           </span>
         </div>
       </div>
@@ -72,7 +51,7 @@ export default function CollectionPage() {
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-[30px] w-full max-w-max mx-auto md:mx-0">
             {/* Generate 12 dummy products */}
             {[...Array(12)].map((_, i) => (
-              <div key={i} className="flex justify-center w-full animate-in fade-in zoom-in-95 duration-300">
+              <div key={i} className="flex justify-center w-full animate-in fade-in zoom-in-95 duration-300 delay-[100ms]">
                 <ProductCard />
               </div>
             ))}

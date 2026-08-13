@@ -37,12 +37,12 @@ export default function Toast({ message, type = "success", isVisible, onClose, d
         <div className="flex items-center justify-center w-8 h-8 rounded-full bg-stone-100 shrink-0">
           {getIcon()}
         </div>
-        <span className="font-poppins text-[14px] text-[#1C1917] pr-2 shrink-0">
+        <span className="font-poppins text-sm text-primary pr-2 shrink-0">
           {message}
         </span>
         <button 
           onClick={onClose}
-          className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-stone-100 text-stone-400 hover:text-[#1C1917] transition-colors shrink-0"
+          className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-stone-100 text-stone-400 hover:text-primary transition-colors shrink-0"
         >
           <X size={14} />
         </button>

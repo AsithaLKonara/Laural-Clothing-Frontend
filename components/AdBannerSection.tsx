@@ -17,7 +17,7 @@ export default function AdBannerSection() {
 
       {/* Text Content */}
       <div className="absolute inset-0 z-20 flex justify-center items-center pointer-events-none w-full h-full px-4">
-        <h2 className="font-signature font-normal text-[24px] md:text-[40px] leading-tight text-center text-[#FAFAF9]">
+        <h2 className="font-signature font-normal text-2xl md:text-5xl leading-tight text-center text-background">
           fashion is more than just clothing
         </h2>
       </div>

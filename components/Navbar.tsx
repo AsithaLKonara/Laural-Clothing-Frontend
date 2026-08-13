@@ -39,7 +39,7 @@ export default function Navbar() {
     ? "bg-black/20 backdrop-blur-md border-b border-white/5"
     : isTransparent
     ? "bg-transparent"
-    : "bg-[#FAFAF9] shadow-sm border-b border-stone-200";
+    : "bg-background shadow-sm border-b border-stone-200";
 
   const textColorClass = isAuth
     ? "text-stone-50"
@@ -68,7 +68,7 @@ export default function Navbar() {
         </div>
 
         {/* Desktop Left Links */}
-        <div className="hidden md:flex items-center space-x-[40px] text-[12px] font-bold font-poppins">
+        <div className="hidden md:flex items-center space-x-[40px] text-xs font-bold font-poppins">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
@@ -105,7 +105,7 @@ export default function Navbar() {
         {/* Right Actions */}
         <div className="flex justify-end flex-1 items-center">
           <div className="hidden lg:flex items-center gap-[4px] space-x-4 mr-4">
-            <Link href="/login" className={`font-poppins font-bold text-[12px] tracking-wide uppercase transition-colors hover:opacity-70 ${textColorClass}`}>
+            <Link href="/login" className={`font-poppins font-bold text-xs tracking-wide uppercase transition-colors hover:opacity-70 ${textColorClass}`}>
               LOGIN/REGISTER
             </Link>
           </div>
@@ -125,7 +125,7 @@ export default function Navbar() {
             
             <button onClick={openCart} className={`flex items-center space-x-1 md:space-x-2 p-2 md:p-2.5 rounded-full transition-colors ${hoverBgClass}`}>
               <ShoppingCart size={20} className={textColorClass} />
-              <span className={`hidden sm:inline font-bold text-[12px] font-poppins ${textColorClass}`}>Rs: 0.00</span>
+              <span className={`hidden sm:inline font-bold text-xs font-poppins ${textColorClass}`}>Rs: 0.00</span>
             </button>
           </div>
         </div>
@@ -133,13 +133,13 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown */}
       {isMobileMenuOpen && (
-        <div className="absolute top-[83px] left-0 w-full bg-[#FAFAF9] shadow-lg border-b border-stone-200 flex flex-col p-4 md:hidden">
+        <div className="absolute top-[83px] left-0 w-full bg-background shadow-lg border-b border-stone-200 flex flex-col p-4 md:hidden">
           {navLinks.map((link) => (
             <Link 
               key={link.name} 
               href={link.href} 
               onClick={() => setIsMobileMenuOpen(false)}
-              className="py-3 px-4 text-stone-900 font-poppins font-bold text-[14px] border-b border-stone-100"
+              className="py-3 px-4 text-stone-900 font-poppins font-bold text-sm border-b border-stone-100"
             >
               {link.name}
             </Link>
@@ -147,7 +147,7 @@ export default function Navbar() {
           <Link 
             href="/login" 
             onClick={() => setIsMobileMenuOpen(false)}
-            className="py-3 px-4 text-stone-900 font-poppins font-bold text-[14px]"
+            className="py-3 px-4 text-stone-900 font-poppins font-bold text-sm"
           >
             LOGIN/REGISTER
           </Link>
