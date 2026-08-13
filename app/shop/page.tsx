@@ -8,6 +8,38 @@ import { SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function ShopPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
+  const totalItems = 59; // Dummy total
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  // Pagination logic
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+  const currentItems = [...Array(totalItems)].slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const getPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages.push(1, 2, 3, 4, '...', totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+      }
+    }
+    return pages;
+  };
 
   return (
     <main className="relative flex flex-col w-full min-h-screen bg-[#FAFAF9] pt-[83px]">
@@ -24,7 +56,7 @@ export default function ShopPage() {
           </span>
           
           <span className="font-urbanist text-[14px] text-[#1C1917] text-right">
-            Showing 1–12 of 597 results
+            Showing {startIndex + 1}–{endIndex} of {totalItems} results
           </span>
         </div>
       </div>
@@ -44,38 +76,51 @@ export default function ShopPage() {
         {/* Product Grid Area */}
         <div className="flex-1 flex flex-col items-center md:items-start py-6 md:py-[40px] px-4 md:px-[40px] transition-all duration-500 ease-in-out">
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-[30px] w-full max-w-max mx-auto md:mx-0">
-            {/* Generate 12 dummy products */}
-            {[...Array(12)].map((_, i) => (
-              <div key={i} className="flex justify-center w-full">
+            {/* Render items for current page */}
+            {currentItems.map((_, i) => (
+              <div key={startIndex + i} className="flex justify-center w-full animate-in fade-in zoom-in-95 duration-300">
                 <ProductCard />
               </div>
             ))}
           </div>
 
           {/* Pagination */}
-          <div className="flex flex-row justify-center items-center w-full mt-[60px] mb-[40px] gap-[8px]">
-            <button className="flex justify-center items-center w-[40px] h-[40px] rounded-full border border-[#D6D3D1] text-[#1C1917] hover:bg-[#1C1917] hover:text-[#FAFAF9] transition-colors">
-              <ChevronLeft size={20} />
-            </button>
-            <button className="flex justify-center items-center w-[40px] h-[40px] rounded-full bg-[#1C1917] text-[#FAFAF9] font-poppins font-medium text-[14px]">
-              1
-            </button>
-            <button className="flex justify-center items-center w-[40px] h-[40px] rounded-full text-[#1C1917] font-poppins font-medium text-[14px] hover:bg-[#D6D3D1] transition-colors">
-              2
-            </button>
-            <button className="flex justify-center items-center w-[40px] h-[40px] rounded-full text-[#1C1917] font-poppins font-medium text-[14px] hover:bg-[#D6D3D1] transition-colors">
-              3
-            </button>
-            <span className="flex justify-center items-center w-[40px] h-[40px] text-[#1C1917] font-poppins font-medium text-[14px]">
-              ...
-            </span>
-            <button className="flex justify-center items-center w-[40px] h-[40px] rounded-full text-[#1C1917] font-poppins font-medium text-[14px] hover:bg-[#D6D3D1] transition-colors">
-              10
-            </button>
-            <button className="flex justify-center items-center w-[40px] h-[40px] rounded-full border border-[#D6D3D1] text-[#1C1917] hover:bg-[#1C1917] hover:text-[#FAFAF9] transition-colors">
-              <ChevronRight size={20} />
-            </button>
-          </div>
+          {totalPages > 1 && (
+            <div className="flex flex-row justify-center items-center w-full mt-[60px] mb-[40px] gap-[8px]">
+              <button 
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="flex justify-center items-center w-[40px] h-[40px] rounded-full border border-[#D6D3D1] text-[#1C1917] hover:bg-[#1C1917] hover:text-[#FAFAF9] disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-[#1C1917] transition-colors"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              
+              {getPageNumbers().map((page, index) => (
+                <button 
+                  key={index}
+                  onClick={() => typeof page === 'number' ? handlePageChange(page) : null}
+                  disabled={typeof page !== 'number'}
+                  className={`flex justify-center items-center w-[40px] h-[40px] rounded-full font-poppins font-medium text-[14px] transition-colors ${
+                    currentPage === page 
+                      ? "bg-[#1C1917] text-[#FAFAF9]" 
+                      : typeof page === 'number' 
+                        ? "text-[#1C1917] hover:bg-[#D6D3D1]" 
+                        : "text-[#1C1917] cursor-default"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button 
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="flex justify-center items-center w-[40px] h-[40px] rounded-full border border-[#D6D3D1] text-[#1C1917] hover:bg-[#1C1917] hover:text-[#FAFAF9] disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-[#1C1917] transition-colors"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          )}
         </div>
 
       </div>

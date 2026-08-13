@@ -1,12 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { Star } from "lucide-react";
 import ReviewCard from "./ReviewCard";
 
 type TabName = "Product Details" | "Rating & Reviews" | "FAQs";
 
 export default function ProductTabs() {
   const [activeTab, setActiveTab] = useState<TabName>("Product Details");
+  const [hoverRating, setHoverRating] = useState(0);
+  const [rating, setRating] = useState(0);
+  const [reviewText, setReviewText] = useState("");
+  const [isReviewSubmitted, setIsReviewSubmitted] = useState(false);
 
   const tabs: TabName[] = ["Product Details", "Rating & Reviews", "FAQs"];
 
@@ -74,6 +79,64 @@ export default function ProductTabs() {
               <button className="border-b border-[#1C1917] pb-1 font-poppins text-[16px] text-[#1C1917]">
                 Load More Reviews
               </button>
+            </div>
+
+            {/* Interactive Review Form */}
+            <div className="flex flex-col items-center w-full max-w-[600px] mx-auto mt-16 pt-10 border-t border-stone-200">
+              <h3 className="font-poppins font-medium text-[24px] text-[#1C1917] mb-6">Write a Review</h3>
+              
+              {isReviewSubmitted ? (
+                <div className="bg-stone-50 border border-stone-200 p-6 rounded-2xl flex flex-col items-center gap-3 w-full text-center">
+                  <div className="w-12 h-12 bg-[#1C1917] text-white rounded-full flex items-center justify-center mb-2">
+                    <Star size={24} fill="currentColor" />
+                  </div>
+                  <h4 className="font-poppins font-medium text-[18px] text-[#1C1917]">Thank you for your feedback!</h4>
+                  <p className="font-poppins text-stone-600 text-[14px]">Your review has been submitted and is awaiting moderation.</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-6 w-full">
+                  <div className="flex flex-col items-center gap-2">
+                    <label className="font-poppins text-[14px] text-stone-600">Rate this product</label>
+                    <div className="flex items-center gap-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onMouseEnter={() => setHoverRating(star)}
+                          onMouseLeave={() => setHoverRating(0)}
+                          onClick={() => setRating(star)}
+                          className={`transition-colors ${
+                            star <= (hoverRating || rating) ? "text-[#C19A5B]" : "text-stone-300"
+                          }`}
+                        >
+                          <Star size={32} fill="currentColor" stroke="none" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2 w-full">
+                    <label className="font-poppins text-[14px] text-stone-600 text-left">Your review</label>
+                    <textarea 
+                      rows={4}
+                      value={reviewText}
+                      onChange={(e) => setReviewText(e.target.value)}
+                      placeholder="What did you like or dislike?"
+                      className="w-full p-4 border border-stone-200 rounded-xl bg-white font-poppins text-[15px] text-[#1C1917] outline-none focus:border-[#C19A5B] focus:ring-1 focus:ring-[#C19A5B] transition-all resize-none placeholder:text-stone-400"
+                    />
+                  </div>
+
+                  <button 
+                    onClick={() => {
+                      if (rating > 0 && reviewText.length > 0) setIsReviewSubmitted(true);
+                    }}
+                    disabled={rating === 0 || reviewText.length === 0}
+                    className="w-full h-[52px] flex justify-center items-center bg-[#1C1917] hover:bg-stone-800 disabled:bg-stone-300 transition-colors rounded-full font-poppins font-semibold text-[14px] text-white uppercase tracking-widest mt-2"
+                  >
+                    Submit Review
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
