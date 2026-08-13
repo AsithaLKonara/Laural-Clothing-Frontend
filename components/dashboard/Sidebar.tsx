@@ -48,14 +48,14 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-[224px] bg-primary border-r border-primary-hover flex flex-col z-50 text-slate-300">
+    <aside className="fixed left-0 top-0 bottom-0 w-[224px] bg-surface border-r border-border flex flex-col z-50 text-text-secondary">
       {/* Logo Area */}
-      <div className="h-[67px] flex items-center px-6 border-b border-primary-hover shrink-0 bg-black/20">
+      <div className="h-[67px] flex items-center px-6 border-b border-border shrink-0 bg-surface">
         <Link href="/admin" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center text-white font-signature text-lg leading-none pt-1 shadow-lg shadow-accent/20">
+          <div className="w-8 h-8 bg-foreground rounded-full flex items-center justify-center text-white font-signature text-lg leading-none pt-1 shadow-sm">
             L
           </div>
-          <span className="font-inter font-bold tracking-widest text-white text-sm uppercase">Laural</span>
+          <span className="font-inter font-bold tracking-widest text-foreground text-sm uppercase">Laural</span>
         </Link>
       </div>
 
@@ -64,7 +64,7 @@ export default function Sidebar() {
         
         {/* Main Nav */}
         <div className="flex flex-col gap-1">
-          <span className="px-3 mb-2 font-poppins font-semibold text-[10px] uppercase tracking-wider text-slate-400">Main Menu</span>
+          <span className="px-3 mb-2 font-poppins font-semibold text-[10px] uppercase tracking-wider text-muted">Main Menu</span>
           {navItems.map((item) => {
             const Icon = item.icon;
             // Exact match for /admin, startsWith for other routes
@@ -76,8 +76,8 @@ export default function Sidebar() {
                 href={item.href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all border-l-4 ${
                   isActive 
-                    ? "bg-primary-hover text-white border-accent font-medium shadow-sm" 
-                    : "border-transparent text-slate-300 hover:bg-primary-hover hover:text-white font-medium"
+                    ? "bg-accent-soft text-primary border-primary font-bold shadow-sm" 
+                    : "border-transparent text-text-secondary hover:bg-background hover:text-foreground font-medium"
                 }`}
               >
                 <Icon size={18} />
@@ -89,7 +89,7 @@ export default function Sidebar() {
 
         {/* System Nav */}
         <div className="flex flex-col gap-1">
-          <span className="px-3 mb-2 font-poppins font-semibold text-[10px] uppercase tracking-wider text-slate-400">System</span>
+          <span className="px-3 mb-2 font-poppins font-semibold text-[10px] uppercase tracking-wider text-muted">System</span>
           {systemItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname?.startsWith(item.href);
@@ -100,8 +100,8 @@ export default function Sidebar() {
                 href={item.href}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all border-l-4 ${
                   isActive 
-                    ? "bg-primary-hover text-white border-accent font-medium shadow-sm" 
-                    : "border-transparent text-slate-300 hover:bg-primary-hover hover:text-white font-medium"
+                    ? "bg-accent-soft text-primary border-primary font-bold shadow-sm" 
+                    : "border-transparent text-text-secondary hover:bg-background hover:text-foreground font-medium"
                 }`}
               >
                 <Icon size={18} />
@@ -113,14 +113,14 @@ export default function Sidebar() {
       </div>
       
       {/* User Profile Footer */}
-      <div className="p-4 border-t border-primary-hover shrink-0 bg-black/20">
-        <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-primary-hover transition-colors cursor-pointer">
-          <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-white font-poppins font-semibold text-sm shadow-md shadow-accent/20">
+      <div className="p-4 border-t border-border shrink-0 bg-surface">
+        <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-background transition-colors cursor-pointer border border-transparent hover:border-border">
+          <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center text-white font-poppins font-semibold text-sm shadow-sm">
             SA
           </div>
           <div className="flex flex-col">
-            <span className="font-inter font-semibold text-sm text-white leading-tight">Super Admin</span>
-            <span className="font-inter text-xs text-slate-400">System Owner</span>
+            <span className="font-inter font-semibold text-sm text-foreground leading-tight">Super Admin</span>
+            <span className="font-inter text-xs text-muted">System Owner</span>
           </div>
         </div>
       </div>

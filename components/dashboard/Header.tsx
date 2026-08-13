@@ -7,7 +7,7 @@ export default function Header() {
     <header className="h-[64px] bg-surface border-b border-border flex items-center justify-between px-8 shrink-0 shadow-sm z-40">
       
       {/* Left — Breadcrumbs placeholder */}
-      <div className="flex items-center gap-2 text-sm text-stone-400 font-inter">
+      <div className="flex items-center gap-2 text-sm text-muted font-inter">
         {/* Dynamic breadcrumbs can be injected here */}
       </div>
 
@@ -16,13 +16,13 @@ export default function Header() {
         
         {/* Global Search */}
         <div className="flex items-center gap-2 w-[320px] h-[38px] bg-background border border-border rounded-xl px-3.5 transition-all focus-within:border-primary focus-within:bg-surface focus-within:shadow-sm">
-          <Search size={15} className="text-stone-400 shrink-0" />
+          <Search size={15} className="text-muted shrink-0" />
           <input 
             type="text" 
             placeholder="Search orders, customers, SKU…"
-            className="flex-1 bg-transparent border-none outline-none font-inter text-[13px] text-stone-700 placeholder:text-stone-400"
+            className="flex-1 bg-transparent border-none outline-none font-inter text-[13px] text-foreground placeholder:text-muted"
           />
-          <kbd className="hidden sm:flex items-center px-1.5 py-0.5 bg-stone-200 rounded text-[10px] font-medium text-stone-500 font-inter shrink-0">
+          <kbd className="hidden sm:flex items-center px-1.5 py-0.5 bg-border rounded text-[10px] font-medium text-text-secondary font-inter shrink-0">
             ⌘K
           </kbd>
         </div>

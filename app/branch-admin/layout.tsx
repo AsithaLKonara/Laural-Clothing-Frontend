@@ -25,37 +25,37 @@ export default function BranchAdminLayout({ children }: { children: React.ReactN
     <div className="flex h-screen w-full bg-background overflow-hidden">
       
       {/* Sidebar */}
-      <div className="w-[224px] h-screen bg-primary flex flex-col shrink-0 text-slate-300 overflow-y-auto border-r border-primary-hover">
-        <div className="px-6 py-6 flex items-center gap-3 border-b border-primary-hover bg-black/20">
-          <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center shadow-lg shadow-accent/20">
+      <div className="w-[224px] h-screen bg-surface flex flex-col shrink-0 text-text-secondary overflow-y-auto border-r border-border">
+        <div className="px-6 py-6 flex items-center gap-3 border-b border-border bg-surface">
+          <div className="w-8 h-8 bg-foreground rounded-full flex items-center justify-center shadow-sm">
             <span className="font-signature text-white text-lg leading-none pt-1">L</span>
           </div>
-          <span className="font-inter font-bold tracking-tight text-white">Kandy Branch</span>
+          <span className="font-inter font-bold tracking-tight text-foreground">Kandy Branch</span>
         </div>
 
         <div className="flex flex-col py-6 px-4 gap-1">
-          <span className="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Today</span>
+          <span className="px-2 text-[10px] font-bold text-muted uppercase tracking-wider mb-2">Today</span>
           
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = item.href === "/branch-admin" ? pathname === "/branch-admin" : pathname?.startsWith(item.href);
             return (
               <Link key={item.name} href={item.href} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all border-l-4 font-medium text-sm ${
-                isActive ? "bg-primary-hover text-white border-accent shadow-sm" : "border-transparent text-slate-300 hover:text-white hover:bg-primary-hover"
+                isActive ? "bg-accent-soft text-primary border-primary font-bold shadow-sm" : "border-transparent text-text-secondary hover:text-foreground hover:bg-background"
               }`}>
                 <Icon size={16} /> {item.name}
               </Link>
             )
           })}
 
-          <span className="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-6 mb-2">Management</span>
+          <span className="px-2 text-[10px] font-bold text-muted uppercase tracking-wider mt-6 mb-2">Management</span>
           
           {managementItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname?.startsWith(item.href);
             return (
               <Link key={item.name} href={item.href} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all border-l-4 font-medium text-sm ${
-                isActive ? "bg-primary-hover text-white border-accent shadow-sm" : "border-transparent text-slate-300 hover:text-white hover:bg-primary-hover"
+                isActive ? "bg-accent-soft text-primary border-primary font-bold shadow-sm" : "border-transparent text-text-secondary hover:text-foreground hover:bg-background"
               }`}>
                 <Icon size={16} /> {item.name}
               </Link>
@@ -73,14 +73,14 @@ export default function BranchAdminLayout({ children }: { children: React.ReactN
             <MapPin size={16} /> Kandy Branch Active
           </div>
           <div className="flex items-center gap-4">
-            <button className="text-stone-400 hover:text-stone-600 transition-colors">
+            <button className="text-muted hover:text-foreground transition-colors">
               <Bell size={18} />
             </button>
-            <div className="flex items-center gap-2 pl-4 border-l border-stone-200 cursor-pointer group">
-              <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-900 font-bold text-xs group-hover:bg-stone-200 transition-colors">
+            <div className="flex items-center gap-2 pl-4 border-l border-border cursor-pointer group">
+              <div className="w-8 h-8 rounded-full bg-background flex items-center justify-center text-foreground font-bold text-xs group-hover:bg-border transition-colors">
                 AM
               </div>
-              <span className="font-inter font-medium text-sm text-stone-900">Admin</span>
+              <span className="font-inter font-medium text-sm text-foreground">Admin</span>
             </div>
           </div>
         </div>
