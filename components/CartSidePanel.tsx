@@ -112,11 +112,6 @@ export default function CartSidePanel({ isOpen, onClose }: { isOpen: boolean; on
               </span>
             </div>
             <div className="flex flex-col gap-[10px]">
-              <button className="flex justify-center items-center w-full h-[36px] bg-[#D6D3D1] rounded-full hover:bg-stone-400 transition-colors">
-                <span className="font-inter font-bold text-xs leading-[15px] text-primary">
-                  View Cart
-                </span>
-              </button>
               <button className="flex justify-center items-center w-full h-[36px] bg-primary rounded-full hover:bg-stone-800 transition-colors">
                 <span className="font-inter font-bold text-xs leading-[15px] text-background">
                   Checkout
