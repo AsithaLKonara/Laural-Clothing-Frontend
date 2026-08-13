@@ -19,8 +19,8 @@ While housed in a monorepo structure (using `pnpm workspaces` and `Turborepo`), 
    - Focus: Desktop/Tablet-first, Keyboard shortcuts, Barcode scanners, Speed
 
 ## Technology Stack
-- **Routing**: Next.js App Router
+- **Routing**: Next.js App Router (using strict Server/Client Component separation)
 - **Data Fetching & Caching**: TanStack Query (React Query)
 - **Forms**: React Hook Form
 - **Validation**: Zod (Shared with backend)
-- **UI Components**: Shadcn/UI (Tailwind-based)
+- **UI Components**: Custom reusable primitives (`components/ui`) utilizing Tailwind CSS v4 and semantic design tokens.
