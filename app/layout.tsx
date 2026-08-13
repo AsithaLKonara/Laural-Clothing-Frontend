@@ -2,9 +2,6 @@ import type { Metadata } from "next";
 import { Poppins, Inria_Serif, Urbanist } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { CartProvider } from "@/components/CartProvider";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -43,13 +40,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${poppins.variable} ${orangeAvenue.variable} ${inriaSerif.variable} ${urbanist.variable} antialiased bg-stone-50 text-stone-900`}
+        className={`${poppins.variable} ${orangeAvenue.variable} ${inriaSerif.variable} ${urbanist.variable} antialiased`}
       >
-        <CartProvider>
-          <Navbar />
-          {children}
-          <Footer />
-        </CartProvider>
+        {children}
       </body>
     </html>
   );
