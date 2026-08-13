@@ -11,7 +11,7 @@ export default function POSLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen w-full bg-[#E5E5E5] overflow-hidden select-none">
+    <div className="flex h-screen w-full bg-slate-100 overflow-hidden select-none">
       {children}
     </div>
   );
