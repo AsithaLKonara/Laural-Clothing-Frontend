@@ -4,34 +4,34 @@
 
 @layer base {
   :root {
-    --background: #F6F7F9;
-    --foreground: #17202A;
+    --background: #F9FAFB;
+    --foreground: #111827;
 
     --surface: #FFFFFF;
-    --surface-elevated: #FCFCFD;
+    --surface-elevated: #FFFFFF;
 
-    --primary: #172554;
-    --primary-hover: #1E3A8A;
+    --primary: #F97316;
+    --primary-hover: #EA580C;
 
-    --accent: #0F766E;
-    --accent-soft: #CCFBF1;
+    --accent: #F97316;
+    --accent-soft: #FFEDD5;
 
-    --text-primary: #17202A;
-    --text-secondary: #475569;
+    --text-primary: #111827;
+    --text-secondary: #6B7280;
     
-    --muted: #64748B;
-    --border: #E2E8F0;
+    --muted: #9CA3AF;
+    --border: #E5E7EB;
 
-    --success: #15803D;
-    --success-soft: #DCFCE7;
+    --success: #10B981;
+    --success-soft: #D1FAE5;
 
-    --warning: #B45309;
+    --warning: #F59E0B;
     --warning-soft: #FEF3C7;
 
-    --error: #B91C1C;
+    --error: #EF4444;
     --error-soft: #FEE2E2;
 
-    --info: #2563EB;
+    --info: #3B82F6;
     --info-soft: #DBEAFE;
   }
 }
