@@ -110,9 +110,9 @@ export default function Footer() {
           <div className="w-full h-[1px] bg-[#FAFAF9]/20" />
           <div className="flex flex-col md:flex-row justify-between items-center w-full py-[20px] gap-6 md:gap-0">
             <div className="flex flex-wrap justify-center md:justify-start items-center gap-[16px]">
-              {["About", "Privacy Policy", "Terms & Conditions"].map(link => (
-                <Link href="#" key={link} className="font-inter text-[13px] text-[#FAFAF9]/85 hover:text-white transition-colors">{link}</Link>
-              ))}
+              <Link href="/about" className="font-inter text-[13px] text-[#FAFAF9]/85 hover:text-white transition-colors">About</Link>
+              <Link href="/privacy-policy" className="font-inter text-[13px] text-[#FAFAF9]/85 hover:text-white transition-colors">Privacy Policy</Link>
+              <Link href="/terms-conditions" className="font-inter text-[13px] text-[#FAFAF9]/85 hover:text-white transition-colors">Terms & Conditions</Link>
             </div>
             <div className="flex items-center gap-[16px]">
               <div className="flex justify-center items-center w-[40px] h-[40px] border border-[#FAFAF9] rounded-full hover:bg-[#FAFAF9]/10 transition-colors cursor-pointer">
