@@ -48,9 +48,9 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-[224px] bg-stone-900 border-r border-stone-800 flex flex-col z-50 text-stone-300">
+    <aside className="fixed left-0 top-0 bottom-0 w-[224px] bg-primary border-r border-primary-hover flex flex-col z-50 text-slate-300">
       {/* Logo Area */}
-      <div className="h-[67px] flex items-center px-6 border-b border-stone-800 shrink-0 bg-stone-950/30">
+      <div className="h-[67px] flex items-center px-6 border-b border-primary-hover shrink-0 bg-black/20">
         <Link href="/admin" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center text-white font-signature text-lg leading-none pt-1 shadow-lg shadow-accent/20">
             L
@@ -64,7 +64,7 @@ export default function Sidebar() {
         
         {/* Main Nav */}
         <div className="flex flex-col gap-1">
-          <span className="px-3 mb-2 font-poppins font-semibold text-[10px] uppercase tracking-wider text-stone-500">Main Menu</span>
+          <span className="px-3 mb-2 font-poppins font-semibold text-[10px] uppercase tracking-wider text-slate-400">Main Menu</span>
           {navItems.map((item) => {
             const Icon = item.icon;
             // Exact match for /admin, startsWith for other routes
@@ -74,10 +74,10 @@ export default function Sidebar() {
               <Link 
                 key={item.name} 
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all border-l-4 ${
                   isActive 
-                    ? "bg-accent/10 text-accent font-medium shadow-sm" 
-                    : "text-stone-400 hover:bg-stone-800 hover:text-white font-medium"
+                    ? "bg-primary-hover text-white border-accent font-medium shadow-sm" 
+                    : "border-transparent text-slate-300 hover:bg-primary-hover hover:text-white font-medium"
                 }`}
               >
                 <Icon size={18} />
@@ -89,7 +89,7 @@ export default function Sidebar() {
 
         {/* System Nav */}
         <div className="flex flex-col gap-1">
-          <span className="px-3 mb-2 font-poppins font-semibold text-[10px] uppercase tracking-wider text-stone-500">System</span>
+          <span className="px-3 mb-2 font-poppins font-semibold text-[10px] uppercase tracking-wider text-slate-400">System</span>
           {systemItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname?.startsWith(item.href);
@@ -98,10 +98,10 @@ export default function Sidebar() {
               <Link 
                 key={item.name} 
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all border-l-4 ${
                   isActive 
-                    ? "bg-accent/10 text-accent font-medium shadow-sm" 
-                    : "text-stone-400 hover:bg-stone-800 hover:text-white font-medium"
+                    ? "bg-primary-hover text-white border-accent font-medium shadow-sm" 
+                    : "border-transparent text-slate-300 hover:bg-primary-hover hover:text-white font-medium"
                 }`}
               >
                 <Icon size={18} />
@@ -113,14 +113,14 @@ export default function Sidebar() {
       </div>
       
       {/* User Profile Footer */}
-      <div className="p-4 border-t border-stone-800 shrink-0 bg-stone-950/30">
-        <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-stone-800 transition-colors cursor-pointer">
+      <div className="p-4 border-t border-primary-hover shrink-0 bg-black/20">
+        <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-primary-hover transition-colors cursor-pointer">
           <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-white font-poppins font-semibold text-sm shadow-md shadow-accent/20">
             SA
           </div>
           <div className="flex flex-col">
             <span className="font-inter font-semibold text-sm text-white leading-tight">Super Admin</span>
-            <span className="font-inter text-xs text-stone-500">System Owner</span>
+            <span className="font-inter text-xs text-slate-400">System Owner</span>
           </div>
         </div>
       </div>

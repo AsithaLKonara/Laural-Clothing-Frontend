@@ -4,7 +4,7 @@ import { Search, Bell, ChevronDown } from "lucide-react";
 
 export default function Header() {
   return (
-    <header className="h-[64px] bg-white border-b border-stone-200 flex items-center justify-between px-8 shrink-0 shadow-sm z-40">
+    <header className="h-[64px] bg-surface border-b border-border flex items-center justify-between px-8 shrink-0 shadow-sm z-40">
       
       {/* Left — Breadcrumbs placeholder */}
       <div className="flex items-center gap-2 text-sm text-stone-400 font-inter">
@@ -15,7 +15,7 @@ export default function Header() {
       <div className="flex items-center gap-4 ml-auto">
         
         {/* Global Search */}
-        <div className="flex items-center gap-2 w-[320px] h-[38px] bg-stone-50 border border-stone-200 rounded-xl px-3.5 transition-all focus-within:border-stone-400 focus-within:bg-white focus-within:shadow-sm">
+        <div className="flex items-center gap-2 w-[320px] h-[38px] bg-background border border-border rounded-xl px-3.5 transition-all focus-within:border-primary focus-within:bg-surface focus-within:shadow-sm">
           <Search size={15} className="text-stone-400 shrink-0" />
           <input 
             type="text" 
@@ -28,18 +28,18 @@ export default function Header() {
         </div>
 
         {/* Notifications */}
-        <button className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-stone-100 transition-colors text-stone-500">
+        <button className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-background transition-colors text-muted">
           <Bell size={18} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white shadow-sm"></span>
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full border-2 border-surface shadow-sm"></span>
         </button>
 
         {/* User Chip */}
-        <button className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-stone-100 transition-colors border border-stone-200 bg-white">
-          <div className="w-6 h-6 rounded-full bg-stone-900 flex items-center justify-center text-white font-inter font-bold text-[10px]">
+        <button className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-background transition-colors border border-border bg-surface">
+          <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white font-inter font-bold text-[10px]">
             SA
           </div>
-          <span className="font-inter font-medium text-sm text-stone-800">Super Admin</span>
-          <ChevronDown size={14} className="text-stone-400" />
+          <span className="font-inter font-medium text-sm text-foreground">Super Admin</span>
+          <ChevronDown size={14} className="text-muted" />
         </button>
 
       </div>
