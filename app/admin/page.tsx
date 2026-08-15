@@ -14,7 +14,7 @@ export default function SuperAdminDashboard() {
   const [activeBranch, setActiveBranch] = useState("All");
 
   return (
-    <div className="flex flex-col gap-8 p-10 max-w-[1280px] mx-auto w-full">
+    <div className="flex flex-col gap-6 md:gap-8 p-4 md:p-10 max-w-[1280px] mx-auto w-full overflow-hidden md:overflow-visible">
 
       {/* Page Header */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -26,8 +26,8 @@ export default function SuperAdminDashboard() {
             Global performance across all branches, channels, and payment gateways
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <select className="bg-white border border-stone-200 rounded-xl py-2.5 px-4 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400 shadow-sm">
+        <div className="flex items-center flex-wrap gap-3 w-full md:w-auto mt-2 md:mt-0">
+          <select className="flex-1 md:flex-none bg-white border border-stone-200 rounded-xl py-2.5 px-4 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400 shadow-sm">
             <option>Today</option>
             <option>Last 7 Days</option>
             <option>Last 30 Days</option>
@@ -40,7 +40,7 @@ export default function SuperAdminDashboard() {
       </div>
 
       {/* Branch Filter Tabs */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
         {BRANCHES.map(branch => (
           <button
             key={branch}
@@ -57,7 +57,7 @@ export default function SuperAdminDashboard() {
       </div>
 
       {/* Stat Cards Row 1 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Revenue" value="Rs. 845K" trend="↑ 12.4% vs last period" trendType="positive" icon={<TrendingUp size={16} />} />
         <StatCard label="Orders" value="186" trend="↑ 8.2% vs last period" trendType="positive" icon={<ShoppingCart size={16} />} />
         <StatCard label="New Customers" value="92" trend="↑ 16% this period" trendType="positive" icon={<Users size={16} />} />
@@ -65,7 +65,7 @@ export default function SuperAdminDashboard() {
       </div>
 
       {/* Stat Cards Row 2 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Pending Orders" value="24" trend="Requires action" trendType="neutral" icon={<Package size={16} />} />
         <StatCard label="Inventory Value" value="Rs. 2.4M" trend="Across all branches" trendType="neutral" icon={<Wallet size={16} />} />
         <StatCard label="Loyalty Points" value="84,520" trend="Outstanding balance" trendType="neutral" icon={<Gift size={16} />} />
@@ -73,18 +73,19 @@ export default function SuperAdminDashboard() {
       </div>
 
       {/* Payment Gateway Performance */}
-      <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
-        <div className="px-6 py-5 border-b border-stone-200 bg-stone-50 flex items-center justify-between">
+      <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden w-full">
+        <div className="px-4 md:px-6 py-4 md:py-5 border-b border-stone-200 bg-stone-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
           <div>
             <h2 className="font-inter font-bold text-stone-900 text-base">Payment Gateway Performance</h2>
             <p className="font-inter text-xs text-stone-400 mt-0.5">Breakdown by gateway for the selected period</p>
           </div>
-          <select className="bg-white border border-stone-200 rounded-lg py-1.5 px-3 text-xs font-inter text-stone-600 outline-none focus:ring-1 focus:ring-stone-300">
+          <select className="w-full sm:w-auto bg-white border border-stone-200 rounded-lg py-1.5 px-3 text-xs font-inter text-stone-600 outline-none focus:ring-1 focus:ring-stone-300">
             <option>Last 30 Days</option>
             <option>Last 7 Days</option>
           </select>
         </div>
-        <div className="p-6 flex flex-col gap-3">
+        <div className="p-6 flex flex-col gap-3 overflow-x-auto">
+          <div className="min-w-[500px]">
           {[
             { gw: "Koko", amount: "Rs. 245,000", pct: 29, count: 42, color: "bg-violet-500" },
             { gw: "Mintpay", amount: "Rs. 184,000", pct: 22, count: 31, color: "bg-purple-400" },
@@ -102,15 +103,16 @@ export default function SuperAdminDashboard() {
               <div className="w-20 font-inter text-xs text-stone-400 text-right shrink-0">{g.count} txns</div>
             </div>
           ))}
+          </div>
         </div>
       </div>
 
       {/* Charts & Breakdown Row */}
       <div className="flex flex-col lg:flex-row gap-5">
-        <div className="flex-1 bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
+        <div className="flex-1 bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden w-full overflow-x-auto">
           <RevenueChart />
         </div>
-        <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden w-full lg:w-[350px] shrink-0 overflow-x-auto">
           <RevenueOverviewTable />
         </div>
       </div>

@@ -10,7 +10,7 @@ export default function RevenueOverviewTable() {
   ];
 
   return (
-    <div className="w-[312px] h-[476px] bg-white border border-stone-300 rounded-xl flex flex-col shrink-0 shadow-sm">
+    <div className="w-full h-full bg-white flex flex-col shrink-0">
       
       {/* Header */}
       <div className="px-4 py-3 border-b border-stone-300 flex items-center shrink-0">

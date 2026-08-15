@@ -91,7 +91,7 @@ export default function ProductsPage() {
 
   return (
     <>
-      <div className="flex flex-col p-10 max-w-[1280px] mx-auto w-full">
+      <div className="flex flex-col p-4 md:p-10 max-w-[1280px] mx-auto w-full">
         <PageHeader
           title="Products"
           description="Manage your product catalog, categories, and inventory base."

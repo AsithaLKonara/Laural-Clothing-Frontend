@@ -78,7 +78,7 @@ export default function ProductCard() {
       </div>
 
       {/* Product Details Container */}
-      <div className="flex flex-col items-start gap-[8px] w-[221px] mt-1">
+      <div className="flex flex-col items-start gap-[8px] w-full mt-1">
         
         {/* Pricing & Title Block */}
         <div className="flex flex-col items-center justify-center gap-[4px] w-full">

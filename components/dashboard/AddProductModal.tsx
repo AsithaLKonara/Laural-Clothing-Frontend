@@ -83,7 +83,35 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
   const [metaTitle, setMetaTitle] = useState("");
   const [metaDesc, setMetaDesc] = useState("");
 
+  const [customSizes, setCustomSizes] = useState<string[]>([]);
+  const [customColors, setCustomColors] = useState<{name: string, hex: string}[]>([]);
+  const [newSize, setNewSize] = useState("");
+  const [newColorName, setNewColorName] = useState("");
+  const [newColorHex, setNewColorHex] = useState("#000000");
+  const [isAddingSize, setIsAddingSize] = useState(false);
+  const [isAddingColor, setIsAddingColor] = useState(false);
+
   if (!isOpen) return null;
+
+  function handleAddCustomSize() {
+    if (newSize.trim() && !SIZES.includes(newSize.trim()) && !customSizes.includes(newSize.trim())) {
+      setCustomSizes(prev => [...prev, newSize.trim()]);
+      setSelectedSizes(prev => [...prev, newSize.trim()]);
+    }
+    setNewSize("");
+    setIsAddingSize(false);
+  }
+
+  function handleAddCustomColor() {
+    const name = newColorName.trim();
+    if (name && !COLORS.includes(name) && !customColors.some(c => c.name === name)) {
+      setCustomColors(prev => [...prev, { name, hex: newColorHex || "#000000" }]);
+      setSelectedColors(prev => [...prev, name]);
+    }
+    setNewColorName("");
+    setNewColorHex("#000000");
+    setIsAddingColor(false);
+  }
 
   function handleNameChange(val: string) {
     setProductName(val);
@@ -295,7 +323,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                 <div className="flex flex-col gap-3">
                   <label className="label">Available Sizes</label>
                   <div className="flex flex-wrap gap-2">
-                    {SIZES.map(size => (
+                    {[...SIZES, ...customSizes].map(size => (
                       <button
                         key={size}
                         onClick={() => toggleSize(size)}
@@ -308,25 +336,58 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                         {size}
                       </button>
                     ))}
+                    {!isAddingSize ? (
+                      <button onClick={() => setIsAddingSize(true)} className="px-3 py-1.5 rounded-lg text-sm font-medium border border-dashed border-stone-300 text-stone-500 hover:text-stone-700 hover:border-stone-400 flex items-center gap-1 transition-all">
+                        <Plus size={14} /> Add Size
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <input type="text" value={newSize} onChange={e => setNewSize(e.target.value)} placeholder="e.g. 40" className="px-3 py-1.5 bg-white rounded-lg text-sm border border-stone-200 outline-none w-20 focus:border-stone-400" autoFocus onKeyDown={e => e.key === 'Enter' && handleAddCustomSize()} />
+                        <button onClick={handleAddCustomSize} className="px-3 py-1.5 bg-stone-900 text-white rounded-lg text-xs font-medium hover:bg-stone-800">Add</button>
+                        <button onClick={() => setIsAddingSize(false)} className="p-1.5 text-stone-400 hover:text-stone-600 bg-stone-100 rounded-lg"><X size={14} /></button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-3">
                   <label className="label">Available Colors</label>
-                  <div className="flex flex-wrap gap-2">
-                    {COLORS.map(color => (
-                      <button
-                        key={color}
-                        onClick={() => toggleColor(color)}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
-                          selectedColors.includes(color)
-                            ? "bg-stone-900 text-white border-stone-900"
-                            : "bg-white text-stone-700 border-stone-200 hover:border-stone-400"
-                        }`}
-                      >
-                        {color}
+                  <div className="flex flex-wrap gap-2 items-center">
+                    {[...COLORS, ...customColors.map(c => c.name)].map(color => {
+                      const isCustom = customColors.find(c => c.name === color);
+                      return (
+                        <button
+                          key={color}
+                          onClick={() => toggleColor(color)}
+                          className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all flex items-center gap-2 ${
+                            selectedColors.includes(color)
+                              ? "bg-stone-900 text-white border-stone-900"
+                              : "bg-white text-stone-700 border-stone-200 hover:border-stone-400"
+                          }`}
+                        >
+                          {isCustom && <span className="w-3 h-3 rounded-full border border-stone-200" style={{ backgroundColor: isCustom.hex }} />}
+                          {color}
+                        </button>
+                      );
+                    })}
+                    
+                    {!isAddingColor ? (
+                      <button onClick={() => setIsAddingColor(true)} className="px-3 py-1.5 rounded-lg text-sm font-medium border border-dashed border-stone-300 text-stone-500 hover:text-stone-700 hover:border-stone-400 flex items-center gap-1 transition-all">
+                        <Plus size={14} /> Add Color
                       </button>
-                    ))}
+                    ) : (
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-stone-50 border border-stone-200 rounded-lg p-2 w-full sm:w-auto">
+                        <div className="flex items-center gap-2">
+                           <div className="w-7 h-7 rounded-md border border-stone-200 shrink-0" style={{ backgroundColor: newColorHex.match(/^#([0-9a-fA-F]{3}){1,2}$/) ? newColorHex : '#000000' }} />
+                           <input type="text" value={newColorHex} onChange={e => setNewColorHex(e.target.value)} placeholder="#HEX" className="px-2 py-1.5 bg-white rounded-md text-sm border border-stone-200 outline-none w-24 focus:border-stone-400 font-mono" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input type="text" value={newColorName} onChange={e => setNewColorName(e.target.value)} placeholder="Color Name" className="px-2 py-1.5 bg-white rounded-md text-sm border border-stone-200 outline-none w-32 focus:border-stone-400" onKeyDown={e => e.key === 'Enter' && handleAddCustomColor()} />
+                          <button onClick={handleAddCustomColor} className="px-3 py-1.5 bg-stone-900 text-white rounded-md text-xs font-medium hover:bg-stone-800 transition-colors">Add</button>
+                          <button onClick={() => setIsAddingColor(false)} className="p-1.5 text-stone-400 hover:text-stone-600 bg-stone-100 rounded-md transition-colors"><X size={14} /></button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

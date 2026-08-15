@@ -16,13 +16,14 @@ import {
   Gift, 
   Megaphone, 
   BarChart3, 
-  UserCog, 
-  Shield, 
+  UserCog,
+  Shield,
   Settings, 
-  FileText 
+  FileText,
+  X
 } from "lucide-react";
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIsOpen?: (v: boolean) => void }) {
   const pathname = usePathname();
 
   const navItems = [
@@ -48,15 +49,20 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-[224px] bg-surface border-r border-border flex flex-col z-50 text-text-secondary">
+    <aside className={`fixed left-0 top-0 bottom-0 w-[224px] bg-surface border-r border-border flex flex-col z-50 text-text-secondary transition-transform duration-300 md:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
       {/* Logo Area */}
-      <div className="h-[67px] flex items-center px-6 border-b border-border shrink-0 bg-surface">
+      <div className="h-[67px] flex items-center justify-between px-6 border-b border-border shrink-0 bg-surface">
         <Link href="/admin" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-foreground rounded-full flex items-center justify-center text-white font-signature text-lg leading-none pt-1 shadow-sm">
             L
           </div>
           <span className="font-inter font-bold tracking-widest text-foreground text-sm uppercase">Laural</span>
         </Link>
+        {setIsOpen && (
+          <button className="md:hidden text-muted hover:text-foreground" onClick={() => setIsOpen(false)}>
+            <X size={20} />
+          </button>
+        )}
       </div>
 
       {/* Navigation */}

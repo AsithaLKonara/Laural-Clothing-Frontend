@@ -50,7 +50,7 @@ export default function AuditPage() {
   );
 
   return (
-    <div className="flex flex-col p-10 max-w-[1280px] mx-auto w-full">
+    <div className="flex flex-col p-4 md:p-10 max-w-[1280px] mx-auto w-full">
       <PageHeader 
         title="Audit Logs" 
         description="Immutable record of all system-level modifications and critical operations."

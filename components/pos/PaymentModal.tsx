@@ -18,15 +18,15 @@ export default function PaymentModal({ total, onClose, onSuccess }: { total: str
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-      <div className="relative w-full max-w-[800px] h-[550px] bg-background shadow-2xl rounded-2xl overflow-hidden flex animate-in fade-in zoom-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="relative w-full max-w-[800px] max-h-[90vh] md:h-[550px] bg-background shadow-2xl rounded-2xl overflow-hidden flex flex-col md:flex-row animate-in fade-in zoom-in duration-200">
         
         {/* Left Sidebar - Payment Methods */}
-        <div className="w-[280px] bg-surface border-r border-border flex flex-col shrink-0">
-          <div className="p-4 border-b border-border">
+        <div className="w-full md:w-[280px] bg-surface border-b md:border-b-0 md:border-r border-border flex flex-col shrink-0">
+          <div className="p-4 border-b border-border hidden md:block">
             <h3 className="font-inter font-bold text-lg text-foreground">Payment Method</h3>
           </div>
-          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
+          <div className="flex-none md:flex-1 overflow-x-auto md:overflow-y-auto p-4 flex flex-row md:flex-col gap-2 custom-scrollbar">
             {paymentMethods.map(method => (
               <button 
                 key={method.name}
@@ -42,7 +42,7 @@ export default function PaymentModal({ total, onClose, onSuccess }: { total: str
                 }`}>
                   {method.icon}
                 </div>
-                <span className={`font-inter font-semibold text-sm ${
+                <span className={`font-inter font-semibold text-sm whitespace-nowrap ${
                   selectedMethod === method.name ? 'text-primary' : 'text-foreground'
                 }`}>
                   {method.name}
@@ -53,13 +53,13 @@ export default function PaymentModal({ total, onClose, onSuccess }: { total: str
         </div>
 
         {/* Right Content Area */}
-        <div className="flex-1 flex flex-col bg-background relative">
-          <button onClick={onClose} className="absolute top-4 right-4 p-2 text-muted hover:text-foreground hover:bg-surface rounded-full transition-colors">
+        <div className="flex-1 flex flex-col bg-background relative overflow-y-auto">
+          <button onClick={onClose} className="absolute top-4 right-4 p-2 text-muted hover:text-foreground hover:bg-surface rounded-full transition-colors z-10">
             <X size={20} />
           </button>
           
-          <div className="flex-1 p-8 flex flex-col">
-            <div className="flex flex-col items-center justify-center mb-8">
+          <div className="flex-1 p-6 md:p-8 flex flex-col min-h-0">
+            <div className="flex flex-col items-center justify-center mb-6 md:mb-8 mt-4 md:mt-0">
               <span className="font-inter text-muted text-sm uppercase tracking-widest font-semibold mb-2">Total Due</span>
               <div className="flex items-baseline gap-2">
                 <span className="font-inter font-bold text-2xl text-muted">Rs.</span>
@@ -69,8 +69,8 @@ export default function PaymentModal({ total, onClose, onSuccess }: { total: str
 
             {/* Dynamic Content based on selected method */}
             {selectedMethod === "Cash" && (
-              <div className="flex flex-col gap-6 animate-in fade-in">
-                <div className="grid grid-cols-3 gap-3">
+              <div className="flex flex-col gap-4 md:gap-6 animate-in fade-in">
+                <div className="grid grid-cols-3 gap-2 md:gap-3">
                   {['10,000', '5,000', 'Exact'].map(amt => (
                     <button key={amt} className="py-3 bg-surface border border-border rounded-xl font-inter font-semibold text-foreground hover:border-primary hover:text-primary transition-colors">
                       {amt === 'Exact' ? 'Exact Amount' : `Rs. ${amt}`}

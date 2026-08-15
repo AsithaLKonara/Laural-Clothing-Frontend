@@ -1,17 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import FilterSidebar from "@/components/FilterSidebar";
 import ProductCard from "@/components/ProductCard";
 import CategoryBar from "@/components/CategoryBar";
 import { SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function ShopContent() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
   const totalItems = 59; // Dummy total
   const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  useEffect(() => {
+    if (window.innerWidth >= 768) {
+      setIsSidebarOpen(true);
+    }
+  }, []);
 
   // Pagination logic
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -55,19 +61,37 @@ export default function ShopContent() {
             Home / Shop
           </span>
           
-          <span className="font-urbanist text-sm text-primary text-right">
-            Showing {startIndex + 1}–{endIndex} of {totalItems} results
-          </span>
+          <div className="flex items-center gap-4">
+            <span className="hidden sm:block font-urbanist text-sm text-primary text-right">
+              Showing {startIndex + 1}–{endIndex} of {totalItems} results
+            </span>
+            <button 
+              className="md:hidden flex items-center gap-2 font-urbanist text-sm text-primary"
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              <SlidersHorizontal size={16} /> Filters
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex flex-col md:flex-row w-full max-w-[1440px] mx-auto min-h-screen">
+      <div className="flex flex-col md:flex-row w-full max-w-[1440px] mx-auto min-h-screen relative">
         
+        {/* Mobile Filter Overlay */}
+        {isSidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-30 md:hidden top-[83px]"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
         {/* Sidebar Container */}
         <div 
-          className={`transition-all duration-500 ease-in-out flex-shrink-0 ${
-            isSidebarOpen ? "w-full md:w-[365px]" : "w-full md:w-[80px]"
+          className={`transition-all duration-500 ease-in-out flex-shrink-0 fixed inset-y-0 left-0 top-[83px] z-40 md:relative md:top-0 md:z-0 bg-background overflow-y-auto h-[calc(100vh-83px)] md:h-auto ${
+            isSidebarOpen 
+              ? "w-[300px] md:w-[365px] translate-x-0" 
+              : "w-[300px] md:w-[80px] -translate-x-full md:translate-x-0"
           }`}
         >
           <FilterSidebar isOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen(!isSidebarOpen)} />

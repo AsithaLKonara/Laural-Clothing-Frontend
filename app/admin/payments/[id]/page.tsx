@@ -8,7 +8,7 @@ export default async function PaymentDetailPage({ params }: { params: Promise<{ 
   const { id } = resolvedParams;
 
   return (
-    <div className="flex flex-col p-10 max-w-[1280px] mx-auto w-full gap-6">
+    <div className="flex flex-col p-4 md:p-10 max-w-[1280px] mx-auto w-full gap-6">
       
       {/* Back Link */}
       <Link href="/admin/payments" className="inline-flex items-center gap-2 text-sm text-stone-500 hover:text-stone-900 transition-colors w-fit">

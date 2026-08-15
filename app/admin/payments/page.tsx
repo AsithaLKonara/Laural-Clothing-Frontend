@@ -35,7 +35,7 @@ export default function PaymentsPage() {
   const tabs = ["All", "Koko", "Mintpay", "OnePay", "Payzy", "COD"];
 
   return (
-    <div className="flex flex-col p-10 max-w-[1280px] mx-auto w-full gap-8">
+    <div className="flex flex-col p-4 md:p-10 max-w-[1280px] mx-auto w-full gap-8">
       
       <PageHeader 
         title="Payments" 

@@ -138,7 +138,7 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           </div>
 
           {/* Actions */}
-          <div className="flex flex-row items-center gap-4 w-full mt-4 pb-6 border-b border-stone-200">
+          <div className="flex flex-row flex-wrap items-center gap-4 w-full mt-4 pb-6 border-b border-stone-200">
             {/* Qty Selector */}
             <div className="flex items-center border border-stone-300 rounded-sm h-[44px] w-[110px] flex-shrink-0">
               <button onClick={() => setQty(Math.max(1, qty - 1))} className="flex-1 text-lg text-[#79716B] border-r border-stone-300 h-full hover:bg-stone-50">-</button>
@@ -147,13 +147,13 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
             </div>
             
             {/* Add to Cart */}
-            <button className="h-[44px] px-8 rounded-sm bg-primary font-poppins font-semibold text-sm text-white hover:bg-stone-800 transition-colors uppercase tracking-wide">
+            <button className="flex-1 h-[44px] px-4 sm:px-8 rounded-sm bg-primary font-poppins font-semibold text-sm text-white hover:bg-stone-800 transition-colors uppercase tracking-wide whitespace-nowrap">
               Add to Cart
             </button>
           </div>
 
           {/* Secondary Actions */}
-          <div className="flex items-center gap-6 pb-6">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6 pb-6">
             <button className="flex items-center gap-2 font-poppins font-medium text-sm text-primary hover:text-accent transition-colors">
               <ArrowLeftRight size={18} strokeWidth={1.5} /> Compare
             </button>

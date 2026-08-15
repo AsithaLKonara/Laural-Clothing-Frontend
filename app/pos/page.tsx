@@ -1,6 +1,6 @@
 "use client";
 
-import { Maximize, Search, Trash2, CreditCard, Banknote, LayoutGrid, UserPlus, X, ChevronRight, CheckCircle2 } from "lucide-react";
+import { Maximize, Search, Trash2, CreditCard, Banknote, LayoutGrid, UserPlus, X, ChevronRight, CheckCircle2, ShoppingBag } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
 import VariantSelectionModal from "@/components/pos/VariantSelectionModal";
@@ -16,6 +16,7 @@ export default function POSPage() {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   const toggleFullscreen = () => {
@@ -51,27 +52,27 @@ export default function POSPage() {
           <h1 className="font-bold text-lg tracking-widest uppercase flex items-center gap-2">
             <LayoutGrid size={18} /> LAURAL POS
           </h1>
-          <div className="flex items-center gap-4 text-sm font-inter text-muted">
+          <div className="hidden sm:flex items-center gap-4 text-sm font-inter text-muted">
             <span>Kandy Branch</span>
             <span className="w-1 h-1 rounded-full bg-muted"></span>
             <span>Terminal #02</span>
           </div>
         </div>
         
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4 md:gap-6">
+          <div className="hidden md:flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-success animate-pulse"></div>
             <span className="text-sm font-inter text-muted">Shift OPEN</span>
           </div>
-          <div className="flex items-center gap-2 text-sm font-inter text-muted border-l border-border pl-6">
+          <div className="hidden md:flex items-center gap-2 text-sm font-inter text-muted border-l border-border pl-6">
             <span>Cashier: Kasun</span>
           </div>
           <button 
             onClick={toggleFullscreen}
-            className="flex items-center gap-2 bg-background hover:bg-border border border-border px-3 py-1.5 rounded transition-colors text-sm font-inter ml-4"
+            className="flex items-center gap-2 bg-background hover:bg-border border border-border px-3 py-1.5 rounded transition-colors text-sm font-inter md:ml-4"
           >
             <Maximize size={14} />
-            {isFullscreen ? "Exit Full Screen" : "Full Screen"}
+            <span className="hidden sm:inline">{isFullscreen ? "Exit Full Screen" : "Full Screen"}</span>
           </button>
         </div>
       </div>
@@ -110,8 +111,8 @@ export default function POSPage() {
           </div>
 
           {/* Product Grid */}
-          <div className="flex-1 overflow-y-auto p-4 bg-background">
-            <div className="grid grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="flex-1 overflow-y-auto p-4 bg-background pb-24 lg:pb-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
               {products.map((p) => (
                 <button 
                   key={p.id}
@@ -139,14 +140,33 @@ export default function POSPage() {
             </div>
           </div>
 
+          {/* Mobile FAB */}
+          <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[400px] z-40">
+            <button 
+              onClick={() => setIsMobileCartOpen(true)}
+              className="w-full bg-primary text-white py-4 rounded-full shadow-xl shadow-primary/30 flex items-center justify-between px-6 font-inter font-bold"
+            >
+              <div className="flex items-center gap-2">
+                <ShoppingBag size={20} />
+                <span>2 Items</span>
+              </div>
+              <span>View Order - Rs. 9,400</span>
+            </button>
+          </div>
+
         </div>
 
         {/* Right Side: Cart & Payment (1/3 width, fixed 400px min) */}
-        <div className="w-[420px] bg-surface flex flex-col shrink-0 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] z-0 relative">
+        <div className={`fixed inset-y-0 right-0 w-full sm:w-[420px] bg-surface flex flex-col shrink-0 shadow-2xl lg:shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] z-50 lg:z-0 lg:static transform transition-transform duration-300 lg:translate-x-0 ${isMobileCartOpen ? "translate-x-0" : "translate-x-full"}`}>
           
           {/* Cart Header */}
-          <div className="p-4 border-b border-border bg-background flex justify-between items-center">
-            <h2 className="font-inter font-bold text-lg">Current Order</h2>
+          <div className="p-4 border-b border-border bg-background flex justify-between items-center shrink-0 h-[60px]">
+            <h2 className="font-inter font-bold text-lg flex items-center gap-2">
+              <button className="lg:hidden p-1 -ml-1 text-muted" onClick={() => setIsMobileCartOpen(false)}>
+                <X size={20} />
+              </button>
+              Current Order
+            </h2>
             <button 
               onClick={() => setIsCustomerModalOpen(true)}
               className="flex items-center gap-2 text-sm font-inter text-primary bg-primary-soft px-3 py-1.5 rounded-lg hover:bg-primary/20 transition-colors"

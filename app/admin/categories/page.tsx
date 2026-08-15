@@ -61,7 +61,7 @@ export default function CategoriesPage() {
   );
 
   return (
-    <div className="flex flex-col p-10 max-w-[1280px] mx-auto w-full gap-6">
+    <div className="flex flex-col p-4 md:p-10 max-w-[1280px] mx-auto w-full gap-6">
       <PageHeader
         title="Categories"
         description="Manage product categories and sub-categories for your catalog."

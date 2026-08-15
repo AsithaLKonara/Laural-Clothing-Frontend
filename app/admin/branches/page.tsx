@@ -84,7 +84,7 @@ export default function BranchesPage() {
   ];
 
   return (
-    <div className="flex flex-col p-10 max-w-[1280px] mx-auto w-full gap-6">
+    <div className="flex flex-col p-4 md:p-10 max-w-[1280px] mx-auto w-full gap-6">
       <PageHeader
         title="Branches"
         description="Manage physical store locations, POS terminals, and branch staff."

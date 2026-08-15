@@ -4,7 +4,7 @@ import PageHeader from "@/components/dashboard/PageHeader";
 
 export default function SettingsPage() {
   return (
-    <div className="flex flex-col p-10 max-w-[1280px] mx-auto w-full">
+    <div className="flex flex-col p-4 md:p-10 max-w-[1280px] mx-auto w-full">
       <PageHeader 
         title="Global Settings" 
         description="Manage store configurations, regional settings, and integrations."

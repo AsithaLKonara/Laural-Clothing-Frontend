@@ -21,7 +21,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="relative w-full h-[600px] md:h-[829px] overflow-hidden bg-stone-100">
+    <section className="relative w-full h-[80vh] min-h-[500px] md:h-[829px] overflow-hidden bg-stone-100">
       {/* Carousel Images */}
       {HERO_IMAGES.map((src, index) => (
         <Image

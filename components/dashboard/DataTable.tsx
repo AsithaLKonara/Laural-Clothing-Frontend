@@ -78,7 +78,7 @@ export default function DataTable<T>({
 
       {/* Pagination Footer */}
       {pagination && (
-        <div className="px-6 py-4 border-t border-border flex items-center justify-between bg-background shrink-0">
+        <div className="px-4 sm:px-6 py-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-0 bg-background shrink-0">
           <span className="font-inter text-xs text-muted">
             Page {pagination.currentPage} of {pagination.totalPages}
           </span>

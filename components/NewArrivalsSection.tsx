@@ -28,7 +28,7 @@ export default function NewArrivalsSection() {
       </div>
 
       {/* Product Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[20px] py-8 md:py-[60px] w-full max-w-[1040px] place-items-center">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-[20px] py-8 md:py-[60px] w-full max-w-[1040px] place-items-center">
         {/* We'll render 8 product cards to show the grid wrap */}
         {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
           <div key={item} className="w-full flex justify-center">
