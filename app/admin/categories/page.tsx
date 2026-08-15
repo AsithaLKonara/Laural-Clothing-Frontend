@@ -5,8 +5,11 @@ import PageHeader from "@/components/dashboard/PageHeader";
 import DataTable from "@/components/dashboard/DataTable";
 import { StatusBadge } from "@/components/dashboard/Badges";
 import FilterBar from "@/components/dashboard/FilterBar";
+import AddCategoryModal from "@/components/dashboard/AddCategoryModal";
 
 export default function CategoriesPage() {
+  const [modalOpen, setModalOpen] = useState(false);
+
   const categories = [
     { id: "CAT-001", name: "T-Shirts", slug: "t-shirts", parent: "—", products: 48, status: "Active" },
     { id: "CAT-002", name: "Shirts", slug: "shirts", parent: "—", products: 32, status: "Active" },
@@ -54,7 +57,10 @@ export default function CategoriesPage() {
         <option>Top Level</option>
         <option>Sub-Categories</option>
       </select>
-      <button className="bg-stone-900 text-white hover:bg-stone-800 px-4 py-2 rounded-lg font-inter text-sm font-medium transition-colors whitespace-nowrap ml-auto flex items-center gap-2">
+      <button 
+        onClick={() => setModalOpen(true)}
+        className="bg-stone-900 text-white hover:bg-stone-800 active:scale-95 px-5 py-2 rounded-lg font-inter text-sm font-semibold transition-all whitespace-nowrap ml-auto shadow-md shadow-stone-900/20 flex items-center gap-2"
+      >
         + Add Category
       </button>
     </>
@@ -92,6 +98,8 @@ export default function CategoriesPage() {
           pagination={{ currentPage: 1, totalPages: 1 }}
         />
       </div>
+      
+      <AddCategoryModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
     </div>
   );
 }
