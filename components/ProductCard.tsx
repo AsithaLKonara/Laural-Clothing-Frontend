@@ -37,9 +37,9 @@ export default function ProductCard() {
         </Link>
         
         {/* Discount Tag */}
-        <div className="absolute top-0 right-0 p-[10px] z-10">
-          <div className="flex justify-center items-center px-[8px] py-[2px] bg-[#5E3122] rounded-full shadow-sm">
-            <span className="font-inter font-normal text-[8px] leading-[10px] text-white">
+        <div className="absolute top-2 right-2 z-10">
+          <div className="flex justify-center items-center px-[6px] py-[3px] bg-[#D32F2F] rounded-sm shadow-md">
+            <span className="font-inter font-bold text-[9px] tracking-wider text-white uppercase">
               20% off
             </span>
           </div>
@@ -105,42 +105,25 @@ export default function ProductCard() {
         </div>
 
         {/* Payment Integrations */}
-        <div className="flex flex-col items-center justify-center gap-[2px] w-full mt-1">
-          {/* Mintpay */}
-          <div className="flex items-center justify-between gap-[4px]">
-            <div className="flex items-center rounded-full">
-              <span className="font-inter font-normal text-[8px] leading-[10px] text-stone-600">
-                3 X Rs. 730.00 with
-              </span>
-            </div>
-            <div className="flex items-center justify-center w-[32px] h-[11px] relative">
-              <Image src="/payment-methods/mintpay-pill.png" alt="mintpay" fill className="object-contain" />
-            </div>
-          </div>
-          {/* Payzy */}
-          <div className="flex items-center justify-between gap-[4px]">
-            <div className="flex items-center rounded-full">
-              <span className="font-inter font-normal text-[8px] leading-[10px] text-stone-600">
-                4 X Rs. 547.50 with
-              </span>
-            </div>
-            <div className="flex items-center justify-center w-[32px] h-[11px] relative">
-              <Image src="/payment-methods/payzy.png" alt="payzy" fill className="object-contain" />
+        <div className="flex flex-col items-center justify-center w-full mt-1.5">
+          <div className="flex items-center gap-1.5 flex-wrap justify-center">
+            <span className="font-inter font-normal text-[9px] text-stone-500">
+              3 X Rs. 730.00 with
+            </span>
+            <div className="flex items-center gap-1">
+              <span className="text-[9px] font-black text-[#0033cc] italic">KOKO</span>
+              <div className="flex items-center justify-center w-[24px] h-[9px] relative">
+                <Image src="/payment-methods/payzy.png" alt="payzy" fill className="object-contain" />
+              </div>
+              <div className="flex items-center justify-center w-[24px] h-[9px] relative">
+                <Image src="/payment-methods/mintpay-pill.png" alt="mintpay" fill className="object-contain" />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Bottom Area: Color Swatches always visible now since button moved */}
-        <div className="flex justify-center items-center gap-[6px] w-full mt-2 h-[20px]">
-          {['#FBBB00', '#FDFD96', '#60D66A', '#8A38F5'].map((color, i) => (
-            <div 
-              key={i} 
-              onClick={(e) => e.stopPropagation()}
-              className="w-[14px] h-[14px] rounded-full border border-stone-300 shadow-sm cursor-pointer hover:scale-110 transition-transform"
-              style={{ backgroundColor: color }}
-            />
-          ))}
-        </div>
+        {/* Bottom Area Spacer */}
+        <div className="h-[4px]"></div>
         
       </div>
     </div>

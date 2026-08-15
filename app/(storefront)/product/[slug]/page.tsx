@@ -70,38 +70,64 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
 
           {/* Installments */}
           <div className="flex flex-col gap-3 w-full border-b border-stone-200 pb-8">
-            <div className="flex items-center text-base text-[#79716B] font-poppins">
+            <div className="flex items-center gap-3 text-base text-[#79716B] font-poppins flex-wrap">
               <span>3 X Rs. 930.00 with</span>
-              <div className="w-[50px] h-[20px] bg-[#0E1E2B] rounded-full mx-2 flex items-center justify-center text-[10px] text-white font-bold tracking-widest">MINTPAY</div>
-              <Info size={14} className="text-primary" fill="currentColor" color="white" />
-            </div>
-            <div className="flex items-center text-base text-[#79716B] font-poppins">
-              <span>or 3 X Rs 930.00 with</span>
-              <div className="w-[40px] h-[16px] mx-2 flex items-center justify-center text-[11px] text-[#0033cc] font-black italic">KOKO</div>
-              <Info size={14} className="text-primary" fill="currentColor" color="white" />
-            </div>
-            <div className="flex items-center text-base text-[#79716B] font-poppins">
-              <span>or up to 4 X Rs 697.50 with</span>
-              <div className="w-[50px] h-[20px] mx-2 flex items-center justify-center text-xs text-[#00aaff] font-black italic tracking-tighter">Payzy</div>
-              <Info size={14} className="text-primary" fill="currentColor" color="white" />
+              <div className="flex items-center gap-2">
+                <span className="text-[14px] font-black text-[#0033cc] italic">KOKO</span>
+                <div className="w-[50px] h-[20px] bg-[#0E1E2B] rounded-full flex items-center justify-center text-[10px] text-white font-bold tracking-widest">MINTPAY</div>
+                <div className="flex items-center justify-center text-xs text-[#00aaff] font-black italic tracking-tighter">Payzy</div>
+              </div>
+              <Info size={16} className="text-primary" fill="currentColor" color="white" />
             </div>
           </div>
 
           {/* Selections */}
-          <div className="flex flex-col gap-4 mt-2">
+          <div className="flex flex-col gap-6 mt-4">
             
+            {/* Color Select */}
+            <div className="flex items-center gap-4">
+              <span className="font-poppins font-bold text-base text-primary w-[50px]">Color:</span>
+              <div className="flex gap-3">
+                {[
+                  { name: 'Yellow', hex: '#FDFD96' },
+                  { name: 'Pink', hex: '#FFD1DC' },
+                  { name: 'Blue', hex: '#AEC6CF' }
+                ].map(color => (
+                  <button 
+                    key={color.name}
+                    onClick={() => setSelectedColor(color.name.toLowerCase())}
+                    title={color.name}
+                    className={`w-[34px] h-[34px] rounded-full border-2 transition-all ${
+                      selectedColor === color.name.toLowerCase() 
+                        ? 'border-primary scale-110' 
+                        : 'border-stone-200 hover:scale-105'
+                    }`}
+                    style={{ backgroundColor: color.hex }}
+                  />
+                ))}
+              </div>
+            </div>
+
             {/* Size Select */}
             <div className="flex items-center gap-4">
-              <span className="font-poppins font-bold text-base text-primary">Size :</span>
-              <div className="flex gap-3">
-                {['UK 08', 'UK 10', 'UK 12', 'UK 14'].map(size => (
+              <span className="font-poppins font-bold text-base text-primary w-[50px]">Size:</span>
+              <div className="flex gap-3 flex-wrap">
+                {[
+                  { size: 'UK 08', inStock: true },
+                  { size: 'UK 10', inStock: true },
+                  { size: 'UK 12', inStock: false },
+                  { size: 'UK 14', inStock: false }
+                ].map(({ size, inStock }) => (
                   <button 
                     key={size}
-                    onClick={() => setSelectedSize(size)}
+                    onClick={() => inStock && setSelectedSize(size)}
+                    disabled={!inStock}
                     className={`h-[34px] px-4 rounded-full flex items-center justify-center font-poppins text-sm transition-colors border ${
-                      selectedSize === size 
-                        ? 'border-primary text-primary' 
-                        : 'border-stone-200 text-primary hover:border-stone-400'
+                      !inStock
+                        ? 'border-stone-200 text-stone-300 bg-stone-50 cursor-not-allowed line-through'
+                        : selectedSize === size 
+                          ? 'border-primary text-primary bg-stone-50' 
+                          : 'border-stone-200 text-primary hover:border-stone-400 bg-white'
                     }`}
                   >
                     {size}

@@ -10,6 +10,12 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-stone-50">
       <Hero />
+      {/* Delivery Ribbon */}
+      <div className="w-full bg-[#1A1A1A] py-3 flex justify-center items-center">
+        <span className="font-poppins text-xs md:text-sm text-white tracking-[0.2em] uppercase font-light">
+          Delivery Available Islandwide
+        </span>
+      </div>
       <CollectionsSection />
       <NewArrivalsSection />
       <AdBannerSection />

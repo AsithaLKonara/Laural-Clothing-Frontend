@@ -11,6 +11,7 @@ interface SizeGuideModalProps {
 
 export default function SizeGuideModal({ isOpen, onClose }: SizeGuideModalProps) {
   const [mounted, setMounted] = useState(false);
+  const [activeTab, setActiveTab] = useState<"Measurements" | "Visual Guide">("Measurements");
 
   useEffect(() => {
     setMounted(true);
@@ -38,9 +39,27 @@ export default function SizeGuideModal({ isOpen, onClose }: SizeGuideModalProps)
           <X size={24} />
         </button>
 
-        <h2 className="font-signature text-4xl text-primary mb-6">Size Guide</h2>
+        <h2 className="font-signature text-4xl text-primary mb-4">Size Guide</h2>
         
-        <div className="w-full overflow-x-auto">
+        {/* Tabs */}
+        <div className="flex gap-6 border-b border-stone-200 mb-6">
+          {(["Measurements", "Visual Guide"] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`pb-2 font-poppins text-sm transition-all ${
+                activeTab === tab
+                  ? "border-b-2 border-primary text-primary font-medium"
+                  : "border-b-2 border-transparent text-stone-500 hover:text-primary"
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+        
+        {activeTab === "Measurements" ? (
+          <div className="w-full overflow-x-auto animate-in fade-in duration-300">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b-2 border-stone-800 text-stone-900 font-urbanist font-bold text-sm uppercase tracking-wider">
@@ -78,6 +97,19 @@ export default function SizeGuideModal({ isOpen, onClose }: SizeGuideModalProps)
             </tbody>
           </table>
         </div>
+        ) : (
+          <div className="w-full flex flex-col items-center animate-in fade-in duration-300">
+            <div className="w-full aspect-[4/3] bg-stone-100 rounded-lg flex items-center justify-center border border-stone-200 p-4">
+              <div className="text-stone-400 font-poppins text-sm flex flex-col items-center gap-2">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                <span>Visual sizing chart goes here</span>
+              </div>
+            </div>
+            <p className="font-poppins text-stone-500 text-xs mt-4 italic text-center">
+              Use this visual guide to understand where to measure your body for the perfect fit.
+            </p>
+          </div>
+        )}
         
         <p className="font-poppins text-stone-500 text-xs mt-6 italic">
           * Note: Measurements are for reference only. Fit may vary depending on the style.
