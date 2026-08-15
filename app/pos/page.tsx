@@ -1,11 +1,22 @@
 "use client";
 
-import { Maximize, Search, Trash2, CreditCard, Banknote, LayoutGrid } from "lucide-react";
+import { Maximize, Search, Trash2, CreditCard, Banknote, LayoutGrid, UserPlus, X, ChevronRight, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
+import VariantSelectionModal from "@/components/pos/VariantSelectionModal";
+import PaymentModal from "@/components/pos/PaymentModal";
+import CustomerSelectionModal from "@/components/pos/CustomerSelectionModal";
+import OrderSuccessModal from "@/components/pos/OrderSuccessModal";
 
 export default function POSPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  
+  // Modal states
+  const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -21,14 +32,14 @@ export default function POSPage() {
 
   const categories = ["All", "T-Shirts", "Shirts", "Dresses", "Pants", "Accessories"];
   const products = [
-    { id: 1, name: "Black Oversized T-Shirt", price: "2,500" },
-    { id: 2, name: "Classic Linen Shirt", price: "4,900" },
-    { id: 3, name: "Summer Floral Dress", price: "6,500" },
-    { id: 4, name: "Cargo Pants", price: "5,200" },
-    { id: 5, name: "Ribbed Tank Top", price: "1,800" },
-    { id: 6, name: "Denim Jacket", price: "8,500" },
-    { id: 7, name: "Pleated Skirt", price: "4,200" },
-    { id: 8, name: "Basic White Tee", price: "2,000" },
+    { id: 1, name: "Black Oversized T-Shirt", price: "2,500", image: "/products/default.jpg" },
+    { id: 2, name: "Classic Linen Shirt", price: "4,900", image: "/products/hover.jpg" },
+    { id: 3, name: "Summer Floral Dress", price: "6,500", image: "/products/default.jpg" },
+    { id: 4, name: "Cargo Pants", price: "5,200", image: "/products/hover.jpg" },
+    { id: 5, name: "Ribbed Tank Top", price: "1,800", image: "/products/default.jpg" },
+    { id: 6, name: "Denim Jacket", price: "8,500", image: "/products/hover.jpg" },
+    { id: 7, name: "Pleated Skirt", price: "4,200", image: "/products/default.jpg" },
+    { id: 8, name: "Basic White Tee", price: "2,000", image: "/products/hover.jpg" },
   ];
 
   return (
@@ -104,18 +115,24 @@ export default function POSPage() {
               {products.map((p) => (
                 <button 
                   key={p.id}
-                  className="bg-surface border border-border rounded-xl p-4 flex flex-col h-[140px] hover:border-accent hover:shadow-md transition-all text-left active:scale-95"
+                  onClick={() => { setSelectedProduct(p); setIsVariantModalOpen(true); }}
+                  className="bg-surface border border-border rounded-xl flex flex-col hover:border-accent hover:shadow-md transition-all text-left active:scale-95 overflow-hidden"
                 >
-                  <span className="font-inter font-bold text-foreground text-sm leading-snug line-clamp-2 mb-auto">
-                    {p.name}
-                  </span>
-                  <div className="flex justify-between items-end w-full mt-2">
-                    <span className="font-inter font-bold text-primary text-lg">
-                      {p.price}
+                  <div className="relative w-full aspect-square bg-stone-100">
+                    <Image src={p.image} alt={p.name} fill className="object-cover" />
+                  </div>
+                  <div className="p-3 flex flex-col justify-between flex-1">
+                    <span className="font-inter font-bold text-foreground text-sm leading-snug line-clamp-2 mb-2">
+                      {p.name}
                     </span>
-                    <span className="font-inter text-xs text-muted bg-background border border-border px-2 py-1 rounded">
-                      In Stock
-                    </span>
+                    <div className="flex justify-between items-end w-full">
+                      <span className="font-inter font-bold text-primary text-lg">
+                        {p.price}
+                      </span>
+                      <span className="font-inter text-[10px] uppercase tracking-wider font-semibold text-muted bg-background border border-border px-1.5 py-0.5 rounded">
+                        In Stock
+                      </span>
+                    </div>
                   </div>
                 </button>
               ))}
@@ -127,15 +144,29 @@ export default function POSPage() {
         {/* Right Side: Cart & Payment (1/3 width, fixed 400px min) */}
         <div className="w-[420px] bg-surface flex flex-col shrink-0 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] z-0 relative">
           
+          {/* Cart Header */}
+          <div className="p-4 border-b border-border bg-background flex justify-between items-center">
+            <h2 className="font-inter font-bold text-lg">Current Order</h2>
+            <button 
+              onClick={() => setIsCustomerModalOpen(true)}
+              className="flex items-center gap-2 text-sm font-inter text-primary bg-primary-soft px-3 py-1.5 rounded-lg hover:bg-primary/20 transition-colors"
+            >
+              <UserPlus size={16} /> Add Customer
+            </button>
+          </div>
+
           {/* Cart Items */}
           <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
             {[1, 2].map(i => (
-              <div key={i} className="flex flex-col bg-background border border-border rounded-lg p-3">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="font-inter font-bold text-foreground leading-snug pr-4">Black Oversized T-Shirt</span>
-                  <button className="text-muted hover:text-error transition-colors">
+              <div key={i} className="flex flex-col bg-background border border-border rounded-lg p-3 relative group">
+                <div className="flex justify-between items-start mb-1">
+                  <span className="font-inter font-bold text-foreground leading-snug pr-8">Black Oversized T-Shirt</span>
+                  <button className="absolute top-3 right-3 text-muted hover:text-error transition-colors opacity-0 group-hover:opacity-100">
                     <Trash2 size={16} />
                   </button>
+                </div>
+                <div className="text-xs font-inter text-muted mb-3">
+                  Color: Black | Size: M
                 </div>
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-3">
@@ -170,18 +201,17 @@ export default function POSPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 mt-4">
-              <button className="flex flex-col items-center justify-center gap-2 bg-background hover:bg-border border border-border rounded-xl py-4 transition-colors">
-                <CreditCard size={24} className="text-muted" />
-                <span className="font-inter font-bold text-sm text-foreground">Card</span>
-              </button>
-              <button className="flex flex-col items-center justify-center gap-2 bg-primary hover:bg-primary-hover rounded-xl py-4 transition-colors shadow-lg shadow-primary/20">
-                <Banknote size={24} className="text-white" />
-                <span className="font-inter font-bold text-sm text-white">Cash</span>
+            <div className="mt-4">
+              <button 
+                onClick={() => setIsPaymentModalOpen(true)}
+                className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover rounded-xl py-4 transition-colors shadow-lg shadow-primary/20"
+              >
+                <span className="font-inter font-bold text-lg text-white">Charge Rs. 9,400</span>
+                <ChevronRight size={20} className="text-white" />
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 mt-1">
+            <div className="grid grid-cols-2 gap-3 mt-2">
               <button className="bg-background hover:bg-border text-foreground font-inter font-semibold py-3 rounded-lg text-sm transition-colors border border-border">
                 Hold Cart
               </button>
@@ -195,6 +225,12 @@ export default function POSPage() {
         </div>
 
       </div>
+      
+      {/* Modals */}
+      {isVariantModalOpen && <VariantSelectionModal product={selectedProduct} onClose={() => setIsVariantModalOpen(false)} />}
+      {isPaymentModalOpen && <PaymentModal onClose={() => setIsPaymentModalOpen(false)} onSuccess={() => { setIsPaymentModalOpen(false); setIsSuccessModalOpen(true); }} total="9,400" />}
+      {isCustomerModalOpen && <CustomerSelectionModal onClose={() => setIsCustomerModalOpen(false)} />}
+      {isSuccessModalOpen && <OrderSuccessModal onClose={() => setIsSuccessModalOpen(false)} />}
 
     </div>
   );
