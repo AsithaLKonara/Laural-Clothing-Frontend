@@ -186,14 +186,18 @@ export default function AdminReturnDetailsPage({ params }: { params: Promise<{ r
 
                 <div className="flex flex-col gap-3 pt-4 border-t border-stone-100">
                   <h4 className="font-inter font-medium text-sm text-stone-900">Select Resolution Method</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <button className="flex flex-col items-start p-4 border border-emerald-500 bg-emerald-50 rounded-lg text-left shadow-sm">
                       <span className="font-inter font-bold text-sm text-emerald-900 mb-1">Original Payment</span>
-                      <span className="font-inter text-xs text-emerald-700">Refund directly to Koko Pay</span>
+                      <span className="font-inter text-xs text-emerald-700">Refund directly to payment method</span>
                     </button>
                     <button className="flex flex-col items-start p-4 border border-stone-200 bg-white hover:bg-stone-50 rounded-lg text-left transition-colors">
                       <span className="font-inter font-bold text-sm text-stone-900 mb-1">Store Credit</span>
                       <span className="font-inter text-xs text-stone-500">Issue as Loyalty Points (8,150 pts)</span>
+                    </button>
+                    <button className="flex flex-col items-start p-4 border border-stone-200 bg-white hover:bg-stone-50 rounded-lg text-left transition-colors">
+                      <span className="font-inter font-bold text-sm text-stone-900 mb-1">Exchange Item</span>
+                      <span className="font-inter text-xs text-stone-500">Create zero-dollar replacement order</span>
                     </button>
                   </div>
                 </div>

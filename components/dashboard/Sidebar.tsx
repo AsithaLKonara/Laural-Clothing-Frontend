@@ -23,6 +23,7 @@ import {
   Layers,
   ArchiveRestore,
   Truck,
+  RotateCcw,
   X
 } from "lucide-react";
 
@@ -32,6 +33,7 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
   const navItems = [
     { name: "Dashboard", icon: LayoutDashboard, href: "/admin" },
     { name: "Orders", icon: ShoppingCart, href: "/admin/orders" },
+    { name: "Returns", icon: RotateCcw, href: "/admin/returns" },
     { name: "Shipping", icon: Truck, href: "/admin/shipping" },
     { name: "Products", icon: Box, href: "/admin/products" },
     { name: "Categories", icon: Tags, href: "/admin/categories" },
