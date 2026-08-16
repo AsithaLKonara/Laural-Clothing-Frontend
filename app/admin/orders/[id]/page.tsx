@@ -2,6 +2,7 @@ import PageHeader from "@/components/dashboard/PageHeader";
 import { OrderStatusBadge, PaymentGatewayBadge } from "@/components/dashboard/Badges";
 import Link from "next/link";
 import { ArrowLeft, User, CreditCard, Truck, MapPin } from "lucide-react";
+import OrderDispatchButtons from "@/components/admin/OrderDispatchButtons";
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
@@ -19,7 +20,13 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       <PageHeader 
         title={`Order #${id}`}
         action={
-          <div className="flex gap-2">
+          <div className="flex gap-4 items-center">
+            <OrderDispatchButtons 
+              orderId={id}
+              customerName="Kasun Perera"
+              address="123 Sample St, Colombo 03"
+              phone="+94 77 123 4567"
+            />
             <OrderStatusBadge status="Paid" />
             <OrderStatusBadge status="Processing" />
           </div>

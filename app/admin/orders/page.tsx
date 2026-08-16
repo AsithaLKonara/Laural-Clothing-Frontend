@@ -7,12 +7,14 @@ import FilterBar from "@/components/dashboard/FilterBar";
 import DataTable from "@/components/dashboard/DataTable";
 import { OrderStatusBadge, BranchBadge, PaymentGatewayBadge } from "@/components/dashboard/Badges";
 import CourierLabelModal from "@/components/admin/CourierLabelModal";
-import { Printer } from "lucide-react";
+import FardarDispatchModal from "@/components/admin/FardarDispatchModal";
+import { Printer, Truck } from "lucide-react";
 
 export default function OrdersPage() {
   const router = useRouter();
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [showLabelModal, setShowLabelModal] = useState(false);
+  const [showFardarModal, setShowFardarModal] = useState(false);
 
   const orders = [
     { id: "LC-10241", customer: "Kasun Perera", branch: "Kandy", total: "Rs.8,500", gateway: "Koko", status: "Paid", orderStatus: "Paid" },
@@ -109,6 +111,9 @@ export default function OrdersPage() {
           <button onClick={() => setShowLabelModal(true)} className="font-inter font-semibold text-sm bg-white text-stone-900 px-4 py-2 rounded-full hover:bg-stone-100 transition-colors flex items-center gap-2">
             <Printer size={14} /> Print Courier Labels
           </button>
+          <button onClick={() => setShowFardarModal(true)} className="font-inter font-semibold text-sm bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-500 transition-colors flex items-center gap-2">
+            <Truck size={14} /> Dispatch via Fardar
+          </button>
         </div>
       )}
 
@@ -123,6 +128,17 @@ export default function OrdersPage() {
             weight: "1.2 kg" // Dummy data
           }))}
           onClose={() => setShowLabelModal(false)}
+        />
+      )}
+
+      {showFardarModal && (
+        <FardarDispatchModal 
+          orderIds={orders.filter(o => selectedOrders.includes(o.id)).map(o => o.id)}
+          onClose={() => setShowFardarModal(false)}
+          onSuccess={() => {
+            setShowFardarModal(false);
+            setSelectedOrders([]);
+          }}
         />
       )}
     </div>
