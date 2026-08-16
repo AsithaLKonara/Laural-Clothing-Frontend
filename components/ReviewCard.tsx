@@ -10,40 +10,40 @@ interface ReviewCardProps {
 
 export default function ReviewCard({ name, rating, text, date, verified = true }: ReviewCardProps) {
   return (
-    <div className="flex flex-col items-start p-7 gap-[24px] w-full max-w-[420px] bg-background border border-[#F5F5F4] shadow-sm rounded-sm">
-      <div className="flex flex-col w-full gap-[15px]">
-        {/* Header: Name and Verified Badge */}
-        <div className="flex flex-row justify-between items-center w-full">
-          <div className="flex flex-row items-center gap-[4px]">
-            <span className="font-poppins font-bold text-xl text-primary">
-              {name}
-            </span>
-            {verified && (
-              <CheckCircle2 size={24} className="text-[#01AB31] fill-[#01AB31]/20" />
-            )}
-          </div>
-        </div>
-
+    <div className="flex flex-col items-start p-8 gap-6 w-full bg-white border border-stone-100 rounded-lg hover:shadow-lg transition-shadow duration-500">
+      <div className="flex flex-col w-full gap-5">
+        
         {/* Star Rating */}
-        <div className="flex flex-row gap-[6px]">
+        <div className="flex flex-row gap-1">
           {[...Array(5)].map((_, i) => (
             <Star 
               key={i}
-              size={22}
-              className={i < rating ? "fill-[#FFC633] text-[#FFC633]" : "text-[#79716B]"}
+              size={16}
+              className={i < rating ? "fill-[#C19A5B] text-[#C19A5B]" : "text-stone-200 fill-stone-200"}
             />
           ))}
         </div>
 
         {/* Review Text */}
-        <p className="font-poppins font-normal text-base leading-[22px] text-[#79716B]">
+        <p className="font-inter font-light italic text-[15px] leading-[26px] text-stone-600">
           "{text}"
         </p>
 
-        {/* Date */}
-        <span className="font-poppins font-medium text-base text-[#79716B] mt-2">
-          Posted on {date}
-        </span>
+        {/* Footer: Name, Badge, Date */}
+        <div className="flex flex-col gap-1 mt-2">
+          <div className="flex flex-row items-center gap-2">
+            <span className="font-poppins font-medium text-sm text-stone-900 tracking-wide">
+              {name}
+            </span>
+            {verified && (
+              <CheckCircle2 className="w-4 h-4 text-stone-400 stroke-[1.5]" />
+            )}
+          </div>
+          <span className="font-poppins font-light text-[11px] text-stone-400 uppercase tracking-[0.1em]">
+            {date}
+          </span>
+        </div>
+        
       </div>
     </div>
   );
