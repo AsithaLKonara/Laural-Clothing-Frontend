@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import BreadcrumbSchema from "./seo/BreadcrumbSchema";
 
 interface BreadcrumbItem {
   label: string;
@@ -12,8 +13,16 @@ interface BreadcrumbsProps {
 }
 
 export default function Breadcrumbs({ items }: BreadcrumbsProps) {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://laural.lk';
+  
+  const schemaItems = items.map((item) => ({
+    name: item.label,
+    item: item.href ? `${baseUrl}${item.href}` : baseUrl,
+  }));
+
   return (
     <nav className="flex items-center gap-2 overflow-x-auto no-scrollbar whitespace-nowrap py-4">
+      <BreadcrumbSchema items={schemaItems} />
       {items.map((item, index) => {
         const isLast = index === items.length - 1;
 
