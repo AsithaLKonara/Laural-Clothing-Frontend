@@ -93,7 +93,7 @@ export default function ClientContent() {
               <div className="flex items-center gap-4 p-4 border border-stone-200 rounded-2xl bg-white hover:border-stone-400 cursor-pointer transition-colors">
                 <input type="checkbox" className="w-5 h-5 accent-[#1C1917] cursor-pointer" />
                 <div className="relative w-16 h-20 bg-stone-100 rounded overflow-hidden shrink-0">
-                  <Image src="/products/product_1.jpg" alt="Product" fill className="object-cover" />
+                  <Image src="/products/product_1.jpg" alt="Vesper Long Sleeve Top" fill className="object-cover" />
                 </div>
                 <div className="flex flex-col flex-1">
                   <span className="font-poppins font-medium text-sm text-primary">Vesper Long Sleeve Top</span>
