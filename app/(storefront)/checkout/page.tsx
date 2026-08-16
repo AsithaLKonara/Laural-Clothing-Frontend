@@ -7,20 +7,35 @@ import { TicketPercent, CreditCard, Banknote, ShieldCheck, Award } from "lucide-
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import LoyaltyPointsModal from "@/components/LoyaltyPointsModal";
-
-type PaymentMethod = "cod" | "mintpay" | "koko" | "payzy" | "onepay";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { checkoutSchema, CheckoutFormData } from "@/lib/validations";
 
 export default function CheckoutPage() {
-  const [shippingPhone, setShippingPhone] = useState<string | undefined>();
-  const [billingPhone, setBillingPhone] = useState<string | undefined>();
-  const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<CheckoutFormData>({
+    resolver: zodResolver(checkoutSchema),
+    defaultValues: {
+      billingSameAsShipping: true,
+      paymentMethod: "cod",
+    },
+  });
+
+  const billingSameAsShipping = watch("billingSameAsShipping");
+  const paymentMethod = watch("paymentMethod");
+
   const [discountCode, setDiscountCode] = useState("");
   const [isLoyaltyModalOpen, setIsLoyaltyModalOpen] = useState(false);
   const [appliedLoyaltyPoints, setAppliedLoyaltyPoints] = useState<number>(0);
 
-  const handlePlaceOrder = (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = (data: CheckoutFormData) => {
+    console.log("Valid checkout data:", data);
     // Proceed to payment gateway or success page
   };
 
@@ -36,7 +51,7 @@ export default function CheckoutPage() {
             </h1>
           </div>
 
-          <form onSubmit={handlePlaceOrder} className="flex flex-col gap-10 w-full">
+          <form id="checkout-form" onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-10 w-full">
             
             {/* Shipping Information */}
             <div className="flex flex-col gap-6 w-full">
@@ -53,9 +68,10 @@ export default function CheckoutPage() {
                   <input 
                     type="text" 
                     placeholder="Enter full name"
-                    className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400"
-                    required
+                    {...register("fullName")}
+                    className={`w-full h-[52px] px-[20px] border ${errors.fullName ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400`}
                   />
+                  {errors.fullName && <span className="text-red-500 text-xs mt-1 pl-4">{errors.fullName.message}</span>}
                 </div>
 
                 {/* Address Lines */}
@@ -66,12 +82,15 @@ export default function CheckoutPage() {
                   <input 
                     type="text" 
                     placeholder="Address Line 1"
-                    className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400 mb-2"
-                    required
+                    {...register("addressLine1")}
+                    className={`w-full h-[52px] px-[20px] border ${errors.addressLine1 ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400 mb-2`}
                   />
+                  {errors.addressLine1 && <span className="text-red-500 text-xs mt-0 mb-2 pl-4">{errors.addressLine1.message}</span>}
+                  
                   <input 
                     type="text" 
                     placeholder="Address Line 2 (Optional)"
+                    {...register("addressLine2")}
                     className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400"
                   />
                 </div>
@@ -84,9 +103,10 @@ export default function CheckoutPage() {
                   <input 
                     type="text" 
                     placeholder="Enter city"
-                    className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400"
-                    required
+                    {...register("city")}
+                    className={`w-full h-[52px] px-[20px] border ${errors.city ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400`}
                   />
+                  {errors.city && <span className="text-red-500 text-xs mt-1 pl-4">{errors.city.message}</span>}
                 </div>
 
                 {/* Phone & Email (Row on Desktop) */}
@@ -96,17 +116,23 @@ export default function CheckoutPage() {
                     <label className="font-poppins font-medium text-xs uppercase tracking-wider text-stone-500">
                       Phone number <span className="text-accent">*</span>
                     </label>
-                    <PhoneInput 
-                      placeholder="Enter phone number"
-                      value={shippingPhone}
-                      onChange={setShippingPhone}
-                      defaultCountry="LK"
-                      className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-all"
-                      numberInputProps={{
-                        className: "w-full h-full bg-transparent border-none outline-none text-primary font-poppins text-sm placeholder:text-stone-400 pl-4",
-                        required: true
-                      }}
+                    <Controller
+                      name="phone"
+                      control={control}
+                      render={({ field }) => (
+                        <PhoneInput 
+                          placeholder="Enter phone number"
+                          value={field.value}
+                          onChange={field.onChange}
+                          defaultCountry="LK"
+                          className={`w-full h-[52px] px-[20px] border ${errors.phone ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-all`}
+                          numberInputProps={{
+                            className: "w-full h-full bg-transparent border-none outline-none text-primary font-poppins text-sm placeholder:text-stone-400 pl-4",
+                          }}
+                        />
+                      )}
                     />
+                    {errors.phone && <span className="text-red-500 text-xs mt-1 pl-4">{errors.phone.message}</span>}
                   </div>
 
                   {/* Email */}
@@ -117,25 +143,29 @@ export default function CheckoutPage() {
                     <input 
                       type="email" 
                       placeholder="Enter email address"
-                      className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400"
-                      required
+                      {...register("email")}
+                      className={`w-full h-[52px] px-[20px] border ${errors.email ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400`}
                     />
+                    {errors.email && <span className="text-red-500 text-xs mt-1 pl-4">{errors.email.message}</span>}
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Checkbox for T&C */}
-            <div className="flex items-center gap-3">
-              <input 
-                type="checkbox" 
-                id="terms" 
-                className="w-5 h-5 accent-[#1C1917] rounded-sm cursor-pointer"
-                required
-              />
-              <label htmlFor="terms" className="font-poppins text-sm text-primary cursor-pointer select-none mt-1">
-                I have read and agree to the Terms and Conditions.
-              </label>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-3">
+                <input 
+                  type="checkbox" 
+                  id="terms" 
+                  {...register("termsAccepted")}
+                  className="w-5 h-5 accent-[#1C1917] rounded-sm cursor-pointer"
+                />
+                <label htmlFor="terms" className="font-poppins text-sm text-primary cursor-pointer select-none mt-1">
+                  I have read and agree to the Terms and Conditions.
+                </label>
+              </div>
+              {errors.termsAccepted && <span className="text-red-500 text-xs mt-1 pl-8">{errors.termsAccepted.message}</span>}
             </div>
 
             {/* Billing Address Toggle */}
@@ -152,9 +182,9 @@ export default function CheckoutPage() {
                   </div>
                   <input 
                     type="radio" 
-                    name="billingToggle" 
-                    checked={billingSameAsShipping} 
-                    onChange={() => setBillingSameAsShipping(true)} 
+                    value="true"
+                    checked={billingSameAsShipping === true}
+                    onChange={() => setValue("billingSameAsShipping", true)}
                     className="hidden" 
                   />
                   <span className="font-poppins text-sm text-primary font-medium">Same as shipping address</span>
@@ -167,9 +197,9 @@ export default function CheckoutPage() {
                   </div>
                   <input 
                     type="radio" 
-                    name="billingToggle" 
-                    checked={!billingSameAsShipping} 
-                    onChange={() => setBillingSameAsShipping(false)} 
+                    value="false"
+                    checked={billingSameAsShipping === false}
+                    onChange={() => setValue("billingSameAsShipping", false)}
                     className="hidden" 
                   />
                   <span className="font-poppins text-sm text-primary font-medium">Use a different billing address</span>
@@ -188,9 +218,10 @@ export default function CheckoutPage() {
                   <input 
                     type="text" 
                     placeholder="Address Line 1"
-                    className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400"
-                    required
+                    {...register("billingAddressLine1")}
+                    className={`w-full h-[52px] px-[20px] border ${errors.billingAddressLine1 ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400`}
                   />
+                  {errors.billingAddressLine1 && <span className="text-red-500 text-xs mt-1 pl-4">{errors.billingAddressLine1.message}</span>}
                 </div>
                 <div className="flex flex-col md:flex-row gap-5 w-full">
                   <div className="flex flex-col gap-2 w-full flex-1">
@@ -200,25 +231,32 @@ export default function CheckoutPage() {
                     <input 
                       type="text" 
                       placeholder="Enter city"
-                      className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400"
-                      required
+                      {...register("billingCity")}
+                      className={`w-full h-[52px] px-[20px] border ${errors.billingCity ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400`}
                     />
+                    {errors.billingCity && <span className="text-red-500 text-xs mt-1 pl-4">{errors.billingCity.message}</span>}
                   </div>
                   <div className="flex flex-col gap-2 w-full flex-1">
                     <label className="font-poppins font-medium text-xs uppercase tracking-wider text-stone-500">
                       Phone <span className="text-accent">*</span>
                     </label>
-                    <PhoneInput 
-                      placeholder="Enter phone number"
-                      value={billingPhone}
-                      onChange={setBillingPhone}
-                      defaultCountry="LK"
-                      className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-all"
-                      numberInputProps={{
-                        className: "w-full h-full bg-transparent border-none outline-none text-primary font-poppins text-sm placeholder:text-stone-400 pl-4",
-                        required: true
-                      }}
+                    <Controller
+                      name="billingPhone"
+                      control={control}
+                      render={({ field }) => (
+                        <PhoneInput 
+                          placeholder="Enter phone number"
+                          value={field.value}
+                          onChange={field.onChange}
+                          defaultCountry="LK"
+                          className={`w-full h-[52px] px-[20px] border ${errors.billingPhone ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-all`}
+                          numberInputProps={{
+                            className: "w-full h-full bg-transparent border-none outline-none text-primary font-poppins text-sm placeholder:text-stone-400 pl-4",
+                          }}
+                        />
+                      )}
                     />
+                    {errors.billingPhone && <span className="text-red-500 text-xs mt-1 pl-4">{errors.billingPhone.message}</span>}
                   </div>
                 </div>
               </div>
@@ -341,7 +379,7 @@ export default function CheckoutPage() {
                   <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === 'cod' ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
                     {paymentMethod === 'cod' && <div className="w-2 h-2 rounded-full bg-white" />}
                   </div>
-                  <input type="radio" name="payment" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} className="hidden" />
+                  <input type="radio" value="cod" {...register("paymentMethod")} className="hidden" />
                   <div className="flex items-center gap-2">
                     <Banknote size={18} className="text-stone-500" />
                     <span className="font-poppins text-sm text-primary font-medium">Cash on delivery</span>
@@ -356,7 +394,7 @@ export default function CheckoutPage() {
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === 'mintpay' ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
                       {paymentMethod === 'mintpay' && <div className="w-2 h-2 rounded-full bg-white" />}
                     </div>
-                    <input type="radio" name="payment" checked={paymentMethod === 'mintpay'} onChange={() => setPaymentMethod('mintpay')} className="hidden" />
+                    <input type="radio" value="mintpay" {...register("paymentMethod")} className="hidden" />
                     <span className="font-poppins text-sm text-primary font-medium">Mintpay</span>
                   </div>
                   <span className="font-poppins text-[11px] font-semibold tracking-wider uppercase text-emerald-600 bg-emerald-50 px-2 py-1 rounded-sm">Pay Later</span>
@@ -370,7 +408,7 @@ export default function CheckoutPage() {
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === 'koko' ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
                       {paymentMethod === 'koko' && <div className="w-2 h-2 rounded-full bg-white" />}
                     </div>
-                    <input type="radio" name="payment" checked={paymentMethod === 'koko'} onChange={() => setPaymentMethod('koko')} className="hidden" />
+                    <input type="radio" value="koko" {...register("paymentMethod")} className="hidden" />
                     <span className="font-poppins text-sm text-primary font-medium">Koko: BNPL</span>
                   </div>
                   <span className="font-poppins text-[11px] font-semibold tracking-wider uppercase text-emerald-600 bg-emerald-50 px-2 py-1 rounded-sm">Pay Later</span>
@@ -383,7 +421,7 @@ export default function CheckoutPage() {
                   <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === 'payzy' ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
                     {paymentMethod === 'payzy' && <div className="w-2 h-2 rounded-full bg-white" />}
                   </div>
-                  <input type="radio" name="payment" checked={paymentMethod === 'payzy'} onChange={() => setPaymentMethod('payzy')} className="hidden" />
+                  <input type="radio" value="payzy" {...register("paymentMethod")} className="hidden" />
                   <span className="font-poppins text-sm text-primary font-medium">Payzy</span>
                 </div>
               </label>
@@ -394,7 +432,7 @@ export default function CheckoutPage() {
                   <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === 'onepay' ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
                     {paymentMethod === 'onepay' && <div className="w-2 h-2 rounded-full bg-white" />}
                   </div>
-                  <input type="radio" name="payment" checked={paymentMethod === 'onepay'} onChange={() => setPaymentMethod('onepay')} className="hidden" />
+                  <input type="radio" value="onepay" {...register("paymentMethod")} className="hidden" />
                   <div className="flex items-center gap-2">
                     <CreditCard size={18} className="text-stone-500" />
                     <span className="font-poppins text-sm text-primary font-medium">Bank Card / Bank Account</span>
@@ -416,9 +454,12 @@ export default function CheckoutPage() {
             {/* Desktop Place Order Button */}
             <div className="hidden lg:flex w-full pt-6">
                <button 
+                type="button"
                 onClick={(e) => {
-                  const form = document.querySelector('form');
-                  if (form) form.requestSubmit();
+                  const form = document.getElementById('checkout-form') as HTMLFormElement;
+                  if (form) {
+                    form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                  }
                 }}
                 className="w-full h-[54px] flex justify-center items-center bg-primary hover:bg-stone-800 transition-colors rounded-full font-poppins font-semibold text-sm text-white uppercase tracking-widest shadow-lg hover:shadow-xl"
               >

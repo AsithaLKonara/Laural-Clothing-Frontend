@@ -2,10 +2,25 @@
 
 import { X, Search, UserPlus, Phone, User } from "lucide-react";
 import { useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { posCustomerSchema, POSCustomerFormData } from "@/lib/validations";
+import PhoneInput from "react-phone-number-input";
+import "react-phone-number-input/style.css";
 
 export default function CustomerSelectionModal({ onClose }: { onClose: () => void }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+
+  const { register, handleSubmit, control, formState: { errors }, reset } = useForm<POSCustomerFormData>({
+    resolver: zodResolver(posCustomerSchema),
+  });
+
+  const onSubmit = (data: POSCustomerFormData) => {
+    console.log("New customer data:", data);
+    // Simulate successful creation and selection
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
@@ -71,47 +86,79 @@ export default function CustomerSelectionModal({ onClose }: { onClose: () => voi
             </div>
           </div>
         ) : (
-          <div className="flex flex-col h-full">
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-full overflow-hidden">
             <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="font-inter font-semibold text-sm text-foreground">First Name</label>
                 <div className="relative">
                   <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-                  <input type="text" className="w-full bg-surface border border-border rounded-xl py-3 pl-10 pr-4 font-inter text-sm text-foreground focus:outline-none focus:border-primary" />
+                  <input 
+                    type="text" 
+                    {...register("firstName")}
+                    className={`w-full bg-surface border ${errors.firstName ? 'border-red-500' : 'border-border'} rounded-xl py-3 pl-10 pr-4 font-inter text-sm text-foreground focus:outline-none focus:border-primary`} 
+                  />
                 </div>
+                {errors.firstName && <span className="text-red-500 text-xs mt-1">{errors.firstName.message}</span>}
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="font-inter font-semibold text-sm text-foreground">Last Name</label>
-                <input type="text" className="w-full bg-surface border border-border rounded-xl py-3 px-4 font-inter text-sm text-foreground focus:outline-none focus:border-primary" />
+                <input 
+                  type="text" 
+                  {...register("lastName")}
+                  className={`w-full bg-surface border ${errors.lastName ? 'border-red-500' : 'border-border'} rounded-xl py-3 px-4 font-inter text-sm text-foreground focus:outline-none focus:border-primary`} 
+                />
+                {errors.lastName && <span className="text-red-500 text-xs mt-1">{errors.lastName.message}</span>}
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="font-inter font-semibold text-sm text-foreground">Phone Number</label>
-                <div className="relative">
-                  <Phone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-                  <input type="tel" className="w-full bg-surface border border-border rounded-xl py-3 pl-10 pr-4 font-inter text-sm text-foreground focus:outline-none focus:border-primary" />
-                </div>
+                <Controller
+                  name="phone"
+                  control={control}
+                  render={({ field }) => (
+                    <PhoneInput 
+                      placeholder="Enter phone number"
+                      value={field.value}
+                      onChange={field.onChange}
+                      defaultCountry="LK"
+                      className={`w-full bg-surface border ${errors.phone ? 'border-red-500' : 'border-border'} rounded-xl py-3 px-4 font-inter text-sm text-foreground focus-within:outline-none focus-within:border-primary`}
+                      numberInputProps={{
+                        className: "w-full h-full bg-transparent border-none outline-none text-foreground font-inter text-sm placeholder:text-muted pl-4",
+                      }}
+                    />
+                  )}
+                />
+                {errors.phone && <span className="text-red-500 text-xs mt-1">{errors.phone.message}</span>}
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="font-inter font-semibold text-sm text-foreground">Email (Optional)</label>
-                <input type="email" className="w-full bg-surface border border-border rounded-xl py-3 px-4 font-inter text-sm text-foreground focus:outline-none focus:border-primary" />
+                <input 
+                  type="email" 
+                  {...register("email")}
+                  className={`w-full bg-surface border ${errors.email ? 'border-red-500' : 'border-border'} rounded-xl py-3 px-4 font-inter text-sm text-foreground focus:outline-none focus:border-primary`} 
+                />
+                {errors.email && <span className="text-red-500 text-xs mt-1">{errors.email.message}</span>}
               </div>
             </div>
             
             <div className="p-4 border-t border-border bg-surface shrink-0 flex gap-3">
               <button 
-                onClick={() => setIsCreating(false)}
+                type="button"
+                onClick={() => {
+                  setIsCreating(false);
+                  reset();
+                }}
                 className="flex-1 py-3 flex items-center justify-center bg-background border border-border hover:bg-surface text-foreground rounded-xl font-inter font-semibold text-sm transition-colors"
               >
                 Back to Search
               </button>
               <button 
-                onClick={onClose}
+                type="submit"
                 className="flex-1 py-3 flex items-center justify-center bg-primary hover:bg-primary-hover text-white rounded-xl font-inter font-bold text-sm transition-colors shadow-md"
               >
                 Save & Select
               </button>
             </div>
-          </div>
+          </form>
         )}
 
       </div>

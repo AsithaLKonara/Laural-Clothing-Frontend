@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   X,
   ImagePlus,
@@ -18,6 +18,9 @@ import {
   CreditCard,
   Globe,
 } from "lucide-react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createProductSchema, CreateProductFormData } from "@/lib/validations";
 
 interface Variant {
   id: string;
@@ -56,7 +59,7 @@ function generateSlug(name: string) {
 }
 
 function generateSKU(name: string, size: string, color: string) {
-  const prefix = name.toUpperCase().split(" ").map(w => w[0]).join("").slice(0, 3);
+  const prefix = name ? name.toUpperCase().split(" ").map(w => w[0]).join("").slice(0, 3) : "PRD";
   const s = size.toUpperCase().slice(0, 2);
   const c = color.toUpperCase().slice(0, 2);
   return `LC-${prefix}-${s}-${c}`;
@@ -64,25 +67,14 @@ function generateSKU(name: string, size: string, color: string) {
 
 export default function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
   const [activeTab, setActiveTab] = useState("basic");
-  const [productName, setProductName] = useState("");
-  const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("");
-  const [collection, setCollection] = useState("");
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [variants, setVariants] = useState<Variant[]>([]);
-  const [basePrice, setBasePrice] = useState("");
-  const [compareAtPrice, setCompareAtPrice] = useState("");
-  const [costPrice, setCostPrice] = useState("");
   const [selectedPaymentMethods, setSelectedPaymentMethods] = useState<string[]>([...PAYMENT_GATEWAYS]);
   const [sizeGuideEnabled, setSizeGuideEnabled] = useState(false);
   const [sizeGuideContent, setSizeGuideContent] = useState("S — Chest: 36\", Waist: 30\"\nM — Chest: 38\", Waist: 32\"\nL — Chest: 40\", Waist: 34\"\nXL — Chest: 42\", Waist: 36\"");
-  const [tags, setTags] = useState("");
-  const [metaTitle, setMetaTitle] = useState("");
-  const [metaDesc, setMetaDesc] = useState("");
-
+  
   const [customSizes, setCustomSizes] = useState<string[]>([]);
   const [customColors, setCustomColors] = useState<{name: string, hex: string}[]>([]);
   const [newSize, setNewSize] = useState("");
@@ -90,6 +82,38 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
   const [newColorHex, setNewColorHex] = useState("#000000");
   const [isAddingSize, setIsAddingSize] = useState(false);
   const [isAddingColor, setIsAddingColor] = useState(false);
+
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<CreateProductFormData>({
+    resolver: zodResolver(createProductSchema),
+    defaultValues: {
+      name: "",
+      slug: "",
+      description: "",
+      category: "",
+      collection: "",
+      basePrice: "",
+      compareAtPrice: "",
+      costPrice: "",
+      tags: "",
+      metaTitle: "",
+      metaDesc: ""
+    }
+  });
+
+  const productName = watch("name");
+  const slug = watch("slug");
+  const metaTitle = watch("metaTitle");
+  const metaDesc = watch("metaDesc");
+  const basePrice = watch("basePrice");
+  const compareAtPrice = watch("compareAtPrice");
+  const costPrice = watch("costPrice");
+
+  // Keep slug in sync unless manually edited
+  useEffect(() => {
+    if (!slugEdited && productName) {
+      setValue("slug", generateSlug(productName));
+    }
+  }, [productName, slugEdited, setValue]);
 
   if (!isOpen) return null;
 
@@ -113,11 +137,6 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
     setIsAddingColor(false);
   }
 
-  function handleNameChange(val: string) {
-    setProductName(val);
-    if (!slugEdited) setSlug(generateSlug(val));
-  }
-
   function toggleSize(size: string) {
     setSelectedSizes(prev => prev.includes(size) ? prev.filter(s => s !== size) : [...prev, size]);
   }
@@ -139,8 +158,8 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
             sku: generateSKU(productName || "PROD", size, color),
             barcode: "",
             stock: Object.fromEntries(BRANCHES.map(b => [b, 0])),
-            price: basePrice,
-            compareAtPrice: compareAtPrice,
+            price: basePrice || "",
+            compareAtPrice: compareAtPrice || "",
           });
         }
       }
@@ -168,6 +187,19 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
     setSelectedPaymentMethods(prev => prev.includes(gw) ? prev.filter(g => g !== gw) : [...prev, gw]);
   }
 
+  const onSubmit = (data: CreateProductFormData) => {
+    const payload = {
+      ...data,
+      variants,
+      paymentMethods: selectedPaymentMethods,
+      sizeGuide: sizeGuideEnabled ? sizeGuideContent : null,
+      selectedSizes,
+      selectedColors
+    };
+    console.log("Saving Product:", payload);
+    onClose();
+  };
+
   return (
     <div className="fixed inset-0 z-[200] flex">
       {/* Backdrop */}
@@ -194,6 +226,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
             return (
               <button
                 key={tab.id}
+                type="button"
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium font-inter whitespace-nowrap border-b-2 transition-all ${
                   activeTab === tab.id
@@ -208,524 +241,531 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
           })}
         </div>
 
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto p-8">
+        {/* Body Form */}
+        <form id="add-product-form" onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-8">
 
-          {/* ────────── BASIC INFO ────────── */}
-          {activeTab === "basic" && (
-            <div className="flex flex-col gap-6 max-w-[700px]">
-              <div className="flex flex-col gap-2">
-                <label className="label">Product Name <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  value={productName}
-                  onChange={e => handleNameChange(e.target.value)}
-                  placeholder="e.g. Black Oversized T-Shirt"
-                  className="input"
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label className="label">Product Slug</label>
-                <div className="flex items-center bg-stone-50 border border-stone-200 rounded-lg overflow-hidden">
-                  <span className="px-3 text-stone-400 text-sm font-mono border-r border-stone-200 h-full py-2.5">/product/</span>
+            {/* ────────── BASIC INFO ────────── */}
+            {activeTab === "basic" && (
+              <div className="flex flex-col gap-6 max-w-[700px]">
+                <div className="flex flex-col gap-2">
+                  <label className="label">Product Name <span className="text-red-500">*</span></label>
                   <input
                     type="text"
-                    value={slug}
-                    onChange={e => { setSlug(e.target.value); setSlugEdited(true); }}
-                    className="flex-1 bg-transparent px-3 py-2.5 text-sm font-mono outline-none text-stone-900"
+                    {...register("name")}
+                    placeholder="e.g. Black Oversized T-Shirt"
+                    className={`input ${errors.name ? 'border-red-500' : ''}`}
                   />
+                  {errors.name && <span className="text-red-500 text-xs">{errors.name.message}</span>}
                 </div>
-                <p className="text-xs text-stone-400 font-inter">Auto-generated from product name. Edit only if needed.</p>
-              </div>
 
-              <div className="flex flex-col gap-2">
-                <label className="label">Description</label>
-                <textarea
-                  value={description}
-                  onChange={e => setDescription(e.target.value)}
-                  rows={5}
-                  placeholder="Describe the product — fabric, fit, key features..."
-                  className="input resize-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
-                  <label className="label">Category</label>
-                  <select value={category} onChange={e => setCategory(e.target.value)} className="input">
-                    <option value="">Select Category</option>
-                    <option>T-Shirts</option>
-                    <option>Shirts</option>
-                    <option>Dresses</option>
-                    <option>Pants</option>
-                    <option>Accessories</option>
-                  </select>
+                  <label className="label">Product Slug</label>
+                  <div className={`flex items-center bg-stone-50 border ${errors.slug ? 'border-red-500' : 'border-stone-200'} rounded-lg overflow-hidden`}>
+                    <span className="px-3 text-stone-400 text-sm font-mono border-r border-stone-200 h-full py-2.5">/product/</span>
+                    <input
+                      type="text"
+                      {...register("slug", { onChange: () => setSlugEdited(true) })}
+                      className="flex-1 bg-transparent px-3 py-2.5 text-sm font-mono outline-none text-stone-900"
+                    />
+                  </div>
+                  {errors.slug && <span className="text-red-500 text-xs">{errors.slug.message}</span>}
+                  <p className="text-xs text-stone-400 font-inter">Auto-generated from product name. Edit only if needed.</p>
                 </div>
+
                 <div className="flex flex-col gap-2">
-                  <label className="label">Collection</label>
-                  <select value={collection} onChange={e => setCollection(e.target.value)} className="input">
-                    <option value="">Select Collection</option>
-                    <option>Summer 2026</option>
-                    <option>Basics</option>
-                    <option>New Arrivals</option>
-                    <option>Sale</option>
-                  </select>
+                  <label className="label">Description</label>
+                  <textarea
+                    {...register("description")}
+                    rows={5}
+                    placeholder="Describe the product — fabric, fit, key features..."
+                    className="input resize-none"
+                  />
+                  {errors.description && <span className="text-red-500 text-xs">{errors.description.message}</span>}
                 </div>
-              </div>
 
-              <div className="flex flex-col gap-2">
-                <label className="label">Tags</label>
-                <input
-                  type="text"
-                  value={tags}
-                  onChange={e => setTags(e.target.value)}
-                  placeholder="oversized, cotton, unisex (comma-separated)"
-                  className="input"
-                />
-              </div>
-
-              <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4">
-                <Info size={16} className="text-blue-500 shrink-0" />
-                <p className="text-sm font-inter text-blue-700">After saving Basic Info, proceed to <strong>Media</strong> to upload product images.</p>
-              </div>
-            </div>
-          )}
-
-          {/* ────────── MEDIA ────────── */}
-          {activeTab === "media" && (
-            <div className="flex flex-col gap-6">
-              <div className="grid grid-cols-4 gap-4">
-                {[...Array(4)].map((_, i) => (
-                  <label key={i} className={`aspect-square border-2 border-dashed border-stone-300 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-stone-50 hover:border-accent transition-all group ${i === 0 ? "col-span-2 row-span-2" : ""}`}>
-                    <ImagePlus size={i === 0 ? 32 : 20} className="text-stone-300 group-hover:text-accent transition-colors" />
-                    <span className="font-inter text-xs text-stone-400 group-hover:text-accent transition-colors">{i === 0 ? "Main Image" : "Image " + (i + 1)}</span>
-                    <input type="file" accept="image/*" className="hidden" />
-                  </label>
-                ))}
-              </div>
-              <p className="text-xs text-stone-400 font-inter">Upload high-quality images. First image will be the primary product photo. Recommended: 800×1000px, JPG/PNG/WEBP.</p>
-
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
-                <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-inter font-bold text-amber-800">File Size Recommendation</p>
-                  <p className="text-xs font-inter text-amber-700 mt-0.5">Keep images under 2MB for fast loading. Use WebP format where possible.</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ────────── VARIANTS ────────── */}
-          {activeTab === "variants" && (
-            <div className="flex flex-col gap-8">
-              <div className="grid grid-cols-2 gap-8">
-                <div className="flex flex-col gap-3">
-                  <label className="label">Available Sizes</label>
-                  <div className="flex flex-wrap gap-2">
-                    {[...SIZES, ...customSizes].map(size => (
-                      <button
-                        key={size}
-                        onClick={() => toggleSize(size)}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
-                          selectedSizes.includes(size)
-                            ? "bg-stone-900 text-white border-stone-900"
-                            : "bg-white text-stone-700 border-stone-200 hover:border-stone-400"
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                    {!isAddingSize ? (
-                      <button onClick={() => setIsAddingSize(true)} className="px-3 py-1.5 rounded-lg text-sm font-medium border border-dashed border-stone-300 text-stone-500 hover:text-stone-700 hover:border-stone-400 flex items-center gap-1 transition-all">
-                        <Plus size={14} /> Add Size
-                      </button>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <input type="text" value={newSize} onChange={e => setNewSize(e.target.value)} placeholder="e.g. 40" className="px-3 py-1.5 bg-white rounded-lg text-sm border border-stone-200 outline-none w-20 focus:border-stone-400" autoFocus onKeyDown={e => e.key === 'Enter' && handleAddCustomSize()} />
-                        <button onClick={handleAddCustomSize} className="px-3 py-1.5 bg-stone-900 text-white rounded-lg text-xs font-medium hover:bg-stone-800">Add</button>
-                        <button onClick={() => setIsAddingSize(false)} className="p-1.5 text-stone-400 hover:text-stone-600 bg-stone-100 rounded-lg"><X size={14} /></button>
-                      </div>
-                    )}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
+                    <label className="label">Category</label>
+                    <select {...register("category")} className={`input ${errors.category ? 'border-red-500' : ''}`}>
+                      <option value="">Select Category</option>
+                      <option>T-Shirts</option>
+                      <option>Shirts</option>
+                      <option>Dresses</option>
+                      <option>Pants</option>
+                      <option>Accessories</option>
+                    </select>
+                    {errors.category && <span className="text-red-500 text-xs">{errors.category.message}</span>}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="label">Collection</label>
+                    <select {...register("collection")} className={`input ${errors.collection ? 'border-red-500' : ''}`}>
+                      <option value="">Select Collection</option>
+                      <option>Summer 2026</option>
+                      <option>Basics</option>
+                      <option>New Arrivals</option>
+                      <option>Sale</option>
+                    </select>
+                    {errors.collection && <span className="text-red-500 text-xs">{errors.collection.message}</span>}
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3">
-                  <label className="label">Available Colors</label>
-                  <div className="flex flex-wrap gap-2 items-center">
-                    {[...COLORS, ...customColors.map(c => c.name)].map(color => {
-                      const isCustom = customColors.find(c => c.name === color);
-                      return (
+                <div className="flex flex-col gap-2">
+                  <label className="label">Tags</label>
+                  <input
+                    type="text"
+                    {...register("tags")}
+                    placeholder="oversized, cotton, unisex (comma-separated)"
+                    className={`input ${errors.tags ? 'border-red-500' : ''}`}
+                  />
+                  {errors.tags && <span className="text-red-500 text-xs">{errors.tags.message}</span>}
+                </div>
+
+                <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <Info size={16} className="text-blue-500 shrink-0" />
+                  <p className="text-sm font-inter text-blue-700">After saving Basic Info, proceed to <strong>Media</strong> to upload product images.</p>
+                </div>
+              </div>
+            )}
+
+            {/* ────────── MEDIA ────────── */}
+            {activeTab === "media" && (
+              <div className="flex flex-col gap-6">
+                <div className="grid grid-cols-4 gap-4">
+                  {[...Array(4)].map((_, i) => (
+                    <label key={i} className={`aspect-square border-2 border-dashed border-stone-300 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-stone-50 hover:border-accent transition-all group ${i === 0 ? "col-span-2 row-span-2" : ""}`}>
+                      <ImagePlus size={i === 0 ? 32 : 20} className="text-stone-300 group-hover:text-accent transition-colors" />
+                      <span className="font-inter text-xs text-stone-400 group-hover:text-accent transition-colors">{i === 0 ? "Main Image" : "Image " + (i + 1)}</span>
+                      <input type="file" accept="image/*" className="hidden" />
+                    </label>
+                  ))}
+                </div>
+                <p className="text-xs text-stone-400 font-inter">Upload high-quality images. First image will be the primary product photo. Recommended: 800×1000px, JPG/PNG/WEBP.</p>
+
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
+                  <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-inter font-bold text-amber-800">File Size Recommendation</p>
+                    <p className="text-xs font-inter text-amber-700 mt-0.5">Keep images under 2MB for fast loading. Use WebP format where possible.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ────────── VARIANTS ────────── */}
+            {activeTab === "variants" && (
+              <div className="flex flex-col gap-8">
+                <div className="grid grid-cols-2 gap-8">
+                  <div className="flex flex-col gap-3">
+                    <label className="label">Available Sizes</label>
+                    <div className="flex flex-wrap gap-2">
+                      {[...SIZES, ...customSizes].map(size => (
                         <button
-                          key={color}
-                          onClick={() => toggleColor(color)}
-                          className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all flex items-center gap-2 ${
-                            selectedColors.includes(color)
+                          key={size}
+                          type="button"
+                          onClick={() => toggleSize(size)}
+                          className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
+                            selectedSizes.includes(size)
                               ? "bg-stone-900 text-white border-stone-900"
                               : "bg-white text-stone-700 border-stone-200 hover:border-stone-400"
                           }`}
                         >
-                          {isCustom && <span className="w-3 h-3 rounded-full border border-stone-200" style={{ backgroundColor: isCustom.hex }} />}
-                          {color}
+                          {size}
                         </button>
-                      );
-                    })}
-                    
-                    {!isAddingColor ? (
-                      <button onClick={() => setIsAddingColor(true)} className="px-3 py-1.5 rounded-lg text-sm font-medium border border-dashed border-stone-300 text-stone-500 hover:text-stone-700 hover:border-stone-400 flex items-center gap-1 transition-all">
-                        <Plus size={14} /> Add Color
-                      </button>
-                    ) : (
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-stone-50 border border-stone-200 rounded-lg p-2 w-full sm:w-auto">
+                      ))}
+                      {!isAddingSize ? (
+                        <button type="button" onClick={() => setIsAddingSize(true)} className="px-3 py-1.5 rounded-lg text-sm font-medium border border-dashed border-stone-300 text-stone-500 hover:text-stone-700 hover:border-stone-400 flex items-center gap-1 transition-all">
+                          <Plus size={14} /> Add Size
+                        </button>
+                      ) : (
                         <div className="flex items-center gap-2">
-                           <div className="w-7 h-7 rounded-md border border-stone-200 shrink-0" style={{ backgroundColor: newColorHex.match(/^#([0-9a-fA-F]{3}){1,2}$/) ? newColorHex : '#000000' }} />
-                           <input type="text" value={newColorHex} onChange={e => setNewColorHex(e.target.value)} placeholder="#HEX" className="px-2 py-1.5 bg-white rounded-md text-sm border border-stone-200 outline-none w-24 focus:border-stone-400 font-mono" />
+                          <input type="text" value={newSize} onChange={e => setNewSize(e.target.value)} placeholder="e.g. 40" className="px-3 py-1.5 bg-white rounded-lg text-sm border border-stone-200 outline-none w-20 focus:border-stone-400" autoFocus onKeyDown={e => e.key === 'Enter' && handleAddCustomSize()} />
+                          <button type="button" onClick={handleAddCustomSize} className="px-3 py-1.5 bg-stone-900 text-white rounded-lg text-xs font-medium hover:bg-stone-800">Add</button>
+                          <button type="button" onClick={() => setIsAddingSize(false)} className="p-1.5 text-stone-400 hover:text-stone-600 bg-stone-100 rounded-lg"><X size={14} /></button>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <input type="text" value={newColorName} onChange={e => setNewColorName(e.target.value)} placeholder="Color Name" className="px-2 py-1.5 bg-white rounded-md text-sm border border-stone-200 outline-none w-32 focus:border-stone-400" onKeyDown={e => e.key === 'Enter' && handleAddCustomColor()} />
-                          <button onClick={handleAddCustomColor} className="px-3 py-1.5 bg-stone-900 text-white rounded-md text-xs font-medium hover:bg-stone-800 transition-colors">Add</button>
-                          <button onClick={() => setIsAddingColor(false)} className="p-1.5 text-stone-400 hover:text-stone-600 bg-stone-100 rounded-md transition-colors"><X size={14} /></button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3">
+                    <label className="label">Available Colors</label>
+                    <div className="flex flex-wrap gap-2 items-center">
+                      {[...COLORS, ...customColors.map(c => c.name)].map(color => {
+                        const isCustom = customColors.find(c => c.name === color);
+                        return (
+                          <button
+                            key={color}
+                            type="button"
+                            onClick={() => toggleColor(color)}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all flex items-center gap-2 ${
+                              selectedColors.includes(color)
+                                ? "bg-stone-900 text-white border-stone-900"
+                                : "bg-white text-stone-700 border-stone-200 hover:border-stone-400"
+                            }`}
+                          >
+                            {isCustom && <span className="w-3 h-3 rounded-full border border-stone-200" style={{ backgroundColor: isCustom.hex }} />}
+                            {color}
+                          </button>
+                        );
+                      })}
+                      
+                      {!isAddingColor ? (
+                        <button type="button" onClick={() => setIsAddingColor(true)} className="px-3 py-1.5 rounded-lg text-sm font-medium border border-dashed border-stone-300 text-stone-500 hover:text-stone-700 hover:border-stone-400 flex items-center gap-1 transition-all">
+                          <Plus size={14} /> Add Color
+                        </button>
+                      ) : (
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-stone-50 border border-stone-200 rounded-lg p-2 w-full sm:w-auto">
+                          <div className="flex items-center gap-2">
+                             <div className="w-7 h-7 rounded-md border border-stone-200 shrink-0" style={{ backgroundColor: newColorHex.match(/^#([0-9a-fA-F]{3}){1,2}$/) ? newColorHex : '#000000' }} />
+                             <input type="text" value={newColorHex} onChange={e => setNewColorHex(e.target.value)} placeholder="#HEX" className="px-2 py-1.5 bg-white rounded-md text-sm border border-stone-200 outline-none w-24 focus:border-stone-400 font-mono" />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input type="text" value={newColorName} onChange={e => setNewColorName(e.target.value)} placeholder="Color Name" className="px-2 py-1.5 bg-white rounded-md text-sm border border-stone-200 outline-none w-32 focus:border-stone-400" onKeyDown={e => e.key === 'Enter' && handleAddCustomColor()} />
+                            <button type="button" onClick={handleAddCustomColor} className="px-3 py-1.5 bg-stone-900 text-white rounded-md text-xs font-medium hover:bg-stone-800 transition-colors">Add</button>
+                            <button type="button" onClick={() => setIsAddingColor(false)} className="p-1.5 text-stone-400 hover:text-stone-600 bg-stone-100 rounded-md transition-colors"><X size={14} /></button>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <button
-                onClick={generateVariants}
-                disabled={selectedSizes.length === 0 || selectedColors.length === 0}
-                className="w-fit bg-stone-900 text-white px-6 py-3 rounded-lg font-inter font-medium text-sm hover:bg-stone-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                <Plus size={16} />
-                Generate {selectedSizes.length * selectedColors.length} Variant{selectedSizes.length * selectedColors.length !== 1 ? "s" : ""}
-              </button>
+                <button
+                  type="button"
+                  onClick={generateVariants}
+                  disabled={selectedSizes.length === 0 || selectedColors.length === 0}
+                  className="w-fit bg-stone-900 text-white px-6 py-3 rounded-lg font-inter font-medium text-sm hover:bg-stone-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  <Plus size={16} />
+                  Generate {selectedSizes.length * selectedColors.length} Variant{selectedSizes.length * selectedColors.length !== 1 ? "s" : ""}
+                </button>
 
-              {variants.length > 0 && (
-                <div className="border border-stone-200 rounded-xl overflow-hidden">
-                  <table className="w-full text-left text-sm">
-                    <thead className="bg-stone-50 border-b border-stone-200">
-                      <tr>
-                        <th className="px-4 py-3 font-semibold text-xs text-stone-500 uppercase tracking-wide">Variant</th>
-                        <th className="px-4 py-3 font-semibold text-xs text-stone-500 uppercase tracking-wide">SKU</th>
-                        <th className="px-4 py-3 font-semibold text-xs text-stone-500 uppercase tracking-wide">Barcode</th>
-                        <th className="px-4 py-3 font-semibold text-xs text-stone-500 uppercase tracking-wide">Price (Rs.)</th>
-                        {BRANCHES.map(b => (
-                          <th key={b} className="px-4 py-3 font-semibold text-xs text-stone-500 uppercase tracking-wide">{b}</th>
-                        ))}
-                        <th className="px-4 py-3"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {variants.map(v => (
-                        <tr key={v.id} className="border-b border-stone-100 last:border-0 hover:bg-stone-50 transition-colors">
-                          <td className="px-4 py-3 font-medium text-stone-900">{v.size} / {v.color}</td>
-                          <td className="px-4 py-3">
-                            <input
-                              className="font-mono text-xs border border-stone-200 rounded px-2 py-1 w-36 outline-none focus:border-stone-400"
-                              value={v.sku}
-                              onChange={e => updateVariantField(v.id, "sku", e.target.value)}
-                            />
-                          </td>
-                          <td className="px-4 py-3">
-                            <input
-                              className="font-mono text-xs border border-stone-200 rounded px-2 py-1 w-28 outline-none focus:border-stone-400"
-                              value={v.barcode}
-                              placeholder="Barcode"
-                              onChange={e => updateVariantField(v.id, "barcode", e.target.value)}
-                            />
-                          </td>
-                          <td className="px-4 py-3">
-                            <input
-                              className="text-sm border border-stone-200 rounded px-2 py-1 w-24 outline-none focus:border-stone-400"
-                              value={v.price}
-                              onChange={e => updateVariantField(v.id, "price", e.target.value)}
-                            />
-                          </td>
+                {variants.length > 0 && (
+                  <div className="border border-stone-200 rounded-xl overflow-hidden">
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-stone-50 border-b border-stone-200">
+                        <tr>
+                          <th className="px-4 py-3 font-semibold text-xs text-stone-500 uppercase tracking-wide">Variant</th>
+                          <th className="px-4 py-3 font-semibold text-xs text-stone-500 uppercase tracking-wide">SKU</th>
+                          <th className="px-4 py-3 font-semibold text-xs text-stone-500 uppercase tracking-wide">Barcode</th>
+                          <th className="px-4 py-3 font-semibold text-xs text-stone-500 uppercase tracking-wide">Price (Rs.)</th>
                           {BRANCHES.map(b => (
-                            <td key={b} className="px-4 py-3">
+                            <th key={b} className="px-4 py-3 font-semibold text-xs text-stone-500 uppercase tracking-wide">{b}</th>
+                          ))}
+                          <th className="px-4 py-3"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {variants.map(v => (
+                          <tr key={v.id} className="border-b border-stone-100 last:border-0 hover:bg-stone-50 transition-colors">
+                            <td className="px-4 py-3 font-medium text-stone-900">{v.size} / {v.color}</td>
+                            <td className="px-4 py-3">
                               <input
-                                type="number"
-                                className="text-sm border border-stone-200 rounded px-2 py-1 w-16 outline-none focus:border-stone-400 text-center"
-                                value={v.stock[b]}
-                                min={0}
-                                onChange={e => updateVariantStock(v.id, b, parseInt(e.target.value) || 0)}
+                                className="font-mono text-xs border border-stone-200 rounded px-2 py-1 w-36 outline-none focus:border-stone-400"
+                                value={v.sku}
+                                onChange={e => updateVariantField(v.id, "sku", e.target.value)}
                               />
                             </td>
-                          ))}
-                          <td className="px-4 py-3">
-                            <button onClick={() => removeVariant(v.id)} className="text-red-400 hover:text-red-600 transition-colors">
-                              <Trash2 size={14} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {variants.length === 0 && (
-                <div className="border-2 border-dashed border-stone-200 rounded-xl p-12 flex flex-col items-center gap-3 text-center">
-                  <Layers size={32} className="text-stone-300" />
-                  <p className="font-inter text-stone-500 font-medium">No variants generated yet</p>
-                  <p className="font-inter text-xs text-stone-400">Select sizes and colors above, then click Generate Variants</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ────────── PRICING ────────── */}
-          {activeTab === "pricing" && (
-            <div className="flex flex-col gap-6 max-w-[500px]">
-              <div className="bg-stone-50 border border-stone-200 rounded-xl p-5 flex flex-col gap-4">
-                <h3 className="font-inter font-bold text-stone-900">Base Pricing</h3>
-                <p className="text-xs text-stone-400 font-inter">These prices apply to all variants by default. You can override per-variant pricing in the Variants tab.</p>
-
-                <div className="flex flex-col gap-2">
-                  <label className="label">Selling Price (Rs.)</label>
-                  <div className="flex items-center border border-stone-200 rounded-lg overflow-hidden bg-white">
-                    <span className="px-3 py-2.5 text-stone-500 text-sm border-r border-stone-200">Rs.</span>
-                    <input type="number" value={basePrice} onChange={e => setBasePrice(e.target.value)} placeholder="0.00" className="flex-1 px-3 py-2.5 text-sm outline-none" />
+                            <td className="px-4 py-3">
+                              <input
+                                className="font-mono text-xs border border-stone-200 rounded px-2 py-1 w-28 outline-none focus:border-stone-400"
+                                value={v.barcode}
+                                placeholder="Barcode"
+                                onChange={e => updateVariantField(v.id, "barcode", e.target.value)}
+                              />
+                            </td>
+                            <td className="px-4 py-3">
+                              <input
+                                className="text-sm border border-stone-200 rounded px-2 py-1 w-24 outline-none focus:border-stone-400"
+                                value={v.price}
+                                onChange={e => updateVariantField(v.id, "price", e.target.value)}
+                              />
+                            </td>
+                            {BRANCHES.map(b => (
+                              <td key={b} className="px-4 py-3">
+                                <input
+                                  type="number"
+                                  className="text-sm border border-stone-200 rounded px-2 py-1 w-16 outline-none focus:border-stone-400 text-center"
+                                  value={v.stock[b]}
+                                  min={0}
+                                  onChange={e => updateVariantStock(v.id, b, parseInt(e.target.value) || 0)}
+                                />
+                              </td>
+                            ))}
+                            <td className="px-4 py-3">
+                              <button type="button" onClick={() => removeVariant(v.id)} className="text-red-400 hover:text-red-600 transition-colors">
+                                <Trash2 size={14} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                </div>
+                )}
 
-                <div className="flex flex-col gap-2">
-                  <label className="label">Compare-At Price (Rs.) <span className="text-stone-400 font-normal">(Original / MRP)</span></label>
-                  <div className="flex items-center border border-stone-200 rounded-lg overflow-hidden bg-white">
-                    <span className="px-3 py-2.5 text-stone-500 text-sm border-r border-stone-200">Rs.</span>
-                    <input type="number" value={compareAtPrice} onChange={e => setCompareAtPrice(e.target.value)} placeholder="0.00" className="flex-1 px-3 py-2.5 text-sm outline-none" />
-                  </div>
-                  <p className="text-xs text-stone-400 font-inter">Shown with strikethrough to indicate discount.</p>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="label">Cost Per Item (Rs.) <span className="text-stone-400 font-normal">(Not shown to customers)</span></label>
-                  <div className="flex items-center border border-stone-200 rounded-lg overflow-hidden bg-white">
-                    <span className="px-3 py-2.5 text-stone-500 text-sm border-r border-stone-200">Rs.</span>
-                    <input type="number" value={costPrice} onChange={e => setCostPrice(e.target.value)} placeholder="0.00" className="flex-1 px-3 py-2.5 text-sm outline-none" />
-                  </div>
-                </div>
-
-                {basePrice && costPrice && (
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-                    <p className="font-inter text-sm font-bold text-emerald-800">Estimated Margin</p>
-                    <p className="font-inter text-2xl font-bold text-emerald-700 mt-1">
-                      {Math.round(((parseFloat(basePrice) - parseFloat(costPrice)) / parseFloat(basePrice)) * 100)}%
-                    </p>
+                {variants.length === 0 && (
+                  <div className="border-2 border-dashed border-stone-200 rounded-xl p-12 flex flex-col items-center gap-3 text-center">
+                    <Layers size={32} className="text-stone-300" />
+                    <p className="font-inter text-stone-500 font-medium">No variants generated yet</p>
+                    <p className="font-inter text-xs text-stone-400">Select sizes and colors above, then click Generate Variants</p>
                   </div>
                 )}
               </div>
-            </div>
-          )}
+            )}
 
-          {/* ────────── INVENTORY ────────── */}
-          {activeTab === "inventory" && (
-            <div className="flex flex-col gap-6 max-w-[700px]">
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
-                <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
-                <p className="text-sm font-inter text-amber-700">Per-variant stock is managed in the <strong>Variants tab</strong>. Use this section to set reorder thresholds and tracking preferences.</p>
-              </div>
+            {/* ────────── PRICING ────────── */}
+            {activeTab === "pricing" && (
+              <div className="flex flex-col gap-6 max-w-[500px]">
+                <div className="bg-stone-50 border border-stone-200 rounded-xl p-5 flex flex-col gap-4">
+                  <h3 className="font-inter font-bold text-stone-900">Base Pricing</h3>
+                  <p className="text-xs text-stone-400 font-inter">These prices apply to all variants by default. You can override per-variant pricing in the Variants tab.</p>
 
-              <div className="flex flex-col gap-4 bg-white border border-stone-200 rounded-xl p-5">
-                <h3 className="font-inter font-bold text-stone-900">Stock Tracking</h3>
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input type="checkbox" defaultChecked className="w-4 h-4 accent-stone-900" />
-                  <span className="font-inter text-sm text-stone-700">Track inventory for this product</span>
-                </label>
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input type="checkbox" className="w-4 h-4 accent-stone-900" />
-                  <span className="font-inter text-sm text-stone-700">Allow purchases when out of stock (backorder)</span>
-                </label>
-              </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="label">Selling Price (Rs.)</label>
+                    <div className={`flex items-center border ${errors.basePrice ? 'border-red-500' : 'border-stone-200'} rounded-lg overflow-hidden bg-white`}>
+                      <span className="px-3 py-2.5 text-stone-500 text-sm border-r border-stone-200">Rs.</span>
+                      <input type="number" {...register("basePrice")} placeholder="0.00" className="flex-1 px-3 py-2.5 text-sm outline-none" />
+                    </div>
+                    {errors.basePrice && <span className="text-red-500 text-xs">{errors.basePrice.message}</span>}
+                  </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-2">
-                  <label className="label">Low Stock Threshold</label>
-                  <input type="number" defaultValue={5} className="input" />
-                  <p className="text-xs text-stone-400 font-inter">Get alerted when stock falls below this level.</p>
+                  <div className="flex flex-col gap-2">
+                    <label className="label">Compare-At Price (Rs.) <span className="text-stone-400 font-normal">(Original / MRP)</span></label>
+                    <div className={`flex items-center border ${errors.compareAtPrice ? 'border-red-500' : 'border-stone-200'} rounded-lg overflow-hidden bg-white`}>
+                      <span className="px-3 py-2.5 text-stone-500 text-sm border-r border-stone-200">Rs.</span>
+                      <input type="number" {...register("compareAtPrice")} placeholder="0.00" className="flex-1 px-3 py-2.5 text-sm outline-none" />
+                    </div>
+                    {errors.compareAtPrice && <span className="text-red-500 text-xs">{errors.compareAtPrice.message}</span>}
+                    <p className="text-xs text-stone-400 font-inter">Shown with strikethrough to indicate discount.</p>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="label">Cost Per Item (Rs.) <span className="text-stone-400 font-normal">(Not shown to customers)</span></label>
+                    <div className={`flex items-center border ${errors.costPrice ? 'border-red-500' : 'border-stone-200'} rounded-lg overflow-hidden bg-white`}>
+                      <span className="px-3 py-2.5 text-stone-500 text-sm border-r border-stone-200">Rs.</span>
+                      <input type="number" {...register("costPrice")} placeholder="0.00" className="flex-1 px-3 py-2.5 text-sm outline-none" />
+                    </div>
+                    {errors.costPrice && <span className="text-red-500 text-xs">{errors.costPrice.message}</span>}
+                  </div>
+
+                  {basePrice && costPrice && !isNaN(Number(basePrice)) && !isNaN(Number(costPrice)) && (
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                      <p className="font-inter text-sm font-bold text-emerald-800">Estimated Margin</p>
+                      <p className="font-inter text-2xl font-bold text-emerald-700 mt-1">
+                        {Math.round(((parseFloat(basePrice) - parseFloat(costPrice)) / parseFloat(basePrice)) * 100)}%
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <div className="flex flex-col gap-2">
-                  <label className="label">Reorder Quantity</label>
-                  <input type="number" defaultValue={50} className="input" />
-                  <p className="text-xs text-stone-400 font-inter">Suggested qty for stock transfer requests.</p>
+              </div>
+            )}
+
+            {/* ────────── INVENTORY ────────── */}
+            {activeTab === "inventory" && (
+              <div className="flex flex-col gap-6 max-w-[700px]">
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
+                  <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                  <p className="text-sm font-inter text-amber-700">Per-variant stock is managed in the <strong>Variants tab</strong>. Use this section to set reorder thresholds and tracking preferences.</p>
+                </div>
+
+                <div className="flex flex-col gap-4 bg-white border border-stone-200 rounded-xl p-5">
+                  <h3 className="font-inter font-bold text-stone-900">Stock Tracking</h3>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" defaultChecked className="w-4 h-4 accent-stone-900" />
+                    <span className="font-inter text-sm text-stone-700">Track inventory for this product</span>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" className="w-4 h-4 accent-stone-900" />
+                    <span className="font-inter text-sm text-stone-700">Allow purchases when out of stock (backorder)</span>
+                  </label>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
+                    <label className="label">Low Stock Threshold</label>
+                    <input type="number" defaultValue={5} className="input" />
+                    <p className="text-xs text-stone-400 font-inter">Get alerted when stock falls below this level.</p>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="label">Reorder Quantity</label>
+                    <input type="number" defaultValue={50} className="input" />
+                    <p className="text-xs text-stone-400 font-inter">Suggested qty for stock transfer requests.</p>
+                  </div>
+                </div>
+
+                <div className="bg-white border border-stone-200 rounded-xl p-5">
+                  <h3 className="font-inter font-bold text-stone-900 mb-4">Branch Availability</h3>
+                  <div className="flex flex-col gap-3">
+                    {BRANCHES.map(branch => (
+                      <label key={branch} className="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" defaultChecked className="w-4 h-4 accent-stone-900" />
+                        <span className="font-inter text-sm text-stone-700 font-medium">{branch}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
               </div>
+            )}
 
-              <div className="bg-white border border-stone-200 rounded-xl p-5">
-                <h3 className="font-inter font-bold text-stone-900 mb-4">Branch Availability</h3>
+            {/* ────────── SIZE GUIDE ────────── */}
+            {activeTab === "sizeguide" && (
+              <div className="flex flex-col gap-6 max-w-[700px]">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={sizeGuideEnabled}
+                    onChange={e => setSizeGuideEnabled(e.target.checked)}
+                    className="w-4 h-4 accent-stone-900"
+                  />
+                  <div>
+                    <span className="font-inter text-sm font-semibold text-stone-900">Enable Size Guide for this product</span>
+                    <p className="font-inter text-xs text-stone-400">Shows a size guide button on the product page.</p>
+                  </div>
+                </label>
+
+                {sizeGuideEnabled && (
+                  <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-2">
+                      <label className="label">Size Guide Content</label>
+                      <textarea
+                        value={sizeGuideContent}
+                        onChange={e => setSizeGuideContent(e.target.value)}
+                        rows={8}
+                        className="input font-mono text-sm resize-none"
+                      />
+                      <p className="text-xs text-stone-400 font-inter">Each line becomes a row in the size guide. Format: Size — Measurement</p>
+                    </div>
+
+                    <div className="bg-white border border-stone-200 rounded-xl p-5">
+                      <h3 className="font-inter font-bold text-stone-900 mb-3 text-sm">Preview</h3>
+                      <div className="flex flex-col gap-2">
+                        {sizeGuideContent.split("\n").filter(Boolean).map((line, i) => (
+                          <div key={i} className="flex justify-between py-2 border-b border-stone-100 last:border-0">
+                            <span className="font-inter text-sm font-bold text-stone-900">{line.split("—")[0]?.trim()}</span>
+                            <span className="font-inter text-sm text-stone-600">{line.split("—")[1]?.trim()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ────────── PAYMENT METHODS ────────── */}
+            {activeTab === "payment" && (
+              <div className="flex flex-col gap-6 max-w-[500px]">
+                <div className="flex flex-col gap-2">
+                  <h3 className="font-inter font-bold text-stone-900">Allowed Payment Methods</h3>
+                  <p className="font-inter text-sm text-stone-500">Control which payment gateways are available at checkout for this product.</p>
+                </div>
+
                 <div className="flex flex-col gap-3">
-                  {BRANCHES.map(branch => (
-                    <label key={branch} className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" defaultChecked className="w-4 h-4 accent-stone-900" />
-                      <span className="font-inter text-sm text-stone-700 font-medium">{branch}</span>
+                  {PAYMENT_GATEWAYS.map(gw => (
+                    <label key={gw} className="flex items-center justify-between p-4 bg-white border border-stone-200 rounded-xl cursor-pointer hover:bg-stone-50 transition-colors group">
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedPaymentMethods.includes(gw)}
+                          onChange={() => togglePayment(gw)}
+                          className="w-4 h-4 accent-stone-900"
+                        />
+                        <span className="font-inter text-sm font-semibold text-stone-900">{gw}</span>
+                      </div>
+                      <span className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${
+                        gw === "COD" ? "bg-stone-100 text-stone-600" :
+                        gw === "Koko" || gw === "Mintpay" ? "bg-violet-100 text-violet-700" :
+                        "bg-blue-100 text-blue-700"
+                      }`}>
+                        {gw === "Koko" || gw === "Mintpay" ? "Installments" : gw === "COD" ? "Cash on Delivery" : "Online"}
+                      </span>
                     </label>
                   ))}
                 </div>
-              </div>
-            </div>
-          )}
 
-          {/* ────────── SIZE GUIDE ────────── */}
-          {activeTab === "sizeguide" && (
-            <div className="flex flex-col gap-6 max-w-[700px]">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={sizeGuideEnabled}
-                  onChange={e => setSizeGuideEnabled(e.target.checked)}
-                  className="w-4 h-4 accent-stone-900"
-                />
-                <div>
-                  <span className="font-inter text-sm font-semibold text-stone-900">Enable Size Guide for this product</span>
-                  <p className="font-inter text-xs text-stone-400">Shows a size guide button on the product page.</p>
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex gap-3">
+                  <Info size={16} className="text-blue-500 shrink-0 mt-0.5" />
+                  <p className="text-sm font-inter text-blue-700">By default, all payment methods are enabled. Disable specific gateways for restricted or custom products only.</p>
                 </div>
-              </label>
+              </div>
+            )}
 
-              {sizeGuideEnabled && (
-                <div className="flex flex-col gap-4">
-                  <div className="flex flex-col gap-2">
-                    <label className="label">Size Guide Content</label>
-                    <textarea
-                      value={sizeGuideContent}
-                      onChange={e => setSizeGuideContent(e.target.value)}
-                      rows={8}
-                      className="input font-mono text-sm resize-none"
-                    />
-                    <p className="text-xs text-stone-400 font-inter">Each line becomes a row in the size guide. Format: Size — Measurement</p>
-                  </div>
-
-                  <div className="bg-white border border-stone-200 rounded-xl p-5">
-                    <h3 className="font-inter font-bold text-stone-900 mb-3 text-sm">Preview</h3>
-                    <div className="flex flex-col gap-2">
-                      {sizeGuideContent.split("\n").filter(Boolean).map((line, i) => (
-                        <div key={i} className="flex justify-between py-2 border-b border-stone-100 last:border-0">
-                          <span className="font-inter text-sm font-bold text-stone-900">{line.split("—")[0]?.trim()}</span>
-                          <span className="font-inter text-sm text-stone-600">{line.split("—")[1]?.trim()}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+            {/* ────────── SEO ────────── */}
+            {activeTab === "seo" && (
+              <div className="flex flex-col gap-6 max-w-[700px]">
+                <div className="flex flex-col gap-2">
+                  <h3 className="font-inter font-bold text-stone-900">SEO & Search Visibility</h3>
+                  <p className="font-inter text-sm text-stone-500">Optimise how this product appears in search engines.</p>
                 </div>
-              )}
-            </div>
-          )}
 
-          {/* ────────── PAYMENT METHODS ────────── */}
-          {activeTab === "payment" && (
-            <div className="flex flex-col gap-6 max-w-[500px]">
-              <div className="flex flex-col gap-2">
-                <h3 className="font-inter font-bold text-stone-900">Allowed Payment Methods</h3>
-                <p className="font-inter text-sm text-stone-500">Control which payment gateways are available at checkout for this product.</p>
+                <div className="flex flex-col gap-2">
+                  <label className="label">Meta Title</label>
+                  <input
+                    type="text"
+                    {...register("metaTitle")}
+                    placeholder="Product name for search engines"
+                    className={`input ${errors.metaTitle ? 'border-red-500' : ''}`}
+                    maxLength={70}
+                  />
+                  {errors.metaTitle && <span className="text-red-500 text-xs">{errors.metaTitle.message}</span>}
+                  <p className="text-xs text-stone-400 font-inter">{(metaTitle || productName || "").length}/70 characters</p>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="label">Meta Description</label>
+                  <textarea
+                    {...register("metaDesc")}
+                    rows={3}
+                    placeholder="Brief product description for search snippets..."
+                    className={`input resize-none ${errors.metaDesc ? 'border-red-500' : ''}`}
+                    maxLength={160}
+                  />
+                  {errors.metaDesc && <span className="text-red-500 text-xs">{errors.metaDesc.message}</span>}
+                  <p className="text-xs text-stone-400 font-inter">{(metaDesc || "").length}/160 characters</p>
+                </div>
+
+                <div className="bg-white border border-stone-200 rounded-xl p-5 flex flex-col gap-1.5">
+                  <p className="text-[10px] text-stone-400 font-inter uppercase tracking-wider">Google Preview</p>
+                  <a href="#" className="font-medium text-blue-700 text-base hover:underline truncate">
+                    {metaTitle || productName || "Product Name"} — Laural Clothing
+                  </a>
+                  <p className="text-sm text-stone-600 font-inter line-clamp-2">
+                    {metaDesc || "Product description will appear here in search results. Write a compelling summary to improve click-through rates."}
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="label">Product Visibility</label>
+                  <select className="input">
+                    <option>Published — Visible to all customers</option>
+                    <option>Draft — Not visible on storefront</option>
+                    <option>Unlisted — Only accessible via direct link</option>
+                  </select>
+                </div>
               </div>
-
-              <div className="flex flex-col gap-3">
-                {PAYMENT_GATEWAYS.map(gw => (
-                  <label key={gw} className="flex items-center justify-between p-4 bg-white border border-stone-200 rounded-xl cursor-pointer hover:bg-stone-50 transition-colors group">
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={selectedPaymentMethods.includes(gw)}
-                        onChange={() => togglePayment(gw)}
-                        className="w-4 h-4 accent-stone-900"
-                      />
-                      <span className="font-inter text-sm font-semibold text-stone-900">{gw}</span>
-                    </div>
-                    <span className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${
-                      gw === "COD" ? "bg-stone-100 text-stone-600" :
-                      gw === "Koko" || gw === "Mintpay" ? "bg-violet-100 text-violet-700" :
-                      "bg-blue-100 text-blue-700"
-                    }`}>
-                      {gw === "Koko" || gw === "Mintpay" ? "Installments" : gw === "COD" ? "Cash on Delivery" : "Online"}
-                    </span>
-                  </label>
-                ))}
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex gap-3">
-                <Info size={16} className="text-blue-500 shrink-0 mt-0.5" />
-                <p className="text-sm font-inter text-blue-700">By default, all payment methods are enabled. Disable specific gateways for restricted or custom products only.</p>
-              </div>
-            </div>
-          )}
-
-          {/* ────────── SEO ────────── */}
-          {activeTab === "seo" && (
-            <div className="flex flex-col gap-6 max-w-[700px]">
-              <div className="flex flex-col gap-2">
-                <h3 className="font-inter font-bold text-stone-900">SEO & Search Visibility</h3>
-                <p className="font-inter text-sm text-stone-500">Optimise how this product appears in search engines.</p>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label className="label">Meta Title</label>
-                <input
-                  type="text"
-                  value={metaTitle || productName}
-                  onChange={e => setMetaTitle(e.target.value)}
-                  placeholder="Product name for search engines"
-                  className="input"
-                  maxLength={70}
-                />
-                <p className="text-xs text-stone-400 font-inter">{(metaTitle || productName).length}/70 characters</p>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label className="label">Meta Description</label>
-                <textarea
-                  value={metaDesc}
-                  onChange={e => setMetaDesc(e.target.value)}
-                  rows={3}
-                  placeholder="Brief product description for search snippets..."
-                  className="input resize-none"
-                  maxLength={160}
-                />
-                <p className="text-xs text-stone-400 font-inter">{metaDesc.length}/160 characters</p>
-              </div>
-
-              <div className="bg-white border border-stone-200 rounded-xl p-5 flex flex-col gap-1.5">
-                <p className="text-[10px] text-stone-400 font-inter uppercase tracking-wider">Google Preview</p>
-                <a href="#" className="font-medium text-blue-700 text-base hover:underline truncate">
-                  {metaTitle || productName || "Product Name"} — Laural Clothing
-                </a>
-                <p className="text-sm text-stone-600 font-inter line-clamp-2">
-                  {metaDesc || "Product description will appear here in search results. Write a compelling summary to improve click-through rates."}
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label className="label">Product Visibility</label>
-                <select className="input">
-                  <option>Published — Visible to all customers</option>
-                  <option>Draft — Not visible on storefront</option>
-                  <option>Unlisted — Only accessible via direct link</option>
-                </select>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="border-t border-stone-200 px-8 py-5 bg-stone-50 shrink-0 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-stone-500 text-sm font-inter">
-            <span className="w-2 h-2 bg-amber-400 rounded-full"></span>
-            Draft mode — product will not be published until you click Save Product
+            )}
           </div>
-          <div className="flex gap-3">
-            <button onClick={onClose} className="px-5 py-2.5 border border-stone-300 rounded-lg font-inter font-medium text-sm text-stone-700 hover:bg-stone-100 transition-colors">
-              Cancel
-            </button>
-            <button
-              className="px-6 py-2.5 bg-stone-900 text-white rounded-lg font-inter font-semibold text-sm hover:bg-stone-800 transition-colors shadow-md shadow-stone-900/20"
-              onClick={() => {
-                // TODO: hook into API
-                onClose();
-              }}
-            >
-              Save Product
-            </button>
+
+          {/* Footer */}
+          <div className="border-t border-stone-200 px-8 py-5 bg-stone-50 shrink-0 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-stone-500 text-sm font-inter">
+              <span className="w-2 h-2 bg-amber-400 rounded-full"></span>
+              Draft mode — product will not be published until you click Save Product
+            </div>
+            <div className="flex gap-3">
+              <button type="button" onClick={onClose} className="px-5 py-2.5 border border-stone-300 rounded-lg font-inter font-medium text-sm text-stone-700 hover:bg-stone-100 transition-colors">
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-2.5 bg-stone-900 text-white rounded-lg font-inter font-semibold text-sm hover:bg-stone-800 transition-colors shadow-md shadow-stone-900/20"
+              >
+                Save Product
+              </button>
+            </div>
           </div>
-        </div>
+        </form>
       </div>
 
       <style jsx>{`

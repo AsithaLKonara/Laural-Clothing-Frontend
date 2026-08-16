@@ -1,4 +1,5 @@
 "use client";
+"use client";
 
 import { Maximize, Search, Trash2, CreditCard, Banknote, LayoutGrid, UserPlus, X, ChevronRight, CheckCircle2, ShoppingBag } from "lucide-react";
 import { useState } from "react";
