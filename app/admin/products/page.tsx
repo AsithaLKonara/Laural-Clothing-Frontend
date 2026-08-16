@@ -10,6 +10,7 @@ import BarcodePrintModal from "@/components/admin/BarcodePrintModal";
 import BulkEditModal from "@/components/admin/BulkEditModal";
 import Link from "next/link";
 import { Barcode, Edit, ArchiveRestore, CheckCircle2 } from "lucide-react";
+import { useProducts } from "@/hooks/useProducts";
 
 export default function ProductsPage() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -17,16 +18,7 @@ export default function ProductsPage() {
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [showBulkEditModal, setShowBulkEditModal] = useState(false);
 
-  const products = [
-    { sku: "LC-TSH-001", name: "Black Oversized T-Shirt", category: "T-Shirts", price: "Rs. 2,500", stock: 124, status: "Active" },
-    { sku: "LC-SHT-042", name: "Classic Linen Shirt", category: "Shirts", price: "Rs. 4,900", stock: 45, status: "Active" },
-    { sku: "LC-DRS-018", name: "Summer Floral Dress", category: "Dresses", price: "Rs. 6,500", stock: 0, status: "Out of Stock" },
-    { sku: "LC-PNT-092", name: "Cargo Pants", category: "Pants", price: "Rs. 5,200", stock: 12, status: "Low Stock" },
-    { sku: "LC-TSH-045", name: "Ribbed Tank Top", category: "T-Shirts", price: "Rs. 1,800", stock: 88, status: "Active" },
-    { sku: "LC-JKT-011", name: "Denim Jacket", category: "Outerwear", price: "Rs. 8,500", stock: 20, status: "Active" },
-    { sku: "LC-DRS-031", name: "Pleated Midi Skirt", category: "Dresses", price: "Rs. 4,200", stock: 5, status: "Low Stock" },
-    { sku: "LC-TSH-002", name: "Basic White Tee", category: "T-Shirts", price: "Rs. 2,000", stock: 0, status: "Draft" },
-  ];
+  const { data: products = [], isLoading } = useProducts();
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
@@ -55,7 +47,7 @@ export default function ProductsPage() {
       ),
     },
     { header: "Category", accessor: "category" as const },
-    { header: "Price", accessor: "price" as const, className: "font-semibold text-stone-800" },
+    { header: "Price", accessor: "priceFormatted" as const, className: "font-semibold text-stone-800" },
     {
       header: "Stock",
       accessor: (row: any) => (

@@ -1,7 +1,10 @@
 import Link from "next/link";
 import ProductCard from "./ProductCard";
+import { useProducts } from "@/hooks/useProducts";
 
 export default function NewArrivalsSection() {
+  const { data: products = [], isLoading } = useProducts();
+
   return (
     <section className="flex flex-col items-center bg-background px-4 md:px-8 lg:px-[120px] py-10 md:py-[60px] w-full">
       
@@ -29,10 +32,10 @@ export default function NewArrivalsSection() {
 
       {/* Product Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-[20px] py-8 md:py-[60px] w-full max-w-[1040px] place-items-center">
-        {/* We'll render 8 product cards to show the grid wrap */}
-        {[1, 2, 3, 4, 5, 6, 7, 8].map((item, i) => (
-          <div key={item} className="w-full flex justify-center">
-            <ProductCard imageUrl={`/products/p${(i % 6) + 1}.jpg`} />
+        {/* We'll render product cards to show the grid wrap */}
+        {products.slice(0, 8).map((product, i) => (
+          <div key={product.id} className="w-full flex justify-center">
+            <ProductCard imageUrl={product.image} />
           </div>
         ))}
       </div>

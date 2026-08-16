@@ -9,6 +9,7 @@ import { OrderStatusBadge, BranchBadge, PaymentGatewayBadge } from "@/components
 import CourierLabelModal from "@/components/admin/CourierLabelModal";
 import FardarDispatchModal from "@/components/admin/FardarDispatchModal";
 import { Printer, Truck } from "lucide-react";
+import { useOrders } from "@/hooks/useOrders";
 
 export default function OrdersPage() {
   const router = useRouter();
@@ -16,13 +17,7 @@ export default function OrdersPage() {
   const [showLabelModal, setShowLabelModal] = useState(false);
   const [showFardarModal, setShowFardarModal] = useState(false);
 
-  const orders = [
-    { id: "LC-10241", customer: "Kasun Perera", branch: "Kandy", total: "Rs.8,500", gateway: "Koko", status: "Paid", orderStatus: "Paid" },
-    { id: "LC-10240", customer: "Nethmi", branch: "Colombo", total: "Rs.5,200", gateway: "Mintpay", status: "Paid", orderStatus: "Paid" },
-    { id: "LC-10239", customer: "Guest", branch: "Kandy", total: "Rs.3,900", gateway: "COD", status: "pending", orderStatus: "Pending" },
-    { id: "LC-10238", customer: "Dilshan", branch: "Gampaha", total: "Rs.7,800", gateway: "OnePay", status: "Paid", orderStatus: "Paid" },
-    { id: "LC-10237", customer: "Anu", branch: "Colombo", total: "Rs.9,200", gateway: "Payzy", status: "failed", orderStatus: "Failed" },
-  ];
+  const { data: orders = [], isLoading: ordersLoading } = useOrders();
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {

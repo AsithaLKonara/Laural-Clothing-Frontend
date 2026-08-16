@@ -32,6 +32,8 @@ export const metadata: Metadata = {
   description: "Pieces edited for quiet luxury — cut clean, worn easy.",
 };
 
+import Providers from "./providers";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -42,7 +44,7 @@ export default function RootLayout({
       <body
         className={`${poppins.variable} ${orangeAvenue.variable} ${inriaSerif.variable} ${urbanist.variable} antialiased`}
       >
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

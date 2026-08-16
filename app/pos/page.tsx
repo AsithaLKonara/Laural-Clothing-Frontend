@@ -13,6 +13,8 @@ import PosExchangeTicket from "@/components/pos/PosExchangeTicket";
 import PosShiftModal from "@/components/pos/PosShiftModal";
 import { RotateCcw, ShoppingCart, Zap, ArrowLeft, Clock, History, ArrowRightLeft } from "lucide-react";
 import Link from "next/link";
+import { useProducts } from "@/hooks/useProducts";
+import { useCategories } from "@/hooks/useCategories";
 
 export default function POSPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -84,17 +86,8 @@ export default function POSPage() {
     }
   };
 
-  const categories = ["All", "T-Shirts", "Shirts", "Dresses", "Pants", "Accessories"];
-  const products = [
-    { id: 1, name: "Black Oversized T-Shirt", price: "2,500", image: "/products/default.jpg" },
-    { id: 2, name: "Classic Linen Shirt", price: "4,900", image: "/products/hover.jpg" },
-    { id: 3, name: "Summer Floral Dress", price: "6,500", image: "/products/default.jpg" },
-    { id: 4, name: "Cargo Pants", price: "5,200", image: "/products/hover.jpg" },
-    { id: 5, name: "Ribbed Tank Top", price: "1,800", image: "/products/default.jpg" },
-    { id: 6, name: "Denim Jacket", price: "8,500", image: "/products/hover.jpg" },
-    { id: 7, name: "Pleated Skirt", price: "4,200", image: "/products/default.jpg" },
-    { id: 8, name: "Basic White Tee", price: "2,000", image: "/products/hover.jpg" },
-  ];
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+  const { data: products = [], isLoading: productsLoading } = useProducts();
 
   return (
     <div className="flex flex-col w-full h-full bg-background">
@@ -242,7 +235,7 @@ export default function POSPage() {
                       </span>
                       <div className="flex justify-between items-end w-full">
                         <span className="font-inter font-bold text-primary text-lg">
-                          {p.price}
+                          {p.priceFormatted ? p.priceFormatted.replace('Rs. ', '') : p.price}
                         </span>
                         <span className="font-inter text-[10px] uppercase tracking-wider font-semibold text-muted bg-background border border-border px-1.5 py-0.5 rounded">
                           In Stock

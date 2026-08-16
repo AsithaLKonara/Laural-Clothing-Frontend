@@ -6,20 +6,12 @@ import DataTable from "@/components/dashboard/DataTable";
 import { StatusBadge } from "@/components/dashboard/Badges";
 import FilterBar from "@/components/dashboard/FilterBar";
 import AddCategoryModal from "@/components/dashboard/AddCategoryModal";
+import { useAdminCategories } from "@/hooks/useCategories";
 
 export default function CategoriesPage() {
   const [modalOpen, setModalOpen] = useState(false);
 
-  const categories = [
-    { id: "CAT-001", name: "T-Shirts", slug: "t-shirts", parent: "—", products: 48, status: "Active" },
-    { id: "CAT-002", name: "Shirts", slug: "shirts", parent: "—", products: 32, status: "Active" },
-    { id: "CAT-003", name: "Dresses", slug: "dresses", parent: "—", products: 24, status: "Active" },
-    { id: "CAT-004", name: "Pants", slug: "pants", parent: "—", products: 19, status: "Active" },
-    { id: "CAT-005", name: "Oversized Tees", slug: "oversized-tees", parent: "T-Shirts", products: 14, status: "Active" },
-    { id: "CAT-006", name: "Polo Shirts", slug: "polo-shirts", parent: "Shirts", products: 8, status: "Active" },
-    { id: "CAT-007", name: "Maxi Dresses", slug: "maxi-dresses", parent: "Dresses", products: 6, status: "Draft" },
-    { id: "CAT-008", name: "Accessories", slug: "accessories", parent: "—", products: 0, status: "Draft" },
-  ];
+  const { data: categories = [], isLoading } = useAdminCategories();
 
   const columns = [
     { header: "ID", accessor: "id" as const, className: "font-mono text-stone-500 text-xs" },

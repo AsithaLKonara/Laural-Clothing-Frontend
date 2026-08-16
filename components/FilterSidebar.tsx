@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown, ChevronUp, SlidersHorizontal, Check } from "lucide-react";
+import { useCategories } from "@/hooks/useCategories";
 
 interface FilterSidebarProps {
   isOpen?: boolean;
@@ -24,7 +25,7 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const categories = ["T-shirts", "Shorts", "Shirts", "Hoodie", "Jeans"];
+  const { data: categories = [], isLoading } = useCategories();
   const styles = ["Casual", "Formal", "Party", "Gym"];
   
   const colors = [

@@ -1,16 +1,10 @@
 import Link from "next/link";
 import CategoryCard from "./CategoryCard";
-
-const CATEGORIES = [
-  { id: 1, title: "Dress", imageUrl: "/hero-image/hero-1.jpg", href: "/category/dress" },
-  { id: 2, title: "Hand Bags", imageUrl: "/hero-image/hero-2.jpg", href: "/category/hand-bags" },
-  { id: 3, title: "Pants", imageUrl: "/hero-image/hero-3.jpg", href: "/category/pants" },
-  { id: 4, title: "Shirts", imageUrl: "/hero-image/hero-1.jpg", href: "/category/shirts" },
-  { id: 5, title: "Shorts", imageUrl: "/hero-image/hero-2.jpg", href: "/category/shorts" },
-  { id: 6, title: "Tops", imageUrl: "/hero-image/hero-3.jpg", href: "/category/tops" },
-];
+import { useCollectionCategories } from "@/hooks/useCategories";
 
 export default function CollectionsSection() {
+  const { data: categories = [], isLoading } = useCollectionCategories();
+
   return (
     <section className="relative w-full h-auto px-4 md:px-8 lg:px-[120px] py-10 md:py-[60px] bg-background">
       <div className="relative z-10 w-full h-full flex flex-col max-w-[1280px] mx-auto">
@@ -39,17 +33,16 @@ export default function CollectionsSection() {
       </div>
 
       {/* Cards Row */}
-      <div className="flex flex-wrap md:flex-nowrap w-full mt-2">
-        {CATEGORIES.map((cat) => (
-          <div key={cat.id} className="w-1/2 md:flex-1 overflow-hidden">
-            <CategoryCard 
-              title={cat.title}
-              imageUrl={cat.imageUrl}
-              href={cat.href}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-[20px] w-full mt-4 md:mt-8">
+          {categories.map((category) => (
+            <CategoryCard
+              key={category.id}
+              title={category.title}
+              imageUrl={category.imageUrl}
+              href={category.href}
             />
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
       
       </div>
     </section>

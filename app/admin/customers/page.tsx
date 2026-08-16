@@ -5,16 +5,12 @@ import PageHeader from "@/components/dashboard/PageHeader";
 import FilterBar from "@/components/dashboard/FilterBar";
 import DataTable from "@/components/dashboard/DataTable";
 import { StatusBadge } from "@/components/dashboard/Badges";
+import { useCustomers } from "@/hooks/useCustomers";
 
 export default function CustomersPage() {
   const router = useRouter();
 
-  const customers = [
-    { id: "CUST-001", name: "Kasun Perera", phone: "0771234567", email: "kasun@example.com", type: "Registered", orders: 12, spent: "Rs.45,000", lastActive: "2 hours ago" },
-    { id: "CUST-002", name: "Nethmi Fernando", phone: "0719876543", email: "nethmi@example.com", type: "Registered", orders: 8, spent: "Rs.32,500", lastActive: "1 day ago" },
-    { id: "CUST-003", name: "Guest User", phone: "0765551234", email: "-", type: "Guest", orders: 1, spent: "Rs.3,900", lastActive: "Just now" },
-    { id: "CUST-004", name: "Dilshan Silva", phone: "0778889999", email: "dilshan@example.com", type: "Registered", orders: 25, spent: "Rs.112,000", lastActive: "3 days ago" },
-  ];
+  const { data: customers = [], isLoading } = useCustomers();
 
   const columns = [
     { header: "Name", accessor: "name" as const },
