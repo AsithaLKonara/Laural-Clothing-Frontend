@@ -11,7 +11,7 @@ export default function ProductCard() {
 
   return (
     <div 
-      className="flex flex-col items-start p-[12px] gap-[8px] w-full max-w-[245px] bg-white rounded-[5px] cursor-pointer"
+      className="group flex flex-col w-full max-w-[245px] bg-white rounded-lg cursor-pointer overflow-hidden border border-stone-100 hover:shadow-md transition-all duration-300"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => router.push("/product/vesper-long-sleeve-top")}
@@ -38,8 +38,8 @@ export default function ProductCard() {
         
         {/* Discount Tag */}
         <div className="absolute top-2 right-2 z-10">
-          <div className="flex justify-center items-center px-[6px] py-[3px] bg-[#D32F2F] rounded-sm shadow-md">
-            <span className="font-inter font-bold text-[9px] tracking-wider text-white uppercase">
+          <div className="flex justify-center items-center px-2 py-1 bg-white/95 backdrop-blur-sm shadow-sm rounded">
+            <span className="font-poppins font-medium text-[9px] tracking-[0.1em] text-stone-900 uppercase">
               20% off
             </span>
           </div>
@@ -68,46 +68,42 @@ export default function ProductCard() {
               e.stopPropagation();
               // Add to cart logic would go here
             }}
-            className="flex justify-center items-center w-full p-[10px] bg-black hover:bg-stone-900 transition-colors pointer-events-auto"
+            className="flex justify-center items-center w-full py-2.5 bg-stone-900 hover:bg-black transition-colors pointer-events-auto"
           >
-            <span className="font-inter font-bold text-xs leading-[15px] text-white">
-              + Add to cart
+            <span className="font-poppins font-medium text-[11px] text-white uppercase tracking-[0.1em]">
+              Add to cart
             </span>
           </button>
         </div>
       </div>
 
       {/* Product Details Container */}
-      <div className="flex flex-col items-start gap-[8px] w-full mt-1">
+      <div className="flex flex-col items-center gap-2 w-full p-4 pt-3">
         
         {/* Pricing & Title Block */}
-        <div className="flex flex-col items-center justify-center gap-[4px] w-full">
-          <Link href="/product/vesper-long-sleeve-top" className="hover:underline">
-            <h3 className="font-inter font-bold text-[11px] leading-[13px] text-black text-center">
+        <div className="flex flex-col items-center justify-center w-full">
+          <Link href="/product/vesper-long-sleeve-top" className="hover:text-stone-500 transition-colors">
+            <h3 className="font-poppins font-light text-xs text-stone-900 text-center tracking-wide mb-1.5">
               Vesper Long Sleeve Top – Pink
             </h3>
           </Link>
           
-          <div className="flex items-center gap-[10px] h-[20px]">
+          <div className="flex items-center gap-2.5">
             {/* Old Price */}
-            <div className="flex items-center px-[8px] py-[2px] rounded-full">
-              <span className="font-inter font-light italic text-xs leading-[16px] line-through text-[#5E3122]">
-                Rs: 2,190
-              </span>
-            </div>
+            <span className="font-inter font-light text-[11px] line-through text-stone-400">
+              Rs. 2,190
+            </span>
             {/* New Price */}
-            <div className="flex items-center px-[8px] py-[2px] bg-[#F7EAE0] rounded-full">
-              <span className="font-inter font-bold text-xs leading-[16px] text-[#5E3122]">
-                Rs: 1,990
-              </span>
-            </div>
+            <span className="font-inter font-medium text-[13px] text-stone-900">
+              Rs. 1,990
+            </span>
           </div>
         </div>
 
         {/* Payment Integrations */}
-        <div className="flex flex-col items-center justify-center w-full mt-1.5">
-          <div className="flex items-center gap-1.5 flex-wrap justify-center">
-            <span className="font-inter font-normal text-[9px] text-stone-500">
+        <div className="flex flex-col items-center justify-center w-full mt-1.5 border-t border-stone-100 pt-3">
+          <div className="flex items-center gap-1.5 flex-wrap justify-center opacity-70 group-hover:opacity-100 transition-opacity">
+            <span className="font-inter font-light text-[9px] text-stone-500">
               3 X Rs. 730.00 with
             </span>
             <div className="flex items-center gap-1">
