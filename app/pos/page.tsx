@@ -9,12 +9,14 @@ import CustomerSelectionModal from "@/components/pos/CustomerSelectionModal";
 import OrderSuccessModal from "@/components/pos/OrderSuccessModal";
 import PosReturnsMode from "@/components/pos/PosReturnsMode";
 import PosDispatchTicket from "@/components/pos/PosDispatchTicket";
-import { RotateCcw, ShoppingCart, Zap, ArrowLeft } from "lucide-react";
+import PosExchangeTicket from "@/components/pos/PosExchangeTicket";
+import PosShiftModal from "@/components/pos/PosShiftModal";
+import { RotateCcw, ShoppingCart, Zap, ArrowLeft, Clock, History, ArrowRightLeft } from "lucide-react";
 import Link from "next/link";
 
 export default function POSPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [posMode, setPosMode] = useState<"SALES" | "RETURNS" | "DISPATCH">("SALES");
+  const [posMode, setPosMode] = useState<"SALES" | "RETURNS" | "DISPATCH" | "EXCHANGE">("SALES");
   
   // Modal states
   const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
@@ -22,8 +24,31 @@ export default function POSPage() {
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
+  
+  // New States for POS Upgrades
+  const [shiftState, setShiftState] = useState<"CLOSED" | "OPEN">("CLOSED");
+  const [shiftModalMode, setShiftModalMode] = useState<"OPEN" | "CLOSE" | null>(null);
+  
+  const [heldCarts, setHeldCarts] = useState<{id: string, time: string, items: any[]}[]>([]);
+  const [isHeldCartsModalOpen, setIsHeldCartsModalOpen] = useState(false);
+
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [cart, setCart] = useState<any[]>([]);
+
+  const holdCurrentCart = () => {
+    if (cart.length === 0) return;
+    setHeldCarts(prev => [...prev, { id: `H-${Math.floor(Math.random() * 10000)}`, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), items: [...cart] }]);
+    clearCart();
+  };
+
+  const restoreHeldCart = (heldId: string) => {
+    const held = heldCarts.find(h => h.id === heldId);
+    if (held) {
+      setCart(held.items);
+      setHeldCarts(prev => prev.filter(h => h.id !== heldId));
+      setIsHeldCartsModalOpen(false);
+    }
+  };
 
   const addToCart = (product: any) => {
     setCart(prev => {
@@ -101,6 +126,12 @@ export default function POSPage() {
               <RotateCcw size={14} /> RETURNS
             </button>
             <button 
+              onClick={() => setPosMode("EXCHANGE")}
+              className={`px-4 py-1.5 rounded-md font-inter font-bold text-xs flex items-center gap-2 transition-colors ${posMode === 'EXCHANGE' ? 'bg-primary text-white shadow-sm' : 'text-muted hover:bg-surface'}`}
+            >
+              <ArrowRightLeft size={14} /> EXCHANGE
+            </button>
+            <button 
               onClick={() => setPosMode("DISPATCH")}
               className={`px-4 py-1.5 rounded-md font-inter font-bold text-xs flex items-center gap-2 transition-colors ${posMode === 'DISPATCH' ? 'bg-primary text-white shadow-sm' : 'text-muted hover:bg-surface'}`}
             >
@@ -116,10 +147,28 @@ export default function POSPage() {
         </div>
         
         <div className="flex items-center gap-4 md:gap-6">
-          <div className="hidden md:flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-success animate-pulse"></div>
-            <span className="text-sm font-inter text-muted">Shift OPEN</span>
-          </div>
+          <button 
+            onClick={() => setShiftModalMode(shiftState === "CLOSED" ? "OPEN" : "CLOSE")}
+            className="hidden md:flex items-center gap-2 hover:bg-surface border border-transparent hover:border-border px-3 py-1.5 rounded transition-colors cursor-pointer"
+          >
+            <div className={`w-2 h-2 rounded-full ${shiftState === "OPEN" ? "bg-success animate-pulse" : "bg-error"}`}></div>
+            <span className="text-sm font-inter font-bold text-foreground">
+              {shiftState === "OPEN" ? "Shift OPEN" : "Shift CLOSED"}
+            </span>
+          </button>
+          
+          <button 
+            onClick={() => setIsHeldCartsModalOpen(true)}
+            className="hidden md:flex items-center gap-2 text-sm font-inter text-muted hover:text-foreground transition-colors border-l border-border pl-6 relative"
+          >
+            <History size={16} />
+            <span>Held Orders</span>
+            {heldCarts.length > 0 && (
+              <span className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-4 h-4 bg-primary text-white text-[10px] flex items-center justify-center rounded-full font-bold">
+                {heldCarts.length}
+              </span>
+            )}
+          </button>
           <div className="hidden md:flex items-center gap-2 text-sm font-inter text-muted border-l border-border pl-6">
             <span>Cashier: Kasun</span>
           </div>
@@ -176,7 +225,7 @@ export default function POSPage() {
                   <button 
                     key={p.id}
                     onClick={() => { 
-                      if (posMode === "DISPATCH") {
+                      if (posMode === "DISPATCH" || posMode === "EXCHANGE") {
                         addToCart(p);
                       } else {
                         setSelectedProduct(p); setIsVariantModalOpen(true); 
@@ -224,6 +273,14 @@ export default function POSPage() {
           {/* Right Side: Cart & Payment */}
           {posMode === "DISPATCH" ? (
             <PosDispatchTicket 
+              isMobileCartOpen={isMobileCartOpen}
+              setIsMobileCartOpen={setIsMobileCartOpen}
+              cart={cart}
+              updateQty={updateQty}
+              clearCart={clearCart}
+            />
+          ) : posMode === "EXCHANGE" ? (
+            <PosExchangeTicket 
               isMobileCartOpen={isMobileCartOpen}
               setIsMobileCartOpen={setIsMobileCartOpen}
               cart={cart}
@@ -291,7 +348,11 @@ export default function POSPage() {
                   </button>
                 </div>
                 <div className="grid grid-cols-2 gap-3 mt-2">
-                  <button className="bg-background hover:bg-border text-foreground font-inter font-semibold py-3 rounded-lg text-sm transition-colors border border-border">
+                  <button 
+                    onClick={holdCurrentCart}
+                    disabled={cart.length === 0}
+                    className="bg-background hover:bg-border disabled:opacity-50 text-foreground font-inter font-semibold py-3 rounded-lg text-sm transition-colors border border-border"
+                  >
                     Hold Cart
                   </button>
                   <button onClick={clearCart} className="bg-error-soft hover:bg-red-200 text-error hover:text-red-700 font-inter font-semibold py-3 rounded-lg text-sm transition-colors border border-error-soft">
@@ -307,6 +368,53 @@ export default function POSPage() {
       
 
       {/* Modals */}
+      {shiftModalMode && (
+        <PosShiftModal 
+          mode={shiftModalMode} 
+          onClose={() => setShiftModalMode(null)} 
+          onSuccess={() => {
+            setShiftState(shiftModalMode === "OPEN" ? "OPEN" : "CLOSED");
+            setShiftModalMode(null);
+          }} 
+        />
+      )}
+      
+      {/* Held Carts Modal Slide-out */}
+      {isHeldCartsModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 max-h-[80vh]">
+            <div className="flex items-center justify-between p-6 border-b border-stone-200 bg-stone-50 shrink-0">
+              <h2 className="font-inter font-bold text-xl text-stone-900 flex items-center gap-2">
+                <History className="text-stone-700" size={24} /> Held Orders
+              </h2>
+              <button onClick={() => setIsHeldCartsModalOpen(false)} className="p-2 text-stone-400 hover:text-stone-900 hover:bg-stone-200 rounded-lg transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-4 bg-stone-100 flex-1 overflow-y-auto flex flex-col gap-3">
+              {heldCarts.length === 0 ? (
+                <div className="text-center text-stone-500 py-10 font-inter">No held orders.</div>
+              ) : (
+                heldCarts.map(hc => (
+                  <div key={hc.id} className="bg-white p-4 rounded-xl shadow-sm border border-stone-200 flex items-center justify-between">
+                    <div>
+                      <p className="font-bold text-stone-900 font-inter">{hc.id}</p>
+                      <p className="text-sm text-stone-500 font-inter">{hc.items.length} items • {hc.time}</p>
+                    </div>
+                    <button 
+                      onClick={() => restoreHeldCart(hc.id)}
+                      className="px-4 py-2 bg-stone-900 text-white font-inter font-semibold text-sm rounded-lg hover:bg-stone-800 transition-colors"
+                    >
+                      Resume
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {isVariantModalOpen && <VariantSelectionModal product={selectedProduct} onClose={() => setIsVariantModalOpen(false)} />}
       {isPaymentModalOpen && <PaymentModal onClose={() => setIsPaymentModalOpen(false)} onSuccess={() => { setIsPaymentModalOpen(false); setIsSuccessModalOpen(true); }} total="9,400" />}
       {isCustomerModalOpen && <CustomerSelectionModal onClose={() => setIsCustomerModalOpen(false)} />}

@@ -7,7 +7,7 @@ import Image from "next/image";
 export default function PosReturnsMode() {
   const [searchQuery, setSearchQuery] = useState("");
   const [orderFound, setOrderFound] = useState(false);
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [selectedItems, setSelectedItems] = useState<any[]>([]); // Changed to store full item objects
   const [refundMethod, setRefundMethod] = useState<"CASH" | "CARD" | "STORE_CREDIT">("CASH");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -15,10 +15,10 @@ export default function PosReturnsMode() {
   const DUMMY_ORDER = {
     id: "LC-09942",
     customer: "Amila Silva",
-    date: "2026-08-10", // 5 days ago (eligible)
+    date: "2026-08-10",
     items: [
       { id: "ITEM-1", name: "Black Oversized T-Shirt", size: "M", price: 2500, image: "/products/default.jpg", returned: false },
-      { id: "ITEM-2", name: "Classic Linen Shirt", size: "L", price: 4900, image: "/products/hover.jpg", returned: true }, // Already returned previously
+      { id: "ITEM-2", name: "Classic Linen Shirt", size: "L", price: 4900, image: "/products/hover.jpg", returned: true },
       { id: "ITEM-3", name: "Summer Floral Dress", size: "S", price: 6500, image: "/products/default.jpg", returned: false },
     ]
   };
@@ -26,22 +26,37 @@ export default function PosReturnsMode() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.length > 3) {
-      setOrderFound(true);
-      setSelectedItems([]);
+      if (searchQuery.toUpperCase().startsWith("LC-")) {
+        setOrderFound(true);
+        // Automatically add all eligible items from the order to the return list for demo purposes
+        setSelectedItems([]);
+      } else {
+        // Treat as a direct barcode scan
+        setOrderFound(true);
+        const newItem = {
+          id: `SCAN-${Math.floor(Math.random() * 1000)}`,
+          name: "Scanned Item",
+          size: "O/S",
+          price: 3500,
+          image: "/products/default.jpg",
+          returned: false,
+          isScanned: true
+        };
+        setSelectedItems(prev => [...prev, newItem]);
+        setSearchQuery(""); // clear for next scan
+      }
       setIsSuccess(false);
     }
   };
 
-  const toggleItem = (itemId: string) => {
+  const toggleItem = (item: any) => {
     setSelectedItems(prev => 
-      prev.includes(itemId) ? prev.filter(i => i !== itemId) : [...prev, itemId]
+      prev.find(i => i.id === item.id) ? prev.filter(i => i.id !== item.id) : [...prev, item]
     );
   };
 
   const calculateRefund = () => {
-    return DUMMY_ORDER.items
-      .filter(item => selectedItems.includes(item.id))
-      .reduce((sum, item) => sum + item.price, 0);
+    return selectedItems.reduce((sum, item) => sum + item.price, 0);
   };
 
   const handleCompleteReturn = () => {
@@ -126,15 +141,50 @@ export default function PosReturnsMode() {
               <div className="flex flex-col gap-4">
                 <h3 className="font-inter font-bold text-foreground">Select Items to Return</h3>
                 
+                {/* Render Scanned Items if any */}
+                {selectedItems.filter(i => i.isScanned).map(item => (
+                  <div key={item.id} className="flex items-start gap-4 p-4 border rounded-xl transition-all bg-primary/5 border-primary shadow-sm">
+                    <div className="pt-2">
+                      <input 
+                        type="checkbox" 
+                        checked={true}
+                        onChange={() => toggleItem(item)}
+                        className="w-5 h-5 rounded border-border text-primary focus:ring-primary"
+                      />
+                    </div>
+                    <div className="w-16 h-20 relative bg-stone-100 rounded-md overflow-hidden shrink-0">
+                      <Image src={item.image} alt={item.name} fill className="object-cover" />
+                    </div>
+                    <div className="flex flex-col flex-1">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-inter font-bold text-foreground">{item.name}</p>
+                          <p className="font-inter text-sm text-muted">Direct Barcode Scan</p>
+                        </div>
+                        <span className="font-inter font-bold text-foreground">Rs. {item.price.toLocaleString()}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 mt-4">
+                        <div className="flex flex-col gap-1">
+                          <select className="bg-background border border-border rounded-md text-sm p-2 outline-none focus:border-primary">
+                            <option>New with tags (Restockable)</option>
+                            <option>Damaged (Write-off)</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Render Dummy Order Items */}
                 {DUMMY_ORDER.items.map(item => (
-                  <div key={item.id} className={`flex items-start gap-4 p-4 border rounded-xl transition-all ${item.returned ? 'bg-background border-border opacity-60' : selectedItems.includes(item.id) ? 'bg-primary/5 border-primary shadow-sm' : 'bg-surface border-border hover:border-muted'}`}>
+                  <div key={item.id} className={`flex items-start gap-4 p-4 border rounded-xl transition-all ${item.returned ? 'bg-background border-border opacity-60' : selectedItems.find(i => i.id === item.id) ? 'bg-primary/5 border-primary shadow-sm' : 'bg-surface border-border hover:border-muted'}`}>
                     
                     <div className="pt-2">
                       <input 
                         type="checkbox" 
                         disabled={item.returned}
-                        checked={selectedItems.includes(item.id)}
-                        onChange={() => toggleItem(item.id)}
+                        checked={!!selectedItems.find(i => i.id === item.id)}
+                        onChange={() => toggleItem(item)}
                         className="w-5 h-5 rounded border-border text-primary focus:ring-primary disabled:opacity-50"
                       />
                     </div>
@@ -156,7 +206,7 @@ export default function PosReturnsMode() {
                         <div className="mt-2 text-xs font-inter font-medium text-error bg-error-soft px-2 py-1 rounded inline-block self-start">
                           Already Returned
                         </div>
-                      ) : selectedItems.includes(item.id) ? (
+                      ) : selectedItems.find(i => i.id === item.id) ? (
                         <div className="grid grid-cols-2 gap-3 mt-4">
                           <div className="flex flex-col gap-1">
                             <label className="font-inter text-xs font-medium text-muted">Condition</label>
