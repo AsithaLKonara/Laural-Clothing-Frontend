@@ -73,9 +73,15 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
             <div className="flex items-center gap-3 text-base text-[#79716B] font-poppins flex-wrap">
               <span>3 X Rs. 930.00 with</span>
               <div className="flex items-center gap-2">
-                <span className="text-[14px] font-black text-[#0033cc] italic">KOKO</span>
-                <div className="w-[50px] h-[20px] bg-[#0E1E2B] rounded-full flex items-center justify-center text-[10px] text-white font-bold tracking-widest">MINTPAY</div>
-                <div className="flex items-center justify-center text-xs text-[#00aaff] font-black italic tracking-tighter">Payzy</div>
+                <div className="w-[45px] h-[15px] relative">
+                  <Image src="/payment-methods/koko.png" alt="koko" fill className="object-contain" />
+                </div>
+                <div className="w-[45px] h-[15px] relative">
+                  <Image src="/payment-methods/mintpay-pill.png" alt="mintpay" fill className="object-contain" />
+                </div>
+                <div className="w-[45px] h-[15px] relative">
+                  <Image src="/payment-methods/payzy.png" alt="payzy" fill className="object-contain" />
+                </div>
               </div>
               <Info size={16} className="text-primary" fill="currentColor" color="white" />
             </div>

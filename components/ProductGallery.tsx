@@ -9,9 +9,24 @@ interface ProductGalleryProps {
 
 export default function ProductGallery({ images }: ProductGalleryProps) {
   const [activeImage, setActiveImage] = useState(images[0] || "/products/default.jpg");
+  const [zoomStyle, setZoomStyle] = useState({ display: 'none', backgroundPosition: '0% 0%' });
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = ((e.pageX - left) / width) * 100;
+    const y = ((e.pageY - top) / height) * 100;
+    setZoomStyle({
+      display: 'block',
+      backgroundPosition: `${x}% ${y}%`,
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setZoomStyle(prev => ({ ...prev, display: 'none' }));
+  };
 
   return (
-    <div className="flex flex-col-reverse md:flex-row gap-[10px] w-full max-w-[463px]">
+    <div className="flex flex-col-reverse md:flex-row gap-[16px] w-full max-w-[650px]">
       
       {/* Thumbnails (Vertical on Desktop, Horizontal on Mobile) */}
       <div className="flex flex-row md:flex-col gap-[10px] overflow-x-auto md:overflow-visible">
@@ -34,17 +49,31 @@ export default function ProductGallery({ images }: ProductGalleryProps) {
       </div>
 
       {/* Main Image */}
-      <div className="relative w-full aspect-[375/451] md:w-[375px] md:h-[451px] bg-stone-100 overflow-hidden">
+      <div 
+        className="relative w-full aspect-[375/451] md:w-[500px] md:h-[600px] bg-stone-100 overflow-hidden cursor-crosshair group"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+      >
         <Image 
           src={activeImage}
           alt="Product Main Image"
           fill
-          className="object-cover transition-opacity duration-500"
+          className="object-cover transition-opacity duration-300 group-hover:opacity-0"
           priority
         />
         
+        {/* Zoomed Image Background */}
+        <div 
+          className="absolute inset-0 bg-no-repeat z-10 pointer-events-none"
+          style={{
+            backgroundImage: `url(${activeImage})`,
+            backgroundSize: '250%',
+            ...zoomStyle
+          }}
+        />
+        
         {/* Optional Badge */}
-        <div className="absolute top-4 right-4 bg-red-500/10 backdrop-blur-sm px-[14px] py-[6px] rounded-full">
+        <div className="absolute top-4 right-4 bg-red-500/10 backdrop-blur-sm px-[14px] py-[6px] rounded-full z-20">
           <span className="font-poppins font-medium text-base text-red-500">
             -40%
           </span>

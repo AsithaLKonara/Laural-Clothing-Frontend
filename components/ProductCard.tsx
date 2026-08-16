@@ -87,18 +87,18 @@ export default function ProductCard({ imageUrl = "/products/default.jpg" }: Prod
         {/* Pricing & Title Block */}
         <div className="flex flex-col items-center justify-center w-full">
           <Link href="/product/vesper-long-sleeve-top" className="hover:text-stone-500 transition-colors">
-            <h3 className="font-poppins font-light text-xs text-stone-900 text-center tracking-wide mb-1.5">
+            <h3 className="font-poppins font-bold text-sm text-stone-900 text-center tracking-wide mb-1.5">
               Vesper Long Sleeve Top – Pink
             </h3>
           </Link>
           
           <div className="flex items-center gap-2.5">
             {/* Old Price */}
-            <span className="font-inter font-light text-[11px] line-through text-stone-400">
+            <span className="font-inter font-medium text-[12px] line-through text-stone-400">
               Rs. 2,190
             </span>
             {/* New Price */}
-            <span className="font-inter font-medium text-[13px] text-stone-900">
+            <span className="font-inter font-black text-[14px] text-stone-900">
               Rs. 1,990
             </span>
           </div>
@@ -111,12 +111,14 @@ export default function ProductCard({ imageUrl = "/products/default.jpg" }: Prod
               3 X Rs. 730.00 with
             </span>
             <div className="flex items-center gap-1">
-              <span className="text-[9px] font-black text-[#0033cc] italic">KOKO</span>
-              <div className="flex items-center justify-center w-[24px] h-[9px] relative">
-                <Image src="/payment-methods/payzy.png" alt="payzy" fill className="object-contain" />
+              <div className="flex items-center justify-center w-[28px] h-[10px] relative">
+                <Image src="/payment-methods/koko.png" alt="koko" fill className="object-contain" />
               </div>
-              <div className="flex items-center justify-center w-[24px] h-[9px] relative">
+              <div className="flex items-center justify-center w-[28px] h-[10px] relative">
                 <Image src="/payment-methods/mintpay-pill.png" alt="mintpay" fill className="object-contain" />
+              </div>
+              <div className="flex items-center justify-center w-[28px] h-[10px] relative">
+                <Image src="/payment-methods/payzy.png" alt="payzy" fill className="object-contain" />
               </div>
             </div>
           </div>
