@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { AlertOctagon, RefreshCw } from "lucide-react";
+import Link from "next/link";
 
 export default function Error({
   error,
@@ -38,12 +39,12 @@ export default function Error({
           Try Again
         </button>
         
-        <button 
-          onClick={() => window.location.href = '/shop'}
+        <Link 
+          href="/shop"
           className="h-[54px] px-8 flex justify-center items-center bg-white border border-primary text-primary hover:bg-stone-100 transition-colors rounded-full font-poppins font-semibold text-sm uppercase tracking-widest"
         >
           Return to Shop
-        </button>
+        </Link>
       </div>
     </main>
   );

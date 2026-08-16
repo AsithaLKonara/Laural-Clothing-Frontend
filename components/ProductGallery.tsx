@@ -5,9 +5,10 @@ import { useState } from "react";
 
 interface ProductGalleryProps {
   images: string[];
+  productName?: string;
 }
 
-export default function ProductGallery({ images }: ProductGalleryProps) {
+export default function ProductGallery({ images, productName = "Product" }: ProductGalleryProps) {
   const [activeImage, setActiveImage] = useState(images[0] || "/products/default.jpg");
   const [zoomStyle, setZoomStyle] = useState({ display: 'none', backgroundPosition: '0% 0%' });
 
@@ -40,7 +41,7 @@ export default function ProductGallery({ images }: ProductGalleryProps) {
           >
             <Image 
               src={img} 
-              alt={`Thumbnail ${idx + 1}`} 
+              alt={`${productName} - Thumbnail ${idx + 1}`} 
               fill 
               className="object-cover"
             />
@@ -56,7 +57,7 @@ export default function ProductGallery({ images }: ProductGalleryProps) {
       >
         <Image 
           src={activeImage}
-          alt="Product Main Image"
+          alt={`${productName} - Main Image`}
           fill
           className="object-cover transition-opacity duration-300 group-hover:opacity-0"
           priority
