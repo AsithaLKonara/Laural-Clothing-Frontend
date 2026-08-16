@@ -26,6 +26,7 @@ import {
   RotateCcw,
   MessageSquare,
   PanelsTopLeft,
+  HardDrive,
   X
 } from "lucide-react";
 
@@ -49,6 +50,7 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
     { name: "Loyalty", icon: Gift, href: "/admin/loyalty" },
     { name: "Promotions", icon: Megaphone, href: "/admin/promotions" },
     { name: "CMS", icon: PanelsTopLeft, href: "/admin/cms" },
+    { name: "Media", icon: HardDrive, href: "/admin/media" },
     { name: "Reports", icon: BarChart3, href: "/admin/reports" },
   ];
 
