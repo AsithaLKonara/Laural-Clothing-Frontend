@@ -25,6 +25,7 @@ import {
   Truck,
   RotateCcw,
   MessageSquare,
+  PanelsTopLeft,
   X
 } from "lucide-react";
 
@@ -47,6 +48,7 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
     { name: "Reviews", icon: MessageSquare, href: "/admin/reviews" },
     { name: "Loyalty", icon: Gift, href: "/admin/loyalty" },
     { name: "Promotions", icon: Megaphone, href: "/admin/promotions" },
+    { name: "CMS", icon: PanelsTopLeft, href: "/admin/cms" },
     { name: "Reports", icon: BarChart3, href: "/admin/reports" },
   ];
 
