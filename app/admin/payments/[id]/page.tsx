@@ -2,6 +2,7 @@ import PageHeader from "@/components/dashboard/PageHeader";
 import { PaymentGatewayBadge } from "@/components/dashboard/Badges";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import PaymentActionButtons from "@/components/admin/PaymentActionButtons";
 
 export default async function PaymentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
@@ -19,7 +20,13 @@ export default async function PaymentDetailPage({ params }: { params: Promise<{ 
       <PageHeader 
         title={`Payment ${id}`}
         action={
-          <div className="flex gap-2">
+          <div className="flex gap-4 items-center">
+            <PaymentActionButtons 
+              transactionId={id} 
+              status="paid" 
+              totalAmount={8500}
+              customerName="Kasun Perera"
+            />
             <PaymentGatewayBadge gateway="Koko" status="paid" />
           </div>
         }
