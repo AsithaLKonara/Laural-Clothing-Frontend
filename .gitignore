@@ -11,3 +11,4 @@ build/
 *.log
 coverage/
 .agents/mcp_config.json
+.vercel
