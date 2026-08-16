@@ -40,27 +40,27 @@ export default function WishlistSidePanel({ isOpen, onClose }: { isOpen: boolean
 
       {/* Side Panel */}
       <div 
-        className={`fixed top-0 right-0 h-[100dvh] w-full max-w-[363px] bg-background z-[101] shadow-2xl transition-transform duration-300 ease-in-out transform ${
+        className={`fixed top-0 right-0 h-[100dvh] w-full max-w-[380px] bg-white z-[101] shadow-2xl transition-transform duration-500 ease-in-out transform ${
           isOpen ? "translate-x-0" : "translate-x-full"
-        } flex flex-col p-[20px] gap-[10px]`}
+        } flex flex-col`}
       >
         
         <div className="flex flex-col flex-1 gap-[1px]">
           {/* Header */}
-          <div className="flex items-center justify-between py-[21px] px-[10px] border-b border-primary/50 h-[66.5px] flex-shrink-0">
-            <h2 className="font-poppins font-semibold text-base leading-[24px] text-primary">
+          <div className="flex items-center justify-between py-6 px-6 border-b border-stone-100 flex-shrink-0">
+            <h2 className="font-poppins font-light text-xl text-stone-900 tracking-wide">
               My Wishlist
             </h2>
             <button 
               onClick={onClose}
-              className="flex justify-center items-center w-[24px] h-[24px] bg-primary rounded-full hover:bg-stone-700 transition-colors"
+              className="flex justify-center items-center p-2 -mr-2 text-stone-400 hover:text-stone-900 transition-colors"
             >
-              <X className="w-[14px] h-[14px] text-background" />
+              <X className="w-5 h-5 stroke-[1]" />
             </button>
           </div>
 
           {/* Scrollable Items Container */}
-          <div className="flex-1 overflow-y-auto py-[10px] flex flex-col gap-[10px] pr-[5px]">
+          <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col">
             {wishlistItems.length > 0 ? (
               wishlistItems.map((item) => (
                 <CartItem
@@ -75,21 +75,21 @@ export default function WishlistSidePanel({ isOpen, onClose }: { isOpen: boolean
                 />
               ))
             ) : (
-              <div className="flex flex-col items-center justify-center h-full gap-[16px] text-stone-500">
-                <Heart className="w-12 h-12 opacity-50" />
-                <p className="font-poppins font-medium text-sm">Your wishlist is empty.</p>
+              <div className="flex flex-col items-center justify-center h-full gap-4 text-stone-400">
+                <Heart className="w-10 h-10 stroke-[1]" />
+                <p className="font-poppins font-light text-sm tracking-wide">Your wishlist is empty</p>
               </div>
             )}
           </div>
         </div>
 
         {/* Footer Area */}
-        <div className="flex flex-col gap-[10px] w-full flex-shrink-0 pt-[21px]">
+        <div className="flex flex-col w-full flex-shrink-0 bg-stone-50 border-t border-stone-100 px-6 py-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02)]">
           <button 
             onClick={onClose}
-            className="flex justify-center items-center w-full h-[36px] bg-[#D6D3D1] rounded-full hover:bg-stone-400 transition-colors"
+            className="flex justify-center items-center w-full py-3.5 bg-white border border-stone-200 text-stone-900 hover:border-stone-400 hover:bg-stone-50 transition-all duration-300"
           >
-            <span className="font-inter font-bold text-xs leading-[15px] text-primary">
+            <span className="font-poppins font-medium text-xs uppercase tracking-[0.15em]">
               Continue Shopping
             </span>
           </button>
