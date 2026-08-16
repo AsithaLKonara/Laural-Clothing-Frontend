@@ -18,7 +18,6 @@ export default function ProductCard({ imageUrl = "/products/default.jpg" }: Prod
       className="group flex flex-col w-full max-w-[245px] bg-white rounded-lg cursor-pointer overflow-hidden border border-stone-100 hover:shadow-md transition-all duration-300"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => router.push("/products/vesper-long-sleeve-top")}
     >
       {/* Top Image Container */}
       <div className="relative w-full aspect-[221/281] bg-stone-100 flex flex-col justify-between overflow-hidden">
@@ -27,14 +26,14 @@ export default function ProductCard({ imageUrl = "/products/default.jpg" }: Prod
         <Link href="/products/vesper-long-sleeve-top" className="absolute inset-0 z-0">
           <Image
             src={imageUrl}
-            alt="Product Image"
+            alt="Vesper Long Sleeve Top - Pink"
             fill
             className={`object-cover transition-opacity duration-300 ${isHovered ? 'opacity-0' : 'opacity-100'}`}
           />
           {/* Hover Image */}
           <Image
             src="/products/hover.jpg"
-            alt="Product Image Hover"
+            alt="Vesper Long Sleeve Top - Pink - Back View"
             fill
             className={`object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
           />
