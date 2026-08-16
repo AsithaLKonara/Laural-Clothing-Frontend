@@ -24,6 +24,7 @@ import {
   ArchiveRestore,
   Truck,
   RotateCcw,
+  MessageSquare,
   X
 } from "lucide-react";
 
@@ -43,6 +44,7 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
     { name: "POS", icon: MonitorSmartphone, href: "/pos" },
     { name: "Payments", icon: CreditCard, href: "/admin/payments" },
     { name: "Customers", icon: Users, href: "/admin/customers" },
+    { name: "Reviews", icon: MessageSquare, href: "/admin/reviews" },
     { name: "Loyalty", icon: Gift, href: "/admin/loyalty" },
     { name: "Promotions", icon: Megaphone, href: "/admin/promotions" },
     { name: "Reports", icon: BarChart3, href: "/admin/reports" },
