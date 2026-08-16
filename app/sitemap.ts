@@ -28,8 +28,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // TODO: Fetch products from database
   // const products = await prisma.product.findMany({ select: { slug: true, updatedAt: true } })
   const mockProducts = [
-    '/product/premium-linen-dress',
-    '/product/silk-evening-gown',
+    '/products/premium-linen-dress',
+    '/products/silk-evening-gown',
   ].map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
@@ -40,8 +40,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // TODO: Fetch collections/categories from database
   // const categories = await prisma.category.findMany({ select: { slug: true, updatedAt: true } })
   const mockCollections = [
-    '/category/women',
-    '/collection/summer-collection',
+    '/categories/women',
+    '/collections/summer-collection',
   ].map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),

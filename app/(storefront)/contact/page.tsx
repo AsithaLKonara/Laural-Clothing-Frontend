@@ -1,4 +1,5 @@
 import ClientContent from "./ClientContent";
+export const dynamic = 'force-static';
 
 export const metadata = {
   title: "Contact - Laural Clothing",

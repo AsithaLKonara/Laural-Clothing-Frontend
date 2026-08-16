@@ -7,14 +7,14 @@ const CURATED_COLLECTIONS = [
     title: "Summer 2026", 
     subtitle: "Lightweight essentials for the modern escapist.",
     imageUrl: "/hero-image/hero-3.jpg", 
-    href: "/collection/summer-2026" 
+    href: "/collections/summer-2026" 
   },
   { 
     id: 2, 
     title: "The Evening Edit", 
     subtitle: "Refined silhouettes for after dark.",
     imageUrl: "/hero-image/hero-2.jpg", 
-    href: "/collection/the-evening-edit" 
+    href: "/collections/the-evening-edit" 
   }
 ];
 

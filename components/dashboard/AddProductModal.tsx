@@ -262,7 +262,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
                 <div className="flex flex-col gap-2">
                   <label className="label">Product Slug</label>
                   <div className={`flex items-center bg-stone-50 border ${errors.slug ? 'border-red-500' : 'border-stone-200'} rounded-lg overflow-hidden`}>
-                    <span className="px-3 text-stone-400 text-sm font-mono border-r border-stone-200 h-full py-2.5">/product/</span>
+                    <span className="px-3 text-stone-400 text-sm font-mono border-r border-stone-200 h-full py-2.5">/products/</span>
                     <input
                       type="text"
                       {...register("slug", { onChange: () => setSlugEdited(true) })}

@@ -87,7 +87,7 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
               <span className="font-urbanist font-medium text-xs text-stone-500 uppercase tracking-widest mb-6">Products</span>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[1, 2, 3, 4].map((item) => (
-                  <Link href="/product/vesper-long-sleeve-top" onClick={onClose} key={item} className="flex flex-col group cursor-pointer">
+                  <Link href="/products/vesper-long-sleeve-top" onClick={onClose} key={item} className="flex flex-col group cursor-pointer">
                     <div className="relative w-full aspect-[3/4] bg-stone-200 mb-3 overflow-hidden rounded-md">
                       <Image 
                         src={`/products/product_${item}.jpg`} 

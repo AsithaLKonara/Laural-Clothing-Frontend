@@ -6,6 +6,8 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 
+export const revalidate = 3600; // ISR every hour
+
 // This function can eventually use prisma.product.findUnique() based on the slug.
 // For now, it returns mock metadata based on the slug.
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -21,12 +23,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: mockTitle,
     description: `Discover the elegant ${mockTitle} at Laural Clothing. Designed for the modern aesthetic.`,
     alternates: {
-      canonical: `/product/${slug}`,
+      canonical: `/products/${slug}`,
     },
     openGraph: {
       title: `${mockTitle} | Laural Clothing`,
       description: `Discover the elegant ${mockTitle} at Laural Clothing.`,
-      url: `/product/${slug}`,
+      url: `/products/${slug}`,
       images: [
         {
           url: '/hero-image/hero-1.jpg', // Mock image
@@ -54,7 +56,7 @@ export default async function ProductPage({ params }: Props) {
         description={`Discover the elegant ${mockTitle} at Laural Clothing.`}
         image={`${baseUrl}/hero-image/hero-1.jpg`}
         price={2790}
-        url={`${baseUrl}/product/${slug}`}
+        url={`${baseUrl}/products/${slug}`}
         sku={`SKU-${slug.toUpperCase()}`}
       />
       <ProductPageClient params={params} />

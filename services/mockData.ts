@@ -11,12 +11,12 @@ export const mockCategories = [
 ];
 
 export const mockCollectionCategories = [
-  { id: 1, title: "Dress", imageUrl: "/hero-image/hero-1.jpg", href: "/category/dress" },
-  { id: 2, title: "Hand Bags", imageUrl: "/hero-image/hero-2.jpg", href: "/category/hand-bags" },
-  { id: 3, title: "Pants", imageUrl: "/hero-image/hero-3.jpg", href: "/category/pants" },
-  { id: 4, title: "Shirts", imageUrl: "/hero-image/hero-1.jpg", href: "/category/shirts" },
-  { id: 5, title: "Shorts", imageUrl: "/hero-image/hero-2.jpg", href: "/category/shorts" },
-  { id: 6, title: "Tops", imageUrl: "/hero-image/hero-3.jpg", href: "/category/tops" },
+  { id: 1, title: "Dress", imageUrl: "/hero-image/hero-1.jpg", href: "/categories/dress" },
+  { id: 2, title: "Hand Bags", imageUrl: "/hero-image/hero-2.jpg", href: "/categories/hand-bags" },
+  { id: 3, title: "Pants", imageUrl: "/hero-image/hero-3.jpg", href: "/categories/pants" },
+  { id: 4, title: "Shirts", imageUrl: "/hero-image/hero-1.jpg", href: "/categories/shirts" },
+  { id: 5, title: "Shorts", imageUrl: "/hero-image/hero-2.jpg", href: "/categories/shorts" },
+  { id: 6, title: "Tops", imageUrl: "/hero-image/hero-3.jpg", href: "/categories/tops" },
 ];
 
 export const mockAdminCategories = [

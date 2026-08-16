@@ -10,7 +10,7 @@ export default function CategoryBar() {
       <div className="flex flex-row justify-center items-center flex-wrap gap-x-[30px] gap-y-[10px] w-full max-w-[1280px] mx-auto py-[16px] px-[20px] md:px-[120px]">
         {categories.map((link) => (
           <Link 
-            href={`/category/${link.toLowerCase().replace(' ', '-')}`} 
+            href={`/categories/${link.toLowerCase().replace(' ', '-')}`} 
             key={link} 
             className="font-urbanist font-black text-sm text-primary hover:text-[#5E3122] transition-colors uppercase"
           >

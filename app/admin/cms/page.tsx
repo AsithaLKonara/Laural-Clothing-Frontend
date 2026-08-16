@@ -54,7 +54,7 @@ interface StaticPage {
 const INITIAL_HERO: HeroSlide[] = [
   { id: "HS-1", title: "New Arrivals", subtitle: "Explore the latest styles this season.", cta: "Shop Now", ctaLink: "/shop", image: "/hero-1.jpg", active: true, order: 1 },
   { id: "HS-2", title: "End of Season Sale", subtitle: "Up to 50% off selected items.", cta: "View Sale", ctaLink: "/sale", image: "/hero-2.jpg", active: true, order: 2 },
-  { id: "HS-3", title: "Quiet Luxury", subtitle: "Elevated minimalism. Timeless pieces.", cta: "Explore", ctaLink: "/collection/luxury", image: "/hero-3.jpg", active: false, order: 3 },
+  { id: "HS-3", title: "Quiet Luxury", subtitle: "Elevated minimalism. Timeless pieces.", cta: "Explore", ctaLink: "/collections/luxury", image: "/hero-3.jpg", active: false, order: 3 },
 ];
 
 const INITIAL_BANNERS: Banner[] = [

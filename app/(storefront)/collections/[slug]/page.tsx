@@ -5,6 +5,8 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 
+export const revalidate = 3600;
+
 // This function can eventually use prisma.collection.findUnique() based on the slug.
 // For now, it returns mock metadata based on the slug.
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -20,12 +22,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: mockTitle,
     description: `Explore our exclusive ${mockTitle} collection at Laural Clothing. Hand-picked pieces edited for quiet luxury.`,
     alternates: {
-      canonical: `/collection/${slug}`,
+      canonical: `/collections/${slug}`,
     },
     openGraph: {
       title: `${mockTitle} Collection | Laural Clothing`,
       description: `Explore our exclusive ${mockTitle} collection at Laural Clothing.`,
-      url: `/collection/${slug}`,
+      url: `/collections/${slug}`,
       images: [
         {
           url: '/hero-image/hero-1.jpg', // Mock image

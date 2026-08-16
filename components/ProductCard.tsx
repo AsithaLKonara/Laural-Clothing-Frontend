@@ -18,13 +18,13 @@ export default function ProductCard({ imageUrl = "/products/default.jpg" }: Prod
       className="group flex flex-col w-full max-w-[245px] bg-white rounded-lg cursor-pointer overflow-hidden border border-stone-100 hover:shadow-md transition-all duration-300"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => router.push("/product/vesper-long-sleeve-top")}
+      onClick={() => router.push("/products/vesper-long-sleeve-top")}
     >
       {/* Top Image Container */}
       <div className="relative w-full aspect-[221/281] bg-stone-100 flex flex-col justify-between overflow-hidden">
         
         {/* Default Image */}
-        <Link href="/product/vesper-long-sleeve-top" className="absolute inset-0 z-0">
+        <Link href="/products/vesper-long-sleeve-top" className="absolute inset-0 z-0">
           <Image
             src={imageUrl}
             alt="Product Image"
@@ -86,7 +86,7 @@ export default function ProductCard({ imageUrl = "/products/default.jpg" }: Prod
         
         {/* Pricing & Title Block */}
         <div className="flex flex-col items-center justify-center w-full">
-          <Link href="/product/vesper-long-sleeve-top" className="hover:text-stone-500 transition-colors">
+          <Link href="/products/vesper-long-sleeve-top" className="hover:text-stone-500 transition-colors">
             <h3 className="font-poppins font-bold text-sm text-stone-900 text-center tracking-wide mb-1.5">
               Vesper Long Sleeve Top – Pink
             </h3>

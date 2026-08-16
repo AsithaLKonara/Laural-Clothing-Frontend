@@ -155,7 +155,7 @@ export default function ClientContent() {
                 </div>
                 {/* Normally a close button goes here in a cart, but in an order summary it's just static. 
                     I'll add a view product link icon instead. */}
-                <Link href="/product/vesper-long-sleeve-top" className="absolute top-4 right-4 text-stone-400 hover:text-primary transition-colors">
+                <Link href="/products/vesper-long-sleeve-top" className="absolute top-4 right-4 text-stone-400 hover:text-primary transition-colors">
                   <Search size={16} />
                 </Link>
               </div>

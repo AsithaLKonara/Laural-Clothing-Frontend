@@ -68,7 +68,7 @@ export default function AddCategoryModal({ isOpen, onClose }: AddCategoryModalPr
           <div className="flex flex-col gap-2">
             <label className="font-inter text-xs font-semibold text-stone-700">Category Slug</label>
             <div className="flex items-center border border-stone-200 rounded-lg overflow-hidden bg-white focus-within:border-stone-400 focus-within:ring-2 focus-within:ring-stone-100 transition-all">
-              <span className="px-3 py-2.5 bg-stone-50 text-stone-500 text-sm border-r border-stone-200 font-mono">/category/</span>
+              <span className="px-3 py-2.5 bg-stone-50 text-stone-500 text-sm border-r border-stone-200 font-mono">/categories/</span>
               <input
                 type="text"
                 value={slug}
