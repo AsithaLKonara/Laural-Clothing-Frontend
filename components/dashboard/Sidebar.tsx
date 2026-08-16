@@ -3,22 +3,22 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { 
-  LayoutDashboard, 
-  ShoppingCart, 
-  Package, 
-  Tags, 
-  Box, 
-  Store, 
-  MonitorSmartphone, 
-  CreditCard, 
-  Users, 
-  Gift, 
-  Megaphone, 
-  BarChart3, 
+import {
+  LayoutDashboard,
+  ShoppingCart,
+  Package,
+  Tags,
+  Box,
+  Store,
+  MonitorSmartphone,
+  CreditCard,
+  Users,
+  Gift,
+  Megaphone,
+  BarChart3,
   UserCog,
   Shield,
-  Settings, 
+  Settings,
   FileText,
   Layers,
   ArchiveRestore,
@@ -72,7 +72,7 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
 
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-8 scrollbar-hide">
-        
+
         {/* Main Nav */}
         <div className="flex flex-col gap-1">
           <span className="px-3 mb-2 font-poppins font-semibold text-[10px] uppercase tracking-wider text-muted">Main Menu</span>
@@ -80,16 +80,15 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
             const Icon = item.icon;
             // Exact match for /admin, startsWith for other routes
             const isActive = item.href === "/admin" ? pathname === "/admin" : pathname?.startsWith(item.href);
-            
+
             return (
-              <Link 
-                key={item.name} 
+              <Link
+                key={item.name}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all border-l-4 ${
-                  isActive 
-                    ? "bg-accent-soft text-primary border-primary font-bold shadow-sm" 
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all border-l-4 ${isActive
+                    ? "bg-accent-soft text-primary border-primary font-bold shadow-sm"
                     : "border-transparent text-text-secondary hover:bg-background hover:text-foreground font-medium"
-                }`}
+                  }`}
               >
                 <Icon size={18} />
                 <span className="font-inter text-sm">{item.name}</span>
@@ -104,16 +103,15 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
           {systemItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname?.startsWith(item.href);
-            
+
             return (
-              <Link 
-                key={item.name} 
+              <Link
+                key={item.name}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all border-l-4 ${
-                  isActive 
-                    ? "bg-accent-soft text-primary border-primary font-bold shadow-sm" 
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all border-l-4 ${isActive
+                    ? "bg-accent-soft text-primary border-primary font-bold shadow-sm"
                     : "border-transparent text-text-secondary hover:bg-background hover:text-foreground font-medium"
-                }`}
+                  }`}
               >
                 <Icon size={18} />
                 <span className="font-inter text-sm">{item.name}</span>
@@ -122,7 +120,7 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
           })}
         </div>
       </div>
-      
+
       {/* User Profile Footer */}
       <div className="p-4 border-t border-border shrink-0 bg-surface">
         <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-background transition-colors cursor-pointer border border-transparent hover:border-border">

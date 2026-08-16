@@ -8,11 +8,13 @@ import PaymentModal from "@/components/pos/PaymentModal";
 import CustomerSelectionModal from "@/components/pos/CustomerSelectionModal";
 import OrderSuccessModal from "@/components/pos/OrderSuccessModal";
 import PosReturnsMode from "@/components/pos/PosReturnsMode";
-import { RotateCcw, ShoppingCart } from "lucide-react";
+import PosDispatchTicket from "@/components/pos/PosDispatchTicket";
+import { RotateCcw, ShoppingCart, Zap, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 export default function POSPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [posMode, setPosMode] = useState<"SALES" | "RETURNS">("SALES");
+  const [posMode, setPosMode] = useState<"SALES" | "RETURNS" | "DISPATCH">("SALES");
   
   // Modal states
   const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
@@ -21,6 +23,29 @@ export default function POSPage() {
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [cart, setCart] = useState<any[]>([]);
+
+  const addToCart = (product: any) => {
+    setCart(prev => {
+      const exists = prev.find(item => item.id === product.id);
+      if (exists) {
+        return prev.map(item => item.id === product.id ? { ...item, qty: item.qty + 1 } : item);
+      }
+      return [...prev, { ...product, qty: 1 }];
+    });
+  };
+
+  const updateQty = (id: number, delta: number) => {
+    setCart(prev => prev.map(item => {
+      if (item.id === id) {
+        const newQty = Math.max(0, item.qty + delta);
+        return { ...item, qty: newQty };
+      }
+      return item;
+    }).filter(item => item.qty > 0));
+  };
+
+  const clearCart = () => setCart([]);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -52,6 +77,11 @@ export default function POSPage() {
       {/* POS Header */}
       <div className="h-[60px] bg-surface text-foreground flex items-center justify-between px-6 shrink-0 shadow-sm border-b border-border z-10">
         <div className="flex items-center gap-6">
+          <Link href="/admin" className="flex items-center gap-2 text-muted hover:text-foreground transition-colors mr-2 group">
+            <div className="w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center group-hover:bg-surface transition-colors">
+              <ArrowLeft size={16} />
+            </div>
+          </Link>
           <h1 className="font-bold text-lg tracking-widest uppercase flex items-center gap-2">
             <LayoutGrid size={18} /> LAURAL POS
           </h1>
@@ -69,6 +99,12 @@ export default function POSPage() {
               className={`px-4 py-1.5 rounded-md font-inter font-bold text-xs flex items-center gap-2 transition-colors ${posMode === 'RETURNS' ? 'bg-primary text-white shadow-sm' : 'text-muted hover:bg-surface'}`}
             >
               <RotateCcw size={14} /> RETURNS
+            </button>
+            <button 
+              onClick={() => setPosMode("DISPATCH")}
+              className={`px-4 py-1.5 rounded-md font-inter font-bold text-xs flex items-center gap-2 transition-colors ${posMode === 'DISPATCH' ? 'bg-primary text-white shadow-sm' : 'text-muted hover:bg-surface'}`}
+            >
+              <Zap size={14} /> DISPATCH
             </button>
           </div>
 
@@ -139,7 +175,13 @@ export default function POSPage() {
                 {products.map((p) => (
                   <button 
                     key={p.id}
-                    onClick={() => { setSelectedProduct(p); setIsVariantModalOpen(true); }}
+                    onClick={() => { 
+                      if (posMode === "DISPATCH") {
+                        addToCart(p);
+                      } else {
+                        setSelectedProduct(p); setIsVariantModalOpen(true); 
+                      }
+                    }}
                     className="bg-surface border border-border rounded-xl flex flex-col hover:border-accent hover:shadow-md transition-all text-left active:scale-95 overflow-hidden"
                   >
                     <div className="relative w-full aspect-square bg-stone-100">
@@ -171,105 +213,99 @@ export default function POSPage() {
               >
                 <div className="flex items-center gap-2">
                   <ShoppingBag size={20} />
-                  <span>2 Items</span>
+                  <span>{cart.length > 0 ? cart.reduce((a, b) => a + b.qty, 0) : 2} Items</span>
                 </div>
-                <span>View Order - Rs. 9,400</span>
+                <span>View Order</span>
               </button>
             </div>
 
           </div>
 
-          {/* Right Side: Cart & Payment (1/3 width, fixed 400px min) */}
-          <div className={`fixed inset-y-0 right-0 w-full sm:w-[420px] bg-surface flex flex-col shrink-0 shadow-2xl lg:shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] z-50 lg:z-0 lg:static transform transition-transform duration-300 lg:translate-x-0 ${isMobileCartOpen ? "translate-x-0" : "translate-x-full"}`}>
-            
-            {/* Cart Header */}
-            <div className="p-4 border-b border-border bg-background flex justify-between items-center shrink-0 h-[60px]">
-              <h2 className="font-inter font-bold text-lg flex items-center gap-2">
-                <button className="lg:hidden p-1 -ml-1 text-muted" onClick={() => setIsMobileCartOpen(false)}>
-                  <X size={20} />
-                </button>
-                Current Order
-              </h2>
-              <button 
-                onClick={() => setIsCustomerModalOpen(true)}
-                className="flex items-center gap-2 text-sm font-inter text-primary bg-primary-soft px-3 py-1.5 rounded-lg hover:bg-primary/20 transition-colors"
-              >
-                <UserPlus size={16} /> Add Customer
-              </button>
-            </div>
-
-            {/* Cart Items */}
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
-              {[1, 2].map(i => (
-                <div key={i} className="flex flex-col bg-background border border-border rounded-lg p-3 relative group">
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="font-inter font-bold text-foreground leading-snug pr-8">Black Oversized T-Shirt</span>
-                    <button className="absolute top-3 right-3 text-muted hover:text-error transition-colors opacity-0 group-hover:opacity-100">
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                  <div className="text-xs font-inter text-muted mb-3">
-                    Color: Black | Size: M
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <button className="w-8 h-8 rounded-full bg-surface border border-border font-bold text-muted flex items-center justify-center hover:bg-background">-</button>
-                      <span className="font-inter font-bold text-lg w-4 text-center text-foreground">2</span>
-                      <button className="w-8 h-8 rounded-full bg-surface border border-border font-bold text-muted flex items-center justify-center hover:bg-background">+</button>
-                    </div>
-                    <span className="font-inter font-bold text-foreground">5,000</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Totals & Payment Actions */}
-            <div className="border-t border-border bg-surface p-6 shrink-0 flex flex-col gap-4 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
-              
-              <div className="flex flex-col gap-2 font-inter text-muted">
-                <div className="flex justify-between">
-                  <span>Subtotal</span>
-                  <span className="text-foreground">10,000</span>
-                </div>
-                <div className="flex justify-between text-success">
-                  <span>Discount</span>
-                  <span>-600</span>
-                </div>
-                <div className="flex justify-between items-end mt-2 pt-2 border-t border-border">
-                  <span className="text-xl font-bold text-foreground">Total</span>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-sm font-bold text-muted">Rs.</span>
-                    <span className="text-4xl font-bold text-foreground tracking-tight">9,400</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4">
+          {/* Right Side: Cart & Payment */}
+          {posMode === "DISPATCH" ? (
+            <PosDispatchTicket 
+              isMobileCartOpen={isMobileCartOpen}
+              setIsMobileCartOpen={setIsMobileCartOpen}
+              cart={cart}
+              updateQty={updateQty}
+              clearCart={clearCart}
+            />
+          ) : (
+            <div className={`fixed inset-y-0 right-0 w-full sm:w-[420px] bg-surface flex flex-col shrink-0 shadow-2xl lg:shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] z-50 lg:z-0 lg:static transform transition-transform duration-300 lg:translate-x-0 ${isMobileCartOpen ? "translate-x-0" : "translate-x-full"}`}>
+              {/* Rest of Sales Cart goes here */}
+              <div className="p-4 border-b border-border bg-background flex justify-between items-center shrink-0 h-[60px]">
+                <h2 className="font-inter font-bold text-lg flex items-center gap-2">
+                  <button className="lg:hidden p-1 -ml-1 text-muted" onClick={() => setIsMobileCartOpen(false)}>
+                    <X size={20} />
+                  </button>
+                  Current Order
+                </h2>
                 <button 
-                  onClick={() => setIsPaymentModalOpen(true)}
-                  className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover rounded-xl py-4 transition-colors shadow-lg shadow-primary/20"
+                  onClick={() => setIsCustomerModalOpen(true)}
+                  className="flex items-center gap-2 text-sm font-inter text-primary bg-primary-soft px-3 py-1.5 rounded-lg hover:bg-primary/20 transition-colors"
                 >
-                  <span className="font-inter font-bold text-lg text-white">Charge Rs. 9,400</span>
-                  <ChevronRight size={20} className="text-white" />
+                  <UserPlus size={16} /> Add Customer
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 mt-2">
-                <button className="bg-background hover:bg-border text-foreground font-inter font-semibold py-3 rounded-lg text-sm transition-colors border border-border">
-                  Hold Cart
-                </button>
-                <button className="bg-error-soft hover:bg-red-200 text-error hover:text-red-700 font-inter font-semibold py-3 rounded-lg text-sm transition-colors border border-error-soft">
-                  Clear All
-                </button>
+              {/* Cart Items */}
+              <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
+                {cart.length === 0 ? (
+                  <div className="flex-1 flex flex-col items-center justify-center text-muted gap-2 h-full opacity-60">
+                    <p className="font-inter text-sm">Cart is empty</p>
+                  </div>
+                ) : (
+                  cart.map(item => (
+                    <div key={item.id} className="flex flex-col bg-background border border-border rounded-lg p-3 relative group">
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="font-inter font-bold text-foreground leading-snug pr-8">{item.name}</span>
+                        <button onClick={() => updateQty(item.id, -item.qty)} className="absolute top-3 right-3 text-muted hover:text-error transition-colors opacity-0 group-hover:opacity-100">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                      <div className="text-xs font-inter text-muted mb-3">
+                        Color: Default | Size: M
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                          <button onClick={() => updateQty(item.id, -1)} className="w-8 h-8 rounded-full bg-surface border border-border font-bold text-muted flex items-center justify-center hover:bg-background">-</button>
+                          <span className="font-inter font-bold text-lg w-4 text-center text-foreground">{item.qty}</span>
+                          <button onClick={() => updateQty(item.id, 1)} className="w-8 h-8 rounded-full bg-surface border border-border font-bold text-muted flex items-center justify-center hover:bg-background">+</button>
+                        </div>
+                        <span className="font-inter font-bold text-foreground">{(Number(item.price.replace(/,/g, "")) * item.qty).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
 
+              {/* Totals & Payment Actions */}
+              <div className="border-t border-border bg-surface p-6 shrink-0 flex flex-col gap-4 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
+                <div className="mt-4">
+                  <button 
+                    onClick={() => setIsPaymentModalOpen(true)}
+                    className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover rounded-xl py-4 transition-colors shadow-lg shadow-primary/20"
+                  >
+                    <span className="font-inter font-bold text-lg text-white">Charge</span>
+                    <ChevronRight size={20} className="text-white" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-3 mt-2">
+                  <button className="bg-background hover:bg-border text-foreground font-inter font-semibold py-3 rounded-lg text-sm transition-colors border border-border">
+                    Hold Cart
+                  </button>
+                  <button onClick={clearCart} className="bg-error-soft hover:bg-red-200 text-error hover:text-red-700 font-inter font-semibold py-3 rounded-lg text-sm transition-colors border border-error-soft">
+                    Clear All
+                  </button>
+                </div>
+              </div>
             </div>
-
-          </div>
+          )}
 
         </div>
       )}
       
+
       {/* Modals */}
       {isVariantModalOpen && <VariantSelectionModal product={selectedProduct} onClose={() => setIsVariantModalOpen(false)} />}
       {isPaymentModalOpen && <PaymentModal onClose={() => setIsPaymentModalOpen(false)} onSuccess={() => { setIsPaymentModalOpen(false); setIsSuccessModalOpen(true); }} total="9,400" />}
