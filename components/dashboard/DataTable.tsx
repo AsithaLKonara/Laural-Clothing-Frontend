@@ -2,7 +2,7 @@ import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Column<T> {
-  header: string;
+  header: string | React.ReactNode;
   accessor: keyof T | ((row: T) => React.ReactNode);
   className?: string;
 }

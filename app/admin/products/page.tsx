@@ -6,10 +6,13 @@ import FilterBar from "@/components/dashboard/FilterBar";
 import DataTable from "@/components/dashboard/DataTable";
 import { StatusBadge } from "@/components/dashboard/Badges";
 import AddProductModal from "@/components/dashboard/AddProductModal";
+import BarcodePrintModal from "@/components/admin/BarcodePrintModal";
 import Link from "next/link";
+import { Barcode } from "lucide-react";
 
 export default function ProductsPage() {
   const [modalOpen, setModalOpen] = useState(false);
+  const [printingProduct, setPrintingProduct] = useState<{sku: string, name: string} | null>(null);
 
   const products = [
     { sku: "LC-TSH-001", name: "Black Oversized T-Shirt", category: "T-Shirts", price: "Rs. 2,500", stock: 124, status: "Active" },
@@ -55,10 +58,14 @@ export default function ProductsPage() {
     {
       header: "Actions",
       accessor: (row: any) => (
-        <div className="flex gap-2 text-xs">
+        <div className="flex gap-2 text-xs items-center">
           <Link href={`/admin/products/${row.sku}`} className="text-blue-600 hover:underline font-medium">Edit</Link>
           <span className="text-stone-300">·</span>
           <button className="text-red-500 hover:underline font-medium">Archive</button>
+          <span className="text-stone-300">·</span>
+          <button onClick={() => setPrintingProduct({ sku: row.sku, name: row.name })} className="text-stone-500 hover:text-stone-900 transition-colors tooltip" title="Print Barcode">
+            <Barcode size={16} />
+          </button>
         </div>
       ),
     },
@@ -113,6 +120,13 @@ export default function ProductsPage() {
       </div>
 
       <AddProductModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+      {printingProduct && (
+        <BarcodePrintModal 
+          productSku={printingProduct.sku} 
+          productName={printingProduct.name} 
+          onClose={() => setPrintingProduct(null)} 
+        />
+      )}
     </>
   );
 }

@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, Filter, RotateCcw, AlertCircle, CheckCircle2, Truck, Package, Clock } from "lucide-react";
+import { Search, Filter, RotateCcw, AlertCircle, CheckCircle2, Truck, Package, Clock, RefreshCw } from "lucide-react";
 import PageHeader from "@/components/admin/PageHeader";
+import BulkReturnModal from "@/components/admin/BulkReturnModal";
 
 const DUMMY_RETURNS = [
   { id: "RMA-00124", orderId: "LC-10241", customer: "Kasun Perera", date: "2026-08-14", status: "REQUESTED", amount: "LKR 4,500" },
@@ -27,10 +28,24 @@ const getStatusConfig = (status: string) => {
 
 export default function AdminReturnsPage() {
   const [filter, setFilter] = useState("ALL");
+  const [selectedRMAs, setSelectedRMAs] = useState<string[]>([]);
+  const [showBulkModal, setShowBulkModal] = useState(false);
 
   const filteredReturns = filter === "ALL" 
     ? DUMMY_RETURNS 
     : DUMMY_RETURNS.filter(r => r.status === filter);
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedRMAs(filteredReturns.map(r => r.id));
+    } else {
+      setSelectedRMAs([]);
+    }
+  };
+
+  const handleSelectOne = (id: string) => {
+    setSelectedRMAs(prev => prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id]);
+  };
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -77,7 +92,10 @@ export default function AdminReturnsPage() {
           <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>
               <tr className="bg-stone-50 border-b border-stone-200">
-                <th className="font-inter font-semibold text-xs text-stone-500 uppercase tracking-wider py-4 px-6">RMA Number</th>
+                <th className="py-4 px-6 w-12">
+                  <input type="checkbox" checked={selectedRMAs.length === filteredReturns.length && filteredReturns.length > 0} onChange={handleSelectAll} className="rounded text-stone-900 focus:ring-stone-900 border-stone-300" />
+                </th>
+                <th className="font-inter font-semibold text-xs text-stone-500 uppercase tracking-wider py-4 px-2">RMA Number</th>
                 <th className="font-inter font-semibold text-xs text-stone-500 uppercase tracking-wider py-4 px-6">Order ID</th>
                 <th className="font-inter font-semibold text-xs text-stone-500 uppercase tracking-wider py-4 px-6">Customer</th>
                 <th className="font-inter font-semibold text-xs text-stone-500 uppercase tracking-wider py-4 px-6">Date</th>
@@ -92,8 +110,11 @@ export default function AdminReturnsPage() {
                 const StatusIcon = statusInfo.icon;
                 
                 return (
-                  <tr key={ret.id} className="hover:bg-stone-50 transition-colors group">
-                    <td className="py-4 px-6 font-inter font-medium text-sm text-stone-900">{ret.id}</td>
+                  <tr key={ret.id} className={`hover:bg-stone-50 transition-colors group ${selectedRMAs.includes(ret.id) ? 'bg-stone-50' : ''}`}>
+                    <td className="py-4 px-6">
+                      <input type="checkbox" checked={selectedRMAs.includes(ret.id)} onChange={() => handleSelectOne(ret.id)} className="rounded text-stone-900 focus:ring-stone-900 border-stone-300" />
+                    </td>
+                    <td className="py-4 px-2 font-inter font-medium text-sm text-stone-900">{ret.id}</td>
                     <td className="py-4 px-6 font-inter text-sm text-blue-600 hover:underline cursor-pointer">{ret.orderId}</td>
                     <td className="py-4 px-6 font-inter text-sm text-stone-600">{ret.customer}</td>
                     <td className="py-4 px-6 font-inter text-sm text-stone-500">{ret.date}</td>
@@ -130,6 +151,29 @@ export default function AdminReturnsPage() {
           </div>
         </div>
       </div>
+
+      {/* Floating Bulk Action Bar */}
+      {selectedRMAs.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-stone-900 text-white px-6 py-4 rounded-full shadow-2xl flex items-center gap-6 animate-in slide-in-from-bottom-10 z-40">
+          <span className="font-inter font-medium text-sm">{selectedRMAs.length} selected</span>
+          <div className="w-px h-6 bg-stone-700"></div>
+          <button onClick={() => setShowBulkModal(true)} className="font-inter font-semibold text-sm bg-white text-stone-900 px-4 py-2 rounded-full hover:bg-stone-100 transition-colors flex items-center gap-2">
+            <RefreshCw size={14} /> Process Bulk Return
+          </button>
+        </div>
+      )}
+
+      {/* Bulk Modal */}
+      {showBulkModal && (
+        <BulkReturnModal 
+          selectedRMAs={filteredReturns.filter(r => selectedRMAs.includes(r.id))}
+          onClose={() => setShowBulkModal(false)}
+          onSuccess={() => {
+            setShowBulkModal(false);
+            setSelectedRMAs([]);
+          }}
+        />
+      )}
     </div>
   );
 }

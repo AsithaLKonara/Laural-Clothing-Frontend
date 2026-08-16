@@ -1,11 +1,16 @@
+"use client";
+
+import { use, useState } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";
 import { StatusBadge } from "@/components/dashboard/Badges";
+import BarcodePrintModal from "@/components/admin/BarcodePrintModal";
 import Link from "next/link";
-import { ArrowLeft, Image as ImageIcon, Box, Tag, Layers } from "lucide-react";
+import { ArrowLeft, Image as ImageIcon, Box, Tag, Layers, Barcode } from "lucide-react";
 
-export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = await params;
+export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
   const { id } = resolvedParams;
+  const [showBarcodeModal, setShowBarcodeModal] = useState(false);
 
   return (
     <div className="flex flex-col p-4 md:p-10 max-w-[1280px] mx-auto w-full gap-6">
@@ -20,6 +25,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         title={`Black Oversized T-Shirt (${id})`}
         action={
           <div className="flex gap-2">
+            <button 
+              onClick={() => setShowBarcodeModal(true)}
+              className="px-3 py-1.5 bg-white border border-stone-200 text-stone-700 font-inter font-medium text-xs rounded shadow-sm hover:bg-stone-50 flex items-center gap-2 transition-colors"
+            >
+              <Barcode size={14} /> Print Barcode
+            </button>
             <StatusBadge label="Active" variant="success" />
           </div>
         }
@@ -147,6 +158,14 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         </div>
 
       </div>
+
+      {showBarcodeModal && (
+        <BarcodePrintModal 
+          productSku={id} 
+          productName="Black Oversized T-Shirt" 
+          onClose={() => setShowBarcodeModal(false)} 
+        />
+      )}
 
     </div>
   );
