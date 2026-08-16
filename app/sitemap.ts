@@ -18,10 +18,36 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/terms-conditions',
   ];
 
-  return routes.map((route) => ({
+  const staticPages = routes.map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
-    changeFrequency: route === '' || route === '/shop' || route === '/sale' ? 'daily' : 'weekly',
+    changeFrequency: (route === '' || route === '/shop' || route === '/sale' ? 'daily' : 'weekly') as "daily" | "weekly",
     priority: route === '' ? 1 : route === '/shop' || route === '/sale' ? 0.9 : 0.7,
   }));
+
+  // TODO: Fetch products from database
+  // const products = await prisma.product.findMany({ select: { slug: true, updatedAt: true } })
+  const mockProducts = [
+    '/product/premium-linen-dress',
+    '/product/silk-evening-gown',
+  ].map((route) => ({
+    url: `${baseUrl}${route}`,
+    lastModified: new Date(),
+    changeFrequency: 'daily' as const,
+    priority: 0.9,
+  }));
+
+  // TODO: Fetch collections/categories from database
+  // const categories = await prisma.category.findMany({ select: { slug: true, updatedAt: true } })
+  const mockCollections = [
+    '/category/women',
+    '/collection/summer-collection',
+  ].map((route) => ({
+    url: `${baseUrl}${route}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.8,
+  }));
+
+  return [...staticPages, ...mockProducts, ...mockCollections];
 }
