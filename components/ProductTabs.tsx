@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink, Truck, Clock, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { ExternalLink, Truck, Clock, ShieldCheck, ArrowRight } from "lucide-react";
 
 type TabName = "Product Details" | "Shipping Information" | "FAQs";
 
@@ -74,14 +75,12 @@ export default function ProductTabs() {
                 </div>
               </div>
 
-              <a 
-                href="https://www.fdedomestic.com/" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 font-poppins font-medium text-sm text-white bg-primary px-6 py-3 rounded-full hover:bg-stone-800 transition-colors"
+              <Link 
+                href="/track-order"
+                className="inline-flex items-center gap-2 font-poppins font-medium text-sm text-white bg-primary px-6 py-3 rounded-full hover:bg-stone-800 transition-colors w-fit mx-auto"
               >
-                Track on Fardar Express <ExternalLink size={16} />
-              </a>
+                Track Order <ArrowRight size={16} />
+              </Link>
             </div>
           </div>
         )}
