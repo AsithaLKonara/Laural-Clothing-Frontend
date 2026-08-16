@@ -14,6 +14,8 @@ import {
   ForgotPasswordFormData,
   ChangePasswordFormData,
 } from "@/lib/validations";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 type AuthView = "login" | "register" | "forgot-password" | "otp" | "change-password";
 
@@ -47,13 +49,36 @@ export default function AuthForm() {
 // Subcomponents
 
 function LoginForm({ setView }: { setView: (v: AuthView) => void }) {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = (data: LoginFormData) => {
-    console.log("Login data:", data);
+  const onSubmit = async (data: LoginFormData) => {
+    setError(null);
+    setLoading(true);
+    
+    try {
+      const result = await signIn("credentials", {
+        redirect: false,
+        email: data.email,
+        password: data.password,
+      });
+
+      if (result?.error) {
+        setError(result.error);
+      } else {
+        router.push("/admin"); // Middleware will handle redirecting Cashiers to /pos
+      }
+    } catch (err) {
+      setError("An unexpected error occurred.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -109,11 +134,17 @@ function LoginForm({ setView }: { setView: (v: AuthView) => void }) {
           </div>
         </div>
 
-        <button type="submit" className="group w-full h-[56px] bg-stone-50 flex justify-between items-center px-[24px] hover:bg-stone-200 transition-colors">
+        {error && (
+          <div className="w-full bg-red-500/10 border border-red-500/50 text-red-500 text-sm px-4 py-3 text-center">
+            {error}
+          </div>
+        )}
+
+        <button type="submit" disabled={loading} className="group w-full h-[56px] bg-stone-50 flex justify-between items-center px-[24px] hover:bg-stone-200 transition-colors disabled:opacity-50">
           <span className="font-urbanist font-bold text-sm text-black uppercase tracking-[0.1em]">
-            Sign In
+            {loading ? "Signing In..." : "Sign In"}
           </span>
-          <ArrowRight className="w-5 h-5 text-black transform group-hover:translate-x-1 transition-transform" />
+          {!loading && <ArrowRight className="w-5 h-5 text-black transform group-hover:translate-x-1 transition-transform" />}
         </button>
 
         <div className="flex flex-col items-center w-full gap-[24px] mt-2">
