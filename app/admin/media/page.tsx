@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import {
   Search, Upload, Grid, List, Trash2, Copy, Download, CheckCircle2,
   Image as ImageIcon, Film, Filter, FolderOpen, X, ZoomIn, ExternalLink,
-  FileImage, AlertCircle
+  FileImage, AlertCircle, ArrowRight
 } from "lucide-react";
 import PageHeader from "@/components/admin/PageHeader";
 
@@ -43,7 +43,67 @@ const DUMMY_MEDIA: MediaFile[] = [
 
 // ─── Detail Panel ──────────────────────────────────────────────────────────────
 
-function DetailPanel({ file, onClose, onDelete }: { file: MediaFile; onClose: () => void; onDelete: (id: string) => void }) {
+interface DetailPanelProps {
+  file: MediaFile;
+  onClose: () => void;
+  onDelete: (id: string) => void;
+}
+
+const ASSIGN_DESTINATIONS = [
+  { label: "Hero Slide Image", page: "/admin/cms" },
+  { label: "Promo Banner", page: "/admin/cms" },
+  { label: "Product Image", page: "/admin/products" },
+  { label: "Category Cover", page: "/admin/categories" },
+  { label: "Collection Cover", page: "/admin/collections" },
+  { label: "CMS Static Page", page: "/admin/cms" },
+];
+
+function AssignToSection({ file }: { file: MediaFile }) {
+  const [destination, setDestination] = useState("");
+  const [assigned, setAssigned] = useState(false);
+
+  const handleAssign = () => {
+    if (!destination) return;
+    setAssigned(true);
+    setTimeout(() => setAssigned(false), 2500);
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <select
+        value={destination}
+        onChange={e => setDestination(e.target.value)}
+        className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:border-stone-900 bg-white"
+      >
+        <option value="">Select a destination...</option>
+        {ASSIGN_DESTINATIONS.map(d => (
+          <option key={d.label} value={d.label}>{d.label}</option>
+        ))}
+      </select>
+      <button
+        onClick={handleAssign}
+        disabled={!destination}
+        className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg font-inter font-semibold text-xs transition-all disabled:opacity-40 ${
+          assigned ? "bg-emerald-600 text-white" : "bg-stone-900 text-white hover:bg-stone-700"
+        }`}
+      >
+        {assigned ? (
+          <><CheckCircle2 size={13}/> Assigned successfully!</>
+        ) : (
+          <><ArrowRight size={13}/> Assign This Image</>
+        )}
+      </button>
+      {assigned && destination && (
+        <p className="font-inter text-xs text-stone-400 text-center">
+          Image URL copied to clipboard — open <span className="font-bold text-stone-700">{destination}</span> to paste it.
+        </p>
+      )}
+    </div>
+  );
+}
+
+
+function DetailPanel({ file, onClose, onDelete }: DetailPanelProps) {
   const [copied, setCopied] = useState(false);
   const copyUrl = () => { navigator.clipboard.writeText(file.url); setCopied(true); setTimeout(() => setCopied(false), 2000); };
 
@@ -104,6 +164,12 @@ function DetailPanel({ file, onClose, onDelete }: { file: MediaFile; onClose: ()
                 {copied ? "Copied!" : "Copy"}
               </button>
             </div>
+          </div>
+
+          {/* Assign To */}
+          <div className="flex flex-col gap-1.5">
+            <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Assign To</label>
+            <AssignToSection file={file} />
           </div>
         </div>
       </div>

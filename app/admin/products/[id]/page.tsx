@@ -4,13 +4,26 @@ import { use, useState } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";
 import { StatusBadge } from "@/components/dashboard/Badges";
 import BarcodePrintModal from "@/components/admin/BarcodePrintModal";
+import MediaPickerModal from "@/components/admin/MediaPickerModal";
 import Link from "next/link";
-import { ArrowLeft, Image as ImageIcon, Box, Tag, Layers, Barcode } from "lucide-react";
+import Image from "next/image";
+import { ArrowLeft, Image as ImageIcon, Box, Tag, Layers, Barcode, Trash2, PlusCircle } from "lucide-react";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const { id } = resolvedParams;
   const [showBarcodeModal, setShowBarcodeModal] = useState(false);
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
+  const [productImages, setProductImages] = useState<string[]>(['/products/default.jpg']);
+
+  const addImage = (url: string) => {
+    setProductImages(prev => [...prev, url]);
+    setShowMediaPicker(false);
+  };
+
+  const removeImage = (index: number) => {
+    setProductImages(prev => prev.filter((_, i) => i !== index));
+  };
 
   return (
     <div className="flex flex-col p-4 md:p-10 max-w-[1280px] mx-auto w-full gap-6">
@@ -62,13 +75,28 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             <h3 className="text-stone-900 font-bold text-lg font-inter flex items-center gap-2">
               <ImageIcon size={18} className="text-stone-400" /> Media
             </h3>
-            <div className="flex gap-4">
-              <div className="w-24 h-24 bg-stone-100 border border-stone-200 rounded-lg flex items-center justify-center text-stone-400 cursor-pointer hover:bg-stone-200 transition-colors">
-                <ImageIcon size={24} />
-              </div>
-              <div className="w-24 h-24 border border-dashed border-stone-300 rounded-lg flex items-center justify-center text-stone-400 cursor-pointer hover:bg-stone-50 transition-colors">
-                +
-              </div>
+            <div className="flex flex-wrap gap-3">
+              {productImages.map((img, idx) => (
+                <div key={idx} className="relative group w-24 h-24 bg-stone-100 border border-stone-200 rounded-lg overflow-hidden">
+                  <Image src={img} alt={`Product image ${idx + 1}`} fill className="object-cover" />
+                  {idx === 0 && (
+                    <span className="absolute top-1 left-1 bg-stone-900 text-white text-[8px] font-bold px-1 py-0.5 rounded uppercase">Main</span>
+                  )}
+                  <button
+                    onClick={() => removeImage(idx)}
+                    className="absolute top-1 right-1 w-5 h-5 bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Trash2 size={10} />
+                  </button>
+                </div>
+              ))}
+              <button
+                onClick={() => setShowMediaPicker(true)}
+                className="w-24 h-24 border-2 border-dashed border-stone-300 rounded-lg flex flex-col items-center justify-center gap-1 text-stone-400 hover:border-stone-500 hover:text-stone-600 hover:bg-stone-50 transition-all cursor-pointer"
+              >
+                <PlusCircle size={18} />
+                <span className="font-inter text-[10px] font-semibold text-center">Add from Library</span>
+              </button>
             </div>
           </div>
 
@@ -170,6 +198,14 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           productSku={id} 
           productName="Black Oversized T-Shirt" 
           onClose={() => setShowBarcodeModal(false)} 
+        />
+      )}
+
+      {showMediaPicker && (
+        <MediaPickerModal
+          title="Add Product Image"
+          onClose={() => setShowMediaPicker(false)}
+          onSelect={(url) => addImage(url)}
         />
       )}
 

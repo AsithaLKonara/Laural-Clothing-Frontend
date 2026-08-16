@@ -7,6 +7,9 @@ import {
   Globe, Save, ExternalLink
 } from "lucide-react";
 import PageHeader from "@/components/admin/PageHeader";
+import MediaPickerModal from "@/components/admin/MediaPickerModal";
+import type { MediaFile } from "@/components/admin/MediaPickerModal";
+import Image from "next/image";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -84,6 +87,7 @@ function HeroTab() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<HeroSlide>>({});
   const [saved, setSaved] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
 
   const startEdit = (slide: HeroSlide) => {
     setEditingId(slide.id);
@@ -166,8 +170,20 @@ function HeroTab() {
                     <input value={editData.ctaLink || ""} onChange={e => setEditData(p => ({...p, ctaLink: e.target.value}))} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900"/>
                   </div>
                   <div className="flex flex-col gap-1.5 md:col-span-2">
-                    <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Image URL / Path</label>
-                    <input value={editData.image || ""} onChange={e => setEditData(p => ({...p, image: e.target.value}))} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900"/>
+                    <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Slide Image</label>
+                    <div className="flex gap-3 items-center">
+                      {editData.image && (
+                        <div className="relative w-20 h-14 bg-stone-100 rounded-lg overflow-hidden shrink-0 border border-stone-200">
+                          <Image src={editData.image} alt="preview" fill className="object-cover" />
+                        </div>
+                      )}
+                      <div className="flex flex-col gap-2 flex-1">
+                        <input value={editData.image || ""} onChange={e => setEditData(p => ({...p, image: e.target.value}))} placeholder="/path/to/image.jpg" className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900 font-mono text-xs"/>
+                        <button type="button" onClick={() => setShowPicker(true)} className="flex items-center gap-2 px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-200 rounded-lg font-inter font-semibold text-xs transition-colors w-fit">
+                          <ImageIcon size={13}/> Pick from Media Library
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div className="flex gap-3 justify-end border-t border-stone-100 pt-4">
@@ -210,6 +226,18 @@ function HeroTab() {
           </div>
         ))}
       </div>
+
+      {/* Media Picker */}
+      {showPicker && (
+        <MediaPickerModal
+          title="Select Hero Slide Image"
+          onClose={() => setShowPicker(false)}
+          onSelect={(url) => {
+            setEditData(p => ({ ...p, image: url }));
+            setShowPicker(false);
+          }}
+        />
+      )}
     </div>
   );
 }
