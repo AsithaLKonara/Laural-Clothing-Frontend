@@ -20,7 +20,9 @@ import {
   Shield,
   Settings, 
   FileText,
-  X
+  X,
+  Layers,
+  ArchiveRestore
 } from "lucide-react";
 
 export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIsOpen?: (v: boolean) => void }) {
@@ -29,9 +31,10 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
   const navItems = [
     { name: "Dashboard", icon: LayoutDashboard, href: "/admin" },
     { name: "Orders", icon: ShoppingCart, href: "/admin/orders" },
-    { name: "Products", icon: Package, href: "/admin/products" },
+    { name: "Products", icon: Box, href: "/admin/products" },
     { name: "Categories", icon: Tags, href: "/admin/categories" },
-    { name: "Inventory", icon: Box, href: "/admin/inventory" },
+    { name: "Collections", icon: Layers, href: "/admin/collections" },
+    { name: "Inventory", icon: ArchiveRestore, href: "/admin/inventory" },
     { name: "Branches", icon: Store, href: "/admin/branches" },
     { name: "POS", icon: MonitorSmartphone, href: "/pos" },
     { name: "Payments", icon: CreditCard, href: "/admin/payments" },

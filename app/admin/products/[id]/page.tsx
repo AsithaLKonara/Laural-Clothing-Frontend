@@ -150,7 +150,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               </div>
               <div className="flex flex-col gap-2">
                 <label className="font-inter text-xs font-semibold text-stone-700">Collections</label>
-                <input type="text" defaultValue="Summer 2026, Basics" className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-stone-400" />
+                <select multiple defaultValue={["Summer 2026", "Best Sellers"]} className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-stone-400 min-h-[100px] bg-white">
+                  <option value="Summer 2026">Summer 2026</option>
+                  <option value="Best Sellers">Best Sellers</option>
+                  <option value="New Arrivals">New Arrivals</option>
+                  <option value="Clearance Sale">Clearance Sale</option>
+                </select>
+                <p className="text-xs text-stone-500 font-inter mt-1">Hold CMD/CTRL to select multiple collections.</p>
               </div>
             </div>
           </div>

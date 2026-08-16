@@ -49,17 +49,23 @@ export default function CollectionsSection() {
         </Link>
       </div>
 
-      {/* Cards Row */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-0 w-full">
-        {CATEGORIES.map((cat) => (
-          <div key={cat.id} className="w-full overflow-hidden">
-            <CategoryCard 
-              title={cat.title}
-              imageUrl={cat.imageUrl}
-              href={cat.href}
-            />
-          </div>
-        ))}
+      {/* Infinite Carousel Row */}
+      <div className="w-[100vw] relative left-1/2 -translate-x-1/2 overflow-hidden mt-2">
+        <div className="flex animate-marquee whitespace-nowrap w-max hover:[animation-play-state:paused]">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="flex shrink-0">
+              {CATEGORIES.map((cat) => (
+                <div key={cat.id} className="w-[160px] md:w-[220px] lg:w-[280px] shrink-0 px-1 md:px-2">
+                  <CategoryCard 
+                    title={cat.title}
+                    imageUrl={cat.imageUrl}
+                    href={cat.href}
+                  />
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
       
       </div>

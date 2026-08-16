@@ -1,8 +1,9 @@
 import Hero from "@/components/Hero";
 import CollectionsSection from "@/components/CollectionsSection";
 import NewArrivalsSection from "@/components/NewArrivalsSection";
-import AdBannerSection from "@/components/AdBannerSection";
+import CuratedCollectionsSection from "@/components/CuratedCollectionsSection";
 import OfferCollectionSection from "@/components/OfferCollectionSection";
+import AdBannerSection from "@/components/AdBannerSection";
 import BrandStorySection from "@/components/BrandStorySection";
 import TestimonialSection from "@/components/TestimonialSection";
 
@@ -45,8 +46,9 @@ export default function Home() {
       </div>
       <CollectionsSection />
       <NewArrivalsSection />
-      <AdBannerSection />
+      <CuratedCollectionsSection />
       <OfferCollectionSection />
+      <AdBannerSection />
       <BrandStorySection />
       <TestimonialSection />
     </main>
