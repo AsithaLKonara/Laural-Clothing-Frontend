@@ -22,7 +22,7 @@ export default function CollectionsSection() {
         priority
       />
       {/* Dark Overlay */}
-      <div className="absolute inset-0 bg-stone-900/50 z-0 pointer-events-none" />
+      <div className="absolute inset-0 bg-stone-950/80 z-0 pointer-events-none" />
       
       <div className="relative z-10 w-full h-full flex flex-col max-w-[1280px] mx-auto">
       
@@ -49,23 +49,17 @@ export default function CollectionsSection() {
         </Link>
       </div>
 
-      {/* Infinite Carousel Row */}
-      <div className="w-[100vw] relative left-1/2 -translate-x-1/2 overflow-hidden mt-2">
-        <div className="flex animate-marquee whitespace-nowrap w-max hover:[animation-play-state:paused]">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="flex shrink-0">
-              {CATEGORIES.map((cat) => (
-                <div key={cat.id} className="w-[160px] md:w-[220px] lg:w-[280px] shrink-0 px-1 md:px-2">
-                  <CategoryCard 
-                    title={cat.title}
-                    imageUrl={cat.imageUrl}
-                    href={cat.href}
-                  />
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
+      {/* Cards Row */}
+      <div className="flex flex-wrap md:flex-nowrap w-full mt-2">
+        {CATEGORIES.map((cat) => (
+          <div key={cat.id} className="w-1/2 md:flex-1 overflow-hidden">
+            <CategoryCard 
+              title={cat.title}
+              imageUrl={cat.imageUrl}
+              href={cat.href}
+            />
+          </div>
+        ))}
       </div>
       
       </div>

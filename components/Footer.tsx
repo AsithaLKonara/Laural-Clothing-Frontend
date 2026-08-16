@@ -17,7 +17,7 @@ export default function Footer() {
         {/* Background Layer */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/footer/bg.jpg?v=2"
+            src="/footer/bg.jpg"
             alt="Footer Background"
             fill
             className="object-cover"
@@ -136,7 +136,7 @@ export default function Footer() {
 
       {/* True Bottom Bar */}
       <div className="flex flex-col md:flex-row justify-between items-center w-full py-4 md:py-0 min-h-[40px] px-4 md:px-8 lg:px-[120px] bg-background gap-4 md:gap-0">
-        <p className="font-inter text-xs text-primary/85 text-center md:text-left">
+        <p className="font-inter text-xs text-stone-500 text-center md:text-left">
           © 2026 Laural Clothing. All Rights Reserved. Developed by ScriptLK Digital
         </p>
         <div className="relative w-[309px] h-[24px]">
