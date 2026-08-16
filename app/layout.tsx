@@ -28,8 +28,28 @@ const urbanist = Urbanist({
 });
 
 export const metadata: Metadata = {
-  title: "Laural Clothing",
-  description: "Pieces edited for quiet luxury — cut clean, worn easy.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://laural.lk'),
+  title: {
+    template: '%s | Laural Clothing',
+    default: 'Laural Clothing',
+  },
+  description: 'Pieces edited for quiet luxury — cut clean, worn easy.',
+  openGraph: {
+    title: 'Laural Clothing',
+    description: 'Pieces edited for quiet luxury — cut clean, worn easy.',
+    url: '/',
+    siteName: 'Laural Clothing',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Laural Clothing',
+      },
+    ],
+    locale: 'en_LK',
+    type: 'website',
+  },
 };
 
 import Providers from "./providers";
