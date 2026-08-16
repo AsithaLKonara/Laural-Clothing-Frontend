@@ -49,6 +49,7 @@ export default function ShopContent() {
 
   return (
     <main className="relative flex flex-col w-full min-h-screen bg-background pt-[83px]">
+      <h1 className="sr-only">Shop All Products</h1>
       
       {/* Sub Navbar */}
       <CategoryBar />
