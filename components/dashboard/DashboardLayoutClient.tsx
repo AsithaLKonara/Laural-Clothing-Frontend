@@ -4,7 +4,9 @@ import { useState } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 
-export default function DashboardLayoutClient({ children }: { children: React.ReactNode }) {
+import { Session } from "next-auth";
+
+export default function DashboardLayoutClient({ children, session }: { children: React.ReactNode, session?: Session | null }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
@@ -25,7 +27,7 @@ export default function DashboardLayoutClient({ children }: { children: React.Re
       <div className="flex-1 flex flex-col md:ml-[224px] h-screen overflow-hidden w-full transition-all">
         
         {/* Header */}
-        <Header onMenuClick={() => setIsSidebarOpen(true)} />
+        <Header onMenuClick={() => setIsSidebarOpen(true)} session={session} />
 
         {/* Scrollable Main Content */}
         <main className="flex-1 overflow-y-auto w-full p-4 md:p-6">
