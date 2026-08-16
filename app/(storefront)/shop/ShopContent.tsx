@@ -103,7 +103,7 @@ export default function ShopContent() {
             {/* Render items for current page */}
             {currentItems.map((_, i) => (
               <div key={startIndex + i} className="flex justify-center w-full animate-in fade-in zoom-in-95 duration-300">
-                <ProductCard />
+                <ProductCard imageUrl={`/products/p${((startIndex + i) % 6) + 1}.jpg`} />
               </div>
             ))}
           </div>

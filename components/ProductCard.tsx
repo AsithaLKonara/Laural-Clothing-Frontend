@@ -5,7 +5,11 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function ProductCard() {
+interface ProductCardProps {
+  imageUrl?: string;
+}
+
+export default function ProductCard({ imageUrl = "/products/default.jpg" }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const router = useRouter();
 
@@ -22,7 +26,7 @@ export default function ProductCard() {
         {/* Default Image */}
         <Link href="/product/vesper-long-sleeve-top" className="absolute inset-0 z-0">
           <Image
-            src="/products/default.jpg"
+            src={imageUrl}
             alt="Product Image"
             fill
             className={`object-cover transition-opacity duration-300 ${isHovered ? 'opacity-0' : 'opacity-100'}`}

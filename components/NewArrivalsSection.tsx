@@ -30,9 +30,9 @@ export default function NewArrivalsSection() {
       {/* Product Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-[20px] py-8 md:py-[60px] w-full max-w-[1040px] place-items-center">
         {/* We'll render 8 product cards to show the grid wrap */}
-        {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
+        {[1, 2, 3, 4, 5, 6, 7, 8].map((item, i) => (
           <div key={item} className="w-full flex justify-center">
-            <ProductCard />
+            <ProductCard imageUrl={`/products/p${(i % 6) + 1}.jpg`} />
           </div>
         ))}
       </div>

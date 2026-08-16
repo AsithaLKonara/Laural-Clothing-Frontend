@@ -39,9 +39,9 @@ export default function OfferCollectionSection() {
       {/* Product Carousel */}
       <div className="w-full max-w-[1040px] overflow-hidden" ref={emblaRef}>
         <div className="flex gap-[20px]">
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((item, i) => (
             <div key={item} className="flex-[0_0_245px] min-w-[245px]">
-              <ProductCard />
+              <ProductCard imageUrl={`/products/p${((i + 3) % 6) + 1}.jpg`} />
             </div>
           ))}
         </div>
