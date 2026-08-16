@@ -16,8 +16,10 @@ import { RotateCcw, ShoppingCart, Zap, ArrowLeft, Clock, History, ArrowRightLeft
 import Link from "next/link";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
+import { useSession, signOut } from "next-auth/react";
 
 export default function POSPage() {
+  const { data: session } = useSession();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [posMode, setPosMode] = useState<"SALES" | "RETURNS" | "DISPATCH" | "EXCHANGE">("SALES");
   
@@ -163,9 +165,15 @@ export default function POSPage() {
               </span>
             )}
           </button>
-          <div className="hidden md:flex items-center gap-2 text-sm font-inter text-muted border-l border-border pl-6">
-            <span>Cashier: Kasun</span>
+          <div className="hidden md:flex items-center gap-2 text-sm font-inter text-muted border-l border-border pl-6 pr-4">
+            <span>Cashier: {session?.user?.name || "User"}</span>
           </div>
+          <button 
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="text-error hover:bg-error/10 border border-transparent px-3 py-1.5 rounded transition-colors text-sm font-inter font-medium flex items-center gap-2"
+          >
+            Sign Out
+          </button>
           <button 
             onClick={toggleFullscreen}
             className="flex items-center gap-2 bg-background hover:bg-border border border-border px-3 py-1.5 rounded transition-colors text-sm font-inter md:ml-4"

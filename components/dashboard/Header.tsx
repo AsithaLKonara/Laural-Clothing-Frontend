@@ -1,8 +1,14 @@
 "use client";
 
-import { Search, Bell, ChevronDown, Menu } from "lucide-react";
+import { Search, Bell, ChevronDown, Menu, LogOut } from "lucide-react";
+import { Session } from "next-auth";
+import { signOut } from "next-auth/react";
 
-export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
+export default function Header({ onMenuClick, session }: { onMenuClick?: () => void, session?: Session | null }) {
+  const getInitials = (name?: string | null) => {
+    if (!name) return "US";
+    return name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+  };
   return (
     <header className="h-[64px] bg-surface border-b border-border flex items-center justify-between px-4 md:px-8 shrink-0 shadow-sm z-40">
       
@@ -46,13 +52,28 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         </button>
 
         {/* User Chip */}
-        <button className="flex items-center gap-2.5 px-2 md:px-3 py-1.5 rounded-xl hover:bg-background transition-colors border border-border bg-surface">
-          <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white font-inter font-bold text-[10px]">
-            SA
+        <div className="relative group">
+          <button className="flex items-center gap-2.5 px-2 md:px-3 py-1.5 rounded-xl hover:bg-background transition-colors border border-border bg-surface">
+            <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white font-inter font-bold text-[10px]">
+              {getInitials(session?.user?.name)}
+            </div>
+            <div className="hidden sm:flex flex-col items-start text-left">
+              <span className="font-inter font-medium text-sm text-foreground leading-none">{session?.user?.name || "Super Admin"}</span>
+              <span className="font-inter text-[10px] text-muted leading-none mt-1">{session?.user?.role || "Admin"}</span>
+            </div>
+            <ChevronDown size={14} className="text-muted ml-1" />
+          </button>
+          
+          <div className="absolute right-0 top-full mt-2 w-48 bg-surface border border-border rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 py-1 z-50 flex flex-col">
+            <button 
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              className="flex items-center gap-2 px-4 py-2 text-sm text-error hover:bg-error/10 transition-colors text-left w-full font-inter"
+            >
+              <LogOut size={16} />
+              Sign Out
+            </button>
           </div>
-          <span className="hidden sm:block font-inter font-medium text-sm text-foreground">Super Admin</span>
-          <ChevronDown size={14} className="text-muted" />
-        </button>
+        </div>
 
       </div>
     </header>
