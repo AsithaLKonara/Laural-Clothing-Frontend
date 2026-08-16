@@ -91,7 +91,7 @@ export default function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModal
                     <div className="relative w-full aspect-[3/4] bg-stone-200 mb-3 overflow-hidden rounded-md">
                       <Image 
                         src={`/products/product_${item}.jpg`} 
-                        alt="Product result" 
+                        alt="Vesper Long Sleeve Top" 
                         fill 
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
                       />
