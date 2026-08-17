@@ -5,13 +5,13 @@ import FilterSidebar from "@/components/FilterSidebar";
 import ProductCard from "@/components/ProductCard";
 import CategoryBar from "@/components/CategoryBar";
 import { SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
+import { useProducts } from "@/hooks/useProducts";
+import { Product } from "@/types/product";
 
 export default function ShopContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
-  const totalItems = 59; // Dummy total
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   useEffect(() => {
     if (window.innerWidth >= 768) {
@@ -20,9 +20,13 @@ export default function ShopContent() {
   }, []);
 
   // Pagination logic
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
-  const currentItems = [...Array(totalItems)].slice(startIndex, endIndex);
+  const skip = (currentPage - 1) * itemsPerPage;
+  const { data: response, isLoading } = useProducts({ skip, take: itemsPerPage });
+  
+  const products = response?.data || [];
+  const totalItems = response?.meta.total || 0;
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+  const endIndex = Math.min(skip + itemsPerPage, totalItems);
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -64,7 +68,7 @@ export default function ShopContent() {
           
           <div className="flex items-center gap-4">
             <span className="hidden sm:block font-urbanist text-sm text-primary text-right">
-              Showing {startIndex + 1}–{endIndex} of {totalItems} results
+              Showing {totalItems > 0 ? skip + 1 : 0}–{endIndex} of {totalItems} results
             </span>
             <button 
               className="md:hidden flex items-center gap-2 font-urbanist text-sm text-primary"
@@ -101,10 +105,15 @@ export default function ShopContent() {
         {/* Product Grid Area */}
         <div className="flex-1 flex flex-col items-center md:items-start py-6 md:py-[40px] px-4 md:px-[40px] transition-all duration-500 ease-in-out">
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-[30px] w-full max-w-max mx-auto md:mx-0">
-            {/* Render items for current page */}
-            {currentItems.map((_, i) => (
-              <div key={startIndex + i} className="flex justify-center w-full animate-in fade-in zoom-in-95 duration-300">
-                <ProductCard imageUrl={`/products/p${((startIndex + i) % 6) + 1}.jpg`} />
+            {isLoading ? (
+              Array.from({ length: itemsPerPage }).map((_, i) => (
+                <div key={i} className="flex justify-center w-full">
+                  <div className="w-full max-w-[245px] h-[380px] bg-stone-100 animate-pulse rounded-lg"></div>
+                </div>
+              ))
+            ) : products.map((product: Product) => (
+              <div key={product.id} className="flex justify-center w-full animate-in fade-in zoom-in-95 duration-300">
+                <ProductCard product={product} />
               </div>
             ))}
           </div>

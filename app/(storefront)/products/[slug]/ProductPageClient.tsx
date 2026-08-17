@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, use } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, LayoutGrid, Info, ArrowLeftRight, Heart, Ruler, Send, MessageCircle } from "lucide-react";
@@ -11,8 +11,17 @@ import SizeGuideModal from "@/components/SizeGuideModal";
 import ProductCard from "@/components/ProductCard";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
+import { useProductBySlug, useProducts } from "@/hooks/useProducts";
+import { Product } from "@/types/product";
 
 export default function ProductPageClient({ params }: { params: Promise<{ slug: string }> }) {
+  const resolvedParams = use(params);
+  const slug = resolvedParams.slug;
+  
+  const { data: product, isLoading } = useProductBySlug(slug);
+  const { data: relatedResponse } = useProducts({ skip: 0, take: 8 });
+  const relatedProducts = relatedResponse?.data || [];
+
   const [emblaRef] = useEmblaCarousel(
     { loop: true, align: "start", dragFree: true },
     [Autoplay({ delay: 3000, stopOnInteraction: true })]
@@ -22,12 +31,32 @@ export default function ProductPageClient({ params }: { params: Promise<{ slug: 
   const [selectedSize, setSelectedSize] = useState("S");
   const [selectedColor, setSelectedColor] = useState("pink");
 
-  const images = [
-    "/hero-image/hero-1.jpg",
-    "/hero-image/hero-2.jpg",
-    "/hero-image/hero-3.jpg",
-    "/hero-image/hero-1.jpg",
-  ];
+  if (isLoading) {
+    return (
+      <main className="relative flex flex-col w-full min-h-screen bg-background pt-[83px] items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-primary font-poppins">Loading product details...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (!product) {
+    return (
+      <main className="relative flex flex-col w-full min-h-screen bg-background pt-[83px] items-center justify-center">
+        <h1 className="font-poppins text-2xl text-primary">Product not found</h1>
+        <Link href="/shop" className="mt-4 underline text-stone-500">Back to Shop</Link>
+      </main>
+    );
+  }
+
+  const images = product.featuredImage 
+    ? [product.featuredImage, "/hero-image/hero-1.jpg", "/hero-image/hero-2.jpg", "/hero-image/hero-3.jpg"] 
+    : ["/hero-image/hero-1.jpg", "/hero-image/hero-2.jpg", "/hero-image/hero-3.jpg", "/hero-image/hero-1.jpg"];
+
+  const currentPrice = (product.price / 100).toFixed(2);
+  const installment = (product.price / 300).toFixed(2);
 
   return (
     <main className="relative flex flex-col w-full min-h-screen bg-background pt-[83px]">
@@ -38,11 +67,11 @@ export default function ProductPageClient({ params }: { params: Promise<{ slug: 
       {/* Breadcrumbs */}
       <div className="w-full max-w-[1280px] mx-auto py-6 px-4 md:px-[120px] flex justify-between items-center">
         <span className="font-urbanist text-sm text-[#79716B]">
-          Home / Dresses / <span className="text-primary font-semibold">Era Dress - Yellow</span>
+          Home / Shop / <span className="text-primary font-semibold">{product.name}</span>
         </span>
         <div className="hidden md:flex gap-4 text-primary">
           <button className="hover:text-stone-500"><ChevronLeft size={18} strokeWidth={1.5} /></button>
-          <button className="hover:text-stone-500"><LayoutGrid size={18} strokeWidth={1.5} /></button>
+          <Link href="/shop" className="hover:text-stone-500"><LayoutGrid size={18} strokeWidth={1.5} /></Link>
           <button className="hover:text-stone-500"><ChevronRight size={18} strokeWidth={1.5} /></button>
         </div>
       </div>
@@ -61,17 +90,17 @@ export default function ProductPageClient({ params }: { params: Promise<{ slug: 
           {/* Header & Pricing */}
           <div className="flex flex-col gap-2 pb-2">
             <h1 className="font-poppins text-3xl md:text-[36px] font-normal text-primary leading-tight">
-              Era Dress – Yellow
+              {product.name}
             </h1>
             <div className="flex items-center gap-4 mt-2">
-              <span className="font-poppins text-[22px] md:text-[26px] font-bold text-primary">Rs 2,790.00</span>
+              <span className="font-poppins text-[22px] md:text-[26px] font-bold text-primary">Rs {currentPrice}</span>
             </div>
           </div>
 
           {/* Installments */}
           <div className="flex flex-col gap-3 w-full border-b border-stone-200 pb-8">
             <div className="flex items-center gap-3 text-base text-[#79716B] font-poppins flex-wrap">
-              <span>3 X Rs. 930.00 with</span>
+              <span>3 X Rs. {installment} with</span>
               <div className="flex items-center gap-2">
                 <div className="w-[45px] h-[15px] relative">
                   <Image src="/payment-methods/koko.png" alt="koko" fill className="object-contain" />
@@ -175,8 +204,8 @@ export default function ProductPageClient({ params }: { params: Promise<{ slug: 
 
           {/* Meta Data */}
           <div className="flex flex-col gap-4 font-poppins text-sm text-primary">
-            <p><span className="font-bold">SKU:</span> <span className="text-[#79716B]">N/A</span></p>
-            <p><span className="font-bold">Categories:</span> <span className="text-[#79716B]">Dresses , July 01 , july Dresses , New arrivals</span></p>
+            <p><span className="font-bold">SKU:</span> <span className="text-[#79716B]">{product.sku || "N/A"}</span></p>
+            <p><span className="font-bold">Categories:</span> <span className="text-[#79716B]">New arrivals</span></p>
             <div className="flex items-center gap-3 mt-1">
               <span className="font-bold">Share:</span>
               <div className="flex gap-4 text-stone-600">
@@ -201,11 +230,17 @@ export default function ProductPageClient({ params }: { params: Promise<{ slug: 
         <h2 className="font-poppins text-2xl md:text-4xl text-primary mb-8">Related Products</h2>
         <div className="w-full max-w-[1040px] overflow-hidden" ref={emblaRef}>
           <div className="flex gap-[20px]">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
-              <div key={item} className="flex-[0_0_245px] min-w-[245px]">
-                <ProductCard />
-              </div>
-            ))}
+            {relatedProducts.length > 0 ? (
+              relatedProducts.map((rp: Product) => (
+                <div key={rp.id} className="flex-[0_0_245px] min-w-[245px]">
+                  <ProductCard product={rp} />
+                </div>
+              ))
+            ) : (
+              [1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
+                <div key={item} className="flex-[0_0_245px] min-w-[245px] h-[380px] bg-stone-100 animate-pulse rounded-lg"></div>
+              ))
+            )}
           </div>
         </div>
         <Link href="/shop" className="font-poppins text-base text-primary border-b border-primary mt-8 pb-1">

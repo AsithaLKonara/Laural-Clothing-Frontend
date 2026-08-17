@@ -4,14 +4,27 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Product } from "@/types/product";
 
 interface ProductCardProps {
+  product?: Product;
   imageUrl?: string;
 }
 
-export default function ProductCard({ imageUrl = "/products/default.jpg" }: ProductCardProps) {
+export default function ProductCard({ product, imageUrl = "/products/default.jpg" }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const router = useRouter();
+
+  // Determine display values
+  const displayImage = product?.featuredImage || imageUrl;
+  const hoverImage = product?.featuredImage || "/products/hover.jpg";
+  const title = product?.name || "Vesper Long Sleeve Top – Pink";
+  const productUrl = product?.slug ? `/products/${product.slug}` : "/products/vesper-long-sleeve-top";
+  const currentPrice = product?.price ? (product.price / 100).toFixed(2) : "1,990.00";
+  const oldPrice = product?.price ? ((product.price + 50000) / 100).toFixed(2) : "2,190.00"; // Dummy old price logic for display
+
+  // Dummy monthly installment calculation for Koko/Mintpay display
+  const installment = product?.price ? (product.price / 300).toFixed(2) : "730.00";
 
   return (
     <div 
@@ -23,17 +36,17 @@ export default function ProductCard({ imageUrl = "/products/default.jpg" }: Prod
       <div className="relative w-full aspect-[221/281] bg-stone-100 flex flex-col justify-between overflow-hidden">
         
         {/* Default Image */}
-        <Link href="/products/vesper-long-sleeve-top" className="absolute inset-0 z-0">
+        <Link href={productUrl} className="absolute inset-0 z-0">
           <Image
-            src={imageUrl}
-            alt="Vesper Long Sleeve Top - Pink"
+            src={displayImage}
+            alt={title}
             fill
             className={`object-cover transition-opacity duration-300 ${isHovered ? 'opacity-0' : 'opacity-100'}`}
           />
           {/* Hover Image */}
           <Image
-            src="/products/hover.jpg"
-            alt="Vesper Long Sleeve Top - Pink - Back View"
+            src={hoverImage}
+            alt={`${title} - Back View`}
             fill
             className={`object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
           />
@@ -85,20 +98,20 @@ export default function ProductCard({ imageUrl = "/products/default.jpg" }: Prod
         
         {/* Pricing & Title Block */}
         <div className="flex flex-col items-center justify-center w-full">
-          <Link href="/products/vesper-long-sleeve-top" className="hover:text-stone-500 transition-colors">
-            <h3 className="font-poppins font-bold text-sm text-stone-900 text-center tracking-wide mb-1.5">
-              Vesper Long Sleeve Top – Pink
+          <Link href={productUrl} className="hover:text-stone-500 transition-colors">
+            <h3 className="font-poppins font-bold text-sm text-stone-900 text-center tracking-wide mb-1.5 line-clamp-1">
+              {title}
             </h3>
           </Link>
           
           <div className="flex items-center gap-2.5">
             {/* Old Price */}
             <span className="font-inter font-medium text-[12px] line-through text-stone-400">
-              Rs. 2,190
+              Rs. {oldPrice}
             </span>
             {/* New Price */}
             <span className="font-inter font-black text-[14px] text-stone-900">
-              Rs. 1,990
+              Rs. {currentPrice}
             </span>
           </div>
         </div>
@@ -107,7 +120,7 @@ export default function ProductCard({ imageUrl = "/products/default.jpg" }: Prod
         <div className="flex flex-col items-center justify-center w-full mt-1.5 border-t border-stone-100 pt-3">
           <div className="flex items-center gap-1.5 flex-wrap justify-center opacity-70 group-hover:opacity-100 transition-opacity">
             <span className="font-inter font-light text-[9px] text-stone-500">
-              3 X Rs. 730.00 with
+              3 X Rs. {installment} with
             </span>
             <div className="flex items-center gap-1">
               <div className="flex items-center justify-center w-[28px] h-[10px] relative">

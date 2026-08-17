@@ -4,12 +4,16 @@ import Link from "next/link";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import ProductCard from "./ProductCard";
+import { useProducts } from "@/hooks/useProducts";
 
 export default function OfferCollectionSection() {
   const [emblaRef] = useEmblaCarousel(
     { loop: true, align: "start", dragFree: true },
     [Autoplay({ delay: 3000, stopOnInteraction: true })]
   );
+
+  const { data: response, isLoading } = useProducts({ skip: 8, take: 8 });
+  const products = response?.data || [];
 
   return (
     <section className="flex flex-col items-center bg-background px-4 md:px-8 lg:px-[120px] py-10 md:py-[60px] w-full">
@@ -39,9 +43,13 @@ export default function OfferCollectionSection() {
       {/* Product Carousel */}
       <div className="w-full max-w-[1040px] overflow-hidden" ref={emblaRef}>
         <div className="flex gap-[20px]">
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((item, i) => (
-            <div key={item} className="flex-[0_0_245px] min-w-[245px]">
-              <ProductCard imageUrl={`/products/p${((i + 3) % 6) + 1}.jpg`} />
+          {isLoading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex-[0_0_245px] min-w-[245px] h-[380px] bg-stone-100 animate-pulse rounded-lg"></div>
+            ))
+          ) : products.map((product) => (
+            <div key={product.id} className="flex-[0_0_245px] min-w-[245px]">
+              <ProductCard product={product} />
             </div>
           ))}
         </div>

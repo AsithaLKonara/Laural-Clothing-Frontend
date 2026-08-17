@@ -34,10 +34,15 @@ export default function NewArrivalsSection() {
 
       {/* Product Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-[20px] py-8 md:py-[60px] w-full max-w-[1040px] place-items-center">
-        {/* We'll render product cards to show the grid wrap */}
-        {products.slice(0, 8).map((product, i) => (
+        {isLoading ? (
+          Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="w-full flex justify-center">
+              <div className="w-full max-w-[245px] h-[380px] bg-stone-100 animate-pulse rounded-lg"></div>
+            </div>
+          ))
+        ) : products.slice(0, 8).map((product) => (
           <div key={product.id} className="w-full flex justify-center">
-            <ProductCard imageUrl={product.featuredImage || "/products/default.jpg"} />
+            <ProductCard product={product} />
           </div>
         ))}
       </div>
