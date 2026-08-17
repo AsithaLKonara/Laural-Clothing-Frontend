@@ -19,11 +19,12 @@ export default function ProductsPage() {
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [showBulkEditModal, setShowBulkEditModal] = useState(false);
 
-  const { data: products = [], isLoading } = useProducts();
+  const { data: response, isLoading } = useProducts();
+  const products = response?.data || [];
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedProducts(products.map(p => p.sku));
+      setSelectedProducts(products.map(p => p.id));
     } else {
       setSelectedProducts([]);
     }
@@ -36,24 +37,28 @@ export default function ProductsPage() {
   const columns = [
     {
       header: <input type="checkbox" checked={selectedProducts.length === products.length && products.length > 0} onChange={handleSelectAll} className="rounded text-stone-900 focus:ring-stone-900 border-stone-300" />,
-      accessor: (row: any) => <input type="checkbox" checked={selectedProducts.includes(row.sku)} onChange={() => handleSelectOne(row.sku)} onClick={e => e.stopPropagation()} className="rounded text-stone-900 focus:ring-stone-900 border-stone-300" />
+      accessor: (row: any) => <input type="checkbox" checked={selectedProducts.includes(row.id)} onChange={() => handleSelectOne(row.id)} onClick={e => e.stopPropagation()} className="rounded text-stone-900 focus:ring-stone-900 border-stone-300" />
     },
     { header: "SKU", accessor: "sku" as const, className: "font-mono font-medium text-stone-500 text-xs" },
     {
       header: "Product",
       accessor: (row: any) => (
-        <Link href={`/admin/products/${row.sku}`} className="font-semibold text-stone-900 hover:text-accent transition-colors">
+        <Link href={`/admin/products/${row.id}`} className="font-semibold text-stone-900 hover:text-accent transition-colors">
           {row.name}
         </Link>
       ),
     },
-    { header: "Category", accessor: "category" as const },
-    { header: "Price", accessor: "priceFormatted" as const, className: "font-semibold text-stone-800" },
+    { header: "Category", accessor: "categoryId" as const },
+    { 
+      header: "Price", 
+      accessor: (row: any) => `$${(row.price / 100).toFixed(2)}`,
+      className: "font-semibold text-stone-800" 
+    },
     {
       header: "Stock",
       accessor: (row: any) => (
-        <span className={row.stock === 0 ? "text-red-600 font-bold" : row.stock <= 10 ? "text-amber-600 font-bold" : "text-stone-900"}>
-          {row.stock}
+        <span className={row.quantity === 0 ? "text-red-600 font-bold" : row.quantity <= 10 ? "text-amber-600 font-bold" : "text-stone-900"}>
+          {row.quantity}
         </span>
       ),
     },
@@ -61,21 +66,21 @@ export default function ProductsPage() {
       header: "Status",
       accessor: (row: any) => {
         let variant: "success" | "warning" | "error" | "neutral" = "success";
-        if (row.status === "Out of Stock") variant = "error";
-        else if (row.status === "Low Stock") variant = "warning";
-        else if (row.status === "Draft") variant = "neutral";
-        return <StatusBadge label={row.status} variant={variant} />;
+        if (row.stockStatus === "outofstock") variant = "error";
+        else if (row.stockStatus === "lowstock") variant = "warning";
+        else variant = "success";
+        return <StatusBadge label={row.stockStatus} variant={variant} />;
       },
     },
     {
       header: "Actions",
       accessor: (row: any) => (
         <div className="flex gap-2 text-xs items-center">
-          <Link href={`/admin/products/${row.sku}`} className="text-blue-600 hover:underline font-medium">Edit</Link>
+          <Link href={`/admin/products/${row.id}`} className="text-blue-600 hover:underline font-medium">Edit</Link>
           <span className="text-stone-300">·</span>
           <button className="text-red-500 hover:underline font-medium">Archive</button>
           <span className="text-stone-300">·</span>
-          <button onClick={() => setPrintingProduct({ sku: row.sku, name: row.name })} className="text-stone-500 hover:text-stone-900 transition-colors tooltip" title="Print Barcode">
+          <button onClick={() => setPrintingProduct({ sku: row.sku || row.id, name: row.name })} className="text-stone-500 hover:text-stone-900 transition-colors tooltip" title="Print Barcode">
             <Barcode size={16} />
           </button>
         </div>
@@ -125,7 +130,7 @@ export default function ProductsPage() {
           <DataTable
             data={products}
             columns={columns}
-            keyExtractor={(row) => row.sku}
+            keyExtractor={(row) => row.id}
             pagination={{ currentPage: 1, totalPages: 8 }}
           />
         </div>
@@ -154,7 +159,7 @@ export default function ProductsPage() {
 
       {showBulkEditModal && (
         <BulkEditModal 
-          selectedProducts={products.filter(p => selectedProducts.includes(p.sku))}
+          selectedProducts={products.filter(p => selectedProducts.includes(p.id)).map(p => ({ sku: p.sku || p.id, name: p.name }))}
           onClose={() => setShowBulkEditModal(false)}
           onSuccess={() => {
             setShowBulkEditModal(false);

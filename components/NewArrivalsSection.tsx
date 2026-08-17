@@ -4,7 +4,8 @@ import ProductCard from "./ProductCard";
 import { useProducts } from "@/hooks/useProducts";
 
 export default function NewArrivalsSection() {
-  const { data: products = [], isLoading } = useProducts();
+  const { data: response, isLoading } = useProducts();
+  const products = response?.data || [];
 
   return (
     <section className="flex flex-col items-center bg-background px-4 md:px-8 lg:px-[120px] py-10 md:py-[60px] w-full">
@@ -36,7 +37,7 @@ export default function NewArrivalsSection() {
         {/* We'll render product cards to show the grid wrap */}
         {products.slice(0, 8).map((product, i) => (
           <div key={product.id} className="w-full flex justify-center">
-            <ProductCard imageUrl={product.image} />
+            <ProductCard imageUrl={product.featuredImage || "/products/default.jpg"} />
           </div>
         ))}
       </div>
