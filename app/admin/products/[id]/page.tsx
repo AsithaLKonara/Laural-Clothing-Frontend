@@ -1,20 +1,46 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useEffect } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";
 import { StatusBadge } from "@/components/dashboard/Badges";
 import BarcodePrintModal from "@/components/admin/BarcodePrintModal";
 import MediaPickerModal from "@/components/admin/MediaPickerModal";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, Image as ImageIcon, Box, Tag, Layers, Barcode, Trash2, PlusCircle } from "lucide-react";
+import { ArrowLeft, Image as ImageIcon, Box, Tag, Layers, Barcode, Trash2, PlusCircle, Save } from "lucide-react";
+import { useProduct, useUpdateProduct } from "@/hooks/useProducts";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const { id } = resolvedParams;
+  
+  const { data: product, isLoading } = useProduct(id);
+  const updateProductMutation = useUpdateProduct();
+
   const [showBarcodeModal, setShowBarcodeModal] = useState(false);
   const [showMediaPicker, setShowMediaPicker] = useState(false);
-  const [productImages, setProductImages] = useState<string[]>(['/products/default.jpg']);
+  const [productImages, setProductImages] = useState<string[]>([]);
+  
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    price: "",
+    quantity: 0
+  });
+
+  useEffect(() => {
+    if (product) {
+      setFormData({
+        name: product.name || "",
+        description: product.description || "",
+        price: (product.price / 100).toString(),
+        quantity: product.quantity || 0,
+      });
+      if (product.featuredImage) {
+        setProductImages([product.featuredImage, ...(product.gallery || [])]);
+      }
+    }
+  }, [product]);
 
   const addImage = (url: string) => {
     setProductImages(prev => [...prev, url]);
@@ -24,6 +50,34 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const removeImage = (index: number) => {
     setProductImages(prev => prev.filter((_, i) => i !== index));
   };
+
+  const handleSave = async () => {
+    try {
+      await updateProductMutation.mutateAsync({
+        id,
+        data: {
+          name: formData.name,
+          description: formData.description,
+          price: parseFloat(formData.price || "0") * 100,
+          quantity: formData.quantity,
+          featuredImage: productImages[0] || null,
+          gallery: productImages.slice(1),
+        }
+      });
+      alert("Product updated successfully!");
+    } catch (error) {
+      console.error("Failed to update product:", error);
+      alert("Failed to update product.");
+    }
+  };
+
+  if (isLoading) {
+    return <div className="p-10 max-w-[1280px] mx-auto w-full font-inter text-stone-500">Loading product...</div>;
+  }
+
+  if (!product) {
+    return <div className="p-10 max-w-[1280px] mx-auto w-full font-inter text-red-500">Product not found.</div>;
+  }
 
   return (
     <div className="flex flex-col p-4 md:p-10 max-w-[1280px] mx-auto w-full gap-6">
@@ -35,16 +89,23 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       </Link>
 
       <PageHeader 
-        title={`Black Oversized T-Shirt (${id})`}
+        title={`${formData.name} (${id})`}
         action={
           <div className="flex gap-2">
+            <button 
+              onClick={handleSave}
+              disabled={updateProductMutation.isPending}
+              className="px-4 py-2 bg-stone-900 text-white font-inter font-semibold text-sm rounded shadow-sm hover:bg-stone-800 flex items-center gap-2 transition-colors disabled:opacity-50"
+            >
+              <Save size={16} /> {updateProductMutation.isPending ? "Saving..." : "Save Changes"}
+            </button>
             <button 
               onClick={() => setShowBarcodeModal(true)}
               className="px-3 py-1.5 bg-white border border-stone-200 text-stone-700 font-inter font-medium text-xs rounded shadow-sm hover:bg-stone-50 flex items-center gap-2 transition-colors"
             >
               <Barcode size={14} /> Print Barcode
             </button>
-            <StatusBadge label="Active" variant="success" />
+            <StatusBadge label={product.stockStatus} variant={product.stockStatus === "instock" ? "success" : "warning"} />
           </div>
         }
       />
@@ -62,11 +123,21 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2 col-span-2">
                 <label className="font-inter text-xs font-semibold text-stone-700">Product Name</label>
-                <input type="text" defaultValue="Black Oversized T-Shirt" className="border border-stone-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-stone-400" />
+                <input 
+                  type="text" 
+                  value={formData.name} 
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="border border-stone-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-stone-400" 
+                />
               </div>
               <div className="flex flex-col gap-2 col-span-2">
                 <label className="font-inter text-xs font-semibold text-stone-700">Description</label>
-                <textarea rows={4} defaultValue="Premium heavy-weight cotton oversized t-shirt." className="border border-stone-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-stone-400 resize-none"></textarea>
+                <textarea 
+                  rows={4} 
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  className="border border-stone-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-stone-400 resize-none"
+                />
               </div>
             </div>
           </div>
@@ -99,36 +170,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               </button>
             </div>
           </div>
-
-          <div className="bg-white border border-stone-200 rounded-xl p-6 shadow-sm flex flex-col gap-6">
-            <h3 className="text-stone-900 font-bold text-lg font-inter flex items-center gap-2">
-              <Layers size={18} className="text-stone-400" /> Variants (Size & Color)
-            </h3>
-            
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-stone-200">
-                  <th className="pb-2 font-inter text-xs font-semibold text-stone-500">Variant</th>
-                  <th className="pb-2 font-inter text-xs font-semibold text-stone-500">Price</th>
-                  <th className="pb-2 font-inter text-xs font-semibold text-stone-500">SKU</th>
-                  <th className="pb-2 font-inter text-xs font-semibold text-stone-500">Stock</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b border-stone-100">
-                  <td className="py-3 font-inter text-sm font-medium">S / Black</td>
-                  <td className="py-3 font-inter text-sm">Rs. 2,500</td>
-                  <td className="py-3 font-inter text-sm text-stone-500 font-mono">LC-TSH-001-S</td>
-                  <td className="py-3 font-inter text-sm">45</td>
-                </tr>
-                <tr className="border-b border-stone-100">
-                  <td className="py-3 font-inter text-sm font-medium">M / Black</td>
-                  <td className="py-3 font-inter text-sm">Rs. 2,500</td>
-                  <td className="py-3 font-inter text-sm text-stone-500 font-mono">LC-TSH-001-M</td>
-                  <td className="py-3 font-inter text-sm">12</td>
-                </tr>
-              </tbody>
-            </table>
+          
+          {/* Note about variants since we are using flat model currently */}
+          <div className="bg-stone-50 border border-stone-200 rounded-xl p-6 shadow-sm flex flex-col gap-2">
+            <h3 className="text-stone-900 font-bold text-sm font-inter">Advanced Variants</h3>
+            <p className="text-sm text-stone-500 font-inter">
+              Currently using basic product model. Advanced variants (Size/Color) tracking are mocked in this view.
+            </p>
           </div>
 
         </div>
@@ -137,29 +185,29 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         <div className="flex flex-col gap-6">
           
           <div className="bg-white border border-stone-200 rounded-xl p-6 shadow-sm flex flex-col gap-6">
-            <h3 className="text-stone-900 font-bold text-lg font-inter">Pricing</h3>
+            <h3 className="text-stone-900 font-bold text-lg font-inter">Pricing & Inventory</h3>
             
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <label className="font-inter text-xs font-semibold text-stone-700">Price</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-stone-500">Rs.</span>
-                  <input type="text" defaultValue="2,500" className="w-full border border-stone-200 rounded-lg pl-9 pr-3 py-2 text-sm outline-none focus:border-stone-400" />
+                  <input 
+                    type="number" 
+                    value={formData.price}
+                    onChange={(e) => setFormData({...formData, price: e.target.value})}
+                    className="w-full border border-stone-200 rounded-lg pl-9 pr-3 py-2 text-sm outline-none focus:border-stone-400" 
+                  />
                 </div>
               </div>
               <div className="flex flex-col gap-2">
-                <label className="font-inter text-xs font-semibold text-stone-700">Compare at price</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-stone-500">Rs.</span>
-                  <input type="text" placeholder="0.00" className="w-full border border-stone-200 rounded-lg pl-9 pr-3 py-2 text-sm outline-none focus:border-stone-400" />
-                </div>
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="font-inter text-xs font-semibold text-stone-700">Cost per item</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-stone-500">Rs.</span>
-                  <input type="text" defaultValue="1,200" className="w-full border border-stone-200 rounded-lg pl-9 pr-3 py-2 text-sm outline-none focus:border-stone-400" />
-                </div>
+                <label className="font-inter text-xs font-semibold text-stone-700">Total Quantity</label>
+                <input 
+                  type="number" 
+                  value={formData.quantity}
+                  onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value) || 0})}
+                  className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-stone-400" 
+                />
               </div>
             </div>
           </div>
@@ -169,22 +217,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
-                <label className="font-inter text-xs font-semibold text-stone-700">Category</label>
-                <select className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-stone-400 bg-white">
-                  <option>T-Shirts</option>
-                  <option>Shirts</option>
-                  <option>Dresses</option>
-                </select>
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="font-inter text-xs font-semibold text-stone-700">Collections</label>
-                <select multiple defaultValue={["Summer 2026", "Best Sellers"]} className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-stone-400 min-h-[100px] bg-white">
-                  <option value="Summer 2026">Summer 2026</option>
-                  <option value="Best Sellers">Best Sellers</option>
-                  <option value="New Arrivals">New Arrivals</option>
-                  <option value="Clearance Sale">Clearance Sale</option>
-                </select>
-                <p className="text-xs text-stone-500 font-inter mt-1">Hold CMD/CTRL to select multiple collections.</p>
+                <label className="font-inter text-xs font-semibold text-stone-700">Category ID</label>
+                <input 
+                  type="text" 
+                  value={product.categoryId || "Uncategorized"}
+                  disabled
+                  className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm outline-none bg-stone-50 text-stone-500" 
+                />
               </div>
             </div>
           </div>
@@ -195,8 +234,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
       {showBarcodeModal && (
         <BarcodePrintModal 
-          productSku={id} 
-          productName="Black Oversized T-Shirt" 
+          productSku={product.sku || product.id} 
+          productName={product.name} 
           onClose={() => setShowBarcodeModal(false)} 
         />
       )}

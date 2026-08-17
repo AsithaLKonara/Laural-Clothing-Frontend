@@ -1,5 +1,4 @@
 "use client";
-"use client";
 
 import { useState } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";
@@ -11,7 +10,7 @@ import BarcodePrintModal from "@/components/admin/BarcodePrintModal";
 import BulkEditModal from "@/components/admin/BulkEditModal";
 import Link from "next/link";
 import { Barcode, Edit, ArchiveRestore, CheckCircle2 } from "lucide-react";
-import { useProducts } from "@/hooks/useProducts";
+import { useProducts, useDeleteProduct } from "@/hooks/useProducts";
 
 export default function ProductsPage() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -21,6 +20,7 @@ export default function ProductsPage() {
 
   const { data: response, isLoading } = useProducts();
   const products = response?.data || [];
+  const deleteProductMutation = useDeleteProduct();
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
@@ -32,6 +32,12 @@ export default function ProductsPage() {
 
   const handleSelectOne = (sku: string) => {
     setSelectedProducts(prev => prev.includes(sku) ? prev.filter(p => p !== sku) : [...prev, sku]);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm("Are you sure you want to archive/delete this product?")) {
+      await deleteProductMutation.mutateAsync(id);
+    }
   };
 
   const columns = [
@@ -78,7 +84,7 @@ export default function ProductsPage() {
         <div className="flex gap-2 text-xs items-center">
           <Link href={`/admin/products/${row.id}`} className="text-blue-600 hover:underline font-medium">Edit</Link>
           <span className="text-stone-300">·</span>
-          <button className="text-red-500 hover:underline font-medium">Archive</button>
+          <button onClick={() => handleDelete(row.id)} disabled={deleteProductMutation.isPending} className="text-red-500 hover:underline font-medium disabled:opacity-50">Archive</button>
           <span className="text-stone-300">·</span>
           <button onClick={() => setPrintingProduct({ sku: row.sku || row.id, name: row.name })} className="text-stone-500 hover:text-stone-900 transition-colors tooltip" title="Print Barcode">
             <Barcode size={16} />

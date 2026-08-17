@@ -25,4 +25,18 @@ export const productsService = {
     const { data } = await api.get<Product>(`/products/slug/${slug}`);
     return data;
   },
+
+  async createProduct(product: Partial<Product>): Promise<Product> {
+    const { data } = await api.post<Product>('/products', product);
+    return data;
+  },
+
+  async updateProduct(id: string, product: Partial<Product>): Promise<Product> {
+    const { data } = await api.put<Product>(`/products/${id}`, product);
+    return data;
+  },
+
+  async deleteProduct(id: string): Promise<void> {
+    await api.delete(`/products/${id}`);
+  },
 };

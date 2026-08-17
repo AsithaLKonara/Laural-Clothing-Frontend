@@ -1,5 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsService, GetProductsParams } from '../services/products.service';
+import { Product } from '../types/product';
 
 export const PRODUCT_QUERY_KEYS = {
   all: ['products'] as const,
@@ -30,5 +31,40 @@ export function useProductBySlug(slug: string) {
     queryKey: PRODUCT_QUERY_KEYS.detailBySlug(slug),
     queryFn: () => productsService.getProductBySlug(slug),
     enabled: !!slug,
+  });
+}
+
+export function useCreateProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<Product>) => productsService.createProduct(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PRODUCT_QUERY_KEYS.lists() });
+    },
+  });
+}
+
+export function useUpdateProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Product> }) => productsService.updateProduct(id, data),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: PRODUCT_QUERY_KEYS.detail(variables.id) });
+      if (data.slug) {
+        queryClient.invalidateQueries({ queryKey: PRODUCT_QUERY_KEYS.detailBySlug(data.slug) });
+      }
+      queryClient.invalidateQueries({ queryKey: PRODUCT_QUERY_KEYS.lists() });
+    },
+  });
+}
+
+export function useDeleteProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => productsService.deleteProduct(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: PRODUCT_QUERY_KEYS.detail(id) });
+      queryClient.invalidateQueries({ queryKey: PRODUCT_QUERY_KEYS.lists() });
+    },
   });
 }

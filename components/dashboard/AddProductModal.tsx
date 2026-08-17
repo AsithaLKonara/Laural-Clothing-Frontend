@@ -21,6 +21,7 @@ import {
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createProductSchema, CreateProductFormData } from "@/lib/validations";
+import { useCreateProduct } from "@/hooks/useProducts";
 
 interface Variant {
   id: string;
@@ -82,6 +83,8 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
   const [newColorHex, setNewColorHex] = useState("#000000");
   const [isAddingSize, setIsAddingSize] = useState(false);
   const [isAddingColor, setIsAddingColor] = useState(false);
+
+  const createProductMutation = useCreateProduct();
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<CreateProductFormData>({
     resolver: zodResolver(createProductSchema),
@@ -187,17 +190,22 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
     setSelectedPaymentMethods(prev => prev.includes(gw) ? prev.filter(g => g !== gw) : [...prev, gw]);
   }
 
-  const onSubmit = (data: CreateProductFormData) => {
-    const payload = {
-      ...data,
-      variants,
-      paymentMethods: selectedPaymentMethods,
-      sizeGuide: sizeGuideEnabled ? sizeGuideContent : null,
-      selectedSizes,
-      selectedColors
-    };
-    console.log("Saving Product:", payload);
-    onClose();
+  const onSubmit = async (data: CreateProductFormData) => {
+    try {
+      const payload = {
+        name: data.name,
+        slug: data.slug || undefined,
+        description: data.description,
+        price: parseFloat(data.basePrice || "0") * 100, // API expects cents
+        quantity: 0,
+        stockStatus: "instock",
+      };
+      
+      await createProductMutation.mutateAsync(payload);
+      onClose();
+    } catch (error) {
+      console.error("Failed to create product", error);
+    }
   };
 
   return (
@@ -759,9 +767,10 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
               </button>
               <button
                 type="submit"
-                className="px-6 py-2.5 bg-stone-900 text-white rounded-lg font-inter font-semibold text-sm hover:bg-stone-800 transition-colors shadow-md shadow-stone-900/20"
+                disabled={createProductMutation.isPending}
+                className="px-6 py-2.5 bg-stone-900 text-white rounded-lg font-inter font-semibold text-sm hover:bg-stone-800 transition-colors shadow-md shadow-stone-900/20 disabled:opacity-50"
               >
-                Save Product
+                {createProductMutation.isPending ? "Saving..." : "Save Product"}
               </button>
             </div>
           </div>
