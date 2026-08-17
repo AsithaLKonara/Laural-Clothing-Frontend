@@ -237,7 +237,7 @@ export default function POSPage() {
                     className="bg-surface border border-border rounded-xl flex flex-col hover:border-accent hover:shadow-md transition-all text-left active:scale-95 overflow-hidden"
                   >
                     <div className="relative w-full aspect-square bg-stone-100">
-                      <Image src={p.featuredImage || "/products/default.jpg"} alt={p.name} fill className="object-cover" />
+                      <Image src={(p as any).featuredImage || "/placeholder.png"} alt={p.name} fill className="object-cover" />
                     </div>
                     <div className="p-3 flex flex-col justify-between flex-1">
                       <span className="font-inter font-bold text-foreground text-sm leading-snug line-clamp-2 mb-2">
@@ -245,7 +245,7 @@ export default function POSPage() {
                       </span>
                       <div className="flex justify-between items-end w-full">
                         <span className="font-inter font-bold text-primary text-lg">
-                          {(p.price / 100).toFixed(2)}
+                          {(p as any).price?.toFixed(2) || "0.00"}
                         </span>
                         <span className="font-inter text-[10px] uppercase tracking-wider font-semibold text-muted bg-background border border-border px-1.5 py-0.5 rounded">
                           In Stock
@@ -332,7 +332,7 @@ export default function POSPage() {
                           <span className="font-inter font-bold text-lg w-4 text-center text-foreground">{item.qty}</span>
                           <button onClick={() => updateQty(item.id, 1)} className="w-8 h-8 rounded-full bg-surface border border-border font-bold text-muted flex items-center justify-center hover:bg-background">+</button>
                         </div>
-                        <span className="font-inter font-bold text-foreground">{((item.price / 100) * item.qty).toFixed(2)}</span>
+                        <span className="font-inter font-bold text-foreground">{(item.price * item.qty).toFixed(2)}</span>
                       </div>
                     </div>
                   ))

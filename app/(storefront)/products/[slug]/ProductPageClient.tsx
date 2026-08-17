@@ -14,6 +14,19 @@ import Autoplay from "embla-carousel-autoplay";
 import { useProductBySlug, useProducts } from "@/hooks/useProducts";
 import { Product } from "@/types/product";
 
+const colorMap: Record<string, string> = {
+  white: '#FFFFFF',
+  black: '#000000',
+  pink: '#FFD1DC',
+  blue: '#AEC6CF',
+  yellow: '#FDFD96',
+  red: '#FF6961',
+  green: '#77DD77',
+  'serene green': '#98FB98',
+  'hot pink': '#FF69B4',
+  ash: '#B2BEB5'
+};
+
 export default function ProductPageClient({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = use(params);
   const slug = resolvedParams.slug;
@@ -28,8 +41,8 @@ export default function ProductPageClient({ params }: { params: Promise<{ slug: 
   );
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [qty, setQty] = useState(1);
-  const [selectedSize, setSelectedSize] = useState("S");
-  const [selectedColor, setSelectedColor] = useState("pink");
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -51,12 +64,37 @@ export default function ProductPageClient({ params }: { params: Promise<{ slug: 
     );
   }
 
-  const images = product.featuredImage 
-    ? [product.featuredImage, "/hero-image/hero-1.jpg", "/hero-image/hero-2.jpg", "/hero-image/hero-3.jpg"] 
-    : ["/hero-image/hero-1.jpg", "/hero-image/hero-2.jpg", "/hero-image/hero-3.jpg", "/hero-image/hero-1.jpg"];
+  const variants = product.variants || [];
+  
+  // Extract unique colors and sizes
+  const uniqueColors = Array.from(new Set(variants.map(v => v.color).filter(Boolean))) as string[];
+  const uniqueSizes = Array.from(new Set(variants.map(v => v.size).filter(Boolean))) as string[];
 
-  const currentPrice = (product.price / 100).toFixed(2);
-  const installment = (product.price / 300).toFixed(2);
+  // Auto-select first available if none selected
+  if (!selectedColor && uniqueColors.length > 0) setSelectedColor(uniqueColors[0].toLowerCase());
+  if (!selectedSize && uniqueSizes.length > 0) setSelectedSize(uniqueSizes[0]);
+
+  // Find the selected variant
+  const selectedVariant = variants.find(v => 
+    (uniqueColors.length === 0 || v.color?.toLowerCase() === selectedColor?.toLowerCase()) &&
+    (uniqueSizes.length === 0 || v.size === selectedSize)
+  ) || variants[0];
+
+  const currentPriceObj = selectedVariant?.price || (product as any).price || 1990;
+  const currentPrice = currentPriceObj.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const installment = (currentPriceObj / 3).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const variantImages = [];
+  if (selectedVariant?.featuredImage) variantImages.push(selectedVariant.featuredImage);
+  if (selectedVariant?.gallery) variantImages.push(...selectedVariant.gallery);
+  
+  const legacyProduct = product as any;
+  const images = variantImages.length > 0 ? variantImages : 
+    (legacyProduct.featuredImage 
+      ? [legacyProduct.featuredImage, "/hero-image/hero-1.jpg", "/hero-image/hero-2.jpg", "/hero-image/hero-3.jpg"] 
+      : ["/hero-image/hero-1.jpg", "/hero-image/hero-2.jpg", "/hero-image/hero-3.jpg", "/hero-image/hero-1.jpg"]);
+
+  const inStock = selectedVariant ? selectedVariant.stockStatus === 'instock' : true;
 
   return (
     <main className="relative flex flex-col w-full min-h-screen bg-background pt-[83px]">
@@ -94,6 +132,7 @@ export default function ProductPageClient({ params }: { params: Promise<{ slug: 
             </h1>
             <div className="flex items-center gap-4 mt-2">
               <span className="font-poppins text-[22px] md:text-[26px] font-bold text-primary">Rs {currentPrice}</span>
+              {!inStock && <span className="font-poppins text-sm text-red-500 font-medium">Out of Stock</span>}
             </div>
           </div>
 
@@ -120,56 +159,59 @@ export default function ProductPageClient({ params }: { params: Promise<{ slug: 
           <div className="flex flex-col gap-6 mt-4">
             
             {/* Color Select */}
-            <div className="flex items-center gap-4">
-              <span className="font-poppins font-bold text-base text-primary w-[50px]">Color:</span>
-              <div className="flex gap-3">
-                {[
-                  { name: 'Yellow', hex: '#FDFD96' },
-                  { name: 'Pink', hex: '#FFD1DC' },
-                  { name: 'Blue', hex: '#AEC6CF' }
-                ].map(color => (
-                  <button 
-                    key={color.name}
-                    onClick={() => setSelectedColor(color.name.toLowerCase())}
-                    title={color.name}
-                    className={`w-[34px] h-[34px] rounded-full border-2 transition-all ${
-                      selectedColor === color.name.toLowerCase() 
-                        ? 'border-primary scale-110' 
-                        : 'border-stone-200 hover:scale-105'
-                    }`}
-                    style={{ backgroundColor: color.hex }}
-                  />
-                ))}
+            {uniqueColors.length > 0 && (
+              <div className="flex items-center gap-4">
+                <span className="font-poppins font-bold text-base text-primary w-[50px]">Color:</span>
+                <div className="flex gap-3 flex-wrap">
+                  {uniqueColors.map(color => (
+                    <button 
+                      key={color}
+                      onClick={() => setSelectedColor(color.toLowerCase())}
+                      title={color}
+                      className={`w-[34px] h-[34px] rounded-full border-2 transition-all ${
+                        selectedColor === color.toLowerCase() 
+                          ? 'border-primary scale-110' 
+                          : 'border-stone-200 hover:scale-105'
+                      }`}
+                      style={{ backgroundColor: colorMap[color.toLowerCase()] || '#CCCCCC' }}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Size Select */}
-            <div className="flex items-center gap-4">
-              <span className="font-poppins font-bold text-base text-primary w-[50px]">Size:</span>
-              <div className="flex gap-3 flex-wrap">
-                {[
-                  { size: 'UK 08', inStock: true },
-                  { size: 'UK 10', inStock: true },
-                  { size: 'UK 12', inStock: false },
-                  { size: 'UK 14', inStock: false }
-                ].map(({ size, inStock }) => (
-                  <button 
-                    key={size}
-                    onClick={() => inStock && setSelectedSize(size)}
-                    disabled={!inStock}
-                    className={`h-[34px] px-4 rounded-full flex items-center justify-center font-poppins text-sm transition-colors border ${
-                      !inStock
-                        ? 'border-stone-200 text-stone-300 bg-stone-50 cursor-not-allowed line-through'
-                        : selectedSize === size 
-                          ? 'border-primary text-primary bg-stone-50' 
-                          : 'border-stone-200 text-primary hover:border-stone-400 bg-white'
-                    }`}
-                  >
-                    {size}
-                  </button>
-                ))}
+            {uniqueSizes.length > 0 && (
+              <div className="flex items-center gap-4">
+                <span className="font-poppins font-bold text-base text-primary w-[50px]">Size:</span>
+                <div className="flex gap-3 flex-wrap">
+                  {uniqueSizes.map((size) => {
+                    const variantForSize = variants.find(v => 
+                      v.size === size && 
+                      (uniqueColors.length === 0 || v.color?.toLowerCase() === selectedColor?.toLowerCase())
+                    );
+                    const isSizeInStock = variantForSize ? variantForSize.stockStatus === 'instock' : false;
+
+                    return (
+                      <button 
+                        key={size}
+                        onClick={() => isSizeInStock && setSelectedSize(size)}
+                        disabled={!isSizeInStock}
+                        className={`h-[34px] px-4 rounded-full flex items-center justify-center font-poppins text-sm transition-colors border ${
+                          !isSizeInStock
+                            ? 'border-stone-200 text-stone-300 bg-stone-50 cursor-not-allowed line-through'
+                            : selectedSize === size 
+                              ? 'border-primary text-primary bg-stone-50' 
+                              : 'border-stone-200 text-primary hover:border-stone-400 bg-white'
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Actions */}
@@ -204,7 +246,7 @@ export default function ProductPageClient({ params }: { params: Promise<{ slug: 
 
           {/* Meta Data */}
           <div className="flex flex-col gap-4 font-poppins text-sm text-primary">
-            <p><span className="font-bold">SKU:</span> <span className="text-[#79716B]">{product.sku || "N/A"}</span></p>
+            <p><span className="font-bold">SKU:</span> <span className="text-[#79716B]">{selectedVariant?.sku || legacyProduct.sku || "N/A"}</span></p>
             <p><span className="font-bold">Categories:</span> <span className="text-[#79716B]">New arrivals</span></p>
             <div className="flex items-center gap-3 mt-1">
               <span className="font-bold">Share:</span>
@@ -222,7 +264,7 @@ export default function ProductPageClient({ params }: { params: Promise<{ slug: 
 
       {/* Tabs Section */}
       <div className="w-full max-w-[1280px] mx-auto px-4 md:px-[120px]">
-        <ProductTabs />
+        <ProductTabs description={product.description} excerpt={product.excerpt} />
       </div>
 
       {/* Related Products */}

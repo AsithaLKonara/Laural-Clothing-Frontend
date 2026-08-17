@@ -15,16 +15,24 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
   const [isHovered, setIsHovered] = useState(false);
   const router = useRouter();
 
-  // Determine display values
-  const displayImage = product?.featuredImage || imageUrl;
-  const hoverImage = product?.featuredImage || "/products/hover.jpg";
+  // Determine display values from variants if available
+  const firstVariant = product?.variants?.[0];
+  
+  const displayImage = firstVariant?.featuredImage || (product as any)?.featuredImage || imageUrl;
+  const hoverImage = firstVariant?.gallery?.[0] || (product as any)?.gallery?.[0] || displayImage;
   const title = product?.name || "Vesper Long Sleeve Top – Pink";
   const productUrl = product?.slug ? `/products/${product.slug}` : "/products/vesper-long-sleeve-top";
-  const currentPrice = product?.price ? (product.price / 100).toFixed(2) : "1,990.00";
-  const oldPrice = product?.price ? ((product.price + 50000) / 100).toFixed(2) : "2,190.00"; // Dummy old price logic for display
-
-  // Dummy monthly installment calculation for Koko/Mintpay display
-  const installment = product?.price ? (product.price / 300).toFixed(2) : "730.00";
+  
+  const basePrice = firstVariant?.price || (product as any)?.price || 1990;
+  
+  // Format numbers exactly without / 100
+  const currentPrice = basePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const oldPrice = (basePrice + 500).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); 
+  const installment = (basePrice / 3).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const uniqueSizes = product?.variants 
+    ? Array.from(new Set(product.variants.map((v: any) => v.size).filter(Boolean))).slice(0, 4)
+    : [];
+  const displaySizes = uniqueSizes.length > 0 ? uniqueSizes : ['S', 'M', 'L'];
 
   return (
     <div 
@@ -65,14 +73,14 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
         <div className="absolute bottom-0 w-full flex flex-col z-20 pointer-events-none">
           {/* Sizes Row (Hover Only) */}
           <div 
-            className={`flex items-center justify-center h-[36px] w-full bg-black/30 backdrop-blur-sm transition-all duration-300 pointer-events-auto ${
+            className={`flex items-center justify-center min-h-[36px] py-1.5 w-full bg-black/30 backdrop-blur-sm transition-all duration-300 pointer-events-auto ${
               isHovered ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'
             }`}
           >
-            <div className="flex gap-[6px]">
-              {['S', 'M', 'L'].map(size => (
-                <div key={size} onClick={(e) => e.stopPropagation()} className="flex justify-center items-center w-[36px] h-[22px] bg-black/80 border border-white/20 rounded-full cursor-pointer hover:bg-black transition-colors">
-                  <span className="font-inter font-bold text-[11px] text-white">{size}</span>
+            <div className="flex flex-wrap justify-center gap-[4px] px-2 w-full">
+              {displaySizes.map((size: any) => (
+                <div key={size} onClick={(e) => e.stopPropagation()} className="flex justify-center items-center px-1.5 min-w-[28px] h-[20px] bg-black/80 border border-white/20 rounded-full cursor-pointer hover:bg-black transition-colors">
+                  <span className="font-inter font-bold text-[10px] text-white truncate max-w-[50px]">{size}</span>
                 </div>
               ))}
             </div>
@@ -119,7 +127,7 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
         {/* Payment Integrations */}
         <div className="flex flex-col items-center justify-center w-full mt-1.5 border-t border-stone-100 pt-3">
           <div className="flex items-center gap-1.5 flex-wrap justify-center opacity-70 group-hover:opacity-100 transition-opacity">
-            <span className="font-inter font-light text-[9px] text-stone-500">
+            <span className="font-inter font-medium text-[10px] text-stone-500 tracking-tight">
               3 X Rs. {installment} with
             </span>
             <div className="flex items-center gap-1">

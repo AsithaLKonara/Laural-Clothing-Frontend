@@ -33,11 +33,11 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       setFormData({
         name: product.name || "",
         description: product.description || "",
-        price: (product.price / 100).toString(),
-        quantity: product.quantity || 0,
+        price: (product as any).price?.toString() || "0",
+        quantity: (product as any).quantity || 0,
       });
-      if (product.featuredImage) {
-        setProductImages([product.featuredImage, ...(product.gallery || [])]);
+      if ((product as any).featuredImage) {
+        setProductImages([(product as any).featuredImage, ...((product as any).gallery || [])]);
       }
     }
   }, [product]);
@@ -62,7 +62,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           quantity: formData.quantity,
           featuredImage: productImages[0] || null,
           gallery: productImages.slice(1),
-        }
+        } as any
       });
       alert("Product updated successfully!");
     } catch (error) {
@@ -105,7 +105,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             >
               <Barcode size={14} /> Print Barcode
             </button>
-            <StatusBadge label={product.stockStatus} variant={product.stockStatus === "instock" ? "success" : "warning"} />
+            <StatusBadge label={(product as any).stockStatus} variant={(product as any).stockStatus === "instock" ? "success" : "warning"} />
           </div>
         }
       />
@@ -122,7 +122,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2 col-span-2">
-                <label className="font-inter text-xs font-semibold text-stone-700">Product Name</label>
+                <span className="font-poppins text-xs font-semibold uppercase tracking-wider text-stone-500">{(product as any)?.sku || "N/A"}</span>
                 <input 
                   type="text" 
                   value={formData.name} 
@@ -220,7 +220,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 <label className="font-inter text-xs font-semibold text-stone-700">Category ID</label>
                 <input 
                   type="text" 
-                  value={product.categoryId || "Uncategorized"}
+                  value={(product as any).categoryId || "Uncategorized"}
                   disabled
                   className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm outline-none bg-stone-50 text-stone-500" 
                 />
@@ -234,7 +234,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
       {showBarcodeModal && (
         <BarcodePrintModal 
-          productSku={product.sku || product.id} 
+          productSku={(product as any).sku || product.id} 
           productName={product.name} 
           onClose={() => setShowBarcodeModal(false)} 
         />

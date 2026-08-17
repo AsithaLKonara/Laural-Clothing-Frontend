@@ -6,7 +6,7 @@ import { ExternalLink, Truck, Clock, ShieldCheck, ArrowRight } from "lucide-reac
 
 type TabName = "Product Details" | "Shipping Information" | "FAQs";
 
-export default function ProductTabs() {
+export default function ProductTabs({ description, excerpt }: { description?: string | null, excerpt?: string | null }) {
   const [activeTab, setActiveTab] = useState<TabName>("Product Details");
 
   const tabs: TabName[] = ["Product Details", "Shipping Information", "FAQs"];
@@ -35,16 +35,20 @@ export default function ProductTabs() {
       <div className="flex flex-col w-full py-[40px]">
         {activeTab === "Product Details" && (
           <div className="flex flex-col items-center text-center max-w-[800px] mx-auto animate-in fade-in duration-500">
-            <h3 className="font-poppins font-semibold text-2xl text-primary mb-4">Exceptional Craftsmanship</h3>
-            <p className="font-poppins font-light text-base leading-[1.8] text-stone-600 mb-6">
-              Our Vesper Long Sleeve Top is designed for both elegance and supreme comfort. Woven from a proprietary blend of sustainably sourced cotton and elastane, it provides a tailored fit that breathes beautifully throughout the day.
-            </p>
-            <ul className="text-left font-poppins font-light text-base leading-[1.8] text-stone-600 list-disc pl-6 space-y-2">
-              <li>95% Organic Cotton, 5% Elastane</li>
-              <li>Machine wash cold, tumble dry low</li>
-              <li>Ribbed cuffs and subtle neckline detailing</li>
-              <li>Ethically manufactured in Sri Lanka</li>
-            </ul>
+            {excerpt && (
+              <h3 className="font-poppins font-semibold text-xl md:text-2xl text-primary mb-4">{excerpt}</h3>
+            )}
+            
+            {description ? (
+              <div 
+                className="font-poppins font-light text-base leading-[1.8] text-stone-600 mb-6 text-left w-full prose prose-stone max-w-none"
+                dangerouslySetInnerHTML={{ __html: description }}
+              />
+            ) : (
+              <p className="font-poppins font-light text-base leading-[1.8] text-stone-600 mb-6">
+                No detailed description available for this product.
+              </p>
+            )}
           </div>
         )}
 

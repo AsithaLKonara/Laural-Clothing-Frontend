@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface ProductGalleryProps {
   images: string[];
@@ -11,6 +11,10 @@ interface ProductGalleryProps {
 export default function ProductGallery({ images, productName = "Product" }: ProductGalleryProps) {
   const [activeImage, setActiveImage] = useState(images[0] || "/products/default.jpg");
   const [zoomStyle, setZoomStyle] = useState({ display: 'none', backgroundPosition: '0% 0%' });
+
+  useEffect(() => {
+    setActiveImage(images[0] || "/products/default.jpg");
+  }, [images]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const { left, top, width, height } = e.currentTarget.getBoundingClientRect();

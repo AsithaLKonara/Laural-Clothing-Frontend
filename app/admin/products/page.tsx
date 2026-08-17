@@ -45,7 +45,11 @@ export default function ProductsPage() {
       header: <input type="checkbox" checked={selectedProducts.length === products.length && products.length > 0} onChange={handleSelectAll} className="rounded text-stone-900 focus:ring-stone-900 border-stone-300" />,
       accessor: (row: any) => <input type="checkbox" checked={selectedProducts.includes(row.id)} onChange={() => handleSelectOne(row.id)} onClick={e => e.stopPropagation()} className="rounded text-stone-900 focus:ring-stone-900 border-stone-300" />
     },
-    { header: "SKU", accessor: "sku" as const, className: "font-mono font-medium text-stone-500 text-xs" },
+    { 
+      header: "SKU", 
+      accessor: (row: any) => row.sku || 'N/A', 
+      className: "font-mono text-stone-500 text-xs" 
+    },
     {
       header: "Product",
       accessor: (row: any) => (
@@ -57,7 +61,7 @@ export default function ProductsPage() {
     { header: "Category", accessor: "categoryId" as const },
     { 
       header: "Price", 
-      accessor: (row: any) => `$${(row.price / 100).toFixed(2)}`,
+      accessor: (row: any) => `Rs ${row.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
       className: "font-semibold text-stone-800" 
     },
     {
@@ -165,7 +169,7 @@ export default function ProductsPage() {
 
       {showBulkEditModal && (
         <BulkEditModal 
-          selectedProducts={products.filter(p => selectedProducts.includes(p.id)).map(p => ({ sku: p.sku || p.id, name: p.name }))}
+          selectedProducts={products.filter(p => selectedProducts.includes(p.id)).map(p => ({ sku: (p as any).sku || p.id, name: p.name }))}
           onClose={() => setShowBulkEditModal(false)}
           onSuccess={() => {
             setShowBulkEditModal(false);
