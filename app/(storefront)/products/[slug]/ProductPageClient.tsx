@@ -257,15 +257,22 @@ export default function ProductPageClient({ params }: { params: Promise<{ slug: 
           {/* Actions */}
           <div className="flex flex-row flex-wrap items-center gap-4 w-full mt-4 pb-6 border-b border-stone-200">
             {/* Qty Selector */}
-            <div className="flex items-center border border-stone-300 rounded-sm h-[44px] w-[110px] flex-shrink-0">
-              <button onClick={() => setQty(Math.max(1, qty - 1))} className="flex-1 text-lg text-[#79716B] border-r border-stone-300 h-full hover:bg-stone-50">-</button>
+            <div className={`flex items-center border border-stone-300 rounded-sm h-[44px] w-[110px] flex-shrink-0 ${!inStock ? 'opacity-50 pointer-events-none' : ''}`}>
+              <button disabled={!inStock} onClick={() => setQty(Math.max(1, qty - 1))} className="flex-1 text-lg text-[#79716B] border-r border-stone-300 h-full hover:bg-stone-50">-</button>
               <span className="flex-1 font-poppins text-sm text-primary flex items-center justify-center h-full">{qty}</span>
-              <button onClick={() => setQty(qty + 1)} className="flex-1 text-lg text-[#79716B] border-l border-stone-300 h-full hover:bg-stone-50">+</button>
+              <button disabled={!inStock} onClick={() => setQty(qty + 1)} className="flex-1 text-lg text-[#79716B] border-l border-stone-300 h-full hover:bg-stone-50">+</button>
             </div>
             
             {/* Add to Cart */}
-            <button className="flex-1 h-[44px] px-4 sm:px-8 rounded-sm bg-primary font-poppins font-semibold text-sm text-white hover:bg-stone-800 transition-colors uppercase tracking-wide whitespace-nowrap">
-              Add to Cart
+            <button 
+              disabled={!inStock}
+              className={`flex-1 h-[44px] px-4 sm:px-8 rounded-sm font-poppins font-semibold text-sm text-white transition-colors uppercase tracking-wide whitespace-nowrap ${
+                inStock 
+                  ? 'bg-primary hover:bg-stone-800' 
+                  : 'bg-stone-400 cursor-not-allowed opacity-80'
+              }`}
+            >
+              {inStock ? 'Add to Cart' : 'Out of Stock'}
             </button>
           </div>
 

@@ -16,6 +16,7 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
   const router = useRouter();
 
   const firstVariant = product?.variants?.[0];
+  const inStock = product?.variants?.some((v: any) => v.stockStatus === 'instock') ?? true;
   
   let allImages: string[] = [];
   if (product?.variants) {
@@ -124,14 +125,21 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
           
           {/* Add to Cart Button (Always Visible) */}
           <button 
+            disabled={!inStock}
             onClick={(e) => {
               e.stopPropagation();
-              // Add to cart logic would go here
+              if (inStock) {
+                // Add to cart logic would go here
+              }
             }}
-            className="flex justify-center items-center w-full py-2.5 bg-stone-900 hover:bg-black transition-colors pointer-events-auto"
+            className={`flex justify-center items-center w-full py-2.5 transition-colors pointer-events-auto ${
+              inStock 
+                ? 'bg-stone-900 hover:bg-black cursor-pointer' 
+                : 'bg-stone-400 cursor-not-allowed'
+            }`}
           >
             <span className="font-poppins font-medium text-[11px] text-white uppercase tracking-[0.1em]">
-              Add to cart
+              {inStock ? 'Add to cart' : 'Out of stock'}
             </span>
           </button>
         </div>
