@@ -1,250 +1,149 @@
-"use client";
+'use client';
 
-import PageHeader from "@/components/dashboard/PageHeader";
-import StatCard from "@/components/dashboard/StatCard";
-import DataTable from "@/components/dashboard/DataTable";
-import { OrderStatusBadge } from "@/components/dashboard/Badges";
-import { useState } from "react";
-import StockTransferModal from "@/components/admin/StockTransferModal";
-import InventoryAdjustmentModal from "@/components/admin/InventoryAdjustmentModal";
-import { ArrowRightLeft, AlertTriangle, PackagePlus, RefreshCw } from "lucide-react";
-import {
-  useInventory,
-  useInventoryStats,
-  useInventoryTransactions,
-  useTransfers,
-} from "@/hooks/useInventory";
+import { useState } from 'react';
+import { useBranches, useInventory, useTransfers, useAdjustStock, useCreateTransfer, useUpdateTransferStatus } from '@/hooks/useInventory';
+import { Button } from '@/components/ui/Button';
 
-export default function InventoryPage() {
-  const [activeBranch, setActiveBranch] = useState("All Branches");
-  const [activeTab, setActiveTab] = useState("Stock Levels");
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [showTransferModal, setShowTransferModal] = useState(false);
-  const [adjustmentType, setAdjustmentType] = useState<"receive" | "deduct" | null>(null);
+export default function InventoryDashboard() {
+  const [activeTab, setActiveTab] = useState<'STOCK' | 'TRANSFERS' | 'BRANCHES'>('STOCK');
+  const [selectedBranchId, setSelectedBranchId] = useState<string>('');
 
-  const tabs = ["Stock Levels", "Transfers", "Adjustments"];
+  const { data: branchesData, isLoading: branchesLoading } = useBranches();
+  const { data: inventoryData, isLoading: invLoading } = useInventory(selectedBranchId || undefined);
+  const { data: transfersData, isLoading: transfersLoading } = useTransfers();
 
-  // — API hooks —
-  const { data: statsData } = useInventoryStats();
-  const { data: inventoryData, isLoading: invLoading } = useInventory({ search, page });
-  const { data: txData, isLoading: txLoading } = useInventoryTransactions({ page });
-  const { data: transferData, isLoading: trLoading } = useTransfers({ page });
-
-  const formatCurrency = (n: number) =>
-    `Rs. ${n.toLocaleString("en-LK", { maximumFractionDigits: 0 })}`;
-
-  // — Table column definitions —
-  const inventoryColumns = [
-    { header: "SKU", accessor: (row: any) => <span className="font-mono text-xs font-medium">{row.sku}</span> },
-    {
-      header: "Product / Variant",
-      accessor: (row: any) => (
-        <div>
-          <p className="font-inter font-medium text-stone-900 text-sm">{row.productName}</p>
-          <p className="font-inter text-xs text-stone-400">{row.name}</p>
-        </div>
-      ),
-    },
-    {
-      header: "Total Stock",
-      accessor: (row: any) => (
-        <span className={row.isOutOfStock ? "text-red-600 font-bold" : row.isLowStock ? "text-amber-600 font-bold" : "text-stone-900"}>
-          {row.quantity}
-        </span>
-      ),
-    },
-    { header: "Reserved", accessor: (row: any) => <span className="text-stone-500">{row.reservedQty}</span> },
-    {
-      header: "Sellable",
-      accessor: (row: any) => (
-        <span className="bg-stone-100 px-2 py-1 rounded font-bold text-stone-900">{row.sellable}</span>
-      ),
-    },
-    {
-      header: "Status",
-      accessor: (row: any) => {
-        const statusMap: Record<string, string> = {
-          instock: "Active",
-          lowstock: "Low Stock",
-          outofstock: "Cancelled",
-        };
-        return <OrderStatusBadge status={statusMap[row.stockStatus] ?? row.stockStatus} />;
-      },
-    },
-    {
-      header: "Value",
-      accessor: (row: any) => (
-        <span className="text-stone-600 text-sm">{formatCurrency(row.quantity * row.price)}</span>
-      ),
-    },
-  ];
-
-  const txColumns = [
-    { header: "Type", accessor: (row: any) => (
-      <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-md ${
-        row.type === "RECEIVE" || row.type === "TRANSFER_IN" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
-      }`}>{row.type}</span>
-    )},
-    { header: "SKU", accessor: (row: any) => <span className="font-mono text-xs">{row.variant?.sku ?? "—"}</span> },
-    { header: "Product", accessor: (row: any) => <span className="text-sm">{row.variant?.product?.name ?? "—"}</span> },
-    { header: "Qty Change", accessor: (row: any) => (
-      <span className={`font-bold ${row.quantityChange > 0 ? "text-emerald-600" : "text-red-600"}`}>
-        {row.quantityChange > 0 ? `+${row.quantityChange}` : row.quantityChange}
-      </span>
-    )},
-    { header: "Reason / Reference", accessor: (row: any) => <span className="text-stone-500 text-sm">{row.reason ?? row.reference ?? "—"}</span> },
-    { header: "Date", accessor: (row: any) => <span className="text-stone-400 text-xs">{new Date(row.createdAt).toLocaleString()}</span> },
-  ];
-
-  const transferColumns = [
-    { header: "Transfer ID", accessor: (row: any) => <span className="font-mono text-xs text-blue-600">{row.id.slice(0, 8).toUpperCase()}</span> },
-    { header: "From", accessor: "fromLocation" as const },
-    { header: "To", accessor: "toLocation" as const },
-    { header: "SKU", accessor: (row: any) => <span className="font-mono text-xs">{row.variant?.sku ?? "—"}</span> },
-    { header: "Qty", accessor: (row: any) => <span className="font-bold">{row.quantity}</span> },
-    { header: "Requested By", accessor: (row: any) => row.requestedBy ?? "—" },
-    { header: "Status", accessor: (row: any) => <OrderStatusBadge status={row.status} /> },
-    { header: "Date", accessor: (row: any) => <span className="text-stone-400 text-xs">{new Date(row.createdAt).toLocaleString()}</span> },
-  ];
-
-  const invMeta = inventoryData?.meta;
-  const txMeta = txData?.meta;
-  const trMeta = transferData?.meta;
+  const adjustStockMutation = useAdjustStock();
+  const updateTransferStatus = useUpdateTransferStatus();
 
   return (
-    <div className="flex flex-col p-4 md:p-10 max-w-[1280px] mx-auto w-full gap-8">
-      <PageHeader
-        title="Inventory"
-        description="Monitor stock levels, transfers, and valuations across all branches."
-        action={
-          <select
-            value={activeBranch}
-            onChange={(e) => setActiveBranch(e.target.value)}
-            className="bg-white border border-stone-200 rounded-lg py-2 px-4 text-sm font-inter text-stone-900 outline-none focus:ring-1 focus:ring-stone-400"
+    <div className="p-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-semibold">Inventory Dashboard</h1>
+        {activeTab === 'STOCK' && (
+          <select 
+            value={selectedBranchId} 
+            onChange={e => setSelectedBranchId(e.target.value)}
+            className="border p-2 rounded"
           >
-            <option>All Branches</option>
-            <option>Online</option>
-            <option>Colombo</option>
-            <option>Kandy</option>
+            <option value="">All Branches</option>
+            {branchesData?.map((b: any) => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
           </select>
-        }
-      />
-
-      {/* KPI Row */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatCard label="Total Stock Units" value={statsData?.totalItems?.toLocaleString() ?? "—"} trend={`${statsData?.totalSKUs ?? "—"} SKUs total`} trendType="neutral" />
-        <StatCard label="Low Stock SKUs" value={String(statsData?.lowStockCount ?? "—")} trend="Needs reorder" trendType="negative" />
-        <StatCard label="Out of Stock" value={String(statsData?.outOfStockCount ?? "—")} trend="Critical" trendType="negative" />
-        <StatCard label="Inventory Value" value={statsData ? formatCurrency(statsData.estimatedValue) : "—"} trend="Estimated" trendType="neutral" />
+        )}
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-stone-200 mt-2">
-        {tabs.map(tab => (
-          <button
-            key={tab}
-            onClick={() => { setActiveTab(tab); setPage(1); setSearch(""); }}
-            className={`px-6 py-3 font-inter text-sm font-medium transition-colors ${
-              activeTab === tab ? "border-b-2 border-stone-900 text-stone-900" : "text-stone-500 hover:text-stone-700"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
+      <div className="flex gap-4 mb-6 border-b pb-2">
+        <button className={`pb-2 ${activeTab === 'STOCK' ? 'border-b-2 border-black font-semibold' : 'text-gray-500'}`} onClick={() => setActiveTab('STOCK')}>Stock Levels</button>
+        <button className={`pb-2 ${activeTab === 'TRANSFERS' ? 'border-b-2 border-black font-semibold' : 'text-gray-500'}`} onClick={() => setActiveTab('TRANSFERS')}>Stock Transfers</button>
+        <button className={`pb-2 ${activeTab === 'BRANCHES' ? 'border-b-2 border-black font-semibold' : 'text-gray-500'}`} onClick={() => setActiveTab('BRANCHES')}>Branches</button>
       </div>
 
-      <div className="bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden">
-        {/* Tab toolbar */}
-        <div className="px-6 py-4 border-b border-stone-200 bg-stone-50 flex items-center justify-between gap-3 flex-wrap">
-          <h3 className="font-bold text-stone-900 font-inter">{activeTab}</h3>
-          <div className="flex items-center gap-3 flex-wrap">
-            {activeTab === "Stock Levels" && (
-              <input
-                type="text"
-                placeholder="Search SKU or product..."
-                value={search}
-                onChange={e => { setSearch(e.target.value); setPage(1); }}
-                className="border border-stone-200 rounded-md px-3 py-1.5 text-xs font-inter w-64 focus:ring-1 focus:ring-stone-900 outline-none"
-              />
-            )}
-
-            {activeTab === "Transfers" && (
-              <button
-                onClick={() => setShowTransferModal(true)}
-                className="flex items-center gap-2 px-4 py-1.5 bg-stone-900 text-white rounded-md text-xs font-semibold hover:bg-stone-800 transition-colors"
-              >
-                <ArrowRightLeft size={14} /> Request Transfer
-              </button>
-            )}
-
-            {activeTab === "Adjustments" && (
-              <>
-                <button
-                  onClick={() => setAdjustmentType("receive")}
-                  className="flex items-center gap-2 px-4 py-1.5 bg-emerald-600 text-white rounded-md text-xs font-semibold hover:bg-emerald-700 transition-colors"
-                >
-                  <PackagePlus size={14} /> Receive Stock
-                </button>
-                <button
-                  onClick={() => setAdjustmentType("deduct")}
-                  className="flex items-center gap-2 px-4 py-1.5 bg-red-600 text-white rounded-md text-xs font-semibold hover:bg-red-700 transition-colors"
-                >
-                  <AlertTriangle size={14} /> Report Damage
-                </button>
-              </>
-            )}
-          </div>
+      {activeTab === 'STOCK' && (
+        <div className="bg-white rounded shadow overflow-hidden">
+          {invLoading ? (
+            <div className="p-4">Loading inventory...</div>
+          ) : (
+            <table className="w-full text-left">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="p-4">Variant</th>
+                  <th className="p-4">Branch</th>
+                  <th className="p-4">Quantity</th>
+                  <th className="p-4">Status</th>
+                  <th className="p-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {inventoryData?.data?.map((item: any) => (
+                  <tr key={item.id} className="border-t">
+                    <td className="p-4">
+                      <div className="font-medium">{item.name}</div>
+                      <div className="text-xs text-gray-500">{item.productName}</div>
+                    </td>
+                    <td className="p-4">{item.branchName}</td>
+                    <td className="p-4 font-medium">{item.quantity}</td>
+                    <td className="p-4">
+                      <span className={`px-2 py-1 text-xs rounded-full ${item.isOutOfStock ? 'bg-red-100 text-red-700' : item.isLowStock ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}`}>
+                        {item.stockStatus}
+                      </span>
+                    </td>
+                    <td className="p-4 text-right space-x-2">
+                      <Button variant="outline" size="sm" onClick={() => {
+                        const qty = prompt(`Adjust stock for ${item.name}? Enter quantity change (+ to add, - to deduct):`);
+                        if (qty && !isNaN(Number(qty))) {
+                          adjustStockMutation.mutate({
+                            variantId: item.variantId,
+                            branchId: item.branchId,
+                            type: Number(qty) >= 0 ? 'RECEIVE' : 'DEDUCT',
+                            quantity: Math.abs(Number(qty)),
+                            reason: 'Manual adjustment'
+                          });
+                        }
+                      }}>Adjust</Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
-
-        {/* Tab content */}
-        {activeTab === "Stock Levels" && (
-          invLoading
-            ? <div className="flex items-center justify-center py-16 gap-3 text-stone-400"><RefreshCw size={18} className="animate-spin" /> Loading inventory...</div>
-            : <DataTable
-                data={inventoryData?.data ?? []}
-                columns={inventoryColumns}
-                keyExtractor={(row: any) => row.variantId}
-                pagination={{ currentPage: page, totalPages: invMeta?.totalPages ?? 1 }}
-              />
-        )}
-
-        {activeTab === "Adjustments" && (
-          txLoading
-            ? <div className="flex items-center justify-center py-16 gap-3 text-stone-400"><RefreshCw size={18} className="animate-spin" /> Loading transactions...</div>
-            : <DataTable
-                data={txData?.data ?? []}
-                columns={txColumns}
-                keyExtractor={(row: any) => row.id}
-                pagination={{ currentPage: page, totalPages: txMeta?.totalPages ?? 1 }}
-              />
-        )}
-
-        {activeTab === "Transfers" && (
-          trLoading
-            ? <div className="flex items-center justify-center py-16 gap-3 text-stone-400"><RefreshCw size={18} className="animate-spin" /> Loading transfers...</div>
-            : <DataTable
-                data={transferData?.data ?? []}
-                columns={transferColumns}
-                keyExtractor={(row: any) => row.id}
-                pagination={{ currentPage: page, totalPages: trMeta?.totalPages ?? 1 }}
-              />
-        )}
-      </div>
-
-      {/* Modals */}
-      {showTransferModal && (
-        <StockTransferModal
-          onClose={() => setShowTransferModal(false)}
-          onSuccess={() => setShowTransferModal(false)}
-        />
       )}
-      {adjustmentType && (
-        <InventoryAdjustmentModal
-          type={adjustmentType}
-          onClose={() => setAdjustmentType(null)}
-          onSuccess={() => setAdjustmentType(null)}
-        />
+
+      {activeTab === 'TRANSFERS' && (
+        <div className="bg-white rounded shadow overflow-hidden">
+           {transfersLoading ? (
+            <div className="p-4">Loading transfers...</div>
+          ) : (
+            <table className="w-full text-left">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="p-4">Date</th>
+                  <th className="p-4">Variant</th>
+                  <th className="p-4">From → To</th>
+                  <th className="p-4">Qty</th>
+                  <th className="p-4">Status</th>
+                  <th className="p-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transfersData?.data?.map((t: any) => (
+                  <tr key={t.id} className="border-t">
+                    <td className="p-4">{new Date(t.createdAt).toLocaleDateString()}</td>
+                    <td className="p-4">{t.variant.name}</td>
+                    <td className="p-4">{t.fromBranch.name} → {t.toBranch.name}</td>
+                    <td className="p-4">{t.quantity}</td>
+                    <td className="p-4">{t.status}</td>
+                    <td className="p-4 text-right">
+                      {t.status === 'PENDING' && (
+                        <Button size="sm" onClick={() => updateTransferStatus.mutate({ id: t.id, status: 'DISPATCHED' })}>Dispatch</Button>
+                      )}
+                      {t.status === 'DISPATCHED' && (
+                        <Button size="sm" onClick={() => updateTransferStatus.mutate({ id: t.id, status: 'RECEIVED' })}>Receive</Button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'BRANCHES' && (
+        <div className="bg-white rounded shadow overflow-hidden p-4">
+          <h2 className="font-semibold mb-4">Active Branches</h2>
+          <ul className="space-y-2">
+            {branchesData?.map((b: any) => (
+              <li key={b.id} className="p-3 border rounded flex justify-between">
+                <div>
+                  <div className="font-medium">{b.name} ({b.code})</div>
+                  <div className="text-sm text-gray-500">{b.type}</div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );
