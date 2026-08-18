@@ -90,7 +90,7 @@ export default function PaymentModal({ total, onClose, onSuccess }: { total: str
                 {tenderedAmount && (
                   <div className="flex justify-between items-center p-4 bg-success-soft border border-success/20 rounded-xl mt-auto">
                     <span className="font-inter font-bold text-success text-sm uppercase tracking-wide">Change Due</span>
-                    <span className="font-inter font-bold text-2xl text-success">Rs. {(parseInt(tenderedAmount.replace(/,/g, '')) - parseInt(total.replace(/,/g, ''))).toLocaleString()}</span>
+                    <span className="font-inter font-bold text-2xl text-success">Rs. {(parseFloat(tenderedAmount.replace(/,/g, '')) - parseFloat(total.replace(/,/g, ''))).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
                 )}
               </div>

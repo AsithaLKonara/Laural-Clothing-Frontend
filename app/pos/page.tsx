@@ -56,13 +56,26 @@ export default function POSPage() {
     }
   };
 
-  const addToCart = (product: any) => {
+  const addToCart = (product: any, variant?: any, selectedQty = 1) => {
+    const itemToAdd = variant ? {
+      ...product,
+      id: variant.id, 
+      productId: product.id,
+      name: `${product.name} - ${variant.color || 'Default'} ${variant.size || ''}`.trim(),
+      price: variant.price || 0,
+      color: variant.color,
+      size: variant.size,
+    } : {
+      ...product,
+      price: product.variants?.[0]?.price || 0,
+    };
+
     setCart(prev => {
-      const exists = prev.find(item => item.id === product.id);
+      const exists = prev.find(item => item.id === itemToAdd.id);
       if (exists) {
-        return prev.map(item => item.id === product.id ? { ...item, qty: item.qty + 1 } : item);
+        return prev.map(item => item.id === itemToAdd.id ? { ...item, qty: item.qty + selectedQty } : item);
       }
-      return [...prev, { ...product, qty: 1 }];
+      return [...prev, { ...itemToAdd, qty: selectedQty }];
     });
   };
 
@@ -93,6 +106,15 @@ export default function POSPage() {
   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
   const { data: response, isLoading: productsLoading } = useProducts();
   const products = response?.data || [];
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
+  const filteredProducts = products.filter((p: any) => {
+    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === "All" || p.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <div className="flex flex-col w-full h-full bg-background">
@@ -201,6 +223,8 @@ export default function POSPage() {
                 <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" />
                 <input 
                   type="text" 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search products, scan barcode..."
                   className="w-full bg-background border border-border rounded-xl py-4 pl-12 pr-4 text-lg font-inter text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
                   autoFocus
@@ -210,11 +234,20 @@ export default function POSPage() {
 
             {/* Categories */}
             <div className="px-4 py-3 border-b border-border flex gap-2 overflow-x-auto shrink-0 scrollbar-hide">
+              <button 
+                onClick={() => setSelectedCategory("All")}
+                className={`px-6 py-3 rounded-lg font-inter font-semibold text-sm whitespace-nowrap transition-colors border ${
+                  selectedCategory === "All" ? "bg-primary-soft text-primary border-primary shadow-sm" : "bg-surface text-muted border-border hover:bg-background"
+                }`}
+              >
+                All
+              </button>
               {categories.map((cat, idx) => (
                 <button 
                   key={idx}
+                  onClick={() => setSelectedCategory(cat)}
                   className={`px-6 py-3 rounded-lg font-inter font-semibold text-sm whitespace-nowrap transition-colors border ${
-                    idx === 0 ? "bg-primary-soft text-primary border-primary shadow-sm" : "bg-surface text-muted border-border hover:bg-background"
+                    selectedCategory === cat ? "bg-primary-soft text-primary border-primary shadow-sm" : "bg-surface text-muted border-border hover:bg-background"
                   }`}
                 >
                   {cat}
@@ -225,36 +258,51 @@ export default function POSPage() {
             {/* Product Grid */}
             <div className="flex-1 overflow-y-auto p-4 bg-background pb-24 lg:pb-4">
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-                {products.map((p) => (
-                  <button 
-                    key={p.id}
-                    onClick={() => { 
-                      if (posMode === "DISPATCH" || posMode === "EXCHANGE") {
-                        addToCart(p);
-                      } else {
-                        setSelectedProduct(p); setIsVariantModalOpen(true); 
-                      }
-                    }}
-                    className="bg-surface border border-border rounded-xl flex flex-col hover:border-accent hover:shadow-md transition-all text-left active:scale-95 overflow-hidden"
-                  >
-                    <div className="relative w-full aspect-square bg-stone-100">
-                      <Image src={(p as any).featuredImage || "/placeholder.png"} alt={p.name} fill className="object-cover" />
-                    </div>
-                    <div className="p-3 flex flex-col justify-between flex-1">
-                      <span className="font-inter font-bold text-foreground text-sm leading-snug line-clamp-2 mb-2">
-                        {p.name}
-                      </span>
-                      <div className="flex justify-between items-end w-full">
-                        <span className="font-inter font-bold text-primary text-lg">
-                          {(p as any).price?.toFixed(2) || "0.00"}
-                        </span>
-                        <span className="font-inter text-[10px] uppercase tracking-wider font-semibold text-muted bg-background border border-border px-1.5 py-0.5 rounded">
-                          In Stock
-                        </span>
+                {filteredProducts.map((p: any) => {
+                  let imageUrl = "/placeholder.png";
+                  if (p.variants && p.variants.length > 0) {
+                    for (const v of p.variants) {
+                      if (v.featuredImage) { imageUrl = v.featuredImage; break; }
+                      if (v.gallery && v.gallery.length > 0) { imageUrl = v.gallery[0]; break; }
+                    }
+                  }
+                  
+                  const price = p.variants?.[0]?.price || 0;
+                  const inStock = p.variants?.some((v: any) => v.stockStatus === 'instock') ?? true;
+
+                  return (
+                    <button 
+                      key={p.id}
+                      onClick={() => { 
+                        if (posMode === "DISPATCH" || posMode === "EXCHANGE") {
+                          addToCart(p);
+                        } else {
+                          setSelectedProduct(p); setIsVariantModalOpen(true); 
+                        }
+                      }}
+                      className="bg-surface border border-border rounded-xl flex flex-col hover:border-accent hover:shadow-md transition-all text-left active:scale-95 overflow-hidden"
+                    >
+                      <div className="relative w-full aspect-square bg-stone-100">
+                        <Image src={imageUrl} alt={p.name} fill className="object-cover" />
                       </div>
-                    </div>
-                  </button>
-                ))}
+                      <div className="p-3 flex flex-col justify-between flex-1">
+                        <span className="font-inter font-bold text-foreground text-sm leading-snug line-clamp-2 mb-2">
+                          {p.name}
+                        </span>
+                        <div className="flex justify-between items-end w-full">
+                          <span className="font-inter font-bold text-primary text-lg">
+                            {price.toFixed(2)}
+                          </span>
+                          <span className={`font-inter text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded border ${
+                            inStock ? "text-muted bg-background border-border" : "text-error bg-error/10 border-error/20"
+                          }`}>
+                            {inStock ? "In Stock" : "Out"}
+                          </span>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -325,7 +373,7 @@ export default function POSPage() {
                         </button>
                       </div>
                       <div className="text-xs font-inter text-muted mb-3">
-                        Color: Default | Size: M
+                        Color: {item.color || 'Default'} | Size: {item.size || 'Default'}
                       </div>
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-3">
@@ -419,8 +467,8 @@ export default function POSPage() {
         </div>
       )}
 
-      {isVariantModalOpen && <VariantSelectionModal product={selectedProduct} onClose={() => setIsVariantModalOpen(false)} />}
-      {isPaymentModalOpen && <PaymentModal onClose={() => setIsPaymentModalOpen(false)} onSuccess={() => { setIsPaymentModalOpen(false); setIsSuccessModalOpen(true); }} total="9,400" />}
+      {isVariantModalOpen && <VariantSelectionModal product={selectedProduct} onClose={() => setIsVariantModalOpen(false)} onAdd={addToCart} />}
+      {isPaymentModalOpen && <PaymentModal onClose={() => setIsPaymentModalOpen(false)} onSuccess={() => { setIsPaymentModalOpen(false); setIsSuccessModalOpen(true); }} total={cart.reduce((sum, item) => sum + (item.price * item.qty), 0).toFixed(2)} />}
       {isCustomerModalOpen && <CustomerSelectionModal onClose={() => setIsCustomerModalOpen(false)} />}
       {isSuccessModalOpen && <OrderSuccessModal onClose={() => setIsSuccessModalOpen(false)} />}
 

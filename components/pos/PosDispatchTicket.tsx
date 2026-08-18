@@ -144,7 +144,7 @@ export default function PosDispatchTicket({ isMobileCartOpen, setIsMobileCartOpe
                   <span className="font-inter font-bold text-lg w-4 text-center text-foreground">{item.qty}</span>
                   <button onClick={() => updateQty(item.id, 1)} className="w-8 h-8 rounded-full bg-background border border-border font-bold text-muted flex items-center justify-center hover:bg-surface">+</button>
                 </div>
-                <span className="font-inter font-bold text-foreground">{(Number(item.price.replace(/,/g, "")) * item.qty).toLocaleString()}</span>
+                <span className="font-inter font-bold text-foreground">{(Number(typeof item.price === 'string' ? item.price.replace(/,/g, "") : item.price) * item.qty).toLocaleString()}</span>
               </div>
             </div>
           ))
