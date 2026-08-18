@@ -82,12 +82,10 @@ export default function ProductsPage() {
     { 
       header: "Stock", 
       accessor: (row: any) => {
-        const inStock = row.variants?.some((v: any) => v.stockStatus === 'instock') ?? true;
+        const totalQuantity = row.variants?.reduce((sum: number, v: any) => sum + (v.quantity || 0), 0) || 0;
         return (
-          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-            inStock ? "bg-success-soft text-success border border-success/20" : "bg-error/10 text-error border border-error/20"
-          }`}>
-            {inStock ? "In Stock" : "Out of Stock"}
+          <span className={totalQuantity === 0 ? "text-red-600 font-bold" : totalQuantity <= 10 ? "text-amber-600 font-bold" : "text-stone-900"}>
+            {totalQuantity}
           </span>
         );
       }
@@ -95,11 +93,8 @@ export default function ProductsPage() {
     {
       header: "Status",
       accessor: (row: any) => {
-        let variant: "success" | "warning" | "error" | "neutral" = "success";
-        if (row.stockStatus === "outofstock") variant = "error";
-        else if (row.stockStatus === "lowstock") variant = "warning";
-        else variant = "success";
-        return <StatusBadge label={row.stockStatus} variant={variant} />;
+        const inStock = row.variants?.some((v: any) => v.stockStatus === 'instock' && v.quantity > 0) ?? false;
+        return <StatusBadge label={inStock ? "In Stock" : "Out of Stock"} variant={inStock ? "success" : "error"} />;
       },
     },
     {
