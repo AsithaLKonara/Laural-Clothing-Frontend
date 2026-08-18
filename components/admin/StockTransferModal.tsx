@@ -1,27 +1,50 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, ArrowRightLeft } from "lucide-react";
+import { X, ArrowRightLeft, Search } from "lucide-react";
+import { useCreateTransfer, useInventory } from "@/hooks/useInventory";
 
 interface StockTransferModalProps {
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export default function StockTransferModal({ onClose, onSuccess }: StockTransferModalProps) {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [fromBranch, setFromBranch] = useState("Online");
-  const [toBranch, setToBranch] = useState("Colombo");
-  const [sku, setSku] = useState("");
-  const [qty, setQty] = useState(1);
+const LOCATIONS = ["Online", "Colombo", "Kandy"];
 
-  const handleProcess = () => {
-    setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      onSuccess();
-    }, 1500);
+export default function StockTransferModal({ onClose, onSuccess }: StockTransferModalProps) {
+  const [fromLocation, setFromLocation] = useState("Online");
+  const [toLocation, setToLocation] = useState("Colombo");
+  const [variantId, setVariantId] = useState("");
+  const [skuSearch, setSkuSearch] = useState("");
+  const [qty, setQty] = useState(1);
+  const [notes, setNotes] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const createTransfer = useCreateTransfer();
+  const { data: searchResults } = useInventory({ search: skuSearch, limit: 8 });
+  const selectedVariant = searchResults?.data?.find(v => v.variantId === variantId);
+
+  const handleSelectVariant = (v: any) => {
+    setVariantId(v.variantId);
+    setSkuSearch(v.sku);
+    setShowDropdown(false);
   };
+
+  const handleProcess = async () => {
+    if (!variantId || fromLocation === toLocation) return;
+    await createTransfer.mutateAsync({
+      variantId,
+      fromLocation,
+      toLocation,
+      quantity: qty,
+      requestedBy: "Admin",
+      notes,
+    });
+    onSuccess();
+  };
+
+  const isProcessing = createTransfer.isPending;
+  const canSubmit = variantId && qty > 0 && fromLocation !== toLocation;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -38,69 +61,122 @@ export default function StockTransferModal({ onClose, onSuccess }: StockTransfer
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto bg-stone-100 flex-1 flex flex-col gap-6">
+        <div className="p-6 overflow-y-auto bg-stone-100 flex-1 flex flex-col gap-5">
           <div className="bg-white border border-stone-200 rounded-xl p-5 shadow-sm flex flex-col gap-5">
-            
+
+            {/* From / To */}
             <div className="grid grid-cols-2 gap-4 relative">
               <div className="flex flex-col gap-2">
                 <label className="font-inter text-sm font-semibold text-stone-700">From Branch</label>
-                <select 
-                  value={fromBranch}
-                  onChange={(e) => setFromBranch(e.target.value)}
-                  className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm font-inter outline-none focus:ring-2 focus:ring-stone-900 bg-stone-50 text-stone-900"
+                <select
+                  value={fromLocation}
+                  onChange={e => setFromLocation(e.target.value)}
+                  className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm font-inter outline-none focus:ring-2 focus:ring-stone-900 bg-stone-50"
                 >
-                  <option>Online</option>
-                  <option>Colombo</option>
-                  <option>Kandy</option>
+                  {LOCATIONS.map(l => <option key={l}>{l}</option>)}
                 </select>
               </div>
-
               <div className="flex flex-col gap-2">
                 <label className="font-inter text-sm font-semibold text-stone-700">To Branch</label>
-                <select 
-                  value={toBranch}
-                  onChange={(e) => setToBranch(e.target.value)}
-                  className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm font-inter outline-none focus:ring-2 focus:ring-stone-900 bg-stone-50 text-stone-900"
+                <select
+                  value={toLocation}
+                  onChange={e => setToLocation(e.target.value)}
+                  className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm font-inter outline-none focus:ring-2 focus:ring-stone-900 bg-stone-50"
                 >
-                  <option>Online</option>
-                  <option>Colombo</option>
-                  <option>Kandy</option>
+                  {LOCATIONS.map(l => <option key={l}>{l}</option>)}
                 </select>
               </div>
-              
-              {/* Arrow Icon in Middle */}
               <div className="absolute top-9 left-1/2 -translate-x-1/2 w-8 h-8 bg-white border border-stone-200 rounded-full flex items-center justify-center text-stone-400 z-10 shadow-sm">
                 <ArrowRightLeft size={14} />
               </div>
             </div>
 
-            <div className="flex flex-col gap-2 mt-2">
-              <label className="font-inter text-sm font-semibold text-stone-700">Product SKU</label>
-              <input 
-                type="text" 
-                value={sku}
-                onChange={(e) => setSku(e.target.value)}
-                placeholder="e.g. LC-TSH-001-M"
-                className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm font-inter outline-none focus:ring-2 focus:ring-stone-900 bg-white"
-              />
+            {fromLocation === toLocation && (
+              <p className="text-amber-600 text-xs font-inter">From and To branches must be different.</p>
+            )}
+
+            {/* SKU Search */}
+            <div className="flex flex-col gap-2 relative">
+              <label className="font-inter text-sm font-semibold text-stone-700">Product / SKU</label>
+              <div className="relative">
+                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                <input
+                  type="text"
+                  value={skuSearch}
+                  onChange={e => { setSkuSearch(e.target.value); setVariantId(""); setShowDropdown(true); }}
+                  onFocus={() => setShowDropdown(true)}
+                  placeholder="Search SKU or product name..."
+                  className="w-full pl-9 border border-stone-200 rounded-lg px-3 py-2.5 text-sm font-inter outline-none focus:ring-2 focus:ring-stone-900 bg-white"
+                />
+              </div>
+              {showDropdown && skuSearch && (
+                <div className="absolute top-full left-0 right-0 z-10 bg-white border border-stone-200 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
+                  {(searchResults?.data ?? []).length === 0 ? (
+                    <p className="p-3 text-sm text-stone-400 text-center">No results</p>
+                  ) : (
+                    (searchResults?.data ?? []).map(v => (
+                      <button
+                        key={v.variantId}
+                        onClick={() => handleSelectVariant(v)}
+                        className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-stone-50 transition-colors text-left"
+                      >
+                        <div>
+                          <p className="font-mono text-xs font-medium text-stone-900">{v.sku}</p>
+                          <p className="text-xs text-stone-500">{v.productName} — {v.name}</p>
+                        </div>
+                        <span className="text-xs font-bold bg-stone-100 text-stone-700 px-2 py-0.5 rounded">
+                          {v.quantity} in stock
+                        </span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
 
+            {selectedVariant && (
+              <div className="flex items-center justify-between bg-stone-50 border border-stone-200 rounded-lg px-4 py-2.5">
+                <div>
+                  <p className="font-inter text-sm font-semibold text-stone-900">{selectedVariant.productName}</p>
+                  <p className="font-mono text-xs text-stone-400">{selectedVariant.sku} · {selectedVariant.name}</p>
+                </div>
+                <span className="text-sm font-bold text-stone-700">{selectedVariant.quantity} available</span>
+              </div>
+            )}
+
+            {/* Quantity */}
             <div className="flex flex-col gap-2">
               <label className="font-inter text-sm font-semibold text-stone-700">Quantity to Transfer</label>
-              <input 
-                type="number" 
+              <input
+                type="number"
                 value={qty}
-                onChange={(e) => setQty(Number(e.target.value))}
+                onChange={e => setQty(Number(e.target.value))}
                 min="1"
+                max={selectedVariant?.quantity ?? undefined}
                 className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm font-inter outline-none focus:ring-2 focus:ring-stone-900 bg-white"
               />
             </div>
 
-            <div className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm font-inter mt-2">
+            {/* Notes */}
+            <div className="flex flex-col gap-2">
+              <label className="font-inter text-sm font-semibold text-stone-700">Notes (optional)</label>
+              <input
+                type="text"
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                placeholder="e.g. Urgent restock for weekend sale"
+                className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm font-inter outline-none focus:ring-2 focus:ring-stone-900 bg-white"
+              />
+            </div>
+
+            <div className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm font-inter">
               <span className="mt-0.5">ℹ️</span>
               <p>This request will require approval from a Super Admin before stock is deducted.</p>
             </div>
 
+            {createTransfer.isError && (
+              <p className="text-red-600 text-sm font-inter text-center">Failed to submit transfer. Please try again.</p>
+            )}
           </div>
         </div>
 
@@ -108,7 +184,11 @@ export default function StockTransferModal({ onClose, onSuccess }: StockTransfer
           <button onClick={onClose} disabled={isProcessing} className="px-5 py-2.5 bg-white border border-stone-200 text-stone-700 font-inter font-medium text-sm rounded-lg hover:bg-stone-50 transition-colors shadow-sm disabled:opacity-50">
             Cancel
           </button>
-          <button onClick={handleProcess} disabled={isProcessing || !sku || fromBranch === toBranch} className="px-8 py-2.5 bg-stone-900 text-white font-inter font-medium text-sm rounded-lg hover:bg-stone-800 transition-colors shadow-sm flex items-center gap-2 disabled:opacity-50">
+          <button
+            onClick={handleProcess}
+            disabled={isProcessing || !canSubmit}
+            className="px-8 py-2.5 bg-stone-900 text-white font-inter font-medium text-sm rounded-lg hover:bg-stone-800 transition-colors shadow-sm flex items-center gap-2 disabled:opacity-50"
+          >
             {isProcessing ? "Submitting..." : "Request Transfer"}
           </button>
         </div>

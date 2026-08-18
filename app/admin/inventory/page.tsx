@@ -7,96 +7,118 @@ import { OrderStatusBadge } from "@/components/dashboard/Badges";
 import { useState } from "react";
 import StockTransferModal from "@/components/admin/StockTransferModal";
 import InventoryAdjustmentModal from "@/components/admin/InventoryAdjustmentModal";
-import { ArrowRightLeft, AlertTriangle, PackagePlus } from "lucide-react";
+import { ArrowRightLeft, AlertTriangle, PackagePlus, RefreshCw } from "lucide-react";
+import {
+  useInventory,
+  useInventoryStats,
+  useInventoryTransactions,
+  useTransfers,
+} from "@/hooks/useInventory";
 
 export default function InventoryPage() {
   const [activeBranch, setActiveBranch] = useState("All Branches");
   const [activeTab, setActiveTab] = useState("Stock Levels");
-  
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [adjustmentType, setAdjustmentType] = useState<"receive" | "deduct" | null>(null);
 
   const tabs = ["Stock Levels", "Transfers", "Adjustments"];
 
-  const inventory = [
-    { sku: "LC-TSH-001-M", product: "Black Oversized T-Shirt (M)", branch: "Colombo", stock: 12, reserved: 2, sellable: 10, value: "Rs. 30,000" },
-    { sku: "LC-SHT-042-L", product: "Classic Linen Shirt (L)", branch: "Kandy", stock: 1, reserved: 1, sellable: 0, value: "Rs. 4,900" },
-    { sku: "LC-DRS-018-S", product: "Summer Floral Dress (S)", branch: "Colombo", stock: 3, reserved: 0, sellable: 3, value: "Rs. 19,500" },
-    { sku: "LC-PNT-092-32", product: "Cargo Pants (32)", branch: "Online", stock: 45, reserved: 5, sellable: 40, value: "Rs. 234,000" },
-  ];
+  // — API hooks —
+  const { data: statsData } = useInventoryStats();
+  const { data: inventoryData, isLoading: invLoading } = useInventory({ search, page });
+  const { data: txData, isLoading: txLoading } = useInventoryTransactions({ page });
+  const { data: transferData, isLoading: trLoading } = useTransfers({ page });
 
-  const transfers = [
-    { id: "TRF-9281", from: "Colombo", to: "Kandy", sku: "LC-TSH-001-M", qty: 5, status: "Pending", requestedBy: "Kasun", date: "Today 10:30 AM" },
-    { id: "TRF-9280", from: "Online", to: "Colombo", sku: "LC-PNT-092-32", qty: 20, status: "Dispatched", requestedBy: "Nethmi", date: "Yesterday" },
-    { id: "TRF-9275", from: "Kandy", to: "Online", sku: "LC-DRS-018-S", qty: 2, status: "Received", requestedBy: "System", date: "2 Days Ago" },
-  ];
+  const formatCurrency = (n: number) =>
+    `Rs. ${n.toLocaleString("en-LK", { maximumFractionDigits: 0 })}`;
 
-  const adjustments = [
-    { id: "ADJ-812", type: "Receive", branch: "Online", sku: "LC-TSH-001-M", qty: "+50", reason: "PO-2026-08-12-A", date: "Today 09:15 AM" },
-    { id: "ADJ-811", type: "Deduct", branch: "Colombo", sku: "LC-SHT-042-L", qty: "-1", reason: "Damage (In Store)", date: "Yesterday" },
-    { id: "ADJ-810", type: "Deduct", branch: "Kandy", sku: "LC-DRS-018-S", qty: "-2", reason: "Theft", date: "Last Week" },
-  ];
-
-  const columns = [
-    { header: "SKU", accessor: "sku" as const, className: "font-mono font-medium" },
-    { header: "Product", accessor: "product" as const },
-    { header: "Branch", accessor: "branch" as const },
-    { 
-      header: "Available", 
+  // — Table column definitions —
+  const inventoryColumns = [
+    { header: "SKU", accessor: (row: any) => <span className="font-mono text-xs font-medium">{row.sku}</span> },
+    {
+      header: "Product / Variant",
       accessor: (row: any) => (
-        <span className={row.sellable <= 3 ? "text-red-600 font-bold" : "text-stone-900"}>{row.stock}</span>
-      )
+        <div>
+          <p className="font-inter font-medium text-stone-900 text-sm">{row.productName}</p>
+          <p className="font-inter text-xs text-stone-400">{row.name}</p>
+        </div>
+      ),
     },
-    { header: "Reserved", accessor: "reserved" as const },
-    { 
-      header: "Sellable", 
+    {
+      header: "Total Stock",
       accessor: (row: any) => (
-        <span className="bg-stone-100 px-2 py-1 rounded font-bold">{row.sellable}</span>
-      )
-    },
-    { header: "Est. Value", accessor: "value" as const },
-  ];
-  const transferColumns = [
-    { header: "Transfer ID", accessor: "id" as const, className: "font-mono font-medium text-blue-600" },
-    { header: "From", accessor: "from" as const },
-    { header: "To", accessor: "to" as const },
-    { header: "SKU", accessor: "sku" as const, className: "font-mono text-xs" },
-    { header: "Qty", accessor: "qty" as const, className: "font-bold" },
-    { header: "Requested By", accessor: "requestedBy" as const },
-    { header: "Status", accessor: (row: any) => <OrderStatusBadge status={row.status} /> },
-    { header: "Date", accessor: "date" as const, className: "text-stone-500 text-xs" },
-  ];
-
-  const adjustmentColumns = [
-    { header: "Ref ID", accessor: "id" as const, className: "font-mono font-medium" },
-    { 
-      header: "Type", 
-      accessor: (row: any) => (
-        <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-md ${row.type === 'Receive' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-          {row.type}
+        <span className={row.isOutOfStock ? "text-red-600 font-bold" : row.isLowStock ? "text-amber-600 font-bold" : "text-stone-900"}>
+          {row.quantity}
         </span>
-      ) 
+      ),
     },
-    { header: "Branch", accessor: "branch" as const },
-    { header: "SKU", accessor: "sku" as const, className: "font-mono text-xs" },
-    { 
-      header: "Qty", 
+    { header: "Reserved", accessor: (row: any) => <span className="text-stone-500">{row.reservedQty}</span> },
+    {
+      header: "Sellable",
       accessor: (row: any) => (
-        <span className={`font-bold ${row.type === 'Receive' ? 'text-emerald-600' : 'text-red-600'}`}>{row.qty}</span>
-      ) 
+        <span className="bg-stone-100 px-2 py-1 rounded font-bold text-stone-900">{row.sellable}</span>
+      ),
     },
-    { header: "Reason / PO", accessor: "reason" as const, className: "text-stone-500 text-sm" },
-    { header: "Date", accessor: "date" as const, className: "text-stone-500 text-xs" },
+    {
+      header: "Status",
+      accessor: (row: any) => {
+        const statusMap: Record<string, string> = {
+          instock: "Active",
+          lowstock: "Low Stock",
+          outofstock: "Cancelled",
+        };
+        return <OrderStatusBadge status={statusMap[row.stockStatus] ?? row.stockStatus} />;
+      },
+    },
+    {
+      header: "Value",
+      accessor: (row: any) => (
+        <span className="text-stone-600 text-sm">{formatCurrency(row.quantity * row.price)}</span>
+      ),
+    },
   ];
+
+  const txColumns = [
+    { header: "Type", accessor: (row: any) => (
+      <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-md ${
+        row.type === "RECEIVE" || row.type === "TRANSFER_IN" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+      }`}>{row.type}</span>
+    )},
+    { header: "SKU", accessor: (row: any) => <span className="font-mono text-xs">{row.variant?.sku ?? "—"}</span> },
+    { header: "Product", accessor: (row: any) => <span className="text-sm">{row.variant?.product?.name ?? "—"}</span> },
+    { header: "Qty Change", accessor: (row: any) => (
+      <span className={`font-bold ${row.quantityChange > 0 ? "text-emerald-600" : "text-red-600"}`}>
+        {row.quantityChange > 0 ? `+${row.quantityChange}` : row.quantityChange}
+      </span>
+    )},
+    { header: "Reason / Reference", accessor: (row: any) => <span className="text-stone-500 text-sm">{row.reason ?? row.reference ?? "—"}</span> },
+    { header: "Date", accessor: (row: any) => <span className="text-stone-400 text-xs">{new Date(row.createdAt).toLocaleString()}</span> },
+  ];
+
+  const transferColumns = [
+    { header: "Transfer ID", accessor: (row: any) => <span className="font-mono text-xs text-blue-600">{row.id.slice(0, 8).toUpperCase()}</span> },
+    { header: "From", accessor: "fromLocation" as const },
+    { header: "To", accessor: "toLocation" as const },
+    { header: "SKU", accessor: (row: any) => <span className="font-mono text-xs">{row.variant?.sku ?? "—"}</span> },
+    { header: "Qty", accessor: (row: any) => <span className="font-bold">{row.quantity}</span> },
+    { header: "Requested By", accessor: (row: any) => row.requestedBy ?? "—" },
+    { header: "Status", accessor: (row: any) => <OrderStatusBadge status={row.status} /> },
+    { header: "Date", accessor: (row: any) => <span className="text-stone-400 text-xs">{new Date(row.createdAt).toLocaleString()}</span> },
+  ];
+
+  const invMeta = inventoryData?.meta;
+  const txMeta = txData?.meta;
+  const trMeta = transferData?.meta;
 
   return (
     <div className="flex flex-col p-4 md:p-10 max-w-[1280px] mx-auto w-full gap-8">
-      
-      <PageHeader 
-        title="Inventory" 
+      <PageHeader
+        title="Inventory"
         description="Monitor stock levels, transfers, and valuations across all branches."
         action={
-          <select 
+          <select
             value={activeBranch}
             onChange={(e) => setActiveBranch(e.target.value)}
             className="bg-white border border-stone-200 rounded-lg py-2 px-4 text-sm font-inter text-stone-900 outline-none focus:ring-1 focus:ring-stone-400"
@@ -111,21 +133,20 @@ export default function InventoryPage() {
 
       {/* KPI Row */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatCard label="Total Items" value="12,458" trend="Across all SKUs" trendType="neutral" />
-        <StatCard label="Low Stock SKUs" value="48" trend="Needs reorder" trendType="negative" />
-        <StatCard label="Out of Stock" value="12" trend="Critical" trendType="negative" />
-        <StatCard label="Inventory Value" value="Rs. 4.2M" trend="Estimated" trendType="neutral" />
+        <StatCard label="Total Stock Units" value={statsData?.totalItems?.toLocaleString() ?? "—"} trend={`${statsData?.totalSKUs ?? "—"} SKUs total`} trendType="neutral" />
+        <StatCard label="Low Stock SKUs" value={String(statsData?.lowStockCount ?? "—")} trend="Needs reorder" trendType="negative" />
+        <StatCard label="Out of Stock" value={String(statsData?.outOfStockCount ?? "—")} trend="Critical" trendType="negative" />
+        <StatCard label="Inventory Value" value={statsData ? formatCurrency(statsData.estimatedValue) : "—"} trend="Estimated" trendType="neutral" />
       </div>
 
+      {/* Tabs */}
       <div className="flex border-b border-stone-200 mt-2">
         {tabs.map(tab => (
-          <button 
+          <button
             key={tab}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => { setActiveTab(tab); setPage(1); setSearch(""); }}
             className={`px-6 py-3 font-inter text-sm font-medium transition-colors ${
-              activeTab === tab 
-                ? "border-b-2 border-stone-900 text-stone-900" 
-                : "text-stone-500 hover:text-stone-700"
+              activeTab === tab ? "border-b-2 border-stone-900 text-stone-900" : "text-stone-500 hover:text-stone-700"
             }`}
           >
             {tab}
@@ -134,20 +155,22 @@ export default function InventoryPage() {
       </div>
 
       <div className="bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden">
-        
-        {/* Tab Actions */}
-        <div className="px-6 py-4 border-b border-stone-200 bg-stone-50 flex items-center justify-between">
+        {/* Tab toolbar */}
+        <div className="px-6 py-4 border-b border-stone-200 bg-stone-50 flex items-center justify-between gap-3 flex-wrap">
           <h3 className="font-bold text-stone-900 font-inter">{activeTab}</h3>
-          
-          <div className="flex items-center gap-3">
-            <input 
-              type="text" 
-              placeholder="Search..." 
-              className="border border-stone-200 rounded-md px-3 py-1.5 text-xs font-inter w-64 focus:ring-1 focus:ring-stone-900 outline-none" 
-            />
-            
+          <div className="flex items-center gap-3 flex-wrap">
+            {activeTab === "Stock Levels" && (
+              <input
+                type="text"
+                placeholder="Search SKU or product..."
+                value={search}
+                onChange={e => { setSearch(e.target.value); setPage(1); }}
+                className="border border-stone-200 rounded-md px-3 py-1.5 text-xs font-inter w-64 focus:ring-1 focus:ring-stone-900 outline-none"
+              />
+            )}
+
             {activeTab === "Transfers" && (
-              <button 
+              <button
                 onClick={() => setShowTransferModal(true)}
                 className="flex items-center gap-2 px-4 py-1.5 bg-stone-900 text-white rounded-md text-xs font-semibold hover:bg-stone-800 transition-colors"
               >
@@ -157,13 +180,13 @@ export default function InventoryPage() {
 
             {activeTab === "Adjustments" && (
               <>
-                <button 
+                <button
                   onClick={() => setAdjustmentType("receive")}
                   className="flex items-center gap-2 px-4 py-1.5 bg-emerald-600 text-white rounded-md text-xs font-semibold hover:bg-emerald-700 transition-colors"
                 >
                   <PackagePlus size={14} /> Receive Stock
                 </button>
-                <button 
+                <button
                   onClick={() => setAdjustmentType("deduct")}
                   className="flex items-center gap-2 px-4 py-1.5 bg-red-600 text-white rounded-md text-xs font-semibold hover:bg-red-700 transition-colors"
                 >
@@ -174,40 +197,55 @@ export default function InventoryPage() {
           </div>
         </div>
 
-        {/* Tab Content */}
+        {/* Tab content */}
         {activeTab === "Stock Levels" && (
-          <DataTable 
-            data={inventory}
-            columns={columns}
-            keyExtractor={(row) => row.sku}
-            pagination={{ currentPage: 1, totalPages: 14 }}
-          />
-        )}
-        
-        {activeTab === "Transfers" && (
-          <DataTable 
-            data={transfers}
-            columns={transferColumns}
-            keyExtractor={(row) => row.id}
-            pagination={{ currentPage: 1, totalPages: 2 }}
-          />
+          invLoading
+            ? <div className="flex items-center justify-center py-16 gap-3 text-stone-400"><RefreshCw size={18} className="animate-spin" /> Loading inventory...</div>
+            : <DataTable
+                data={inventoryData?.data ?? []}
+                columns={inventoryColumns}
+                keyExtractor={(row: any) => row.variantId}
+                pagination={{ currentPage: page, totalPages: invMeta?.totalPages ?? 1 }}
+              />
         )}
 
         {activeTab === "Adjustments" && (
-          <DataTable 
-            data={adjustments}
-            columns={adjustmentColumns}
-            keyExtractor={(row) => row.id}
-            pagination={{ currentPage: 1, totalPages: 5 }}
-          />
+          txLoading
+            ? <div className="flex items-center justify-center py-16 gap-3 text-stone-400"><RefreshCw size={18} className="animate-spin" /> Loading transactions...</div>
+            : <DataTable
+                data={txData?.data ?? []}
+                columns={txColumns}
+                keyExtractor={(row: any) => row.id}
+                pagination={{ currentPage: page, totalPages: txMeta?.totalPages ?? 1 }}
+              />
         )}
 
+        {activeTab === "Transfers" && (
+          trLoading
+            ? <div className="flex items-center justify-center py-16 gap-3 text-stone-400"><RefreshCw size={18} className="animate-spin" /> Loading transfers...</div>
+            : <DataTable
+                data={transferData?.data ?? []}
+                columns={transferColumns}
+                keyExtractor={(row: any) => row.id}
+                pagination={{ currentPage: page, totalPages: trMeta?.totalPages ?? 1 }}
+              />
+        )}
       </div>
 
       {/* Modals */}
-      {showTransferModal && <StockTransferModal onClose={() => setShowTransferModal(false)} onSuccess={() => setShowTransferModal(false)} />}
-      {adjustmentType && <InventoryAdjustmentModal type={adjustmentType} onClose={() => setAdjustmentType(null)} onSuccess={() => setAdjustmentType(null)} />}
-
+      {showTransferModal && (
+        <StockTransferModal
+          onClose={() => setShowTransferModal(false)}
+          onSuccess={() => setShowTransferModal(false)}
+        />
+      )}
+      {adjustmentType && (
+        <InventoryAdjustmentModal
+          type={adjustmentType}
+          onClose={() => setAdjustmentType(null)}
+          onSuccess={() => setAdjustmentType(null)}
+        />
+      )}
     </div>
   );
 }

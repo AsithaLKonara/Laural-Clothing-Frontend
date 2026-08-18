@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, PackagePlus, AlertTriangle } from "lucide-react";
+import { X, PackagePlus, AlertTriangle, Search } from "lucide-react";
+import { useAdjustStock, useInventory } from "@/hooks/useInventory";
 
 interface InventoryAdjustmentModalProps {
   type: "receive" | "deduct";
@@ -10,22 +11,41 @@ interface InventoryAdjustmentModalProps {
 }
 
 export default function InventoryAdjustmentModal({ type, onClose, onSuccess }: InventoryAdjustmentModalProps) {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [branch, setBranch] = useState("Online");
-  const [sku, setSku] = useState("");
+  const [variantId, setVariantId] = useState("");
+  const [skuSearch, setSkuSearch] = useState("");
   const [qty, setQty] = useState(1);
   const [reason, setReason] = useState("");
   const [supplierPo, setSupplierPo] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const isReceive = type === "receive";
+  const adjustMutation = useAdjustStock();
 
-  const handleProcess = () => {
-    setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      onSuccess();
-    }, 1500);
+  // Live search inventory for SKU picker
+  const { data: searchResults } = useInventory({ search: skuSearch, limit: 8 });
+
+  const selectedVariant = searchResults?.data?.find(v => v.variantId === variantId);
+
+  const handleSelectVariant = (v: any) => {
+    setVariantId(v.variantId);
+    setSkuSearch(v.sku);
+    setShowDropdown(false);
   };
+
+  const handleProcess = async () => {
+    if (!variantId) return;
+    await adjustMutation.mutateAsync({
+      variantId,
+      type: isReceive ? "RECEIVE" : "DEDUCT",
+      quantity: qty,
+      reason: isReceive ? supplierPo : reason,
+      reference: isReceive ? supplierPo : reason,
+    });
+    onSuccess();
+  };
+
+  const isProcessing = adjustMutation.isPending;
+  const canSubmit = variantId && qty > 0 && (isReceive ? !!supplierPo : !!reason);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -45,63 +65,90 @@ export default function InventoryAdjustmentModal({ type, onClose, onSuccess }: I
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto bg-stone-100 flex-1 flex flex-col gap-6">
+        <div className="p-6 overflow-y-auto bg-stone-100 flex-1 flex flex-col gap-5">
           <div className="bg-white border border-stone-200 rounded-xl p-5 shadow-sm flex flex-col gap-5">
-            
+
+            {/* SKU Search */}
+            <div className="flex flex-col gap-2 relative">
+              <label className="font-inter text-sm font-semibold text-stone-700">Product / SKU</label>
+              <div className="relative">
+                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                <input
+                  type="text"
+                  value={skuSearch}
+                  onChange={e => { setSkuSearch(e.target.value); setVariantId(""); setShowDropdown(true); }}
+                  onFocus={() => setShowDropdown(true)}
+                  placeholder="Search SKU or product name..."
+                  className="w-full pl-9 border border-stone-200 rounded-lg px-3 py-2.5 text-sm font-inter outline-none focus:ring-2 focus:ring-stone-900 bg-white"
+                />
+              </div>
+
+              {showDropdown && skuSearch && (
+                <div className="absolute top-full left-0 right-0 z-10 bg-white border border-stone-200 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
+                  {(searchResults?.data ?? []).length === 0 ? (
+                    <p className="p-3 text-sm text-stone-400 text-center">No results</p>
+                  ) : (
+                    (searchResults?.data ?? []).map(v => (
+                      <button
+                        key={v.variantId}
+                        onClick={() => handleSelectVariant(v)}
+                        className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-stone-50 transition-colors text-left"
+                      >
+                        <div>
+                          <p className="font-mono text-xs font-medium text-stone-900">{v.sku}</p>
+                          <p className="text-xs text-stone-500">{v.productName} — {v.name}</p>
+                        </div>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded ${v.isOutOfStock ? "bg-red-100 text-red-700" : "bg-stone-100 text-stone-700"}`}>
+                          {v.quantity} in stock
+                        </span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Selected variant pill */}
+            {selectedVariant && (
+              <div className="flex items-center justify-between bg-stone-50 border border-stone-200 rounded-lg px-4 py-2.5">
+                <div>
+                  <p className="font-inter text-sm font-semibold text-stone-900">{selectedVariant.productName}</p>
+                  <p className="font-mono text-xs text-stone-400">{selectedVariant.sku} · {selectedVariant.name}</p>
+                </div>
+                <span className="text-sm font-bold text-stone-700">{selectedVariant.quantity} on hand</span>
+              </div>
+            )}
+
+            {/* Quantity */}
             <div className="flex flex-col gap-2">
-              <label className="font-inter text-sm font-semibold text-stone-700">Target Branch</label>
-              <select 
-                value={branch}
-                onChange={(e) => setBranch(e.target.value)}
-                className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm font-inter outline-none focus:ring-2 focus:ring-stone-900 bg-stone-50 text-stone-900"
-              >
-                <option>Online</option>
-                <option>Colombo</option>
-                <option>Kandy</option>
-              </select>
+              <label className="font-inter text-sm font-semibold text-stone-700">Quantity</label>
+              <input
+                type="number"
+                value={qty}
+                onChange={e => setQty(Number(e.target.value))}
+                min="1"
+                className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm font-inter outline-none focus:ring-2 focus:ring-stone-900 bg-white"
+              />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2">
-                <label className="font-inter text-sm font-semibold text-stone-700">Product SKU</label>
-                <input 
-                  type="text" 
-                  value={sku}
-                  onChange={(e) => setSku(e.target.value)}
-                  placeholder="e.g. LC-TSH-001"
-                  className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm font-inter outline-none focus:ring-2 focus:ring-stone-900 bg-white"
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <label className="font-inter text-sm font-semibold text-stone-700">Quantity</label>
-                <input 
-                  type="number" 
-                  value={qty}
-                  onChange={(e) => setQty(Number(e.target.value))}
-                  min="1"
-                  className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm font-inter outline-none focus:ring-2 focus:ring-stone-900 bg-white"
-                />
-              </div>
-            </div>
-
+            {/* Receive: PO number | Deduct: reason */}
             {isReceive ? (
               <div className="flex flex-col gap-2">
-                <label className="font-inter text-sm font-semibold text-stone-700">Supplier / PO Number</label>
-                <input 
-                  type="text" 
+                <label className="font-inter text-sm font-semibold text-stone-700">Supplier / PO Number <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
                   value={supplierPo}
-                  onChange={(e) => setSupplierPo(e.target.value)}
+                  onChange={e => setSupplierPo(e.target.value)}
                   placeholder="e.g. PO-2026-08-12-A"
                   className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm font-inter outline-none focus:ring-2 focus:ring-stone-900 bg-white"
                 />
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                <label className="font-inter text-sm font-semibold text-stone-700">Reason Code</label>
-                <select 
+                <label className="font-inter text-sm font-semibold text-stone-700">Reason Code <span className="text-red-500">*</span></label>
+                <select
                   value={reason}
-                  onChange={(e) => setReason(e.target.value)}
+                  onChange={e => setReason(e.target.value)}
                   className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm font-inter outline-none focus:ring-2 focus:ring-stone-900 bg-stone-50 text-stone-900"
                 >
                   <option value="" disabled>Select reason...</option>
@@ -114,6 +161,9 @@ export default function InventoryAdjustmentModal({ type, onClose, onSuccess }: I
               </div>
             )}
 
+            {adjustMutation.isError && (
+              <p className="text-red-600 text-sm font-inter text-center">Failed to process. Please try again.</p>
+            )}
           </div>
         </div>
 
@@ -121,10 +171,10 @@ export default function InventoryAdjustmentModal({ type, onClose, onSuccess }: I
           <button onClick={onClose} disabled={isProcessing} className="px-5 py-2.5 bg-white border border-stone-200 text-stone-700 font-inter font-medium text-sm rounded-lg hover:bg-stone-50 transition-colors shadow-sm disabled:opacity-50">
             Cancel
           </button>
-          <button 
-            onClick={handleProcess} 
-            disabled={isProcessing || !sku || (isReceive && !supplierPo) || (!isReceive && !reason)} 
-            className={`px-8 py-2.5 text-white font-inter font-medium text-sm rounded-lg transition-colors shadow-sm flex items-center gap-2 disabled:opacity-50 ${isReceive ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'}`}
+          <button
+            onClick={handleProcess}
+            disabled={isProcessing || !canSubmit}
+            className={`px-8 py-2.5 text-white font-inter font-medium text-sm rounded-lg transition-colors shadow-sm flex items-center gap-2 disabled:opacity-50 ${isReceive ? "bg-emerald-600 hover:bg-emerald-700" : "bg-red-600 hover:bg-red-700"}`}
           >
             {isProcessing ? "Processing..." : isReceive ? "Add to Stock" : "Deduct from Stock"}
           </button>
