@@ -61,16 +61,24 @@ export default function ProductsPage() {
     { header: "Category", accessor: "categoryId" as const },
     { 
       header: "Price", 
-      accessor: (row: any) => `Rs ${row.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+      accessor: (row: any) => {
+        const price = row.variants?.[0]?.price || 0;
+        return `Rs ${price.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+      },
       className: "font-semibold text-stone-800" 
     },
-    {
-      header: "Stock",
-      accessor: (row: any) => (
-        <span className={row.quantity === 0 ? "text-red-600 font-bold" : row.quantity <= 10 ? "text-amber-600 font-bold" : "text-stone-900"}>
-          {row.quantity}
-        </span>
-      ),
+    { 
+      header: "Stock", 
+      accessor: (row: any) => {
+        const inStock = row.variants?.some((v: any) => v.stockStatus === 'instock') ?? true;
+        return (
+          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+            inStock ? "bg-success-soft text-success border border-success/20" : "bg-error/10 text-error border border-error/20"
+          }`}>
+            {inStock ? "In Stock" : "Out of Stock"}
+          </span>
+        );
+      }
     },
     {
       header: "Status",
