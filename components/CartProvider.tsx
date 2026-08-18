@@ -31,7 +31,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
-      <CartSidePanel isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      <CartSidePanel />
       <WishlistSidePanel isOpen={isWishlistOpen} onClose={() => setIsWishlistOpen(false)} />
     </CartContext.Provider>
   );
