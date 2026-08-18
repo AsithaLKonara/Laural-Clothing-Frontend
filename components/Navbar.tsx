@@ -5,7 +5,9 @@ import Image from "next/image";
 import { Search, Heart, ShoppingCart, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { useCart } from "@/components/CartProvider";
+import { useCart as useOldCart } from "@/components/CartProvider";
+import { useCartStore } from "@/store/useCartStore";
+import { useCart } from "@/hooks/useCart";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -14,8 +16,13 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { openCart, openWishlist } = useCart();
+  const { openWishlist } = useOldCart();
+  const { sessionId, openDrawer } = useCartStore();
+  const { data: cart } = useCart(sessionId);
 
+  const cartItems = cart?.items || [];
+  const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const subtotal = cartItems.reduce((sum, item) => sum + (item.quantity * (item.variant.salePrice ?? item.variant.price)), 0);
   const navLinks = [
     { name: "HOME", href: "/" },
     { name: "SHOP", href: "/shop" },
@@ -123,9 +130,18 @@ export default function Navbar() {
               <Heart size={20} className={textColorClass} />
             </button>
             
-            <button onClick={openCart} className={`flex items-center space-x-1 md:space-x-2 p-2 md:p-2.5 rounded-full transition-colors ${hoverBgClass}`}>
-              <ShoppingCart size={20} className={textColorClass} />
-              <span className={`hidden sm:inline font-bold text-xs font-poppins ${textColorClass}`}>Rs: 0.00</span>
+            <button onClick={openDrawer} className={`flex items-center space-x-1 md:space-x-2 p-2 md:p-2.5 rounded-full transition-colors relative ${hoverBgClass}`}>
+              <div className="relative">
+                <ShoppingCart size={20} className={textColorClass} />
+                {itemCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-accent text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                    {itemCount}
+                  </span>
+                )}
+              </div>
+              <span className={`hidden sm:inline font-bold text-xs font-poppins ${textColorClass}`}>
+                Rs: {subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
             </button>
           </div>
         </div>
