@@ -27,6 +27,42 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: 'Product Not Found',
     };
   }
+
+  let allImages: string[] = [];
+  if (product?.variants) {
+    for (const v of product.variants) {
+      if (v.featuredImage) allImages.push(v.featuredImage);
+      if (v.gallery) allImages.push(...v.gallery);
+    }
+  }
+  
+  const deduplicateImages = (urls: string[]) => {
+    const seen = new Set();
+    const result = [];
+    for (const url of urls) {
+      if (!url) continue;
+      try {
+        const parsed = new URL(url);
+        const filename = parsed.pathname.split('/').pop() || "";
+        let baseFilename = filename;
+        const match = filename.match(/^\d{13}-(.+)$/);
+        if (match) baseFilename = match[1];
+        if (!seen.has(baseFilename)) {
+          seen.add(baseFilename);
+          result.push(url);
+        }
+      } catch (e) {
+        if (!seen.has(url)) {
+          seen.add(url);
+          result.push(url);
+        }
+      }
+    }
+    return result;
+  };
+
+  allImages = deduplicateImages(allImages);
+  const ogImage = allImages[0] || '/hero-image/hero-1.jpg';
     
   return {
     title: product.name,
@@ -40,7 +76,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: `/products/${slug}`,
       images: [
         {
-          url: product.variants?.[0]?.featuredImage || '/hero-image/hero-1.jpg',
+          url: ogImage,
           width: 800,
           height: 1200,
           alt: product.name,
@@ -55,13 +91,49 @@ export default async function ProductPage({ params }: Props) {
   const product = await getProductData(slug);
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://laural.lk';
 
+  let allImages: string[] = [];
+  if (product?.variants) {
+    for (const v of product.variants) {
+      if (v.featuredImage) allImages.push(v.featuredImage);
+      if (v.gallery) allImages.push(...v.gallery);
+    }
+  }
+  
+  const deduplicateImages = (urls: string[]) => {
+    const seen = new Set();
+    const result = [];
+    for (const url of urls) {
+      if (!url) continue;
+      try {
+        const parsed = new URL(url);
+        const filename = parsed.pathname.split('/').pop() || "";
+        let baseFilename = filename;
+        const match = filename.match(/^\d{13}-(.+)$/);
+        if (match) baseFilename = match[1];
+        if (!seen.has(baseFilename)) {
+          seen.add(baseFilename);
+          result.push(url);
+        }
+      } catch (e) {
+        if (!seen.has(url)) {
+          seen.add(url);
+          result.push(url);
+        }
+      }
+    }
+    return result;
+  };
+
+  allImages = deduplicateImages(allImages);
+  const schemaImage = allImages[0] || `${baseUrl}/hero-image/hero-1.jpg`;
+
   return (
     <>
       {product && (
         <ProductSchema
           name={product.name}
           description={product.description?.substring(0, 160) || `Discover the elegant ${product.name} at Laural Clothing.`}
-          image={product.variants?.[0]?.featuredImage ? product.variants[0].featuredImage : `${baseUrl}/hero-image/hero-1.jpg`}
+          image={schemaImage}
           price={product.variants?.[0]?.price || 0}
           url={`${baseUrl}/products/${slug}`}
           sku={product.variants?.[0]?.sku || `SKU-${slug.toUpperCase()}`}

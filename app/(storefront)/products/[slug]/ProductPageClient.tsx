@@ -84,10 +84,54 @@ export default function ProductPageClient({ params }: { params: Promise<{ slug: 
   const currentPrice = currentPriceObj.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const installment = (currentPriceObj / 3).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-  const variantImages = [];
+  let variantImages: string[] = [];
+  
   if (selectedVariant?.featuredImage) variantImages.push(selectedVariant.featuredImage);
   if (selectedVariant?.gallery) variantImages.push(...selectedVariant.gallery);
   
+  if (variantImages.length === 0) {
+    const colorVariants = variants.filter(v => v.color?.toLowerCase() === selectedColor?.toLowerCase());
+    for (const cv of colorVariants) {
+      if (cv.featuredImage) variantImages.push(cv.featuredImage);
+      if (cv.gallery) variantImages.push(...cv.gallery);
+    }
+  }
+
+  if (variantImages.length === 0) {
+    for (const v of variants) {
+      if (v.featuredImage) variantImages.push(v.featuredImage);
+      if (v.gallery) variantImages.push(...v.gallery);
+    }
+  }
+
+  const deduplicateImages = (urls: string[]) => {
+    const seen = new Set();
+    const result = [];
+    for (const url of urls) {
+      if (!url) continue;
+      try {
+        const parsed = new URL(url);
+        const filename = parsed.pathname.split('/').pop() || "";
+        let baseFilename = filename;
+        const match = filename.match(/^\d{13}-(.+)$/);
+        if (match) {
+          baseFilename = match[1];
+        }
+        if (!seen.has(baseFilename)) {
+          seen.add(baseFilename);
+          result.push(url);
+        }
+      } catch (e) {
+        if (!seen.has(url)) {
+          seen.add(url);
+          result.push(url);
+        }
+      }
+    }
+    return result;
+  };
+
+  variantImages = deduplicateImages(variantImages);
   const images = variantImages.length > 0 ? variantImages : ["/products/default.jpg"];
 
   const inStock = selectedVariant ? selectedVariant.stockStatus === 'instock' : true;

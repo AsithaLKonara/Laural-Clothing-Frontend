@@ -15,11 +15,45 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
   const [isHovered, setIsHovered] = useState(false);
   const router = useRouter();
 
-  // Determine display values from variants if available
   const firstVariant = product?.variants?.[0];
   
-  const displayImage = firstVariant?.featuredImage || imageUrl;
-  const hoverImage = firstVariant?.gallery?.[0] || displayImage;
+  let allImages: string[] = [];
+  if (product?.variants) {
+    for (const v of product.variants) {
+      if (v.featuredImage) allImages.push(v.featuredImage);
+      if (v.gallery) allImages.push(...v.gallery);
+    }
+  }
+  
+  const deduplicateImages = (urls: string[]) => {
+    const seen = new Set();
+    const result = [];
+    for (const url of urls) {
+      if (!url) continue;
+      try {
+        const parsed = new URL(url);
+        const filename = parsed.pathname.split('/').pop() || "";
+        let baseFilename = filename;
+        const match = filename.match(/^\d{13}-(.+)$/);
+        if (match) baseFilename = match[1];
+        if (!seen.has(baseFilename)) {
+          seen.add(baseFilename);
+          result.push(url);
+        }
+      } catch (e) {
+        if (!seen.has(url)) {
+          seen.add(url);
+          result.push(url);
+        }
+      }
+    }
+    return result;
+  };
+
+  allImages = deduplicateImages(allImages);
+  
+  const displayImage = allImages[0] || imageUrl;
+  const hoverImage = allImages.length > 1 ? allImages[1] : displayImage;
   const title = product?.name || "Product Name";
   const productUrl = product?.slug ? `/products/${product.slug}` : "#";
   
