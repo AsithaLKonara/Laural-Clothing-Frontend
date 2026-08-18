@@ -80,7 +80,7 @@ export default function ProductPageClient({ params }: { params: Promise<{ slug: 
     (uniqueSizes.length === 0 || v.size === selectedSize)
   ) || variants[0];
 
-  const currentPriceObj = selectedVariant?.price || (product as any).price || 1990;
+  const currentPriceObj = selectedVariant?.price || 0;
   const currentPrice = currentPriceObj.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const installment = (currentPriceObj / 3).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -88,11 +88,7 @@ export default function ProductPageClient({ params }: { params: Promise<{ slug: 
   if (selectedVariant?.featuredImage) variantImages.push(selectedVariant.featuredImage);
   if (selectedVariant?.gallery) variantImages.push(...selectedVariant.gallery);
   
-  const legacyProduct = product as any;
-  const images = variantImages.length > 0 ? variantImages : 
-    (legacyProduct.featuredImage 
-      ? [legacyProduct.featuredImage, "/hero-image/hero-1.jpg", "/hero-image/hero-2.jpg", "/hero-image/hero-3.jpg"] 
-      : ["/hero-image/hero-1.jpg", "/hero-image/hero-2.jpg", "/hero-image/hero-3.jpg", "/hero-image/hero-1.jpg"]);
+  const images = variantImages.length > 0 ? variantImages : ["/products/default.jpg"];
 
   const inStock = selectedVariant ? selectedVariant.stockStatus === 'instock' : true;
 
@@ -246,7 +242,7 @@ export default function ProductPageClient({ params }: { params: Promise<{ slug: 
 
           {/* Meta Data */}
           <div className="flex flex-col gap-4 font-poppins text-sm text-primary">
-            <p><span className="font-bold">SKU:</span> <span className="text-[#79716B]">{selectedVariant?.sku || legacyProduct.sku || "N/A"}</span></p>
+            <p><span className="font-bold">SKU:</span> <span className="text-[#79716B]">{selectedVariant?.sku || "N/A"}</span></p>
             <p><span className="font-bold">Categories:</span> <span className="text-[#79716B]">New arrivals</span></p>
             <div className="flex items-center gap-3 mt-1">
               <span className="font-bold">Share:</span>

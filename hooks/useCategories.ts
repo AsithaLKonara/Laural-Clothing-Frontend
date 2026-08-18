@@ -1,16 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
-import { mockCategories, mockAdminCategories, mockCollectionCategories } from "../services/mockData";
 import { api } from "../services/api";
 
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 const fetchCategories = async (): Promise<string[]> => {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  
-  // Future real API call:
-  // const response = await api.get<string[]>("/categories");
-  // return response.data;
-  
-  return mockCategories;
+  try {
+    const response = await api.get<Category[]>("/categories");
+    return response.data.map((c) => c.name);
+  } catch (error) {
+    return [];
+  }
 };
 
 export function useCategories() {
@@ -30,8 +33,12 @@ export interface AdminCategory {
 }
 
 const fetchAdminCategories = async (): Promise<AdminCategory[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  return mockAdminCategories as AdminCategory[];
+  try {
+    const response = await api.get<AdminCategory[]>("/categories/admin");
+    return response.data;
+  } catch (error) {
+    return [];
+  }
 };
 
 export function useAdminCategories() {
@@ -49,8 +56,12 @@ export interface CollectionCategory {
 }
 
 const fetchCollectionCategories = async (): Promise<CollectionCategory[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  return mockCollectionCategories as CollectionCategory[];
+  try {
+    const response = await api.get<CollectionCategory[]>("/categories/collections");
+    return response.data;
+  } catch (error) {
+    return [];
+  }
 };
 
 export function useCollectionCategories() {

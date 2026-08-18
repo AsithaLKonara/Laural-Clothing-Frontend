@@ -18,21 +18,21 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
   // Determine display values from variants if available
   const firstVariant = product?.variants?.[0];
   
-  const displayImage = firstVariant?.featuredImage || (product as any)?.featuredImage || imageUrl;
-  const hoverImage = firstVariant?.gallery?.[0] || (product as any)?.gallery?.[0] || displayImage;
-  const title = product?.name || "Vesper Long Sleeve Top – Pink";
-  const productUrl = product?.slug ? `/products/${product.slug}` : "/products/vesper-long-sleeve-top";
+  const displayImage = firstVariant?.featuredImage || imageUrl;
+  const hoverImage = firstVariant?.gallery?.[0] || displayImage;
+  const title = product?.name || "Product Name";
+  const productUrl = product?.slug ? `/products/${product.slug}` : "#";
   
-  const basePrice = firstVariant?.price || (product as any)?.price || 1990;
+  const basePrice = firstVariant?.price || 0;
   
   // Format numbers exactly without / 100
   const currentPrice = basePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const oldPrice = (basePrice + 500).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); 
+  const oldPrice = basePrice > 0 ? (basePrice + 500).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"; 
   const installment = (basePrice / 3).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const uniqueSizes = product?.variants 
     ? Array.from(new Set(product.variants.map((v: any) => v.size).filter(Boolean))).slice(0, 4)
     : [];
-  const displaySizes = uniqueSizes.length > 0 ? uniqueSizes : ['S', 'M', 'L'];
+  const displaySizes = uniqueSizes;
 
   return (
     <div 
@@ -72,19 +72,21 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
         {/* Bottom Overlays */}
         <div className="absolute bottom-0 w-full flex flex-col z-20 pointer-events-none">
           {/* Sizes Row (Hover Only) */}
-          <div 
-            className={`flex items-center justify-center min-h-[36px] py-1.5 w-full bg-black/30 backdrop-blur-sm transition-all duration-300 pointer-events-auto ${
-              isHovered ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'
-            }`}
-          >
-            <div className="flex flex-wrap justify-center gap-[4px] px-2 w-full">
-              {displaySizes.map((size: any) => (
-                <div key={size} onClick={(e) => e.stopPropagation()} className="flex justify-center items-center px-1.5 min-w-[28px] h-[20px] bg-black/80 border border-white/20 rounded-full cursor-pointer hover:bg-black transition-colors">
-                  <span className="font-inter font-bold text-[10px] text-white truncate max-w-[50px]">{size}</span>
-                </div>
-              ))}
+          {displaySizes.length > 0 && (
+            <div 
+              className={`flex items-center justify-center min-h-[36px] py-1.5 w-full bg-black/30 backdrop-blur-sm transition-all duration-300 pointer-events-auto ${
+                isHovered ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'
+              }`}
+            >
+              <div className="flex flex-wrap justify-center gap-[4px] px-2 w-full">
+                {displaySizes.map((size: any) => (
+                  <div key={size} onClick={(e) => e.stopPropagation()} className="flex justify-center items-center px-1.5 min-w-[28px] h-[20px] bg-black/80 border border-white/20 rounded-full cursor-pointer hover:bg-black transition-colors">
+                    <span className="font-inter font-bold text-[10px] text-white truncate max-w-[50px]">{size}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
           
           {/* Add to Cart Button (Always Visible) */}
           <button 

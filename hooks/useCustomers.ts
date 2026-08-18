@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { mockCustomers } from "../services/mockData";
 import { api } from "../services/api";
 
 export interface Customer {
@@ -14,8 +13,12 @@ export interface Customer {
 }
 
 const fetchCustomers = async (): Promise<Customer[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  return mockCustomers as Customer[];
+  try {
+    const response = await api.get<Customer[]>("/customers");
+    return response.data;
+  } catch (error) {
+    return [];
+  }
 };
 
 export function useCustomers() {

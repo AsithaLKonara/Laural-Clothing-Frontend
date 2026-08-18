@@ -1,5 +1,4 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { mockOrders } from "../services/mockData";
 import { api } from "../services/api";
 
 export interface Order {
@@ -13,8 +12,12 @@ export interface Order {
 }
 
 const fetchOrders = async (): Promise<Order[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 600));
-  return mockOrders as Order[];
+  try {
+    const response = await api.get<Order[]>("/orders");
+    return response.data;
+  } catch (error) {
+    return [];
+  }
 };
 
 export function useOrders() {
@@ -27,10 +30,8 @@ export function useOrders() {
 export function useCreateOrder() {
   return useMutation({
     mutationFn: async (newOrder: Partial<Order>) => {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      console.log("Mock create order:", newOrder);
-      // Simulate returning the created order with a generated ID
-      return { id: `LC-${Math.floor(10000 + Math.random() * 90000)}`, ...newOrder } as Order;
+      const response = await api.post<Order>("/orders", newOrder);
+      return response.data;
     },
   });
 }
