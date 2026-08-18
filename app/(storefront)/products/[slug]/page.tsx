@@ -10,7 +10,7 @@ export const revalidate = 3600; // ISR every hour
 
 async function getProductData(slug: string) {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/products/slug/${slug}`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/products/slug/${slug}`, { next: { revalidate: 3600 } });
     if (!res.ok) return null;
     return await res.json();
   } catch (error) {
