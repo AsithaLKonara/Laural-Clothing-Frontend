@@ -1,24 +1,51 @@
 "use client";
 
+import { useState } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";
 import { StatusBadge } from "@/components/dashboard/Badges";
 import StatCard from "@/components/dashboard/StatCard";
 import DataTable from "@/components/dashboard/DataTable";
-import { useBranches } from "@/hooks/useInventory";
+import { useBranches, useDeleteBranch } from "@/hooks/useInventory";
+import BranchModal from "@/components/dashboard/BranchModal";
 
 export default function BranchesPage() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingBranch, setEditingBranch] = useState<any>(null);
+
   const { data: realBranches, isLoading } = useBranches();
+  const deleteMutation = useDeleteBranch();
+
+  const handleEdit = (branch: any) => {
+    const rawBranch = realBranches?.find((b: any) => b.code === branch.id);
+    setEditingBranch(rawBranch);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm("Are you sure you want to deactivate this branch?")) {
+      const rawBranch = realBranches?.find((b: any) => b.code === id);
+      if (rawBranch) {
+        await deleteMutation.mutateAsync(rawBranch.id);
+      }
+    }
+  };
 
   const branches = realBranches?.map((b: any) => ({
     id: b.code,
     name: b.name,
     location: b.address || "Unknown",
-    manager: "N/A", // To be implemented with Users
-    terminals: 0,
-    staff: 0,
+    manager: b.managerName || "N/A",
+    terminals: b.posCount || 0,
+    staff: b.staffCount || 0,
     status: b.isActive ? "Operational" : "Inactive",
-    revenue: "Rs. 0",
+    revenue: `Rs. ${(b.revenue || 0).toLocaleString()}`,
+    rawRevenue: b.revenue || 0,
   })) || [];
+
+  const totalBranches = branches.length;
+  const totalPosTerminals = branches.reduce((sum: number, b: any) => sum + b.terminals, 0);
+  const totalStaff = branches.reduce((sum: number, b: any) => sum + b.staff, 0);
+  const totalRevenue = branches.reduce((sum: number, b: any) => sum + b.rawRevenue, 0);
 
   const columns = [
     { header: "ID", accessor: "id" as const, className: "font-mono text-stone-500 text-xs" },
@@ -46,9 +73,20 @@ export default function BranchesPage() {
       header: "Actions",
       accessor: (row: any) => (
         <div className="flex gap-2">
-          <button className="text-xs text-blue-600 hover:underline font-medium">View</button>
+          <button 
+            onClick={() => handleEdit(row)} 
+            className="text-xs text-blue-600 hover:underline font-medium"
+          >
+            Edit
+          </button>
           <span className="text-stone-300">·</span>
-          <button className="text-xs text-stone-500 hover:underline font-medium">Edit</button>
+          <button 
+            onClick={() => handleDelete(row.id)} 
+            className="text-xs text-red-600 hover:underline font-medium"
+            disabled={deleteMutation.isPending}
+          >
+            Deactivate
+          </button>
         </div>
       ),
     },
@@ -60,7 +98,13 @@ export default function BranchesPage() {
         title="Branches"
         description="Manage physical store locations, POS terminals, and branch staff."
         action={
-          <button className="bg-stone-900 text-white hover:bg-stone-800 px-4 py-2.5 rounded-lg font-inter text-sm font-medium transition-colors">
+          <button 
+            onClick={() => {
+              setEditingBranch(null);
+              setIsModalOpen(true);
+            }}
+            className="bg-stone-900 text-white hover:bg-stone-800 px-4 py-2.5 rounded-lg font-inter text-sm font-medium transition-colors"
+          >
             + Add Branch
           </button>
         }
@@ -68,10 +112,10 @@ export default function BranchesPage() {
 
       {/* KPI Row */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatCard label="Total Branches" value="3" trend="1 Coming Soon" trendType="neutral" />
-        <StatCard label="Active POS Terminals" value="6" trend="Across all branches" trendType="positive" />
-        <StatCard label="Total Staff" value="25" trend="All active branches" trendType="neutral" />
-        <StatCard label="Total Revenue" value="Rs. 2.69M" trend="This month" trendType="positive" />
+        <StatCard label="Total Branches" value={isLoading ? "-" : totalBranches.toString()} trend="Active locations" trendType="neutral" />
+        <StatCard label="Active POS Terminals" value={isLoading ? "-" : totalPosTerminals.toString()} trend="Across all branches" trendType="neutral" />
+        <StatCard label="Total Staff" value={isLoading ? "-" : totalStaff.toString()} trend="All active branches" trendType="neutral" />
+        <StatCard label="Total Revenue" value={isLoading ? "-" : `Rs. ${totalRevenue.toLocaleString()}`} trend="This month" trendType="neutral" />
       </div>
 
       {/* Branch Cards */}
@@ -125,6 +169,12 @@ export default function BranchesPage() {
           />
         )}
       </div>
+
+      <BranchModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        branchToEdit={editingBranch} 
+      />
     </div>
   );
 }
