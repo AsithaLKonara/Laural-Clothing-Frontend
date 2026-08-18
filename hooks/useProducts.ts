@@ -37,7 +37,7 @@ export function useProductBySlug(slug: string) {
 export function useCreateProduct() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Partial<Product>) => productsService.createProduct(data),
+    mutationFn: (data: any) => productsService.createProduct(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PRODUCT_QUERY_KEYS.lists() });
     },
@@ -47,7 +47,7 @@ export function useCreateProduct() {
 export function useUpdateProduct() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Product> }) => productsService.updateProduct(id, data),
+    mutationFn: ({ id, data }: { id: string; data: any }) => productsService.updateProduct(id, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: PRODUCT_QUERY_KEYS.detail(variables.id) });
       if (data.slug) {

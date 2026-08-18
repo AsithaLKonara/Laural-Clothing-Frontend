@@ -26,12 +26,12 @@ export const productsService = {
     return data;
   },
 
-  async createProduct(product: Partial<Product>): Promise<Product> {
+  async createProduct(product: any): Promise<Product> {
     const { data } = await api.post<Product>('/products', product);
     return data;
   },
 
-  async updateProduct(id: string, product: Partial<Product>): Promise<Product> {
+  async updateProduct(id: string, product: any): Promise<Product> {
     const { data } = await api.put<Product>(`/products/${id}`, product);
     return data;
   },

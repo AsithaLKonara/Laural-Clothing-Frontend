@@ -21,7 +21,7 @@ import {
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createProductSchema, CreateProductFormData } from "@/lib/validations";
-import { useCreateProduct } from "@/hooks/useProducts";
+import { useCreateProduct, useUpdateProduct } from "@/hooks/useProducts";
 
 interface Variant {
   id: string;
@@ -34,9 +34,10 @@ interface Variant {
   compareAtPrice: string;
 }
 
-interface AddProductModalProps {
+interface ProductFormModalProps {
   isOpen: boolean;
   onClose: () => void;
+  productToEdit?: any; // any because we might pass a full Product with nested variants
 }
 
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL", "28", "30", "32", "34", "36", "38"];
@@ -66,7 +67,7 @@ function generateSKU(name: string, size: string, color: string) {
   return `LC-${prefix}-${s}-${c}`;
 }
 
-export default function AddProductModal({ isOpen, onClose }: AddProductModalProps) {
+export default function ProductFormModal({ isOpen, onClose, productToEdit }: ProductFormModalProps) {
   const [activeTab, setActiveTab] = useState("basic");
   const [slugEdited, setSlugEdited] = useState(false);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
@@ -85,6 +86,7 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
   const [isAddingColor, setIsAddingColor] = useState(false);
 
   const createProductMutation = useCreateProduct();
+  const updateProductMutation = useUpdateProduct();
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<CreateProductFormData>({
     resolver: zodResolver(createProductSchema),
@@ -113,10 +115,57 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
 
   // Keep slug in sync unless manually edited
   useEffect(() => {
-    if (!slugEdited && productName) {
+    if (!slugEdited && productName && !productToEdit) {
       setValue("slug", generateSlug(productName));
     }
-  }, [productName, slugEdited, setValue]);
+  }, [productName, slugEdited, setValue, productToEdit]);
+
+  // Load existing product data if editing
+  useEffect(() => {
+    if (productToEdit && isOpen) {
+      setValue("name", productToEdit.name || "");
+      setValue("slug", productToEdit.slug || "");
+      setValue("description", productToEdit.description || "");
+      setValue("category", productToEdit.categoryId || ""); // Note: might need ID to Name mapping depending on select
+      setSlugEdited(true);
+      
+      if (productToEdit.variants && productToEdit.variants.length > 0) {
+        const firstVariant = productToEdit.variants[0];
+        setValue("basePrice", (firstVariant.price).toString());
+        if (firstVariant.salePrice) setValue("compareAtPrice", (firstVariant.salePrice).toString());
+
+        const loadedVariants = productToEdit.variants.map((v: any) => ({
+          id: v.id,
+          size: v.size || "",
+          color: v.color || "",
+          sku: v.sku || "",
+          barcode: "",
+          stock: { "Online": v.quantity || 0, "Colombo": 0, "Kandy": 0, "Gampaha": 0 },
+          price: v.price.toString(),
+          compareAtPrice: v.salePrice ? v.salePrice.toString() : "",
+        }));
+
+        const sizes = Array.from(new Set(loadedVariants.map((v: any) => v.size).filter(Boolean))) as string[];
+        const colors = Array.from(new Set(loadedVariants.map((v: any) => v.color).filter(Boolean))) as string[];
+        
+        setSelectedSizes(sizes);
+        setSelectedColors(colors);
+        setVariants(loadedVariants);
+      }
+    } else if (!productToEdit && isOpen) {
+      // Reset form for new product
+      setValue("name", "");
+      setValue("slug", "");
+      setValue("description", "");
+      setValue("basePrice", "");
+      setValue("compareAtPrice", "");
+      setSlugEdited(false);
+      setSelectedSizes([]);
+      setSelectedColors([]);
+      setVariants([]);
+      setActiveTab("basic");
+    }
+  }, [productToEdit, isOpen, setValue]);
 
   if (!isOpen) return null;
 
@@ -192,19 +241,36 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
 
   const onSubmit = async (data: CreateProductFormData) => {
     try {
+      const variantPayloads = variants.map(v => ({
+        size: v.size,
+        color: v.color,
+        sku: v.sku || null,
+        price: parseFloat(v.price || "0"),
+        salePrice: v.compareAtPrice ? parseFloat(v.compareAtPrice) : null,
+        quantity: Object.values(v.stock).reduce((sum, qty) => sum + qty, 0),
+        stockStatus: "instock",
+      }));
+
       const payload = {
         name: data.name,
         slug: data.slug || undefined,
         description: data.description,
-        price: parseFloat(data.basePrice || "0") * 100, // API expects cents
-        quantity: 0,
-        stockStatus: "instock",
+        variants: productToEdit ? {
+          deleteMany: {}, // Clean replace
+          create: variantPayloads,
+        } : {
+          create: variantPayloads,
+        }
       };
       
-      await createProductMutation.mutateAsync(payload);
+      if (productToEdit) {
+        await updateProductMutation.mutateAsync({ id: productToEdit.id, data: payload as any });
+      } else {
+        await createProductMutation.mutateAsync(payload);
+      }
       onClose();
     } catch (error) {
-      console.error("Failed to create product", error);
+      console.error("Failed to save product", error);
     }
   };
 
@@ -219,8 +285,8 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
         {/* Header */}
         <div className="flex items-center justify-between px-8 py-5 border-b border-stone-200 bg-stone-50 shrink-0">
           <div>
-            <h2 className="font-inter font-bold text-xl text-stone-900">Add New Product</h2>
-            <p className="font-inter text-sm text-stone-500 mt-0.5">Fill in all sections to publish a complete product listing.</p>
+            <h2 className="font-inter font-bold text-xl text-stone-900">{productToEdit ? "Edit Product" : "Add New Product"}</h2>
+            <p className="font-inter text-sm text-stone-500 mt-0.5">{productToEdit ? "Update product details and variations." : "Fill in all sections to publish a complete product listing."}</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-stone-200 rounded-lg text-stone-600 transition-colors">
             <X size={20} />
@@ -767,10 +833,10 @@ export default function AddProductModal({ isOpen, onClose }: AddProductModalProp
               </button>
               <button
                 type="submit"
-                disabled={createProductMutation.isPending}
+                disabled={createProductMutation.isPending || updateProductMutation.isPending}
                 className="px-6 py-2.5 bg-stone-900 text-white rounded-lg font-inter font-semibold text-sm hover:bg-stone-800 transition-colors shadow-md shadow-stone-900/20 disabled:opacity-50"
               >
-                {createProductMutation.isPending ? "Saving..." : "Save Product"}
+                {createProductMutation.isPending || updateProductMutation.isPending ? "Saving..." : "Save Product"}
               </button>
             </div>
           </div>

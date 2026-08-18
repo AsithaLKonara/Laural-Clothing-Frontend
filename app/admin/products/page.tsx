@@ -5,15 +5,17 @@ import PageHeader from "@/components/dashboard/PageHeader";
 import FilterBar from "@/components/dashboard/FilterBar";
 import DataTable from "@/components/dashboard/DataTable";
 import { StatusBadge } from "@/components/dashboard/Badges";
-import AddProductModal from "@/components/dashboard/AddProductModal";
+import ProductFormModal from "@/components/dashboard/ProductFormModal";
 import BarcodePrintModal from "@/components/admin/BarcodePrintModal";
 import BulkEditModal from "@/components/admin/BulkEditModal";
 import Link from "next/link";
 import { Barcode, Edit, ArchiveRestore, CheckCircle2 } from "lucide-react";
 import { useProducts, useDeleteProduct } from "@/hooks/useProducts";
+import { Product } from "@/types/product";
 
 export default function ProductsPage() {
   const [modalOpen, setModalOpen] = useState(false);
+  const [productToEdit, setProductToEdit] = useState<Product | undefined>(undefined);
   const [printingProduct, setPrintingProduct] = useState<{sku: string, name: string} | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [showBulkEditModal, setShowBulkEditModal] = useState(false);
@@ -40,6 +42,16 @@ export default function ProductsPage() {
     }
   };
 
+  const handleEdit = (product: Product) => {
+    setProductToEdit(product);
+    setModalOpen(true);
+  };
+
+  const handleAdd = () => {
+    setProductToEdit(undefined);
+    setModalOpen(true);
+  };
+
   const columns = [
     {
       header: <input type="checkbox" checked={selectedProducts.length === products.length && products.length > 0} onChange={handleSelectAll} className="rounded text-stone-900 focus:ring-stone-900 border-stone-300" />,
@@ -53,9 +65,9 @@ export default function ProductsPage() {
     {
       header: "Product",
       accessor: (row: any) => (
-        <Link href={`/admin/products/${row.id}`} className="font-semibold text-stone-900 hover:text-accent transition-colors">
+        <button onClick={() => handleEdit(row)} className="font-semibold text-stone-900 hover:text-accent transition-colors text-left">
           {row.name}
-        </Link>
+        </button>
       ),
     },
     { header: "Category", accessor: "categoryId" as const },
@@ -94,7 +106,7 @@ export default function ProductsPage() {
       header: "Actions",
       accessor: (row: any) => (
         <div className="flex gap-2 text-xs items-center">
-          <Link href={`/admin/products/${row.id}`} className="text-blue-600 hover:underline font-medium">Edit</Link>
+          <button onClick={() => handleEdit(row)} className="text-blue-600 hover:underline font-medium">Edit</button>
           <span className="text-stone-300">·</span>
           <button onClick={() => handleDelete(row.id)} disabled={deleteProductMutation.isPending} className="text-red-500 hover:underline font-medium disabled:opacity-50">Archive</button>
           <span className="text-stone-300">·</span>
@@ -123,7 +135,7 @@ export default function ProductsPage() {
         <option>Draft</option>
       </select>
       <button
-        onClick={() => setModalOpen(true)}
+        onClick={handleAdd}
         className="bg-stone-900 text-white hover:bg-stone-800 active:scale-95 px-5 py-2 rounded-lg font-inter text-sm font-semibold transition-all whitespace-nowrap ml-auto shadow-md shadow-stone-900/20 flex items-center gap-2"
       >
         + Add Product
@@ -154,7 +166,11 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      <AddProductModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+      <ProductFormModal 
+        isOpen={modalOpen} 
+        onClose={() => setModalOpen(false)} 
+        productToEdit={productToEdit}
+      />
       
       {/* Floating Bulk Action Bar */}
       {selectedProducts.length > 0 && (
