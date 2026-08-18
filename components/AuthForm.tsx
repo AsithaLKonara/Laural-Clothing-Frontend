@@ -14,7 +14,6 @@ import {
   ForgotPasswordFormData,
   ChangePasswordFormData,
 } from "@/lib/validations";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 type AuthView = "login" | "register" | "forgot-password" | "otp" | "change-password";
@@ -63,21 +62,14 @@ function LoginForm({ setView }: { setView: (v: AuthView) => void }) {
     setLoading(true);
     
     try {
-      const result = await signIn("credentials", {
-        redirect: false,
-        email: data.email,
-        password: data.password,
-      });
-
-      if (result?.error) {
-        setError(result.error);
-      } else {
-        router.push("/admin"); // Middleware will handle redirecting Cashiers to /pos
-      }
+      // Mock authentication
+      setTimeout(() => {
+        router.push("/admin");
+      }, 500);
     } catch (err) {
       setError("An unexpected error occurred.");
     } finally {
-      setLoading(false);
+      // keep loading true while redirecting
     }
   };
 

@@ -16,10 +16,11 @@ import { RotateCcw, ShoppingCart, Zap, ArrowLeft, Clock, History, ArrowRightLeft
 import Link from "next/link";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
-import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function POSPage() {
-  const { data: session } = useSession();
+  const router = useRouter();
+  const session = { user: { name: "Mock User" } }; // Mock session
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [posMode, setPosMode] = useState<"SALES" | "RETURNS" | "DISPATCH" | "EXCHANGE">("SALES");
   
@@ -170,7 +171,7 @@ export default function POSPage() {
             <span>Cashier: {session?.user?.name || "User"}</span>
           </div>
           <button 
-            onClick={() => signOut({ callbackUrl: "/login" })}
+            onClick={() => router.push("/login")}
             className="text-error hover:bg-error/10 border border-transparent px-3 py-1.5 rounded transition-colors text-sm font-inter font-medium flex items-center gap-2"
           >
             Sign Out

@@ -4,9 +4,7 @@ import { useState } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 
-import { Session } from "next-auth";
-
-export default function DashboardLayoutClient({ children, session }: { children: React.ReactNode, session?: Session | null }) {
+export default function DashboardLayoutClient({ children, session }: { children: React.ReactNode, session?: any }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
