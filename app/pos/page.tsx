@@ -103,9 +103,10 @@ export default function POSPage() {
     }
   };
 
-  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
-  const { data: response, isLoading: productsLoading } = useProducts();
-  const products = response?.data || [];
+  const { data: categoriesResponse, isLoading: categoriesLoading } = useCategories();
+  const categories = categoriesResponse?.data || [];
+  const { data: productsResponse, isLoading: productsLoading } = useProducts();
+  const products = productsResponse?.data || [];
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -242,15 +243,15 @@ export default function POSPage() {
               >
                 All
               </button>
-              {categories.map((cat, idx) => (
+              {categories.map((cat) => (
                 <button 
-                  key={idx}
-                  onClick={() => setSelectedCategory(cat)}
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.name)}
                   className={`px-6 py-3 rounded-lg font-inter font-semibold text-sm whitespace-nowrap transition-colors border ${
-                    selectedCategory === cat ? "bg-primary-soft text-primary border-primary shadow-sm" : "bg-surface text-muted border-border hover:bg-background"
+                    selectedCategory === cat.name ? "bg-primary-soft text-primary border-primary shadow-sm" : "bg-surface text-muted border-border hover:bg-background"
                   }`}
                 >
-                  {cat}
+                  {cat.name}
                 </button>
               ))}
             </div>

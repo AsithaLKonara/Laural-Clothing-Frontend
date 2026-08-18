@@ -3,22 +3,43 @@
 import { useState } from "react";
 import { X, ImagePlus } from "lucide-react";
 
-interface AddCategoryModalProps {
+import { useEffect } from "react";
+import { useCreateCategory, useUpdateCategory } from "@/hooks/useCategories";
+import { Category } from "@/types/category";
+
+interface CategoryFormModalProps {
   isOpen: boolean;
   onClose: () => void;
+  categoryToEdit?: Category;
 }
 
 function generateSlug(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-export default function AddCategoryModal({ isOpen, onClose }: AddCategoryModalProps) {
+export default function CategoryFormModal({ isOpen, onClose, categoryToEdit }: CategoryFormModalProps) {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
-  const [parent, setParent] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("Active");
+
+  const createCategoryMutation = useCreateCategory();
+  const updateCategoryMutation = useUpdateCategory();
+
+  useEffect(() => {
+    if (categoryToEdit && isOpen) {
+      setName(categoryToEdit.name || "");
+      setSlug(categoryToEdit.slug || "");
+      setDescription(categoryToEdit.description || "");
+      setSlugEdited(true);
+    } else if (!categoryToEdit && isOpen) {
+      setName("");
+      setSlug("");
+      setDescription("");
+      setSlugEdited(false);
+    }
+  }, [categoryToEdit, isOpen]);
 
   if (!isOpen) return null;
 
@@ -27,9 +48,23 @@ export default function AddCategoryModal({ isOpen, onClose }: AddCategoryModalPr
     if (!slugEdited) setSlug(generateSlug(val));
   }
 
-  function handleSave() {
-    // TODO: integrate with backend
-    onClose();
+  async function handleSave() {
+    try {
+      const payload = {
+        name,
+        slug: slug || undefined,
+        description,
+      };
+
+      if (categoryToEdit) {
+        await updateCategoryMutation.mutateAsync({ id: categoryToEdit.id, data: payload });
+      } else {
+        await createCategoryMutation.mutateAsync(payload);
+      }
+      onClose();
+    } catch (error) {
+      console.error("Failed to save category", error);
+    }
   }
 
   return (
@@ -43,8 +78,8 @@ export default function AddCategoryModal({ isOpen, onClose }: AddCategoryModalPr
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200 bg-stone-50 shrink-0">
           <div>
-            <h2 className="font-inter font-bold text-lg text-stone-900">Add New Category</h2>
-            <p className="font-inter text-xs text-stone-500 mt-0.5">Create a new product category or sub-category.</p>
+            <h2 className="font-inter font-bold text-lg text-stone-900">{categoryToEdit ? "Edit Category" : "Add New Category"}</h2>
+            <p className="font-inter text-xs text-stone-500 mt-0.5">{categoryToEdit ? "Update category details." : "Create a new product category."}</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-stone-200 rounded-lg text-stone-600 transition-colors">
             <X size={20} />
@@ -78,33 +113,16 @@ export default function AddCategoryModal({ isOpen, onClose }: AddCategoryModalPr
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
-              <label className="font-inter text-xs font-semibold text-stone-700">Parent Category</label>
-              <select 
-                value={parent} 
-                onChange={e => setParent(e.target.value)} 
-                className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all font-inter bg-white"
-              >
-                <option value="">None (Top Level)</option>
-                <option value="t-shirts">T-Shirts</option>
-                <option value="shirts">Shirts</option>
-                <option value="dresses">Dresses</option>
-                <option value="pants">Pants</option>
-              </select>
-            </div>
-            
-            <div className="flex flex-col gap-2">
-              <label className="font-inter text-xs font-semibold text-stone-700">Status</label>
-              <select 
-                value={status} 
-                onChange={e => setStatus(e.target.value)} 
-                className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all font-inter bg-white"
-              >
-                <option value="Active">Active</option>
-                <option value="Draft">Draft</option>
-              </select>
-            </div>
+          <div className="flex flex-col gap-2">
+            <label className="font-inter text-xs font-semibold text-stone-700">Status</label>
+            <select 
+              value={status} 
+              onChange={e => setStatus(e.target.value)} 
+              className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all font-inter bg-white"
+            >
+              <option value="Active">Active</option>
+              <option value="Draft">Draft</option>
+            </select>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -139,10 +157,10 @@ export default function AddCategoryModal({ isOpen, onClose }: AddCategoryModalPr
           </button>
           <button
             onClick={handleSave}
-            disabled={!name.trim()}
+            disabled={!name.trim() || createCategoryMutation.isPending || updateCategoryMutation.isPending}
             className="px-5 py-2 bg-stone-900 text-white rounded-lg font-inter font-medium text-sm hover:bg-stone-800 transition-colors shadow-md shadow-stone-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Save Category
+            {createCategoryMutation.isPending || updateCategoryMutation.isPending ? "Saving..." : "Save Category"}
           </button>
         </div>
       </div>

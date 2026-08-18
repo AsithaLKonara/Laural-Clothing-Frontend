@@ -1,22 +1,34 @@
 "use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCategories } from "@/hooks/useCategories";
 
 export default function CategoryBar() {
-  const { data: categories = [] } = useCategories();
+  const pathname = usePathname();
+  const { data: response } = useCategories();
+  const categories = response?.data || [];
 
   return (
-    <div className="w-full bg-[#E7E5E4]">
-      <div className="flex flex-row justify-center items-center flex-wrap gap-x-[30px] gap-y-[10px] w-full max-w-[1280px] mx-auto py-[16px] px-[20px] md:px-[120px]">
-        {categories.map((link) => (
-          <Link 
-            href={`/categories/${link.toLowerCase().replace(' ', '-')}`} 
-            key={link} 
-            className="font-urbanist font-black text-sm text-primary hover:text-[#5E3122] transition-colors uppercase"
-          >
-            {link}
-          </Link>
-        ))}
+    <div className="w-full bg-stone-500 hidden md:block">
+      <div className="max-w-[1440px] mx-auto px-6 lg:px-8">
+        <div className="flex items-center justify-center gap-8 overflow-x-auto custom-scrollbar py-3">
+          {categories.map((cat) => {
+            const isActive = pathname === `/categories/${cat.slug}`;
+            return (
+              <Link 
+                key={cat.id} 
+                href={`/categories/${cat.slug}`} 
+                className={`text-sm transition-colors whitespace-nowrap ${
+                  isActive 
+                    ? "text-stone-50 font-bold underline underline-offset-4" 
+                    : "font-medium text-stone-200 hover:text-stone-50"
+                }`}
+              >
+                {cat.name}
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

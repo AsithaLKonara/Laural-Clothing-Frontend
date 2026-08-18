@@ -6,6 +6,7 @@ export interface GetProductsParams {
   skip?: number;
   take?: number;
   search?: string;
+  category?: string;
 }
 
 export const productsService = {

@@ -1,53 +1,61 @@
-import { useQuery } from "@tanstack/react-query";
-import { api } from "../services/api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { categoriesService } from "../services/categories.service";
+import { Category } from "../types/category";
 
-export interface Category {
-  id: string;
-  name: string;
-  slug: string;
-}
-
-const fetchCategories = async (): Promise<string[]> => {
-  try {
-    const response = await api.get<Category[]>("/categories");
-    return response.data.map((c) => c.name);
-  } catch (error) {
-    return [];
-  }
+export const CATEGORY_QUERY_KEYS = {
+  all: ['categories'] as const,
+  lists: () => [...CATEGORY_QUERY_KEYS.all, 'list'] as const,
+  detail: (id: string) => [...CATEGORY_QUERY_KEYS.all, 'detail', id] as const,
 };
 
 export function useCategories() {
   return useQuery({
-    queryKey: ["categories"],
-    queryFn: fetchCategories,
+    queryKey: CATEGORY_QUERY_KEYS.lists(),
+    queryFn: () => categoriesService.getCategories(),
   });
 }
 
-export interface AdminCategory {
-  id: string;
-  name: string;
-  slug: string;
-  parent: string;
-  products: number;
-  status: string;
-}
-
-const fetchAdminCategories = async (): Promise<AdminCategory[]> => {
-  try {
-    const response = await api.get<AdminCategory[]>("/categories/admin");
-    return response.data;
-  } catch (error) {
-    return [];
-  }
-};
-
-export function useAdminCategories() {
+export function useCategory(id: string) {
   return useQuery({
-    queryKey: ["adminCategories"],
-    queryFn: fetchAdminCategories,
+    queryKey: CATEGORY_QUERY_KEYS.detail(id),
+    queryFn: () => categoriesService.getCategoryById(id),
+    enabled: !!id,
   });
 }
 
+export function useCreateCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Partial<Category>) => categoriesService.createCategory(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: CATEGORY_QUERY_KEYS.lists() });
+    },
+  });
+}
+
+export function useUpdateCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<Category> }) => categoriesService.updateCategory(id, data),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: CATEGORY_QUERY_KEYS.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: CATEGORY_QUERY_KEYS.lists() });
+    },
+  });
+}
+
+export function useDeleteCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => categoriesService.deleteCategory(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: CATEGORY_QUERY_KEYS.detail(id) });
+      queryClient.invalidateQueries({ queryKey: CATEGORY_QUERY_KEYS.lists() });
+    },
+  });
+}
+
+// Keeping the collection categories hook for storefront compatibility if needed
 export interface CollectionCategory {
   id: number;
   title: string;
@@ -55,18 +63,11 @@ export interface CollectionCategory {
   href: string;
 }
 
-const fetchCollectionCategories = async (): Promise<CollectionCategory[]> => {
-  try {
-    const response = await api.get<CollectionCategory[]>("/categories/collections");
-    return response.data;
-  } catch (error) {
-    return [];
-  }
-};
-
 export function useCollectionCategories() {
   return useQuery({
     queryKey: ["collectionCategories"],
-    queryFn: fetchCollectionCategories,
+    queryFn: async (): Promise<CollectionCategory[]> => {
+      return []; // Return empty for now as it's mocked in storefront
+    },
   });
 }

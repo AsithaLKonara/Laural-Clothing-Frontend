@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp, SlidersHorizontal, Check } from "lucide-react";
+import { ChevronDown, ChevronUp, SlidersHorizontal, Check, Filter } from "lucide-react";
 import { useCategories } from "@/hooks/useCategories";
 
 interface FilterSidebarProps {
@@ -25,7 +25,8 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const { data: categories = [], isLoading } = useCategories();
+  const { data: response, isLoading } = useCategories();
+  const categories = response?.data || [];
   const styles = ["Casual", "Formal", "Party", "Gym"];
   
   const colors = [
@@ -57,7 +58,9 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
       
       {/* Header */}
       <div className="flex justify-between items-center w-full">
-        <h2 className="font-poppins font-bold text-xl text-primary">Filters</h2>
+        <h2 className="font-poppins font-bold text-xl text-primary flex items-center gap-2">
+          <Filter size={20} /> Filters
+        </h2>
         <button 
           onClick={onToggle}
           className="p-2 -mr-2 rounded-full hover:bg-stone-200 transition-colors"
@@ -86,8 +89,8 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
       {/* Categories */}
       <div className="flex flex-col w-full gap-[20px]">
         {categories.map((cat) => (
-          <div key={cat} className="flex justify-between items-center cursor-pointer group">
-            <span className="font-poppins text-base text-[#44403B] group-hover:text-primary transition-colors">{cat}</span>
+          <div key={cat.id} className="flex justify-between items-center cursor-pointer group">
+            <span className="font-poppins text-base text-[#44403B] group-hover:text-primary transition-colors">{cat.name}</span>
             <ChevronDown size={16} className="text-[#44403B] -rotate-90 group-hover:text-primary transition-transform" />
           </div>
         ))}

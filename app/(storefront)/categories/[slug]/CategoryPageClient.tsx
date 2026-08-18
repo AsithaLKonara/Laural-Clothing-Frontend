@@ -19,7 +19,7 @@ export default function CategoryPageClient() {
   // Format slug to readable name: "womens-tops" -> "Womens Tops"
   const categoryName = slug ? slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : 'Category';
 
-  const { data: response, isLoading } = useProducts({ skip, take }); // In the future, pass category: slug
+  const { data: response, isLoading } = useProducts({ skip, take, category: slug });
   const products = response?.data || [];
   const total = response?.meta.total || 0;
 

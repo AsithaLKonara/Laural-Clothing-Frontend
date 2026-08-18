@@ -11,7 +11,7 @@ export default function CategoryCard({ title, imageUrl, href }: CategoryCardProp
   return (
     <Link 
       href={href}
-      className="relative group block w-full h-[321px] overflow-hidden bg-stone-200 transition-transform duration-300 hover:scale-105"
+      className="relative group block w-full aspect-[3/4] md:aspect-[4/5] overflow-hidden bg-stone-200 transition-transform duration-300 hover:scale-105"
     >
       <Image
         src={imageUrl}

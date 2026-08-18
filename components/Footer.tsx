@@ -4,9 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Phone, Mail } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useCategories } from "@/hooks/useCategories";
 
 export default function Footer() {
   const pathname = usePathname();
+  const { data: response } = useCategories();
+  const categories = response?.data?.slice(0, 5) || []; // Show up to 5 categories
+  
   if (pathname === "/login") return null;
 
   return (
@@ -76,8 +80,8 @@ export default function Footer() {
             <div className="flex flex-col gap-[16px]">
               <h4 className="font-inter font-bold text-sm tracking-[0.02em] uppercase text-background">Categories</h4>
               <div className="flex flex-col gap-[10px]">
-                {["Pants", "Tops", "T-Shirts", "Shorts"].map(link => (
-                  <Link href="#" key={link} className="font-inter text-sm text-background/85 hover:text-white transition-colors">{link}</Link>
+                {categories.map(cat => (
+                  <Link href={`/categories/${cat.slug}`} key={cat.id} className="font-inter text-sm text-background/85 hover:text-white transition-colors">{cat.name}</Link>
                 ))}
               </div>
             </div>
