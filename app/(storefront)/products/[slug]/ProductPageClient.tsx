@@ -13,6 +13,8 @@ import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { useProductBySlug, useProducts } from "@/hooks/useProducts";
 import { Product } from "@/types/product";
+import { useCartStore } from "@/store/useCartStore";
+import { useAddToCart } from "@/hooks/useCart";
 
 const colorMap: Record<string, string> = {
   white: '#FFFFFF',
@@ -34,6 +36,9 @@ export default function ProductPageClient({ params }: { params: Promise<{ slug: 
   const { data: product, isLoading } = useProductBySlug(slug);
   const { data: relatedResponse } = useProducts({ skip: 0, take: 8 });
   const relatedProducts = relatedResponse?.data || [];
+  
+  const { sessionId, openDrawer } = useCartStore();
+  const addToCart = useAddToCart(sessionId);
 
   const [emblaRef] = useEmblaCarousel(
     { loop: true, align: "start", dragFree: true },
@@ -265,14 +270,26 @@ export default function ProductPageClient({ params }: { params: Promise<{ slug: 
             
             {/* Add to Cart */}
             <button 
-              disabled={!inStock}
+              onClick={() => {
+                if (selectedVariant) {
+                  addToCart.mutate(
+                    { variantId: selectedVariant.id, quantity: qty },
+                    {
+                      onSuccess: () => {
+                        openDrawer();
+                      }
+                    }
+                  );
+                }
+              }}
+              disabled={!inStock || addToCart.isPending}
               className={`flex-1 h-[44px] px-4 sm:px-8 rounded-sm font-poppins font-semibold text-sm text-white transition-colors uppercase tracking-wide whitespace-nowrap ${
                 inStock 
                   ? 'bg-primary hover:bg-stone-800' 
                   : 'bg-stone-400 cursor-not-allowed opacity-80'
               }`}
             >
-              {inStock ? 'Add to Cart' : 'Out of Stock'}
+              {addToCart.isPending ? 'Adding...' : inStock ? 'Add to Cart' : 'Out of Stock'}
             </button>
           </div>
 
