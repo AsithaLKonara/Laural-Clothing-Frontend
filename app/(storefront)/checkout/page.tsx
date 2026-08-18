@@ -10,6 +10,10 @@ import LoyaltyPointsModal from "@/components/LoyaltyPointsModal";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { checkoutSchema, CheckoutFormData } from "@/lib/validations";
+import { useCartStore } from "@/store/useCartStore";
+import { useCart } from "@/hooks/useCart";
+import { useInitiateCheckout } from "@/hooks/useCheckout";
+import { useRouter } from "next/navigation";
 
 export default function CheckoutPage() {
   const {
@@ -34,9 +38,49 @@ export default function CheckoutPage() {
   const [isLoyaltyModalOpen, setIsLoyaltyModalOpen] = useState(false);
   const [appliedLoyaltyPoints, setAppliedLoyaltyPoints] = useState<number>(0);
 
+  const router = useRouter();
+  const { sessionId } = useCartStore();
+  const { data: cart, isLoading: isCartLoading } = useCart(sessionId);
+  const initiateCheckout = useInitiateCheckout(sessionId);
+
+  const cartItems = cart?.items || [];
+  const subtotal = cartItems.reduce((sum, item) => sum + (item.quantity * (item.variant.salePrice ?? item.variant.price)), 0);
+  const shippingFee = 400; // Flat fee for now
+  const total = subtotal + shippingFee - appliedLoyaltyPoints;
+
   const onSubmit = (data: CheckoutFormData) => {
-    console.log("Valid checkout data:", data);
-    // Proceed to payment gateway or success page
+    if (!cart?.id) return;
+    
+    initiateCheckout.mutate(
+      {
+        cartId: cart.id,
+        customer: {
+          phone: data.phone,
+          email: data.email,
+          firstName: data.fullName.split(' ')[0],
+          lastName: data.fullName.split(' ').slice(1).join(' '),
+        },
+        shippingAddress: {
+          firstName: data.fullName.split(' ')[0],
+          lastName: data.fullName.split(' ').slice(1).join(' '),
+          addressLine1: data.addressLine1,
+          addressLine2: data.addressLine2,
+          city: data.city,
+          phone: data.phone,
+        },
+        paymentMethod: data.paymentMethod,
+      },
+      {
+        onSuccess: (order) => {
+          // In a real app, if payment method is not COD, redirect to payment gateway here
+          router.push(`/checkout/success?orderNumber=${order.orderNumber}`);
+        },
+        onError: (error) => {
+          console.error("Checkout failed:", error);
+          alert("Checkout failed. Please try again.");
+        }
+      }
+    );
   };
 
   return (
@@ -266,9 +310,10 @@ export default function CheckoutPage() {
             <div className="flex lg:hidden w-full pt-4">
                <button 
                 type="submit"
-                className="w-full h-[54px] flex justify-center items-center bg-primary hover:bg-stone-800 transition-colors rounded-full font-poppins font-semibold text-sm text-white uppercase tracking-widest"
+                disabled={initiateCheckout.isPending || cartItems.length === 0}
+                className="w-full h-[54px] flex justify-center items-center bg-primary hover:bg-stone-800 transition-colors rounded-full font-poppins font-semibold text-sm text-white uppercase tracking-widest disabled:opacity-50"
               >
-                Place Order
+                {initiateCheckout.isPending ? "Processing..." : "Place Order"}
               </button>
             </div>
             
@@ -284,37 +329,45 @@ export default function CheckoutPage() {
 
           {/* Cart Items */}
           <div className="flex flex-col w-full gap-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-            {/* Mock Cart Item 1 */}
-            <div className="flex flex-row items-center w-full p-3 bg-white border border-stone-200 rounded-xl shadow-sm gap-4">
-              <div className="w-[70px] h-[70px] relative bg-stone-100 rounded-lg overflow-hidden shrink-0">
-                <Image src="/DSC06483-640x800.jpg" alt="Vesper Long Sleeve Top" fill className="object-cover object-top" />
-              </div>
-              <div className="flex flex-col flex-1 justify-center gap-1">
-                <h4 className="font-poppins font-medium text-xs text-primary leading-tight">
-                  Vesper Long Sleeve Top – Pink
-                </h4>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="font-poppins text-xs text-stone-500">UK : 08</span>
-                  <span className="font-poppins font-medium text-xs text-primary">1 × Rs: 2190.00</span>
+            {isCartLoading ? (
+              <p className="text-stone-500 font-poppins text-sm">Loading cart...</p>
+            ) : cartItems.length === 0 ? (
+              <p className="text-stone-500 font-poppins text-sm">Your cart is empty.</p>
+            ) : (
+              cartItems.map((item) => (
+                <div key={item.id} className="flex flex-row items-center w-full p-3 bg-white border border-stone-200 rounded-xl shadow-sm gap-4">
+                  <div className="w-[70px] h-[70px] relative bg-stone-100 rounded-lg overflow-hidden shrink-0">
+                    {(() => {
+                      let allImages: string[] = [];
+                      if (item.variant.product?.variants) {
+                        for (const v of item.variant.product.variants) {
+                          if (v.featuredImage) allImages.push(v.featuredImage);
+                          if (v.gallery) allImages.push(...v.gallery);
+                        }
+                      } else {
+                        if (item.variant.featuredImage) allImages.push(item.variant.featuredImage);
+                        if (item.variant.gallery) allImages.push(...item.variant.gallery);
+                      }
+                      
+                      const imgUrl = allImages[0] || "/products/default.jpg";
+                      
+                      return (
+                        <Image src={imgUrl} alt={item.variant.product.name} fill className="object-cover object-top" />
+                      );
+                    })()}
+                  </div>
+                  <div className="flex flex-col flex-1 justify-center gap-1">
+                    <h4 className="font-poppins font-medium text-xs text-primary leading-tight">
+                      {item.variant.product.name}
+                    </h4>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="font-poppins text-xs text-stone-500">{item.variant.name}</span>
+                      <span className="font-poppins font-medium text-xs text-primary">{item.quantity} × Rs: {(item.variant.salePrice ?? item.variant.price).toLocaleString()}</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Mock Cart Item 2 */}
-            <div className="flex flex-row items-center w-full p-3 bg-white border border-stone-200 rounded-xl shadow-sm gap-4">
-              <div className="w-[70px] h-[70px] relative bg-stone-100 rounded-lg overflow-hidden shrink-0">
-                <Image src="/DSC03204-scaled.jpg" alt="Basic White Tee" fill className="object-cover object-top" />
-              </div>
-              <div className="flex flex-col flex-1 justify-center gap-1">
-                <h4 className="font-poppins font-medium text-xs text-primary leading-tight">
-                  Basic White Tee
-                </h4>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="font-poppins text-xs text-stone-500">UK : 10</span>
-                  <span className="font-poppins font-medium text-xs text-primary">2 × Rs: 1500.00</span>
-                </div>
-              </div>
-            </div>
+              ))
+            )}
           </div>
 
           {/* Discount Code */}
@@ -347,21 +400,21 @@ export default function CheckoutPage() {
           <div className="flex flex-col w-full gap-3 py-6 border-y border-stone-200">
             <div className="flex justify-between items-center w-full">
               <span className="font-poppins text-sm text-stone-500">Subtotal</span>
-              <span className="font-poppins font-medium text-sm text-primary">Rs. 5190.00</span>
+              <span className="font-poppins font-medium text-sm text-primary">Rs. {subtotal.toLocaleString()}</span>
             </div>
             <div className="flex justify-between items-center w-full">
               <span className="font-poppins text-sm text-stone-500">Shipping</span>
-              <span className="font-poppins font-medium text-sm text-primary">Rs. 350.00</span>
+              <span className="font-poppins font-medium text-sm text-primary">Rs. {shippingFee.toLocaleString()}</span>
             </div>
             {appliedLoyaltyPoints > 0 && (
               <div className="flex justify-between items-center w-full">
                 <span className="font-poppins text-sm text-stone-500">Loyalty Points ({appliedLoyaltyPoints})</span>
-                <span className="font-poppins font-medium text-sm text-emerald-600">-Rs. {appliedLoyaltyPoints}.00</span>
+                <span className="font-poppins font-medium text-sm text-emerald-600">-Rs. {appliedLoyaltyPoints.toLocaleString()}</span>
               </div>
             )}
             <div className="flex justify-between items-center w-full mt-2 pt-4 border-t border-stone-100">
               <span className="font-poppins font-semibold text-base text-primary">Total</span>
-              <span className="font-poppins font-bold text-xl text-primary">Rs. {5540 - appliedLoyaltyPoints}.00</span>
+              <span className="font-poppins font-bold text-xl text-primary">Rs. {total.toLocaleString()}</span>
             </div>
           </div>
 
