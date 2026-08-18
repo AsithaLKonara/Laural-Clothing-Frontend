@@ -22,9 +22,9 @@ export default function InventoryAdjustmentModal({ type, onClose, onSuccess }: I
   const adjustMutation = useAdjustStock();
 
   // Live search inventory for SKU picker
-  const { data: searchResults } = useInventory({ search: skuSearch, limit: 8 });
+  const { data: searchResults } = useInventory(undefined, skuSearch, undefined, 1);
 
-  const selectedVariant = searchResults?.data?.find(v => v.variantId === variantId);
+  const selectedVariant = searchResults?.data?.find((v: any) => v.variantId === variantId);
 
   const handleSelectVariant = (v: any) => {
     setVariantId(v.variantId);
@@ -36,10 +36,10 @@ export default function InventoryAdjustmentModal({ type, onClose, onSuccess }: I
     if (!variantId) return;
     await adjustMutation.mutateAsync({
       variantId,
+      branchId: "BR-001",
       type: isReceive ? "RECEIVE" : "DEDUCT",
       quantity: qty,
       reason: isReceive ? supplierPo : reason,
-      reference: isReceive ? supplierPo : reason,
     });
     onSuccess();
   };
@@ -88,7 +88,7 @@ export default function InventoryAdjustmentModal({ type, onClose, onSuccess }: I
                   {(searchResults?.data ?? []).length === 0 ? (
                     <p className="p-3 text-sm text-stone-400 text-center">No results</p>
                   ) : (
-                    (searchResults?.data ?? []).map(v => (
+                    (searchResults?.data ?? []).map((v: any) => (
                       <button
                         key={v.variantId}
                         onClick={() => handleSelectVariant(v)}

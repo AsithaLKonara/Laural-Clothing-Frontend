@@ -21,8 +21,8 @@ export default function StockTransferModal({ onClose, onSuccess }: StockTransfer
   const [showDropdown, setShowDropdown] = useState(false);
 
   const createTransfer = useCreateTransfer();
-  const { data: searchResults } = useInventory({ search: skuSearch, limit: 8 });
-  const selectedVariant = searchResults?.data?.find(v => v.variantId === variantId);
+  const { data: searchResults } = useInventory(undefined, skuSearch, undefined, 1);
+  const selectedVariant = searchResults?.data?.find((v: any) => v.variantId === variantId);
 
   const handleSelectVariant = (v: any) => {
     setVariantId(v.variantId);
@@ -34,10 +34,9 @@ export default function StockTransferModal({ onClose, onSuccess }: StockTransfer
     if (!variantId || fromLocation === toLocation) return;
     await createTransfer.mutateAsync({
       variantId,
-      fromLocation,
-      toLocation,
+      fromBranchId: fromLocation,
+      toBranchId: toLocation,
       quantity: qty,
-      requestedBy: "Admin",
       notes,
     });
     onSuccess();
@@ -114,7 +113,7 @@ export default function StockTransferModal({ onClose, onSuccess }: StockTransfer
                   {(searchResults?.data ?? []).length === 0 ? (
                     <p className="p-3 text-sm text-stone-400 text-center">No results</p>
                   ) : (
-                    (searchResults?.data ?? []).map(v => (
+                    (searchResults?.data ?? []).map((v: any) => (
                       <button
                         key={v.variantId}
                         onClick={() => handleSelectVariant(v)}

@@ -40,6 +40,7 @@ export default function POSPage() {
 
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [cart, setCart] = useState<any[]>([]);
+  const [cartVouchers, setCartVouchers] = useState<{code: string, amount: number}[]>([]);
 
   const holdCurrentCart = () => {
     if (cart.length === 0) return;
@@ -89,7 +90,7 @@ export default function POSPage() {
     }).filter(item => item.qty > 0));
   };
 
-  const clearCart = () => setCart([]);
+  const clearCart = () => { setCart([]); setCartVouchers([]); };
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -110,6 +111,21 @@ export default function POSPage() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setSearchTerm(val);
+    if (val.startsWith("VCH-")) {
+      const parts = val.split('-');
+      if (parts.length >= 2) {
+        const amount = parseInt(parts[1]);
+        if (!isNaN(amount) && !cartVouchers.find(v => v.code === val)) {
+          setCartVouchers(prev => [...prev, { code: val, amount }]);
+          setSearchTerm("");
+        }
+      }
+    }
+  };
 
   const filteredProducts = products.filter((p: any) => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -225,7 +241,7 @@ export default function POSPage() {
                 <input 
                   type="text" 
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={handleSearchChange}
                   placeholder="Search products, scan barcode..."
                   className="w-full bg-background border border-border rounded-xl py-4 pl-12 pr-4 text-lg font-inter text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
                   autoFocus
@@ -391,6 +407,22 @@ export default function POSPage() {
 
               {/* Totals & Payment Actions */}
               <div className="border-t border-border bg-surface p-6 shrink-0 flex flex-col gap-4 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
+                
+                {cartVouchers.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    <span className="font-inter font-bold text-sm text-muted">Applied Vouchers</span>
+                    {cartVouchers.map(v => (
+                      <div key={v.code} className="flex justify-between items-center bg-emerald-50 text-emerald-800 px-3 py-2 rounded-lg border border-emerald-200">
+                        <span className="font-mono text-xs font-bold">{v.code}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="font-inter font-bold">-Rs. {v.amount.toLocaleString()}</span>
+                          <button onClick={() => setCartVouchers(prev => prev.filter(cv => cv.code !== v.code))} className="text-emerald-600 hover:text-emerald-900"><Trash2 size={14} /></button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <div className="mt-4">
                   <button 
                     onClick={() => setIsPaymentModalOpen(true)}
@@ -469,7 +501,7 @@ export default function POSPage() {
       )}
 
       {isVariantModalOpen && <VariantSelectionModal product={selectedProduct} onClose={() => setIsVariantModalOpen(false)} onAdd={addToCart} />}
-      {isPaymentModalOpen && <PaymentModal onClose={() => setIsPaymentModalOpen(false)} onSuccess={() => { setIsPaymentModalOpen(false); setIsSuccessModalOpen(true); }} total={cart.reduce((sum, item) => sum + (item.price * item.qty), 0).toFixed(2)} />}
+      {isPaymentModalOpen && <PaymentModal onClose={() => setIsPaymentModalOpen(false)} onSuccess={() => { setIsPaymentModalOpen(false); setIsSuccessModalOpen(true); }} total={Math.max(0, cart.reduce((sum, item) => sum + (item.price * item.qty), 0) - cartVouchers.reduce((sum, v) => sum + v.amount, 0)).toFixed(2)} />}
       {isCustomerModalOpen && <CustomerSelectionModal onClose={() => setIsCustomerModalOpen(false)} />}
       {isSuccessModalOpen && <OrderSuccessModal onClose={() => setIsSuccessModalOpen(false)} />}
 

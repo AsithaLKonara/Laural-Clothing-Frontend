@@ -12,6 +12,7 @@ interface PosShiftModalProps {
 export default function PosShiftModal({ mode, onClose, onSuccess }: PosShiftModalProps) {
   const [floatAmount, setFloatAmount] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const expectedCash = 25000; // Mock expected cash for closing shift
   const actualCash = Number(floatAmount) || 0;
@@ -21,9 +22,49 @@ export default function PosShiftModal({ mode, onClose, onSuccess }: PosShiftModa
     setIsProcessing(true);
     setTimeout(() => {
       setIsProcessing(false);
-      onSuccess(actualCash);
+      if (mode === "CLOSE") {
+        setIsSuccess(true);
+      } else {
+        onSuccess(actualCash);
+      }
     }, 1500);
   };
+
+  if (isSuccess && mode === "CLOSE") {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col p-8 items-center text-center">
+          <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-4">
+            <Lock size={32} />
+          </div>
+          <h2 className="font-inter font-bold text-2xl text-stone-900 mb-2">Shift Closed</h2>
+          <p className="text-stone-500 font-inter text-sm mb-6">Drawer balanced and sales recorded for the day.</p>
+          
+          <div className="w-full bg-stone-50 border border-stone-200 rounded-lg p-4 mb-6 flex flex-col gap-2 text-sm text-left font-inter">
+            <div className="flex justify-between"><span>Opening Cash</span><span>Rs. 5,000</span></div>
+            <div className="flex justify-between"><span>Total Sales</span><span>Rs. 20,000</span></div>
+            <div className="flex justify-between font-bold pt-2 border-t border-stone-200"><span>Variance</span><span className={variance < 0 ? "text-red-600" : "text-emerald-600"}>Rs. {variance.toLocaleString()}</span></div>
+          </div>
+
+          <button 
+            onClick={() => {
+              window.print();
+            }}
+            className="w-full py-3 bg-stone-900 text-white font-inter font-bold rounded-xl hover:bg-stone-800 transition-colors mb-3"
+          >
+            Print Day End Report
+          </button>
+          
+          <button 
+            onClick={() => onSuccess(actualCash)}
+            className="w-full py-3 bg-stone-100 text-stone-700 font-inter font-bold rounded-xl hover:bg-stone-200 transition-colors"
+          >
+            Finish & Log Out
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">

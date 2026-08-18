@@ -120,7 +120,7 @@ export default function BranchesPage() {
 
       {/* Branch Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {branches.filter(b => b.status === "Operational").map((branch) => (
+        {branches.filter((b: any) => b.status === "Operational").map((branch: any) => (
           <div key={branch.id} className="bg-white border border-stone-200 rounded-xl p-6 shadow-sm hover:shadow-md hover:border-stone-300 transition-all flex flex-col gap-4">
             <div className="flex items-start justify-between">
               <div>
