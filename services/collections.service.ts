@@ -5,6 +5,7 @@ export interface Collection {
   title: string;
   slug: string;
   description: string | null;
+  imageUrl: string | null;
   type: 'MANUAL' | 'AUTOMATED';
   status: string;
   rules: any;
