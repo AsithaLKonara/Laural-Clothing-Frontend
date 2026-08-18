@@ -1,17 +1,33 @@
 'use client';
 
-import { useState } from 'react';
-import { useBranches, useInventory, useTransfers, useAdjustStock, useCreateTransfer, useUpdateTransferStatus } from '@/hooks/useInventory';
+import { useState, useEffect } from 'react';
+import { useBranches, useInventory, useTransfers, useAdjustStock, useCreateTransfer, useUpdateTransferStatus, useInventoryStats } from '@/hooks/useInventory';
 import { Button } from '@/components/ui/Button';
+import StatCard from '@/components/dashboard/StatCard';
 
 export default function InventoryDashboard() {
   const [activeTab, setActiveTab] = useState<'STOCK' | 'TRANSFERS' | 'BRANCHES'>('STOCK');
   const [selectedBranchId, setSelectedBranchId] = useState<string>('');
   const [page, setPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+
+  // Debounce search
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setPage(1); // Reset page on new search
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
 
   const { data: branchesData, isLoading: branchesLoading } = useBranches();
-  const { data: inventoryData, isLoading: invLoading } = useInventory(selectedBranchId || undefined, undefined, page);
+  const { data: statsData } = useInventoryStats(selectedBranchId || undefined);
+  const { data: inventoryData, isLoading: invLoading } = useInventory(selectedBranchId || undefined, debouncedSearch, statusFilter, page);
   const { data: transfersData, isLoading: transfersLoading } = useTransfers();
+  
+  console.log("DEBUG statsData:", statsData);
 
   const adjustStockMutation = useAdjustStock();
   const updateTransferStatus = useUpdateTransferStatus();
@@ -21,11 +37,32 @@ export default function InventoryDashboard() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold">Inventory Dashboard</h1>
         {activeTab === 'STOCK' && (
+          <div className="flex space-x-3">
+            <input 
+              type="text" 
+              placeholder="Search SKU or Name..." 
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="border p-2 rounded"
+            />
+            <select 
+              value={statusFilter} 
+              onChange={e => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
+              className="border p-2 rounded"
+            >
+              <option value="">All Statuses</option>
+              <option value="instock">In Stock</option>
+              <option value="lowstock">Low Stock</option>
+              <option value="outofstock">Out of Stock</option>
+            </select>
             <select 
               value={selectedBranchId} 
               onChange={e => {
                 setSelectedBranchId(e.target.value);
-                setPage(1); // Reset page on branch change
+                setPage(1);
               }}
               className="border p-2 rounded"
             >
@@ -34,6 +71,7 @@ export default function InventoryDashboard() {
                 <option key={b.id} value={b.id}>{b.name}</option>
               ))}
             </select>
+          </div>
         )}
       </div>
 
@@ -42,6 +80,35 @@ export default function InventoryDashboard() {
         <button className={`pb-2 ${activeTab === 'TRANSFERS' ? 'border-b-2 border-black font-semibold' : 'text-gray-500'}`} onClick={() => setActiveTab('TRANSFERS')}>Stock Transfers</button>
         <button className={`pb-2 ${activeTab === 'BRANCHES' ? 'border-b-2 border-black font-semibold' : 'text-gray-500'}`} onClick={() => setActiveTab('BRANCHES')}>Branches</button>
       </div>
+
+      {activeTab === 'STOCK' && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <StatCard 
+            label="Total Items" 
+            value={statsData?.totalSKUs?.toString() || '0'} 
+            trend="Active variants" 
+            trendType="neutral" 
+          />
+          <StatCard 
+            label="Total Qty" 
+            value={statsData?.totalItems?.toLocaleString() || '0'} 
+            trend="Total units in stock" 
+            trendType="neutral" 
+          />
+          <StatCard 
+            label="Low Stock Alerts" 
+            value={statsData?.lowStockCount?.toString() || '0'} 
+            trend={statsData?.lowStockCount > 0 ? 'Requires attention' : 'All good'} 
+            trendType={statsData?.lowStockCount > 0 ? 'negative' : 'positive'} 
+          />
+          <StatCard 
+            label="Out of Stock" 
+            value={statsData?.outOfStockCount?.toString() || '0'} 
+            trend={statsData?.outOfStockCount > 0 ? 'Immediate action' : 'All good'} 
+            trendType={statsData?.outOfStockCount > 0 ? 'negative' : 'positive'} 
+          />
+        </div>
+      )}
 
       {activeTab === 'STOCK' && (
         <div className="bg-white rounded shadow overflow-hidden">
