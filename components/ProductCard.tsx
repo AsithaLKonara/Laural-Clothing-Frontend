@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Product } from "@/types/product";
+import { useCartStore } from "@/store/useCartStore";
+import { useAddToCart } from "@/hooks/useCart";
 
 interface ProductCardProps {
   product?: Product;
@@ -14,8 +16,10 @@ interface ProductCardProps {
 export default function ProductCard({ product, imageUrl = "/products/default.jpg" }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const router = useRouter();
+  const { sessionId, openDrawer } = useCartStore();
+  const addToCart = useAddToCart(sessionId);
 
-  const firstVariant = product?.variants?.[0];
+  const defaultVariant = product?.variants?.[0];
   const inStock = product?.variants?.some((v: any) => v.stockStatus === 'instock') ?? true;
   
   let allImages: string[] = [];
@@ -58,11 +62,14 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
   const title = product?.name || "Product Name";
   const productUrl = product?.slug ? `/products/${product.slug}` : "#";
   
-  const basePrice = firstVariant?.price || 0;
+  const basePrice = defaultVariant?.price || 0;
   
   // Format numbers exactly without / 100
   const currentPrice = basePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const oldPrice = basePrice > 0 ? (basePrice + 500).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"; 
+  const displaySalePrice = defaultVariant?.salePrice 
+    ? defaultVariant.salePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : null;
   const installment = (basePrice / 3).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const uniqueSizes = product?.variants 
     ? Array.from(new Set(product.variants.map((v: any) => v.size).filter(Boolean))).slice(0, 4)
@@ -125,11 +132,17 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
           
           {/* Add to Cart Button (Always Visible) */}
           <button 
-            disabled={!inStock}
+            disabled={!inStock || addToCart.isPending}
             onClick={(e) => {
               e.stopPropagation();
-              if (inStock) {
-                // Add to cart logic would go here
+              e.preventDefault();
+              if (inStock && defaultVariant) {
+                addToCart.mutate(
+                  { variantId: defaultVariant.id, quantity: 1 },
+                  {
+                    onSuccess: () => openDrawer(),
+                  }
+                );
               }
             }}
             className={`flex justify-center items-center w-full py-2.5 transition-colors pointer-events-auto ${
@@ -139,7 +152,7 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
             }`}
           >
             <span className="font-poppins font-medium text-[11px] text-white uppercase tracking-[0.1em]">
-              {inStock ? 'Add to cart' : 'Out of stock'}
+              {addToCart.isPending ? 'Adding...' : inStock ? 'Add to cart' : 'Out of stock'}
             </span>
           </button>
         </div>
