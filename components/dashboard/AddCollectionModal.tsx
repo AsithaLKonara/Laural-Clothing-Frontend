@@ -1,17 +1,77 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, Layers } from "lucide-react";
+import { useCreateCollection, useUpdateCollection } from "@/hooks/useAdminCollections";
+import { Collection } from "@/services/collections.service";
 
 interface AddCollectionModalProps {
   isOpen: boolean;
   onClose: () => void;
+  collectionToEdit?: Collection;
 }
 
-export default function AddCollectionModal({ isOpen, onClose }: AddCollectionModalProps) {
-  const [collectionType, setCollectionType] = useState<"Manual" | "Automated">("Manual");
+export default function AddCollectionModal({ isOpen, onClose, collectionToEdit }: AddCollectionModalProps) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [collectionType, setCollectionType] = useState<"MANUAL" | "AUTOMATED">("MANUAL");
+  
+  // Basic state for a single rule to demonstrate functionality
+  const [ruleField, setRuleField] = useState("price");
+  const [ruleOp, setRuleOp] = useState(">");
+  const [ruleVal, setRuleVal] = useState("");
+
+  const createMutation = useCreateCollection();
+  const updateMutation = useUpdateCollection();
+
+  useEffect(() => {
+    if (collectionToEdit && isOpen) {
+      setTitle(collectionToEdit.title || "");
+      setDescription(collectionToEdit.description || "");
+      setCollectionType(collectionToEdit.type || "MANUAL");
+      
+      const rules = collectionToEdit.rules;
+      if (Array.isArray(rules) && rules.length > 0) {
+        setRuleField(rules[0].field || "price");
+        setRuleOp(rules[0].operator || ">");
+        setRuleVal(rules[0].value || "");
+      }
+    } else if (isOpen) {
+      setTitle("");
+      setDescription("");
+      setCollectionType("MANUAL");
+      setRuleField("price");
+      setRuleOp(">");
+      setRuleVal("");
+    }
+  }, [collectionToEdit, isOpen]);
 
   if (!isOpen) return null;
+
+  const handleSave = async () => {
+    let rules: any[] = [];
+    if (collectionType === "AUTOMATED" && ruleVal.trim()) {
+      rules.push({ field: ruleField, operator: ruleOp, value: ruleVal });
+    }
+
+    const payload = {
+      title,
+      description,
+      type: collectionType,
+      rules: rules.length > 0 ? rules : undefined,
+    };
+
+    try {
+      if (collectionToEdit) {
+        await updateMutation.mutateAsync({ id: collectionToEdit.id, data: payload });
+      } else {
+        await createMutation.mutateAsync(payload);
+      }
+      onClose();
+    } catch (e) {
+      console.error("Failed to save collection", e);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -24,7 +84,7 @@ export default function AddCollectionModal({ isOpen, onClose }: AddCollectionMod
         <div className="flex items-center justify-between p-6 border-b border-stone-200 bg-stone-50 shrink-0">
           <div>
             <h2 className="font-inter font-bold text-xl text-stone-900 flex items-center gap-2">
-              <Layers className="text-stone-700" size={24} /> Create Collection
+              <Layers className="text-stone-700" size={24} /> {collectionToEdit ? "Edit Collection" : "Create Collection"}
             </h2>
             <p className="font-inter text-sm text-stone-500 mt-1">Organize products into thematic groups.</p>
           </div>
@@ -38,6 +98,8 @@ export default function AddCollectionModal({ isOpen, onClose }: AddCollectionMod
             <label className="font-inter text-sm font-semibold text-stone-700">Collection Title <span className="text-red-500">*</span></label>
             <input 
               type="text" 
+              value={title}
+              onChange={e => setTitle(e.target.value)}
               placeholder="e.g. Summer 2026, Best Sellers"
               className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm font-inter outline-none focus:ring-2 focus:ring-stone-900 bg-white"
             />
@@ -47,6 +109,8 @@ export default function AddCollectionModal({ isOpen, onClose }: AddCollectionMod
             <label className="font-inter text-sm font-semibold text-stone-700">Description</label>
             <textarea 
               rows={3}
+              value={description}
+              onChange={e => setDescription(e.target.value)}
               placeholder="Optional description for your internal reference or SEO."
               className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm font-inter outline-none focus:ring-2 focus:ring-stone-900 bg-white resize-none"
             />
@@ -56,37 +120,49 @@ export default function AddCollectionModal({ isOpen, onClose }: AddCollectionMod
             <label className="font-inter text-sm font-semibold text-stone-700">Collection Type</label>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label className={`relative flex flex-col p-4 border rounded-xl cursor-pointer transition-all ${collectionType === 'Manual' ? 'border-stone-900 bg-stone-50 ring-1 ring-stone-900' : 'border-stone-200 hover:border-stone-400'}`}>
-                <input type="radio" name="collection_type" value="Manual" checked={collectionType === 'Manual'} onChange={() => setCollectionType('Manual')} className="sr-only" />
+              <label className={`relative flex flex-col p-4 border rounded-xl cursor-pointer transition-all ${collectionType === 'MANUAL' ? 'border-stone-900 bg-stone-50 ring-1 ring-stone-900' : 'border-stone-200 hover:border-stone-400'}`}>
+                <input type="radio" name="collection_type" value="MANUAL" checked={collectionType === 'MANUAL'} onChange={() => setCollectionType('MANUAL')} className="sr-only" />
                 <span className="font-inter font-bold text-sm text-stone-900 mb-1">Manual</span>
                 <span className="font-inter text-xs text-stone-500">You will manually select which products belong in this collection.</span>
               </label>
 
-              <label className={`relative flex flex-col p-4 border rounded-xl cursor-pointer transition-all ${collectionType === 'Automated' ? 'border-stone-900 bg-stone-50 ring-1 ring-stone-900' : 'border-stone-200 hover:border-stone-400'}`}>
-                <input type="radio" name="collection_type" value="Automated" checked={collectionType === 'Automated'} onChange={() => setCollectionType('Automated')} className="sr-only" />
+              <label className={`relative flex flex-col p-4 border rounded-xl cursor-pointer transition-all ${collectionType === 'AUTOMATED' ? 'border-stone-900 bg-stone-50 ring-1 ring-stone-900' : 'border-stone-200 hover:border-stone-400'}`}>
+                <input type="radio" name="collection_type" value="AUTOMATED" checked={collectionType === 'AUTOMATED'} onChange={() => setCollectionType('AUTOMATED')} className="sr-only" />
                 <span className="font-inter font-bold text-sm text-stone-900 mb-1">Automated</span>
                 <span className="font-inter text-xs text-stone-500">Products are automatically added based on rules (e.g. tags, price).</span>
               </label>
             </div>
           </div>
           
-          {collectionType === 'Automated' && (
+          {collectionType === 'AUTOMATED' && (
             <div className="flex flex-col gap-3 p-4 bg-stone-50 border border-stone-200 rounded-xl animate-in fade-in slide-in-from-top-2">
               <label className="font-inter text-sm font-semibold text-stone-700">Conditions</label>
               <div className="flex items-center gap-3">
-                <select className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900 bg-white">
-                  <option>Product Tag</option>
-                  <option>Price</option>
-                  <option>Inventory Stock</option>
+                <select 
+                  value={ruleField}
+                  onChange={e => setRuleField(e.target.value)}
+                  className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900 bg-white"
+                >
+                  <option value="price">Price</option>
+                  <option value="tag" disabled>Product Tag (Coming Soon)</option>
                 </select>
-                <select className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900 bg-white">
-                  <option>is equal to</option>
-                  <option>is not equal to</option>
-                  <option>is greater than</option>
+                <select 
+                  value={ruleOp}
+                  onChange={e => setRuleOp(e.target.value)}
+                  className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900 bg-white"
+                >
+                  <option value="=">is equal to</option>
+                  <option value="<">is less than</option>
+                  <option value=">">is greater than</option>
                 </select>
-                <input type="text" placeholder="Value" className="flex-1 border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900 bg-white" />
+                <input 
+                  type="text" 
+                  value={ruleVal}
+                  onChange={e => setRuleVal(e.target.value)}
+                  placeholder="e.g. 50" 
+                  className="flex-1 border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900 bg-white" 
+                />
               </div>
-              <button className="text-left font-inter text-sm font-medium text-stone-600 hover:text-stone-900 mt-1 w-fit transition-colors">+ Add another condition</button>
             </div>
           )}
 
@@ -96,8 +172,12 @@ export default function AddCollectionModal({ isOpen, onClose }: AddCollectionMod
           <button onClick={onClose} className="px-5 py-2.5 bg-white border border-stone-200 text-stone-700 font-inter font-medium text-sm rounded-lg hover:bg-stone-50 transition-colors shadow-sm">
             Cancel
           </button>
-          <button onClick={onClose} className="px-8 py-2.5 bg-stone-900 text-white font-inter font-medium text-sm rounded-lg hover:bg-stone-800 transition-colors shadow-sm flex items-center gap-2">
-            Create Collection
+          <button 
+            onClick={handleSave} 
+            disabled={!title.trim() || createMutation.isPending || updateMutation.isPending}
+            className="px-8 py-2.5 bg-stone-900 text-white font-inter font-medium text-sm rounded-lg hover:bg-stone-800 transition-colors shadow-sm flex items-center gap-2 disabled:opacity-50"
+          >
+            {createMutation.isPending || updateMutation.isPending ? "Saving..." : "Save Collection"}
           </button>
         </div>
       </div>

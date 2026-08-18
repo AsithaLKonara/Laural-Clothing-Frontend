@@ -1,24 +1,29 @@
+"use client";
 import Link from "next/link";
 import Image from "next/image";
-
-const CURATED_COLLECTIONS = [
-  { 
-    id: 1, 
-    title: "Summer 2026", 
-    subtitle: "Lightweight essentials for the modern escapist.",
-    imageUrl: "/hero-image/hero-3.jpg", 
-    href: "/collections/summer-2026" 
-  },
-  { 
-    id: 2, 
-    title: "The Evening Edit", 
-    subtitle: "Refined silhouettes for after dark.",
-    imageUrl: "/hero-image/hero-2.jpg", 
-    href: "/collections/the-evening-edit" 
-  }
-];
+import { useCollections } from "@/hooks/useCollections";
 
 export default function CuratedCollectionsSection() {
+  const { data: response, isLoading } = useCollections();
+  const collections = response?.data || [];
+  
+  // Show max 2 collections for this specific layout
+  const displayCollections = collections.slice(0, 2);
+
+  // Fallback images if collection doesn't have an image field yet
+  const fallbacks = [
+    "/hero-image/hero-3.jpg",
+    "/hero-image/hero-2.jpg",
+  ];
+
+  if (isLoading) {
+    return <div className="w-full h-40 bg-stone-50 animate-pulse" />;
+  }
+
+  if (displayCollections.length === 0) {
+    return null; // hide section if no collections
+  }
+
   return (
     <section className="w-full h-auto px-4 md:px-8 lg:px-[120px] py-10 md:py-[60px] bg-stone-50">
       <div className="flex flex-col items-center text-center mb-10 w-full max-w-[1280px] mx-auto">
@@ -32,14 +37,15 @@ export default function CuratedCollectionsSection() {
       </div>
 
       <div className="max-w-[1280px] mx-auto w-full flex flex-col md:flex-row gap-4 md:gap-6">
-        {CURATED_COLLECTIONS.map((collection) => (
+        {displayCollections.map((collection, idx) => (
           <Link 
             key={collection.id} 
-            href={collection.href}
+            href={`/collections/${collection.slug}`}
             className="group relative w-full md:w-1/2 aspect-[4/5] md:aspect-square lg:aspect-[4/3] overflow-hidden rounded-sm"
           >
             <Image 
-              src={collection.imageUrl} 
+              // We'll use fallback images until we add image upload for collections
+              src={fallbacks[idx % fallbacks.length]} 
               alt={collection.title}
               fill
               className="object-cover transition-transform duration-1000 group-hover:scale-105"
@@ -54,7 +60,7 @@ export default function CuratedCollectionsSection() {
                 {collection.title}
               </h3>
               <p className="font-poppins text-sm md:text-base text-stone-200 font-light mb-6 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 delay-100">
-                {collection.subtitle}
+                {collection.description || `Explore our ${collection.title} collection.`}
               </p>
               
               <div className="overflow-hidden">

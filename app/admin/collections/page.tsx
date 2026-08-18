@@ -6,24 +6,50 @@ import DataTable from "@/components/dashboard/DataTable";
 import { StatusBadge } from "@/components/dashboard/Badges";
 import FilterBar from "@/components/dashboard/FilterBar";
 import AddCollectionModal from "@/components/dashboard/AddCollectionModal";
+import { useAdminCollections, useDeleteCollection } from "@/hooks/useAdminCollections";
+import { Collection } from "@/services/collections.service";
 
 export default function CollectionsPage() {
   const [modalOpen, setModalOpen] = useState(false);
+  const [collectionToEdit, setCollectionToEdit] = useState<Collection | undefined>(undefined);
 
-  const collections = [
-    { id: "COL-001", name: "Summer 2026", slug: "summer-2026", type: "Manual", products: 24, status: "Active" },
-    { id: "COL-002", name: "Best Sellers", slug: "best-sellers", type: "Automated", products: 10, status: "Active" },
-    { id: "COL-003", name: "New Arrivals", slug: "new-arrivals", type: "Automated", products: 15, status: "Active" },
-    { id: "COL-004", name: "Clearance Sale", slug: "clearance-sale", type: "Manual", products: 42, status: "Active" },
-    { id: "COL-005", name: "Winter 2026", slug: "winter-2026", type: "Manual", products: 0, status: "Draft" },
-  ];
+  const { data: response } = useAdminCollections();
+  const collections = response?.data || [];
+  const deleteCollectionMutation = useDeleteCollection();
+
+  const handleEdit = (collection: Collection) => {
+    setCollectionToEdit(collection);
+    setModalOpen(true);
+  };
+
+  const handleAdd = () => {
+    setCollectionToEdit(undefined);
+    setModalOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm("Are you sure you want to delete this collection?")) {
+      await deleteCollectionMutation.mutateAsync(id);
+    }
+  };
 
   const columns = [
-    { header: "ID", accessor: "id" as const, className: "font-mono text-stone-500 text-xs" },
-    { header: "Collection Name", accessor: "name" as const, className: "font-semibold text-stone-900" },
+    { header: "ID", accessor: (row: any) => row.id.substring(0, 8), className: "font-mono text-stone-500 text-xs" },
+    { 
+      header: "Collection Title", 
+      accessor: (row: any) => (
+        <button onClick={() => handleEdit(row)} className="font-semibold text-stone-900 hover:text-accent transition-colors text-left">
+          {row.title}
+        </button>
+      )
+    },
     { header: "Slug", accessor: "slug" as const, className: "font-mono text-xs text-stone-500" },
-    { header: "Type", accessor: "type" as const, className: "text-stone-600 font-inter text-sm" },
-    { header: "Products", accessor: "products" as const, className: "font-bold text-stone-800" },
+    { 
+      header: "Type", 
+      accessor: (row: any) => row.type.charAt(0) + row.type.slice(1).toLowerCase(), 
+      className: "text-stone-600 font-inter text-sm" 
+    },
+    { header: "Products", accessor: (row: any) => row._count?.products || 0, className: "font-bold text-stone-800" },
     {
       header: "Status",
       accessor: (row: any) => (
@@ -34,9 +60,9 @@ export default function CollectionsPage() {
       header: "Actions",
       accessor: (row: any) => (
         <div className="flex items-center gap-2">
-          <button className="text-xs text-blue-600 hover:underline font-medium">Edit</button>
+          <button onClick={() => handleEdit(row)} className="text-xs text-blue-600 hover:underline font-medium">Edit</button>
           <span className="text-stone-300">·</span>
-          <button className="text-xs text-red-500 hover:underline font-medium">Delete</button>
+          <button onClick={() => handleDelete(row.id)} disabled={deleteCollectionMutation.isPending} className="text-xs text-red-500 hover:underline font-medium disabled:opacity-50">Delete</button>
         </div>
       ),
     },
@@ -55,7 +81,7 @@ export default function CollectionsPage() {
         <option>Automated</option>
       </select>
       <button 
-        onClick={() => setModalOpen(true)}
+        onClick={handleAdd}
         className="bg-stone-900 text-white hover:bg-stone-800 active:scale-95 px-5 py-2 rounded-lg font-inter text-sm font-semibold transition-all whitespace-nowrap ml-auto shadow-md shadow-stone-900/20 flex items-center gap-2"
       >
         + Add Collection
@@ -73,10 +99,10 @@ export default function CollectionsPage() {
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: "Total Collections", value: "5" },
-          { label: "Active", value: "4" },
-          { label: "Draft", value: "1" },
-          { label: "Automated", value: "2" },
+          { label: "Total Collections", value: collections.length.toString() },
+          { label: "Active", value: collections.filter(c => c.status === 'Active').length.toString() },
+          { label: "Draft", value: collections.filter(c => c.status === 'Draft').length.toString() },
+          { label: "Automated", value: collections.filter(c => c.type === 'AUTOMATED').length.toString() },
         ].map((s) => (
           <div key={s.label} className="bg-white border border-stone-200 rounded-xl p-5 shadow-sm">
             <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider font-inter">{s.label}</p>
@@ -96,7 +122,11 @@ export default function CollectionsPage() {
         />
       </div>
       
-      <AddCollectionModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+      <AddCollectionModal 
+        isOpen={modalOpen} 
+        onClose={() => setModalOpen(false)} 
+        collectionToEdit={collectionToEdit}
+      />
     </div>
   );
 }
