@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/Button';
 export default function InventoryDashboard() {
   const [activeTab, setActiveTab] = useState<'STOCK' | 'TRANSFERS' | 'BRANCHES'>('STOCK');
   const [selectedBranchId, setSelectedBranchId] = useState<string>('');
+  const [page, setPage] = useState(1);
 
   const { data: branchesData, isLoading: branchesLoading } = useBranches();
-  const { data: inventoryData, isLoading: invLoading } = useInventory(selectedBranchId || undefined);
+  const { data: inventoryData, isLoading: invLoading } = useInventory(selectedBranchId || undefined, undefined, page);
   const { data: transfersData, isLoading: transfersLoading } = useTransfers();
 
   const adjustStockMutation = useAdjustStock();
@@ -20,16 +21,19 @@ export default function InventoryDashboard() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold">Inventory Dashboard</h1>
         {activeTab === 'STOCK' && (
-          <select 
-            value={selectedBranchId} 
-            onChange={e => setSelectedBranchId(e.target.value)}
-            className="border p-2 rounded"
-          >
-            <option value="">All Branches</option>
-            {branchesData?.map((b: any) => (
-              <option key={b.id} value={b.id}>{b.name}</option>
-            ))}
-          </select>
+            <select 
+              value={selectedBranchId} 
+              onChange={e => {
+                setSelectedBranchId(e.target.value);
+                setPage(1); // Reset page on branch change
+              }}
+              className="border p-2 rounded"
+            >
+              <option value="">All Branches</option>
+              {branchesData?.map((b: any) => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
         )}
       </div>
 
@@ -86,6 +90,33 @@ export default function InventoryDashboard() {
                 ))}
               </tbody>
             </table>
+          )}
+          
+          {/* Pagination Controls */}
+          {inventoryData?.meta && (
+            <div className="flex items-center justify-between p-4 border-t">
+              <span className="text-sm text-gray-500">
+                Page {inventoryData.meta.page} of {inventoryData.meta.totalPages} (Total: {inventoryData.meta.total})
+              </span>
+              <div className="flex space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  Previous
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setPage(p => p + 1)}
+                  disabled={page >= inventoryData.meta.totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
           )}
         </div>
       )}

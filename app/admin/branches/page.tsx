@@ -4,50 +4,21 @@ import PageHeader from "@/components/dashboard/PageHeader";
 import { StatusBadge } from "@/components/dashboard/Badges";
 import StatCard from "@/components/dashboard/StatCard";
 import DataTable from "@/components/dashboard/DataTable";
+import { useBranches } from "@/hooks/useInventory";
 
 export default function BranchesPage() {
-  const branches = [
-    {
-      id: "BR-001",
-      name: "Colombo Main",
-      location: "Colombo 03",
-      manager: "Nimal Fernando",
-      terminals: 3,
-      staff: 12,
-      status: "Operational",
-      revenue: "Rs. 1.24M",
-    },
-    {
-      id: "BR-002",
-      name: "Kandy",
-      location: "Kandy City Centre",
-      manager: "Kasun Perera",
-      terminals: 2,
-      staff: 8,
-      status: "Operational",
-      revenue: "Rs. 840K",
-    },
-    {
-      id: "BR-003",
-      name: "Gampaha",
-      location: "Gampaha Town",
-      manager: "Dilshan Silva",
-      terminals: 1,
-      staff: 5,
-      status: "Operational",
-      revenue: "Rs. 610K",
-    },
-    {
-      id: "BR-004",
-      name: "Negombo",
-      location: "Negombo",
-      manager: "—",
-      terminals: 0,
-      staff: 0,
-      status: "Coming Soon",
-      revenue: "—",
-    },
-  ];
+  const { data: realBranches, isLoading } = useBranches();
+
+  const branches = realBranches?.map((b: any) => ({
+    id: b.code,
+    name: b.name,
+    location: b.address || "Unknown",
+    manager: "N/A", // To be implemented with Users
+    terminals: 0,
+    staff: 0,
+    status: b.isActive ? "Operational" : "Inactive",
+    revenue: "Rs. 0",
+  })) || [];
 
   const columns = [
     { header: "ID", accessor: "id" as const, className: "font-mono text-stone-500 text-xs" },
@@ -139,15 +110,20 @@ export default function BranchesPage() {
       </div>
 
       {/* Full Data Table */}
-      <div className="bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden mb-8">
         <div className="px-6 py-4 bg-stone-50 border-b border-stone-200 flex items-center justify-between">
           <h3 className="font-inter font-bold text-stone-900">All Branches</h3>
         </div>
-        <DataTable
-          data={branches}
-          columns={columns}
-          keyExtractor={(row) => row.id}
-        />
+        {isLoading ? (
+          <div className="p-8 text-center text-stone-500">Loading branches...</div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={branches}
+            keyExtractor={(row) => row.id}
+            onRowClick={(row) => console.log("Branch selected:", row)}
+          />
+        )}
       </div>
     </div>
   );

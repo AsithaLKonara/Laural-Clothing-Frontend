@@ -13,13 +13,14 @@ export const useBranches = () => {
 };
 
 // --- Inventory ---
-export const useInventory = (branchId?: string, search?: string) => {
+export const useInventory = (branchId?: string, search?: string, page: number = 1) => {
   return useQuery({
-    queryKey: ['inventory', branchId, search],
+    queryKey: ['inventory', branchId, search, page],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (branchId) params.append('branchId', branchId);
       if (search) params.append('search', search);
+      params.append('page', page.toString());
       const res = await api.get(`/inventory?${params.toString()}`);
       return res.data;
     },
