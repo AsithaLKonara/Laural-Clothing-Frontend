@@ -114,18 +114,6 @@ export default function CategoryFormModal({ isOpen, onClose, categoryToEdit }: C
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="font-inter text-xs font-semibold text-stone-700">Status</label>
-            <select 
-              value={status} 
-              onChange={e => setStatus(e.target.value)} 
-              className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all font-inter bg-white"
-            >
-              <option value="Active">Active</option>
-              <option value="Draft">Draft</option>
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-2">
             <label className="font-inter text-xs font-semibold text-stone-700">Description</label>
             <textarea
               value={description}
@@ -134,15 +122,6 @@ export default function CategoryFormModal({ isOpen, onClose, categoryToEdit }: C
               placeholder="Brief description for internal use and SEO..."
               className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all font-inter resize-none"
             />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label className="font-inter text-xs font-semibold text-stone-700">Category Cover Image</label>
-            <label className="h-32 border-2 border-dashed border-stone-300 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-stone-50 hover:border-accent transition-all group">
-              <ImagePlus size={24} className="text-stone-400 group-hover:text-accent transition-colors" />
-              <span className="font-inter text-xs text-stone-500 group-hover:text-accent transition-colors font-medium">Click to upload image</span>
-              <input type="file" accept="image/*" className="hidden" />
-            </label>
           </div>
 
         </div>
