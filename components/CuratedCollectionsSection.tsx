@@ -37,15 +37,16 @@ export default function CuratedCollectionsSection() {
       </div>
 
       <div className="max-w-[1280px] mx-auto w-full flex flex-col md:flex-row gap-4 md:gap-6">
-        {displayCollections.map((collection, idx) => (
+        {displayCollections.map((collection, idx) => {
+          const img = collection.imageUrl || fallbacks[idx % fallbacks.length];
+          return (
           <Link 
             key={collection.id} 
             href={`/collections/${collection.slug}`}
             className="group relative w-full md:w-1/2 aspect-[4/5] md:aspect-square lg:aspect-[4/3] overflow-hidden rounded-sm"
           >
             <Image 
-              // We'll use fallback images until we add image upload for collections
-              src={fallbacks[idx % fallbacks.length]} 
+              src={img}
               alt={collection.title}
               fill
               className="object-cover transition-transform duration-1000 group-hover:scale-105"
@@ -54,7 +55,7 @@ export default function CuratedCollectionsSection() {
             {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500" />
             
-            {/* Content Content */}
+            {/* Content */}
             <div className="absolute inset-0 p-8 md:p-12 flex flex-col justify-end">
               <h3 className="font-signature text-3xl md:text-4xl text-white tracking-wider mb-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
                 {collection.title}
@@ -70,7 +71,8 @@ export default function CuratedCollectionsSection() {
               </div>
             </div>
           </Link>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
