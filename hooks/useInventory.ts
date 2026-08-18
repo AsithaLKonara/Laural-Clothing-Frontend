@@ -12,6 +12,45 @@ export const useBranches = () => {
   });
 };
 
+export const useCreateBranch = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { name: string, code: string, address?: string, phone?: string, type?: string, isActive?: boolean }) => {
+      const res = await api.post('/inventory/branches', data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['branches'] });
+    },
+  });
+};
+
+export const useUpdateBranch = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string, data: any }) => {
+      const res = await api.put(`/inventory/branches/${id}`, data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['branches'] });
+    },
+  });
+};
+
+export const useDeleteBranch = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.delete(`/inventory/branches/${id}`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['branches'] });
+    },
+  });
+};
+
 // --- Inventory ---
 export const useInventory = (branchId?: string, search?: string, status?: string, page: number = 1) => {
   return useQuery({
