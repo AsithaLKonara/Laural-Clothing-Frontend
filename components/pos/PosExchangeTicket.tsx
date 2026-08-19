@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { X, CheckCircle2, Trash2, Search, MinusCircle } from "lucide-react";
+import { useGenerateVoucher } from "@/hooks/usePos";
 
 interface PosExchangeTicketProps {
   isMobileCartOpen: boolean;
@@ -38,14 +39,23 @@ export default function PosExchangeTicket({ isMobileCartOpen, setIsMobileCartOpe
   };
 
   const returnTotal = returnedItems.reduce((acc, item) => acc + (item.price * item.qty), 0);
+  const generateVoucherMutation = useGenerateVoucher();
 
-  const handleProcess = () => {
+  const handleProcess = async () => {
     setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      setVoucherCode(`VCH-${returnTotal}-${Math.floor(Math.random() * 10000)}`);
+    try {
+      const result = await generateVoucherMutation.mutateAsync({
+        branchId: "BR-001", // Hardcoded for now
+        returnedItems: returnedItems,
+        value: returnTotal
+      });
+      setVoucherCode(result.code);
       setSuccess(true);
-    }, 1500);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (success) {

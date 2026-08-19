@@ -17,12 +17,16 @@ import Link from "next/link";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { useRouter } from "next/navigation";
+import { useProcessPosOrder, useCurrentSession, useValidateVoucher } from "@/hooks/usePos";
 
 export default function POSPage() {
   const router = useRouter();
   const session = { user: { name: "Mock User" } }; // Mock session
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [posMode, setPosMode] = useState<"SALES" | "RETURNS" | "DISPATCH" | "EXCHANGE">("SALES");
+  
+  const { data: activeSession } = useCurrentSession("TERM-001");
+  const processOrderMutation = useProcessPosOrder();
   
   // Modal states
   const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
@@ -112,16 +116,21 @@ export default function POSPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const validateVoucherMutation = useValidateVoucher();
+
+  const handleSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setSearchTerm(val);
-    if (val.startsWith("VCH-")) {
-      const parts = val.split('-');
-      if (parts.length >= 2) {
-        const amount = parseInt(parts[1]);
-        if (!isNaN(amount) && !cartVouchers.find(v => v.code === val)) {
-          setCartVouchers(prev => [...prev, { code: val, amount }]);
+    
+    // Barcode scanners usually end with enter, or we can check length
+    if (val.startsWith("VCH-") && val.length > 8) {
+      if (!cartVouchers.find(v => v.code === val)) {
+        try {
+          const voucher = await validateVoucherMutation.mutateAsync(val);
+          setCartVouchers(prev => [...prev, { code: voucher.code, amount: voucher.value }]);
           setSearchTerm("");
+        } catch (err) {
+          console.error("Invalid or used voucher");
         }
       }
     }
@@ -501,7 +510,28 @@ export default function POSPage() {
       )}
 
       {isVariantModalOpen && <VariantSelectionModal product={selectedProduct} onClose={() => setIsVariantModalOpen(false)} onAdd={addToCart} />}
-      {isPaymentModalOpen && <PaymentModal onClose={() => setIsPaymentModalOpen(false)} onSuccess={() => { setIsPaymentModalOpen(false); setIsSuccessModalOpen(true); }} total={Math.max(0, cart.reduce((sum, item) => sum + (item.price * item.qty), 0) - cartVouchers.reduce((sum, v) => sum + v.amount, 0)).toFixed(2)} />}
+      {isPaymentModalOpen && <PaymentModal 
+        onClose={() => setIsPaymentModalOpen(false)} 
+        onSuccess={async (method: string) => {
+          setIsPaymentModalOpen(false);
+          const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+          const voucherAmount = cartVouchers.reduce((sum, v) => sum + v.amount, 0);
+          const total = Math.max(0, subtotal - voucherAmount);
+          await processOrderMutation.mutateAsync({
+            branchId: "BR-001",
+            sessionId: activeSession?.id || "mock-session-id",
+            items: cart,
+            paymentMethod: method,
+            appliedVouchers: cartVouchers.map(v => v.code),
+            subtotal,
+            total,
+            tax: 0
+          });
+          clearCart();
+          setIsSuccessModalOpen(true); 
+        }} 
+        total={Math.max(0, cart.reduce((sum, item) => sum + (item.price * item.qty), 0) - cartVouchers.reduce((sum, v) => sum + v.amount, 0)).toFixed(2)} 
+      />}
       {isCustomerModalOpen && <CustomerSelectionModal onClose={() => setIsCustomerModalOpen(false)} />}
       {isSuccessModalOpen && <OrderSuccessModal onClose={() => setIsSuccessModalOpen(false)} />}
 

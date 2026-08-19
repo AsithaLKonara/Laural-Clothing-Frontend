@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { X, Lock, Unlock, AlertCircle } from "lucide-react";
+import { useOpenSession, useCloseSession } from "@/hooks/usePos";
 
 interface PosShiftModalProps {
   mode: "OPEN" | "CLOSE";
@@ -17,17 +18,33 @@ export default function PosShiftModal({ mode, onClose, onSuccess }: PosShiftModa
   const expectedCash = 25000; // Mock expected cash for closing shift
   const actualCash = Number(floatAmount) || 0;
   const variance = actualCash - expectedCash;
+  
+  const openSessionMutation = useOpenSession();
+  const closeSessionMutation = useCloseSession();
 
-  const handleProcess = () => {
+  const handleProcess = async () => {
     setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
+    try {
       if (mode === "CLOSE") {
+        await closeSessionMutation.mutateAsync({
+          sessionId: "mock-session-id", // Hardcoded for now until session fetching is fully integrated to modal
+          actualClosing: actualCash
+        });
         setIsSuccess(true);
       } else {
+        await openSessionMutation.mutateAsync({
+          branchId: "BR-001",
+          terminalId: "TERM-001",
+          userId: "mock-user-id",
+          openingFloat: actualCash
+        });
         onSuccess(actualCash);
       }
-    }, 1500);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (isSuccess && mode === "CLOSE") {

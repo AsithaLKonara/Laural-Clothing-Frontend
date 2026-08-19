@@ -4,7 +4,7 @@ import { X, CreditCard, Banknote, Smartphone, Globe, Landmark } from "lucide-rea
 import Image from "next/image";
 import { useState } from "react";
 
-export default function PaymentModal({ total, onClose, onSuccess }: { total: string, onClose: () => void, onSuccess: () => void }) {
+export default function PaymentModal({ total, onClose, onSuccess }: { total: string, onClose: () => void, onSuccess: (method: string) => void }) {
   const [selectedMethod, setSelectedMethod] = useState("Cash");
   const [tenderedAmount, setTenderedAmount] = useState("");
 
@@ -115,7 +115,7 @@ export default function PaymentModal({ total, onClose, onSuccess }: { total: str
               <button onClick={onClose} className="flex-1 py-4 bg-surface border border-border rounded-xl font-inter font-semibold text-foreground hover:bg-background transition-colors">
                 Cancel
               </button>
-              <button onClick={onSuccess} className="flex-1 py-4 bg-primary rounded-xl font-inter font-bold text-white hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20">
+              <button onClick={() => onSuccess(selectedMethod)} className="flex-1 py-4 bg-primary rounded-xl font-inter font-bold text-white hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20">
                 Complete Payment
               </button>
             </div>
