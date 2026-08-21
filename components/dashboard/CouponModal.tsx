@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Tag, RefreshCcw } from "lucide-react";
+import { X, Tag, RefreshCcw, Loader2 } from "lucide-react";
+import { useCreateCoupon, useUpdateCoupon } from "@/hooks/usePromotions";
 
 interface CouponData {
   id?: string;
@@ -58,9 +59,31 @@ export default function CouponModal({ isOpen, onClose, initialData }: CouponModa
     setCode(res);
   }
 
-  function handleSave() {
-    // TODO: Hook into backend API
-    onClose();
+  const { mutateAsync: createCoupon, isPending: isCreating } = useCreateCoupon();
+  const { mutateAsync: updateCoupon, isPending: isUpdating } = useUpdateCoupon();
+
+  async function handleSave() {
+    try {
+      const payload = {
+        name,
+        code,
+        type,
+        value: Number(value),
+        usageLimit: usageLimit ? Number(usageLimit) : null,
+        expiryDate: expiry ? new Date(expiry).toISOString() : null,
+        status
+      };
+
+      if (initialData?.id) {
+        await updateCoupon({ id: initialData.id, payload });
+      } else {
+        await createCoupon(payload);
+      }
+      onClose();
+    } catch (error) {
+      console.error("Failed to save coupon", error);
+      alert("Failed to save coupon");
+    }
   }
 
   return (
@@ -188,9 +211,10 @@ export default function CouponModal({ isOpen, onClose, initialData }: CouponModa
           </button>
           <button
             onClick={handleSave}
-            disabled={!name.trim() || !code.trim() || !value.trim()}
-            className="px-5 py-2 bg-stone-900 text-white rounded-lg font-inter font-medium text-sm hover:bg-stone-800 transition-colors shadow-md shadow-stone-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!name.trim() || !code.trim() || !value.trim() || isCreating || isUpdating}
+            className="px-5 py-2 bg-stone-900 text-white rounded-lg font-inter font-medium text-sm hover:bg-stone-800 transition-colors shadow-md shadow-stone-900/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
+            {(isCreating || isUpdating) && <Loader2 size={16} className="animate-spin" />}
             {initialData ? "Save Changes" : "Create Coupon"}
           </button>
         </div>
