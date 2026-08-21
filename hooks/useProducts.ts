@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsService, GetProductsParams } from '../services/products.service';
 import { Product } from '../types/product';
 
@@ -6,6 +6,7 @@ export const PRODUCT_QUERY_KEYS = {
   all: ['products'] as const,
   lists: () => [...PRODUCT_QUERY_KEYS.all, 'list'] as const,
   list: (params?: GetProductsParams) => [...PRODUCT_QUERY_KEYS.lists(), params] as const,
+  infinite: (params?: GetProductsParams) => [...PRODUCT_QUERY_KEYS.lists(), 'infinite', params] as const,
   details: () => [...PRODUCT_QUERY_KEYS.all, 'detail'] as const,
   detail: (id: string) => [...PRODUCT_QUERY_KEYS.details(), id] as const,
   detailBySlug: (slug: string) => [...PRODUCT_QUERY_KEYS.details(), 'slug', slug] as const,
@@ -15,6 +16,18 @@ export function useProducts(params?: GetProductsParams) {
   return useQuery({
     queryKey: PRODUCT_QUERY_KEYS.list(params),
     queryFn: () => productsService.getProducts(params),
+  });
+}
+
+export function useInfiniteProducts(params?: GetProductsParams) {
+  return useInfiniteQuery({
+    queryKey: PRODUCT_QUERY_KEYS.infinite(params),
+    queryFn: ({ pageParam = 0 }) => productsService.getProducts({ ...params, skip: pageParam as number, take: params?.take || 12 }),
+    getNextPageParam: (lastPage, allPages) => {
+      const nextSkip = allPages.length * (params?.take || 12);
+      return nextSkip < lastPage.meta.total ? nextSkip : undefined;
+    },
+    initialPageParam: 0,
   });
 }
 
@@ -31,6 +44,12 @@ export function useProductBySlug(slug: string) {
     queryKey: PRODUCT_QUERY_KEYS.detailBySlug(slug),
     queryFn: () => productsService.getProductBySlug(slug),
     enabled: !!slug,
+  });
+}
+
+export function useScanBarcode() {
+  return useMutation({
+    mutationFn: (sku: string) => productsService.getProductBySku(sku),
   });
 }
 

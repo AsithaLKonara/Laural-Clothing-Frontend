@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { X, Phone, MapPin, Truck, CheckCircle2, Trash2, Link as LinkIcon, User, CreditCard, Banknote } from "lucide-react";
+import { useCreateShipment } from "@/hooks/useShipping";
 
 interface PosDispatchTicketProps {
   isMobileCartOpen: boolean;
@@ -35,17 +36,34 @@ export default function PosDispatchTicket({ isMobileCartOpen, setIsMobileCartOpe
     }
   };
 
-  const handleDispatch = () => {
-    setIsDispatching(true);
-    setTimeout(() => {
-      setIsDispatching(false);
-      setSuccess(true);
-    }, 1500);
-  };
-
   const subtotal = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
   const deliveryFee = deliveryMethod === "Fardar" ? 400 : 0;
   const total = subtotal + deliveryFee;
+
+  const createShipmentMutation = useCreateShipment();
+
+  const handleDispatch = async () => {
+    setIsDispatching(true);
+    try {
+      if (deliveryMethod === "Fardar") {
+        await createShipmentMutation.mutateAsync({
+          orderReference: "POS-DISPATCH-" + Math.floor(Math.random() * 100000),
+          customerName: customerName || "Guest",
+          customerPhone: phone,
+          customerAddress: address || "No address provided",
+          city: "Colombo", // Normally would be parsed from address or explicit dropdown
+          amountToCollect: paymentMethod === "COD" ? total : 0,
+          pieces: cart.length
+        });
+      }
+      setSuccess(true);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to create Fardar shipment.");
+    } finally {
+      setIsDispatching(false);
+    }
+  };
 
   if (success) {
     return (

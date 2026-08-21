@@ -27,6 +27,11 @@ export const productsService = {
     return data;
   },
 
+  async getProductBySku(sku: string): Promise<Product> {
+    const { data } = await api.get<Product>(`/products/sku/${sku}`);
+    return data;
+  },
+
   async createProduct(product: any): Promise<Product> {
     const { data } = await api.post<Product>('/products', product);
     return data;

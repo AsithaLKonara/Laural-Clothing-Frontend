@@ -2,7 +2,7 @@
 "use client";
 
 import { Maximize, Search, Trash2, CreditCard, Banknote, LayoutGrid, UserPlus, X, ChevronRight, CheckCircle2, ShoppingBag } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import VariantSelectionModal from "@/components/pos/VariantSelectionModal";
 import PaymentModal from "@/components/pos/PaymentModal";
@@ -14,7 +14,8 @@ import PosExchangeTicket from "@/components/pos/PosExchangeTicket";
 import PosShiftModal from "@/components/pos/PosShiftModal";
 import { RotateCcw, ShoppingCart, Zap, ArrowLeft, Clock, History, ArrowRightLeft } from "lucide-react";
 import Link from "next/link";
-import { useProducts } from "@/hooks/useProducts";
+import { useInfiniteProducts, useScanBarcode } from "@/hooks/useProducts";
+import { useIntersection } from "@/hooks/useIntersection";
 import { useCategories } from "@/hooks/useCategories";
 import { useRouter } from "next/navigation";
 import { useProcessPosOrder, useCurrentSession, useValidateVoucher } from "@/hooks/usePos";
@@ -27,6 +28,7 @@ export default function POSPage() {
   
   const { data: activeSession } = useCurrentSession("TERM-001");
   const processOrderMutation = useProcessPosOrder();
+  const scanBarcodeMutation = useScanBarcode();
   
   // Modal states
   const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
@@ -110,11 +112,32 @@ export default function POSPage() {
 
   const { data: categoriesResponse, isLoading: categoriesLoading } = useCategories();
   const categories = categoriesResponse?.data || [];
-  const { data: productsResponse, isLoading: productsLoading } = useProducts();
-  const products = productsResponse?.data || [];
-
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+
+  const { 
+    data: productsPages, 
+    isLoading: productsLoading, 
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage 
+  } = useInfiniteProducts({
+    search: searchTerm,
+    category: selectedCategory !== "All" ? selectedCategory : undefined,
+    take: 12
+  });
+
+  const products = productsPages?.pages.flatMap(page => page.data) || [];
+
+  const [bottomRef, isIntersecting] = useIntersection<HTMLDivElement>({ threshold: 0.5 });
+  
+  // Intersection Observer hook
+  useEffect(() => {
+    if (isIntersecting && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [isIntersecting, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const validateVoucherMutation = useValidateVoucher();
 
@@ -136,11 +159,26 @@ export default function POSPage() {
     }
   };
 
-  const filteredProducts = products.filter((p: any) => {
-    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "All" || p.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && searchTerm) {
+      if (!searchTerm.startsWith("VCH-")) {
+        try {
+          const product = await scanBarcodeMutation.mutateAsync(searchTerm);
+          if (product && product.variants) {
+            const matchingVariant = product.variants.find((v: any) => v.sku === searchTerm);
+            if (matchingVariant) {
+              addToCart(product, matchingVariant, 1);
+              setSearchTerm("");
+            }
+          }
+        } catch (err) {
+          console.error("Barcode scan failed", err);
+        }
+      }
+    }
+  };
+
+  const filteredProducts = products; // Already filtered by backend!
 
   return (
     <div className="flex flex-col w-full h-full bg-background">
@@ -251,6 +289,7 @@ export default function POSPage() {
                   type="text" 
                   value={searchTerm}
                   onChange={handleSearchChange}
+                  onKeyDown={handleKeyDown}
                   placeholder="Search products, scan barcode..."
                   className="w-full bg-background border border-border rounded-xl py-4 pl-12 pr-4 text-lg font-inter text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
                   autoFocus
@@ -271,9 +310,9 @@ export default function POSPage() {
               {categories.map((cat) => (
                 <button 
                   key={cat.id}
-                  onClick={() => setSelectedCategory(cat.name)}
+                  onClick={() => setSelectedCategory(cat.id)}
                   className={`px-6 py-3 rounded-lg font-inter font-semibold text-sm whitespace-nowrap transition-colors border ${
-                    selectedCategory === cat.name ? "bg-primary-soft text-primary border-primary shadow-sm" : "bg-surface text-muted border-border hover:bg-background"
+                    selectedCategory === cat.id ? "bg-primary-soft text-primary border-primary shadow-sm" : "bg-surface text-muted border-border hover:bg-background"
                   }`}
                 >
                   {cat.name}
@@ -329,6 +368,11 @@ export default function POSPage() {
                     </button>
                   );
                 })}
+              </div>
+              
+              {/* Intersection Observer target */}
+              <div ref={bottomRef} className="h-10 w-full flex items-center justify-center mt-6">
+                {isFetchingNextPage && <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>}
               </div>
             </div>
 
