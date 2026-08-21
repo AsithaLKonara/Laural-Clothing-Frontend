@@ -34,4 +34,13 @@ export const orderService = {
 
   createQuickDispatch: (data: QuickDispatchPayload) => 
     api.post<any>('/orders/quick-dispatch', data),
+
+  getOrders: (params?: { page?: number; limit?: number; status?: string; branchId?: string; paymentGateway?: string }) => 
+    api.get<any>('/orders', { params }),
+
+  getOrderById: (id: string) => 
+    api.get<any>(`/orders/${id}`),
+
+  updateOrderStatus: (id: string, status: string) => 
+    api.patch<any>(`/orders/${id}/status`, { status }),
 };
