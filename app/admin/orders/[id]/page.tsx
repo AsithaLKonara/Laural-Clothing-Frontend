@@ -1,12 +1,41 @@
+"use client";
+
 import PageHeader from "@/components/dashboard/PageHeader";
 import { OrderStatusBadge, PaymentGatewayBadge } from "@/components/dashboard/Badges";
 import Link from "next/link";
-import { ArrowLeft, User, CreditCard, Truck, MapPin } from "lucide-react";
+import { ArrowLeft, User, CreditCard, Truck, RefreshCw } from "lucide-react";
 import OrderDispatchButtons from "@/components/admin/OrderDispatchButtons";
+import { useOrderById, useUpdateOrderStatus } from "@/hooks/useOrders";
+import { useParams } from "next/navigation";
+import Image from "next/image";
 
-export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = await params;
-  const { id } = resolvedParams;
+export default function OrderDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
+
+  const { data: order, isLoading } = useOrderById(id);
+  const { mutate: updateStatus, isPending: isUpdating } = useUpdateOrderStatus();
+
+  if (isLoading) {
+    return <div className="p-10 text-stone-500 font-inter">Loading order details...</div>;
+  }
+
+  if (!order) {
+    return <div className="p-10 text-stone-500 font-inter">Order not found.</div>;
+  }
+
+  const customerName = order.customer ? `${order.customer.firstName} ${order.customer.lastName}` : "Guest";
+  const customerPhone = order.customer?.phone || "-";
+  const address = order.shippingAddress 
+    ? `${order.shippingAddress.addressLine1}, ${order.shippingAddress.city}` 
+    : "-";
+
+  const nextStatusMap: Record<string, string> = {
+    'PENDING': 'PROCESSING',
+    'PROCESSING': 'DISPATCHED',
+    'DISPATCHED': 'DELIVERED',
+  };
+  const nextStatus = nextStatusMap[order.status];
 
   return (
     <div className="flex flex-col p-4 md:p-10 max-w-[1280px] mx-auto w-full gap-6">
@@ -18,17 +47,27 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       </Link>
 
       <PageHeader 
-        title={`Order #${id}`}
+        title={`Order #${order.orderNumber || order.id.substring(0, 8)}`}
         action={
           <div className="flex gap-4 items-center">
+            {nextStatus && (
+              <button 
+                onClick={() => updateStatus({ id, status: nextStatus })}
+                disabled={isUpdating}
+                className="flex items-center gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-900 text-sm font-semibold font-inter rounded-lg transition-colors border border-stone-200 disabled:opacity-50"
+              >
+                {isUpdating ? <RefreshCw size={14} className="animate-spin" /> : null}
+                Mark as {nextStatus.charAt(0) + nextStatus.slice(1).toLowerCase()}
+              </button>
+            )}
             <OrderDispatchButtons 
               orderId={id}
-              customerName="Kasun Perera"
-              address="123 Sample St, Colombo 03"
-              phone="+94 77 123 4567"
+              customerName={customerName}
+              address={address}
+              phone={customerPhone}
             />
-            <OrderStatusBadge status="Paid" />
-            <OrderStatusBadge status="Processing" />
+            <OrderStatusBadge status={order.paymentStatus || "pending"} />
+            <OrderStatusBadge status={order.status} />
           </div>
         }
       />
@@ -45,8 +84,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               Customer
             </div>
             <div className="flex flex-col gap-1">
-              <span className="font-inter text-sm text-stone-800">Kasun Perera</span>
-              <span className="font-inter text-sm text-stone-500">0771234567</span>
+              <span className="font-inter text-sm text-stone-800">{customerName}</span>
+              <span className="font-inter text-sm text-stone-500">{customerPhone}</span>
+              {order.customer?.email && <span className="font-inter text-sm text-stone-500">{order.customer.email}</span>}
               <Link href="#" className="font-inter text-xs text-blue-600 hover:underline mt-1">View Profile</Link>
             </div>
           </div>
@@ -60,19 +100,19 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             <div className="flex flex-col gap-2">
               <div className="flex justify-between items-center">
                 <span className="font-inter text-sm text-stone-500">Gateway</span>
-                <PaymentGatewayBadge gateway="Koko" status="paid" />
+                <PaymentGatewayBadge gateway={order.paymentMethod || 'COD'} status={order.paymentStatus?.toLowerCase() || 'pending'} />
               </div>
               <div className="flex justify-between items-center">
-                <span className="font-inter text-sm text-stone-500">Method</span>
-                <span className="font-inter text-sm text-stone-800">Buy Now Pay Later</span>
+                <span className="font-inter text-sm text-stone-500">Subtotal</span>
+                <span className="font-inter text-sm text-stone-800">Rs. {order.subtotal?.toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="font-inter text-sm text-stone-500">Transaction</span>
-                <span className="font-inter text-sm text-stone-800 font-mono">KOKO-82931</span>
+                <span className="font-inter text-sm text-stone-500">Shipping</span>
+                <span className="font-inter text-sm text-stone-800">Rs. {order.shippingFee?.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="font-inter text-sm text-stone-500">Amount</span>
-                <span className="font-inter text-sm text-stone-800 font-bold">Rs. 8,500</span>
+              <div className="flex justify-between items-center mt-2 border-t border-stone-100 pt-2">
+                <span className="font-inter text-sm text-stone-900 font-semibold">Total</span>
+                <span className="font-inter text-sm text-stone-900 font-bold">Rs. {order.total?.toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -81,56 +121,44 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           <div className="bg-white border border-stone-200 rounded-xl p-5 shadow-sm flex flex-col gap-4">
             <div className="flex items-center gap-2 text-stone-900 font-semibold text-sm font-inter">
               <Truck size={16} className="text-stone-400" />
-              Shipment
+              Shipping
             </div>
             <div className="flex flex-col gap-2">
-              <div className="flex justify-between items-center">
-                <span className="font-inter text-sm text-stone-500">Courier</span>
-                <span className="font-inter text-sm text-stone-800">Fardar</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-inter text-sm text-stone-500">Tracking</span>
-                <span className="font-inter text-sm text-blue-600 hover:underline cursor-pointer">FRD-29381</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-inter text-sm text-stone-500">Status</span>
-                <span className="font-inter text-sm text-stone-800">In Transit</span>
-              </div>
+              <span className="font-inter text-sm text-stone-800">Address</span>
+              <p className="font-inter text-sm text-stone-500 whitespace-pre-wrap">{address}</p>
             </div>
           </div>
           
         </div>
 
-        {/* Right Col: Timeline & Items */}
+        {/* Right Col: Items */}
         <div className="md:col-span-2 flex flex-col gap-6">
-          
           <div className="bg-white border border-stone-200 rounded-xl p-5 shadow-sm flex flex-col gap-4">
-            <h3 className="text-stone-900 font-semibold text-sm font-inter">Timeline</h3>
+            <h3 className="text-stone-900 font-semibold text-sm font-inter">Order Items ({order.items?.length || 0})</h3>
             
             <div className="flex flex-col gap-4 mt-2">
-              {[
-                { time: "12:41 PM", desc: "Order placed", active: true },
-                { time: "12:42 PM", desc: "Payment confirmed (Koko)", active: true },
-                { time: "01:15 PM", desc: "Order processing", active: true },
-                { time: "02:30 PM", desc: "Packed", active: true },
-                { time: "04:00 PM", desc: "Shipped via Fardar", active: true },
-                { time: "Today 09:00 AM", desc: "In transit", active: true },
-                { time: "-", desc: "Delivered", active: false },
-              ].map((step, idx) => (
-                <div key={idx} className="flex gap-4">
-                  <div className="flex flex-col items-center">
-                    <div className={`w-3 h-3 rounded-full ${step.active ? 'bg-emerald-500' : 'bg-stone-200'} shrink-0 mt-1.5`}></div>
-                    {idx !== 6 && <div className={`w-px h-8 ${step.active ? 'bg-emerald-500' : 'bg-stone-200'} mt-1`}></div>}
+              {order.items?.map((item: any) => (
+                <div key={item.id} className="flex gap-4 items-center border-b border-stone-100 pb-4 last:border-0 last:pb-0">
+                  <div className="w-16 h-16 bg-stone-100 rounded-md overflow-hidden relative">
+                    <Image 
+                      src={item.variant?.product?.featuredImage || "/products/default.jpg"} 
+                      alt="Product"
+                      fill
+                      className="object-cover"
+                    />
                   </div>
-                  <div className="flex flex-col">
-                    <span className={`font-inter text-sm ${step.active ? 'text-stone-900' : 'text-stone-400'}`}>{step.desc}</span>
-                    <span className="font-inter text-xs text-stone-500">{step.time}</span>
+                  <div className="flex flex-col flex-1">
+                    <span className="font-inter font-medium text-sm text-stone-900">{item.variant?.product?.name || 'Unknown Product'}</span>
+                    <span className="font-inter text-xs text-stone-500">Variant: {item.variant?.size} | {item.variant?.color}</span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="font-inter font-medium text-sm text-stone-900">Rs. {item.priceAtPurchase?.toLocaleString()}</span>
+                    <span className="font-inter text-xs text-stone-500">Qty: {item.quantity}</span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-
         </div>
 
       </div>
