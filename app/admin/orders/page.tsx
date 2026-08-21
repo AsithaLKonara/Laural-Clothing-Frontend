@@ -19,11 +19,23 @@ export default function OrdersPage() {
   const [showLabelModal, setShowLabelModal] = useState(false);
   const [showFardarModal, setShowFardarModal] = useState(false);
 
-  const { data: orders = [], isLoading: ordersLoading } = useOrders();
+  // Filter states
+  const [status, setStatus] = useState<string>("");
+  const [branchId, setBranchId] = useState<string>("");
+  const [paymentGateway, setPaymentGateway] = useState<string>("");
+
+  const { data: ordersData, isLoading: ordersLoading } = useOrders({
+    status: status || undefined,
+    branchId: branchId || undefined,
+    paymentGateway: paymentGateway || undefined,
+  });
+
+  const orders = ordersData?.data || [];
+  const meta = ordersData?.meta || { totalPages: 1, page: 1 };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedOrders(orders.map(o => o.id));
+      setSelectedOrders(orders.map((o: any) => o.id));
     } else {
       setSelectedOrders([]);
     }
@@ -38,44 +50,50 @@ export default function OrdersPage() {
       header: <input type="checkbox" checked={selectedOrders.length === orders.length && orders.length > 0} onChange={handleSelectAll} className="rounded text-stone-900 focus:ring-stone-900 border-stone-300" />,
       accessor: (row: any) => <input type="checkbox" checked={selectedOrders.includes(row.id)} onChange={() => handleSelectOne(row.id)} onClick={e => e.stopPropagation()} className="rounded text-stone-900 focus:ring-stone-900 border-stone-300" />
     },
-    { header: "Order", accessor: "id" as const },
-    { header: "Customer", accessor: "customer" as const },
+    { header: "Order", accessor: (row: any) => row.orderNumber || row.id.substring(0, 8) },
+    { header: "Customer", accessor: (row: any) => row.customer ? `${row.customer.firstName} ${row.customer.lastName}` : "Guest" },
     { 
       header: "Branch", 
-      accessor: (row: any) => <BranchBadge branch={row.branch} /> 
+      accessor: (row: any) => <BranchBadge branch={row.branch?.name || "Online"} /> 
     },
-    { header: "Total", accessor: "total" as const },
+    { header: "Total", accessor: (row: any) => `Rs. ${row.total?.toLocaleString()}` },
     { 
       header: "Payment", 
-      accessor: (row: any) => <PaymentGatewayBadge gateway={row.gateway} status={row.status.toLowerCase()} /> 
+      accessor: (row: any) => <PaymentGatewayBadge gateway={row.paymentMethod || "Unknown"} status={row.paymentStatus?.toLowerCase() || 'pending'} /> 
     },
     { 
       header: "Status", 
-      accessor: (row: any) => <OrderStatusBadge status={row.orderStatus} /> 
+      accessor: (row: any) => <OrderStatusBadge status={row.status} /> 
     },
   ];
 
   const filters = (
     <>
-      <select className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400">
-        <option>All Statuses</option>
-        <option>Paid</option>
-        <option>Pending</option>
-        <option>Failed</option>
+      <select 
+        value={status} 
+        onChange={e => setStatus(e.target.value)}
+        className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400"
+      >
+        <option value="">All Statuses</option>
+        <option value="PENDING">Pending</option>
+        <option value="PROCESSING">Processing</option>
+        <option value="DISPATCHED">Dispatched</option>
+        <option value="DELIVERED">Delivered</option>
+        <option value="CANCELLED">Cancelled</option>
       </select>
-      <select className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400">
-        <option>All Branches</option>
-        <option>Online</option>
-        <option>Colombo</option>
-        <option>Kandy</option>
-      </select>
-      <select className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400">
-        <option>All Gateways</option>
-        <option>Koko</option>
-        <option>Mintpay</option>
-        <option>OnePay</option>
-        <option>Payzy</option>
-        <option>COD</option>
+      
+      <select 
+        value={paymentGateway}
+        onChange={e => setPaymentGateway(e.target.value)}
+        className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400"
+      >
+        <option value="">All Gateways</option>
+        <option value="Koko">Koko</option>
+        <option value="Mintpay">Mintpay</option>
+        <option value="OnePay">OnePay</option>
+        <option value="Payzy">Payzy</option>
+        <option value="COD">COD</option>
+        <option value="BANK_TRANSFER">Bank Transfer</option>
       </select>
     </>
   );
@@ -105,7 +123,7 @@ export default function OrdersPage() {
         columns={columns}
         keyExtractor={(row) => row.id}
         onRowClick={(row) => router.push(`/admin/orders/${row.id}`)}
-        pagination={{ currentPage: 1, totalPages: 12 }}
+        pagination={{ currentPage: meta.page, totalPages: meta.totalPages || 1 }}
       />
 
       {/* Floating Bulk Action Bar */}
@@ -124,7 +142,7 @@ export default function OrdersPage() {
 
       {showLabelModal && (
         <CourierLabelModal 
-          orders={orders.filter(o => selectedOrders.includes(o.id)).map(o => ({
+          orders={orders.filter((o: any) => selectedOrders.includes(o.id)).map((o: any) => ({
             id: o.id,
             customer: o.customer,
             address: "123 Sample St, Colombo 03, Sri Lanka", // Dummy data
@@ -138,7 +156,7 @@ export default function OrdersPage() {
 
       {showFardarModal && (
         <FardarDispatchModal 
-          orderIds={orders.filter(o => selectedOrders.includes(o.id)).map(o => o.id)}
+          orderIds={orders.filter((o: any) => selectedOrders.includes(o.id)).map((o: any) => o.id)}
           onClose={() => setShowFardarModal(false)}
           onSuccess={() => {
             setShowFardarModal(false);
