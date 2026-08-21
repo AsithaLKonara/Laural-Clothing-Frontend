@@ -1,0 +1,283 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { X, Zap, Loader2, Plus, Trash2 } from "lucide-react";
+import { useCreateFlashSale, useUpdateFlashSale } from "@/hooks/usePromotions";
+import { useProducts } from "@/hooks/useProducts";
+
+interface FlashSaleModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  initialData?: any;
+}
+
+export default function FlashSaleModal({ isOpen, onClose, initialData }: FlashSaleModalProps) {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [discount, setDiscount] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [status, setStatus] = useState("ACTIVE");
+  
+  // Selected items array: { variantId, salePrice, product: Product, variant: ProductVariant }
+  const [items, setItems] = useState<any[]>([]);
+
+  const { data: productsData } = useProducts({ take: 100 });
+  const products = productsData?.data || [];
+
+  const { mutateAsync: createFlashSale, isPending: isCreating } = useCreateFlashSale();
+  const { mutateAsync: updateFlashSale, isPending: isUpdating } = useUpdateFlashSale();
+
+  useEffect(() => {
+    if (initialData) {
+      setName(initialData.name || "");
+      setDescription(initialData.description || "");
+      setDiscount(initialData.discount?.toString() || "");
+      setStartDate(initialData.startDate ? new Date(initialData.startDate).toISOString().slice(0, 16) : "");
+      setEndDate(initialData.endDate ? new Date(initialData.endDate).toISOString().slice(0, 16) : "");
+      setStatus(initialData.status || "ACTIVE");
+      
+      if (initialData.items) {
+        setItems(initialData.items.map((i: any) => ({
+          variantId: i.variantId,
+          salePrice: i.salePrice?.toString() || "",
+          product: i.variant?.product,
+          variant: i.variant
+        })));
+      } else {
+        setItems([]);
+      }
+    } else {
+      setName("");
+      setDescription("");
+      setDiscount("");
+      setStartDate("");
+      setEndDate("");
+      setStatus("ACTIVE");
+      setItems([]);
+    }
+  }, [initialData, isOpen]);
+
+  if (!isOpen) return null;
+
+  async function handleSave() {
+    try {
+      const payload = {
+        name,
+        description,
+        discount: Number(discount),
+        startDate: startDate ? new Date(startDate).toISOString() : null,
+        endDate: endDate ? new Date(endDate).toISOString() : null,
+        status,
+        items: items.map(i => ({
+          variantId: i.variantId,
+          salePrice: Number(i.salePrice)
+        }))
+      };
+
+      if (initialData?.id) {
+        await updateFlashSale({ id: initialData.id, payload });
+      } else {
+        await createFlashSale(payload);
+      }
+      onClose();
+    } catch (error) {
+      console.error("Failed to save flash sale", error);
+      alert("Failed to save flash sale");
+    }
+  }
+
+  const addVariant = (variant: any, product: any) => {
+    if (items.find(i => i.variantId === variant.id)) return;
+    
+    // Auto calculate sale price based on global discount
+    const currentPrice = variant.price || 0;
+    const computedSalePrice = discount ? currentPrice - (currentPrice * (Number(discount) / 100)) : currentPrice;
+
+    setItems([...items, {
+      variantId: variant.id,
+      salePrice: computedSalePrice.toString(),
+      product,
+      variant
+    }]);
+  };
+
+  const removeVariant = (variantId: string) => {
+    setItems(items.filter(i => i.variantId !== variantId));
+  };
+
+  const updateItemSalePrice = (variantId: string, price: string) => {
+    setItems(items.map(i => i.variantId === variantId ? { ...i, salePrice: price } : i));
+  };
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6">
+      <div className="absolute inset-0 bg-stone-950/60 backdrop-blur-sm" onClick={onClose} />
+      
+      <div className="relative w-full max-w-[800px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-[90vh]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200 bg-stone-50 shrink-0">
+          <div>
+            <h2 className="font-inter font-bold text-lg text-stone-900 flex items-center gap-2">
+              <Zap size={18} className="text-orange-500" /> 
+              {initialData ? "Edit Flash Sale" : "Create Flash Sale"}
+            </h2>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-stone-200 rounded-lg text-stone-600 transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6 flex flex-col md:flex-row gap-8 custom-scrollbar">
+          
+          <div className="flex-1 flex flex-col gap-5">
+            <h3 className="font-inter font-semibold text-stone-800 border-b border-stone-100 pb-2">Campaign Details</h3>
+            <div className="flex flex-col gap-2">
+              <label className="font-inter text-xs font-semibold text-stone-700">Campaign Name <span className="text-red-500">*</span></label>
+              <input
+                type="text"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="e.g. End of Season Flash Sale"
+                className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all font-inter"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="font-inter text-xs font-semibold text-stone-700">Global Discount (%) <span className="text-red-500">*</span></label>
+              <input
+                type="number"
+                value={discount}
+                onChange={e => setDiscount(e.target.value)}
+                placeholder="25"
+                className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all font-inter"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <label className="font-inter text-xs font-semibold text-stone-700">Start Date & Time</label>
+                <input
+                  type="datetime-local"
+                  value={startDate}
+                  onChange={e => setStartDate(e.target.value)}
+                  className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all font-inter"
+                />
+              </div>
+              
+              <div className="flex flex-col gap-2">
+                <label className="font-inter text-xs font-semibold text-stone-700">End Date & Time</label>
+                <input
+                  type="datetime-local"
+                  value={endDate}
+                  onChange={e => setEndDate(e.target.value)}
+                  className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all font-inter"
+                />
+              </div>
+            </div>
+            
+            <div className="flex flex-col gap-2 mt-2">
+              <label className="font-inter text-xs font-semibold text-stone-700">Status</label>
+              <div className="flex items-center gap-4 bg-stone-50 border border-stone-200 p-3 rounded-lg">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="fs-status" value="ACTIVE" checked={status === "ACTIVE"} onChange={() => setStatus("ACTIVE")} className="w-4 h-4 accent-stone-900" />
+                  <span className="text-sm font-inter text-stone-800">Active</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="fs-status" value="SCHEDULED" checked={status === "SCHEDULED"} onChange={() => setStatus("SCHEDULED")} className="w-4 h-4 accent-stone-900" />
+                  <span className="text-sm font-inter text-stone-800">Scheduled</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="fs-status" value="EXPIRED" checked={status === "EXPIRED"} onChange={() => setStatus("EXPIRED")} className="w-4 h-4 accent-stone-900" />
+                  <span className="text-sm font-inter text-stone-800">Ended</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Right side: Items */}
+          <div className="flex-[1.5] flex flex-col gap-4 border-l border-stone-100 pl-8">
+            <h3 className="font-inter font-semibold text-stone-800 border-b border-stone-100 pb-2">Included Products</h3>
+            
+            <div className="flex flex-col gap-2">
+              <label className="font-inter text-xs font-semibold text-stone-700">Quick Add Variant</label>
+              <select 
+                onChange={(e) => {
+                  if(!e.target.value) return;
+                  const [pId, vId] = e.target.value.split('|');
+                  const product = products.find((p: any) => p.id === pId);
+                  const variant = product?.variants?.find((v: any) => v.id === vId);
+                  if(product && variant) addVariant(variant, product);
+                  e.target.value = ""; // reset
+                }}
+                className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all font-inter bg-white"
+              >
+                <option value="">-- Select Product Variant --</option>
+                {products.map((p: any) => (
+                  <optgroup key={p.id} label={p.name}>
+                    {p.variants?.map((v: any) => (
+                      <option key={v.id} value={`${p.id}|${v.id}`}>{v.name || v.sku} - Rs.{v.price}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex-1 border border-stone-200 rounded-lg overflow-hidden flex flex-col bg-stone-50">
+              <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-2 custom-scrollbar min-h-[250px]">
+                {items.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-stone-400 gap-2">
+                    <Zap size={32} className="opacity-20" />
+                    <p className="text-sm font-inter">No products added yet.</p>
+                  </div>
+                ) : (
+                  items.map((item, idx) => (
+                    <div key={idx} className="bg-white border border-stone-200 rounded-lg p-3 flex items-center justify-between shadow-sm">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-inter font-semibold text-stone-800">{item.product?.name}</span>
+                        <span className="text-xs font-inter text-stone-500">{item.variant?.name || item.variant?.sku}</span>
+                        <span className="text-xs font-inter text-stone-400 line-through mt-1">Reg: Rs.{item.variant?.price}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col items-end">
+                          <label className="text-[10px] font-semibold text-stone-500 uppercase tracking-wider mb-1">Sale Price</label>
+                          <div className="relative w-24">
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-stone-500 text-xs font-medium">Rs</span>
+                            <input
+                              type="number"
+                              value={item.salePrice}
+                              onChange={(e) => updateItemSalePrice(item.variantId, e.target.value)}
+                              className="w-full border border-stone-200 rounded-md pl-7 pr-2 py-1.5 text-sm outline-none focus:border-stone-400 font-inter font-medium text-red-600 bg-red-50"
+                            />
+                          </div>
+                        </div>
+                        <button onClick={() => removeVariant(item.variantId)} className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors mt-4">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <div className="border-t border-stone-200 px-6 py-4 bg-stone-50 shrink-0 flex items-center justify-end gap-3">
+          <button onClick={onClose} className="px-4 py-2 bg-white border border-stone-300 rounded-lg font-inter font-medium text-sm text-stone-700 hover:bg-stone-50 transition-colors shadow-sm">
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!name.trim() || !discount.trim() || isCreating || isUpdating}
+            className="px-5 py-2 bg-stone-900 text-white rounded-lg font-inter font-medium text-sm hover:bg-stone-800 transition-colors shadow-md shadow-stone-900/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {(isCreating || isUpdating) && <Loader2 size={16} className="animate-spin" />}
+            {initialData ? "Save Changes" : "Create Flash Sale"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
