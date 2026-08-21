@@ -10,6 +10,9 @@ import { Plus, ChevronDown, Send, Bell, Tag } from "lucide-react";
 import BulkMessageModal from "@/components/dashboard/BulkMessageModal";
 import PushNotificationModal from "@/components/dashboard/PushNotificationModal";
 import CouponModal from "@/components/dashboard/CouponModal";
+import FlashSaleModal from "@/components/dashboard/FlashSaleModal";
+import { useCoupons, useDeleteCoupon, useFlashSales, useDeleteFlashSale } from "@/hooks/usePromotions";
+import { Loader2, Zap } from "lucide-react";
 
 export default function PromotionsPage() {
   const router = useRouter();
@@ -19,6 +22,17 @@ export default function PromotionsPage() {
   const [pushModalOpen, setPushModalOpen] = useState(false);
   const [couponModalOpen, setCouponModalOpen] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<any>(null);
+  
+  const [flashSaleModalOpen, setFlashSaleModalOpen] = useState(false);
+  const [editingFlashSale, setEditingFlashSale] = useState<any>(null);
+  
+  const [activeTab, setActiveTab] = useState<"coupons" | "flash-sales">("coupons");
+
+  const { data: coupons = [], isLoading: isLoadingCoupons } = useCoupons();
+  const { mutateAsync: deleteCoupon } = useDeleteCoupon();
+
+  const { data: flashSales = [], isLoading: isLoadingFlashSales } = useFlashSales();
+  const { mutateAsync: deleteFlashSale } = useDeleteFlashSale();
   
   const menuRef = useRef<HTMLDivElement>(null);
   
@@ -32,11 +46,27 @@ export default function PromotionsPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const promotions = [
-    { id: "PRM-001", name: "Summer Sale", code: "SUMMER20", type: "Percentage", value: "20%", usage: "145 / Unlimited", status: "Active", expiry: "2026-08-31" },
-    { id: "PRM-002", name: "New User Discount", code: "WELCOME500", type: "Fixed Amount", value: "Rs.500", usage: "32 / 1000", status: "Active", expiry: "No Expiry" },
-    { id: "PRM-003", name: "Flash Sale", code: "FLASH50", type: "Percentage", value: "50%", usage: "500 / 500", status: "Expired", expiry: "2026-07-15" },
-  ];
+  const formattedCoupons = coupons.map((c) => ({
+    id: c.id,
+    name: c.name,
+    code: c.code,
+    type: c.type,
+    value: c.type === 'PERCENTAGE' ? `${c.value}%` : `Rs.${c.value}`,
+    usage: c.usageLimit ? `${c.usedCount} / ${c.usageLimit}` : `${c.usedCount} / Unlimited`,
+    status: c.status,
+    expiry: c.expiryDate ? new Date(c.expiryDate).toLocaleDateString() : "No Expiry",
+    raw: c // keep raw data for editing
+  }));
+
+  const formattedFlashSales = flashSales.map((fs) => ({
+    id: fs.id,
+    name: fs.name,
+    discount: `${fs.discount}%`,
+    status: fs.status,
+    dates: `${fs.startDate ? new Date(fs.startDate).toLocaleDateString() : 'N/A'} - ${fs.endDate ? new Date(fs.endDate).toLocaleDateString() : 'N/A'}`,
+    itemsCount: fs.items?.length || 0,
+    raw: fs
+  }));
 
   const columns = [
     { header: "Promotion Name", accessor: "name" as const },
@@ -61,14 +91,19 @@ export default function PromotionsPage() {
         <div className="flex items-center gap-2">
           <button 
             className="text-xs text-blue-600 hover:underline font-medium"
-            onClick={(e) => { e.stopPropagation(); setEditingCoupon(row); setCouponModalOpen(true); }}
+            onClick={(e) => { e.stopPropagation(); setEditingCoupon(row.raw); setCouponModalOpen(true); }}
           >
             Edit
           </button>
           <span className="text-stone-300">·</span>
           <button 
             className="text-xs text-red-500 hover:underline font-medium"
-            onClick={(e) => { e.stopPropagation(); if(confirm('Delete this coupon?')) { /* delete */ } }}
+            onClick={async (e) => { 
+              e.stopPropagation(); 
+              if(confirm('Delete this coupon?')) { 
+                await deleteCoupon(row.id);
+              } 
+            }}
           >
             Delete
           </button>
@@ -119,6 +154,12 @@ export default function PromotionsPage() {
           </button>
           <div className="h-px bg-stone-100 my-1 mx-2"></div>
           <button 
+            onClick={() => { setEditingFlashSale(null); setFlashSaleModalOpen(true); setShowCampaignMenu(false); }}
+            className="flex items-center gap-3 px-3 py-2.5 text-sm font-inter text-stone-700 hover:bg-stone-50 rounded-lg transition-colors text-left"
+          >
+            <Zap size={16} className="text-orange-500" /> Flash Sale
+          </button>
+          <button 
             onClick={() => { setEditingCoupon(null); setCouponModalOpen(true); setShowCampaignMenu(false); }}
             className="flex items-center gap-3 px-3 py-2.5 text-sm font-inter text-stone-700 hover:bg-stone-50 rounded-lg transition-colors text-left"
           >
@@ -137,17 +178,82 @@ export default function PromotionsPage() {
         action={pageActions}
       />
 
+      <div className="flex gap-4 border-b border-stone-200 mb-6">
+        <button 
+          onClick={() => setActiveTab("coupons")}
+          className={`py-2 px-1 border-b-2 font-inter text-sm font-medium transition-colors ${activeTab === "coupons" ? "border-stone-900 text-stone-900" : "border-transparent text-stone-500 hover:text-stone-700"}`}
+        >
+          Discount Coupons
+        </button>
+        <button 
+          onClick={() => setActiveTab("flash-sales")}
+          className={`py-2 px-1 border-b-2 font-inter text-sm font-medium transition-colors ${activeTab === "flash-sales" ? "border-stone-900 text-stone-900" : "border-transparent text-stone-500 hover:text-stone-700"}`}
+        >
+          Flash Sales
+        </button>
+      </div>
+
       <FilterBar 
-        placeholder="Search by promotion name or code..." 
+        placeholder={`Search by ${activeTab === 'coupons' ? 'coupon' : 'flash sale'} name or code...`} 
         filters={filters} 
       />
 
-      <DataTable 
-        data={promotions}
-        columns={columns}
-        keyExtractor={(row) => row.id}
-        pagination={{ currentPage: 1, totalPages: 1 }}
-      />
+      {activeTab === "coupons" && (
+        isLoadingCoupons ? (
+          <div className="flex justify-center p-10"><Loader2 className="animate-spin text-stone-400" /></div>
+        ) : (
+          <DataTable 
+            data={formattedCoupons}
+            columns={columns}
+            keyExtractor={(row) => row.id}
+            pagination={{ currentPage: 1, totalPages: 1 }}
+          />
+        )
+      )}
+
+      {activeTab === "flash-sales" && (
+        isLoadingFlashSales ? (
+          <div className="flex justify-center p-10"><Loader2 className="animate-spin text-stone-400" /></div>
+        ) : (
+          <DataTable 
+            data={formattedFlashSales}
+            columns={[
+              { header: "Name", accessor: "name" },
+              { header: "Discount", accessor: "discount" },
+              { header: "Status", accessor: (row: any) => <StatusBadge label={row.status} variant={row.status === "ACTIVE" ? "success" : "neutral"} dot /> },
+              { header: "Valid Dates", accessor: "dates" },
+              { header: "Products", accessor: "itemsCount" },
+              {
+                header: "Actions",
+                accessor: (row: any) => (
+                  <div className="flex items-center gap-2">
+                    <button 
+                      className="text-xs text-blue-600 hover:underline font-medium"
+                      onClick={(e) => { e.stopPropagation(); setEditingFlashSale(row.raw); setFlashSaleModalOpen(true); }}
+                    >
+                      Edit
+                    </button>
+                    <span className="text-stone-300">·</span>
+                    <button 
+                      className="text-xs text-red-500 hover:underline font-medium"
+                      onClick={async (e) => { 
+                        e.stopPropagation(); 
+                        if(confirm('Delete this flash sale?')) { 
+                          await deleteFlashSale(row.id);
+                        } 
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ),
+              }
+            ]}
+            keyExtractor={(row) => row.id}
+            pagination={{ currentPage: 1, totalPages: 1 }}
+          />
+        )
+      )}
       
       <BulkMessageModal isOpen={bulkModalOpen} onClose={() => setBulkModalOpen(false)} />
       <PushNotificationModal isOpen={pushModalOpen} onClose={() => setPushModalOpen(false)} />
@@ -155,6 +261,11 @@ export default function PromotionsPage() {
         isOpen={couponModalOpen} 
         onClose={() => { setCouponModalOpen(false); setEditingCoupon(null); }} 
         initialData={editingCoupon} 
+      />
+      <FlashSaleModal 
+        isOpen={flashSaleModalOpen} 
+        onClose={() => { setFlashSaleModalOpen(false); setEditingFlashSale(null); }} 
+        initialData={editingFlashSale} 
       />
     </div>
   );
