@@ -328,7 +328,7 @@ export default function ProductPageClient({ params }: { params: Promise<{ slug: 
 
       {/* Tabs Section */}
       <div className="w-full max-w-[1280px] mx-auto px-4 md:px-[120px]">
-        <ProductTabs description={product.description} excerpt={product.excerpt} />
+        <ProductTabs description={product.description} excerpt={product.excerpt} productId={product.id} />
       </div>
 
       {/* Related Products */}

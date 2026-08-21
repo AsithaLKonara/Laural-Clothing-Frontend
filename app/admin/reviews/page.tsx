@@ -3,75 +3,9 @@
 import { useState } from "react";
 import { Search, Star, Check, X, Flag, MessageSquare, Eye } from "lucide-react";
 import PageHeader from "@/components/admin/PageHeader";
+import { useAllReviews, useUpdateReviewStatus } from "@/hooks/useReviews";
 
-const DUMMY_REVIEWS = [
-  {
-    id: "REV-001",
-    customer: "Kasun Perera",
-    product: "Black Oversized T-Shirt",
-    productSku: "LC-TSH-001-M",
-    rating: 5,
-    title: "Best quality tee I've ever owned",
-    body: "The fabric is super soft and the oversized fit is perfect. Washed it 5 times and it hasn't lost its shape at all. Would 100% buy again in different colors.",
-    date: "2026-08-14",
-    status: "PENDING",
-    verified: true,
-    helpful: 12,
-  },
-  {
-    id: "REV-002",
-    customer: "Amila Silva",
-    product: "Summer Floral Dress",
-    productSku: "LC-DRS-018-S",
-    rating: 4,
-    title: "Beautiful dress but sizing runs small",
-    body: "Love the fabric and the print is gorgeous in person. Photos don't do it justice. Only giving 4 stars because I had to size up. Would recommend ordering one size bigger than usual.",
-    date: "2026-08-12",
-    status: "APPROVED",
-    verified: true,
-    helpful: 8,
-  },
-  {
-    id: "REV-003",
-    customer: "Nuwan Jayasinghe",
-    product: "Classic Linen Shirt",
-    productSku: "LC-SHT-042-L",
-    rating: 2,
-    title: "Not as described",
-    body: "The color in the picture is way off from what I received. Also the stitching came apart after the first wash. Very disappointed. Would not recommend.",
-    date: "2026-08-11",
-    status: "PENDING",
-    verified: false,
-    helpful: 2,
-  },
-  {
-    id: "REV-004",
-    customer: "Samadi Wijeratne",
-    product: "Cargo Pants",
-    productSku: "LC-PNT-092-32",
-    rating: 1,
-    title: "Check your website before buying!!",
-    body: "Visit www.competitor.com for better prices. This brand is a scam. [SPAM DETECTED]",
-    date: "2026-08-10",
-    status: "REJECTED",
-    verified: false,
-    helpful: 0,
-    flagged: true,
-  },
-  {
-    id: "REV-005",
-    customer: "Deshan Mendis",
-    product: "Ribbed Tank Top",
-    productSku: "LC-TSH-005-S",
-    rating: 5,
-    title: "Great for the gym!",
-    body: "Really comfortable and breathable. Gets a lot of compliments. The quality for the price is unbeatable. Shipping was fast too.",
-    date: "2026-08-09",
-    status: "APPROVED",
-    verified: true,
-    helpful: 24,
-  },
-];
+// Mock data removed in favor of real API
 
 const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
   PENDING:  { bg: "bg-orange-100", text: "text-orange-700", label: "Pending" },
@@ -94,13 +28,30 @@ function StarRating({ rating }: { rating: number }) {
 }
 
 export default function AdminReviewsPage() {
-  const [reviews, setReviews] = useState(DUMMY_REVIEWS);
   const [filter, setFilter] = useState("ALL");
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const displayed = reviews.filter((r) => {
+  const { data: serverReviews = [], isLoading } = useAllReviews();
+  const { mutateAsync: updateStatus } = useUpdateReviewStatus();
+
+  const reviews = serverReviews.map((r: any) => ({
+    id: r.id,
+    customer: `${r.customer.firstName} ${r.customer.lastName}`,
+    product: r.product.name,
+    productSku: r.productId.substring(0, 8),
+    rating: r.rating,
+    title: r.title || 'No Title',
+    body: r.comment || '',
+    date: new Date(r.createdAt).toISOString().split('T')[0],
+    status: r.status,
+    verified: r.isVerifiedPurchase,
+    helpful: 0,
+    flagged: false,
+  }));
+
+  const displayed = reviews.filter((r: any) => {
     const matchesFilter = filter === "ALL" || r.status === filter;
     const matchesSearch =
       !search ||
@@ -110,21 +61,27 @@ export default function AdminReviewsPage() {
     return matchesFilter && matchesSearch;
   });
 
-  const pendingCount = reviews.filter((r) => r.status === "PENDING").length;
+  const pendingCount = reviews.filter((r: any) => r.status === "PENDING").length;
 
-  const approve = (id: string) =>
-    setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, status: "APPROVED" } : r)));
+  const approve = async (id: string) => {
+    await updateStatus({ id, status: "APPROVED" });
+  };
 
-  const reject = (id: string) =>
-    setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, status: "REJECTED" } : r)));
+  const reject = async (id: string) => {
+    await updateStatus({ id, status: "REJECTED" });
+  };
 
-  const bulkApprove = () => {
-    setReviews((prev) => prev.map((r) => (selectedIds.includes(r.id) ? { ...r, status: "APPROVED" } : r)));
+  const bulkApprove = async () => {
+    for (const id of selectedIds) {
+      await updateStatus({ id, status: "APPROVED" });
+    }
     setSelectedIds([]);
   };
 
-  const bulkReject = () => {
-    setReviews((prev) => prev.map((r) => (selectedIds.includes(r.id) ? { ...r, status: "REJECTED" } : r)));
+  const bulkReject = async () => {
+    for (const id of selectedIds) {
+      await updateStatus({ id, status: "REJECTED" });
+    }
     setSelectedIds([]);
   };
 
@@ -132,7 +89,7 @@ export default function AdminReviewsPage() {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setSelectedIds(e.target.checked ? displayed.map((r) => r.id) : []);
+    setSelectedIds(e.target.checked ? displayed.map((r: any) => r.id) : []);
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -146,8 +103,8 @@ export default function AdminReviewsPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: "Pending Review", value: pendingCount, color: "text-orange-600" },
-          { label: "Approved", value: reviews.filter((r) => r.status === "APPROVED").length, color: "text-emerald-600" },
-          { label: "Rejected / Spam", value: reviews.filter((r) => r.status === "REJECTED").length, color: "text-red-600" },
+          { label: "Approved", value: reviews.filter((r: any) => r.status === "APPROVED").length, color: "text-emerald-600" },
+          { label: "Rejected / Spam", value: reviews.filter((r: any) => r.status === "REJECTED").length, color: "text-red-600" },
           { label: "Average Rating", value: "4.2 ★", color: "text-amber-500" },
         ].map(({ label, value, color }) => (
           <div key={label} className="bg-white border border-stone-200 rounded-xl p-5 shadow-sm flex flex-col gap-1">

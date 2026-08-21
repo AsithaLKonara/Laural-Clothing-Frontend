@@ -4,6 +4,7 @@ import { Star, MessageSquare } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import Link from "next/link";
+import { useCustomerReviews } from "@/hooks/useReviews";
 
 const DUMMY_PENDING = [
   {
@@ -15,19 +16,13 @@ const DUMMY_PENDING = [
   }
 ];
 
-const DUMMY_PAST = [
-  {
-    id: "R-1",
-    name: "Linen Trousers",
-    image: "https://images.unsplash.com/photo-1584370848010-d7fe6bc767ec?q=80&w=800&auto=format&fit=crop",
-    rating: 5,
-    date: "2026-07-15",
-    content: "Absolutely love these trousers. The fit is perfect and the material is so breathable. Perfect for the Colombo heat!"
-  }
-];
+// Replace DUMMY_PAST with API integration
 
 export default function ReviewsPage() {
   const [activeTab, setActiveTab] = useState<"pending" | "past">("pending");
+  
+  // Hardcoded CUST-001 for demo purposes
+  const { data: pastReviews = [], isLoading } = useCustomerReviews("CUST-001");
 
   return (
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -55,7 +50,7 @@ export default function ReviewsPage() {
               : "border-transparent text-stone-500 hover:text-stone-700"
           }`}
         >
-          Past Reviews ({DUMMY_PAST.length})
+          Past Reviews ({pastReviews.length})
         </button>
       </div>
 
@@ -94,32 +89,39 @@ export default function ReviewsPage() {
         )}
 
         {activeTab === "past" && (
-          DUMMY_PAST.length === 0 ? (
+          isLoading ? (
+            <div className="animate-pulse">Loading reviews...</div>
+          ) : pastReviews.length === 0 ? (
             <EmptyState message="You haven't submitted any reviews yet." />
           ) : (
-            DUMMY_PAST.map((review) => (
-              <div key={review.id} className="flex flex-col sm:flex-row gap-6 p-6 border border-stone-200 rounded-xl bg-white">
-                <div className="w-20 h-28 relative bg-stone-100 rounded-lg overflow-hidden shrink-0">
-                  <Image src={review.image} alt={review.name} fill className="object-cover" />
-                </div>
-                <div className="flex flex-col flex-1">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-inter font-semibold text-stone-900">{review.name}</h3>
-                    <span className="font-inter text-xs text-stone-500">{review.date}</span>
+            pastReviews.map((review: any) => (
+              <div key={review.id} className="flex flex-col gap-4 p-6 border border-stone-200 rounded-xl bg-white">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-inter font-semibold text-stone-900 text-lg mb-1">{review.product?.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <div className="flex text-amber-400">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star key={star} className={star <= review.rating ? "fill-current text-amber-400" : "fill-stone-200 text-stone-200"} size={16} />
+                        ))}
+                      </div>
+                      <span className="font-inter text-xs text-stone-400">
+                        {new Date(review.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex gap-1 mb-3">
-                    {[...Array(5)].map((_, i) => (
-                      <Star 
-                        key={i} 
-                        size={14} 
-                        className={i < review.rating ? "text-stone-900 fill-stone-900" : "text-stone-200 fill-stone-200"} 
-                      />
-                    ))}
-                  </div>
-                  <p className="font-inter text-sm text-stone-600 leading-relaxed bg-stone-50 p-3 rounded-lg border border-stone-100 italic">
-                    "{review.content}"
-                  </p>
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    review.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700' :
+                    review.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
+                    'bg-orange-100 text-orange-700'
+                  }`}>
+                    {review.status}
+                  </span>
                 </div>
+                <h4 className="font-inter font-medium text-stone-800">{review.title}</h4>
+                <p className="font-inter text-sm text-stone-600 leading-relaxed">
+                  {review.comment}
+                </p>
               </div>
             ))
           )
