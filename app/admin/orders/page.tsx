@@ -9,8 +9,9 @@ import DataTable from "@/components/dashboard/DataTable";
 import { OrderStatusBadge, BranchBadge, PaymentGatewayBadge } from "@/components/dashboard/Badges";
 import CourierLabelModal from "@/components/admin/CourierLabelModal";
 import FardarDispatchModal from "@/components/admin/FardarDispatchModal";
-import { Printer, Truck } from "lucide-react";
+import { Printer, Truck, Plus } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
+import Link from "next/link";
 
 export default function OrdersPage() {
   const router = useRouter();
@@ -81,10 +82,18 @@ export default function OrdersPage() {
 
   return (
     <div className="flex flex-col p-4 md:p-10 max-w-[1280px] mx-auto w-full">
-      <PageHeader 
-        title="Orders" 
-        description="Manage and track all customer orders across channels."
-      />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+        <PageHeader 
+          title="Orders" 
+          description="Manage and track all customer orders across channels."
+        />
+        <Link 
+          href="/admin/orders/quick-dispatch"
+          className="flex items-center gap-2 bg-stone-900 text-white px-4 py-2 rounded-lg font-inter font-medium text-sm hover:bg-stone-800 transition-colors shadow-sm self-start sm:self-auto"
+        >
+          <Plus size={16} /> Quick Dispatch
+        </Link>
+      </div>
 
       <FilterBar 
         placeholder="Search order, phone, customer, tracking..." 
