@@ -6,13 +6,7 @@ import { Search, Filter, RotateCcw, AlertCircle, CheckCircle2, Truck, Package, C
 import PageHeader from "@/components/admin/PageHeader";
 import BulkReturnModal from "@/components/admin/BulkReturnModal";
 
-const DUMMY_RETURNS = [
-  { id: "RMA-00124", orderId: "LC-10241", customer: "Kasun Perera", date: "2026-08-14", status: "REQUESTED", amount: "LKR 4,500" },
-  { id: "RMA-00123", orderId: "LC-09942", customer: "Amila Silva", date: "2026-08-12", status: "APPROVED", amount: "LKR 12,000" },
-  { id: "RMA-00122", orderId: "LC-09855", customer: "Nuwan Jay", date: "2026-08-10", status: "RECEIVED", amount: "LKR 3,200" },
-  { id: "RMA-00121", orderId: "LC-09710", customer: "Samadi W.", date: "2026-08-05", status: "REFUNDED", amount: "LKR 8,900" },
-  { id: "RMA-00120", orderId: "LC-09601", customer: "Deshan M.", date: "2026-08-01", status: "REJECTED", amount: "LKR 2,100" },
-];
+import { useReturns } from "@/hooks/useReturns";
 
 const getStatusConfig = (status: string) => {
   switch (status) {
@@ -28,16 +22,55 @@ const getStatusConfig = (status: string) => {
 
 export default function AdminReturnsPage() {
   const [filter, setFilter] = useState("ALL");
+  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [page, setPage] = useState(1);
   const [selectedRMAs, setSelectedRMAs] = useState<string[]>([]);
   const [showBulkModal, setShowBulkModal] = useState(false);
 
-  const filteredReturns = filter === "ALL" 
-    ? DUMMY_RETURNS 
-    : DUMMY_RETURNS.filter(r => r.status === filter);
+  const { data, isLoading } = useReturns(page, 10, search, filter);
+  
+  const returns = data?.returns || [];
+  const total = data?.total || 0;
+  const totalPages = data?.totalPages || 1;
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearch(searchInput);
+    setPage(1);
+  };
+
+  const handleExport = () => {
+    if (!returns || returns.length === 0) {
+      alert("No data to export");
+      return;
+    }
+    const headers = ["RMA Number", "Order ID", "Customer", "Date", "Status", "Amount"];
+    const csvContent = [
+      headers.join(","),
+      ...returns.map((r: any) => [
+        r.rmaId,
+        r.orderId,
+        `"${r.customer}"`,
+        r.date,
+        r.status,
+        r.amount
+      ].join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `returns_export_${new Date().getTime()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedRMAs(filteredReturns.map(r => r.id));
+      setSelectedRMAs(returns.map((r: any) => r.id));
     } else {
       setSelectedRMAs([]);
     }
@@ -53,19 +86,22 @@ export default function AdminReturnsPage() {
         title="Returns Management" 
         subtitle="Process online return requests and manage warehouse inspections."
         actionLabel="Export Report"
+        onActionClick={handleExport}
       />
 
       {/* Filters & Search */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 border border-stone-200 rounded-xl shadow-sm">
         <div className="flex gap-2 w-full sm:w-auto">
-          <div className="relative w-full sm:w-80">
+          <form onSubmit={handleSearch} className="relative w-full sm:w-80">
             <input 
               type="text" 
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Search by RMA, Order ID, or Customer..." 
               className="w-full h-10 pl-10 pr-4 bg-stone-50 border border-stone-200 rounded-lg outline-none focus:border-stone-900 focus:bg-white transition-colors text-sm font-inter"
             />
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={16} />
-          </div>
+          </form>
           <button className="flex items-center justify-center w-10 h-10 bg-stone-50 border border-stone-200 text-stone-700 rounded-lg hover:bg-stone-100 transition-colors shrink-0 md:hidden">
             <Filter size={16} />
           </button>
@@ -75,7 +111,7 @@ export default function AdminReturnsPage() {
           {["ALL", "REQUESTED", "APPROVED", "RECEIVED", "REFUNDED"].map((f) => (
             <button 
               key={f}
-              onClick={() => setFilter(f)}
+              onClick={() => { setFilter(f); setPage(1); }}
               className={`px-4 py-2 font-inter text-sm font-medium rounded-lg transition-colors whitespace-nowrap capitalize ${
                 filter === f ? "bg-stone-900 text-white" : "bg-stone-50 text-stone-600 hover:bg-stone-100"
               }`}
@@ -93,7 +129,7 @@ export default function AdminReturnsPage() {
             <thead>
               <tr className="bg-stone-50 border-b border-stone-200">
                 <th className="py-4 px-6 w-12">
-                  <input type="checkbox" checked={selectedRMAs.length === filteredReturns.length && filteredReturns.length > 0} onChange={handleSelectAll} className="rounded text-stone-900 focus:ring-stone-900 border-stone-300" />
+                  <input type="checkbox" checked={selectedRMAs.length === returns.length && returns.length > 0} onChange={handleSelectAll} className="rounded text-stone-900 focus:ring-stone-900 border-stone-300" />
                 </th>
                 <th className="font-inter font-semibold text-xs text-stone-500 uppercase tracking-wider py-4 px-2">RMA Number</th>
                 <th className="font-inter font-semibold text-xs text-stone-500 uppercase tracking-wider py-4 px-6">Order ID</th>
@@ -105,37 +141,51 @@ export default function AdminReturnsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
-              {filteredReturns.map((ret) => {
-                const statusInfo = getStatusConfig(ret.status);
-                const StatusIcon = statusInfo.icon;
-                
-                return (
-                  <tr key={ret.id} className={`hover:bg-stone-50 transition-colors group ${selectedRMAs.includes(ret.id) ? 'bg-stone-50' : ''}`}>
-                    <td className="py-4 px-6">
-                      <input type="checkbox" checked={selectedRMAs.includes(ret.id)} onChange={() => handleSelectOne(ret.id)} className="rounded text-stone-900 focus:ring-stone-900 border-stone-300" />
-                    </td>
-                    <td className="py-4 px-2 font-inter font-medium text-sm text-stone-900">{ret.id}</td>
-                    <td className="py-4 px-6 font-inter text-sm text-blue-600 hover:underline cursor-pointer">{ret.orderId}</td>
-                    <td className="py-4 px-6 font-inter text-sm text-stone-600">{ret.customer}</td>
-                    <td className="py-4 px-6 font-inter text-sm text-stone-500">{ret.date}</td>
-                    <td className="py-4 px-6">
-                      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider ${statusInfo.bg} ${statusInfo.color}`}>
-                        <StatusIcon size={14} />
-                        {statusInfo.label}
-                      </div>
-                    </td>
-                    <td className="py-4 px-6 font-inter text-sm text-stone-900 text-right font-medium">{ret.amount}</td>
-                    <td className="py-4 px-6 text-right">
-                      <Link 
-                        href={`/admin/returns/${ret.id}`}
-                        className="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-stone-300 text-stone-700 font-inter font-medium text-xs rounded hover:bg-stone-50 transition-colors shadow-sm"
-                      >
-                        Process
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })}
+              {isLoading ? (
+                <tr>
+                  <td colSpan={8} className="py-10 text-center text-stone-500 font-inter text-sm">
+                    Loading returns...
+                  </td>
+                </tr>
+              ) : returns.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-10 text-center text-stone-500 font-inter text-sm">
+                    No returns found for the selected criteria.
+                  </td>
+                </tr>
+              ) : (
+                returns.map((ret: any) => {
+                  const statusInfo = getStatusConfig(ret.status);
+                  const StatusIcon = statusInfo.icon;
+                  
+                  return (
+                    <tr key={ret.id} className={`hover:bg-stone-50 transition-colors group ${selectedRMAs.includes(ret.id) ? 'bg-stone-50' : ''}`}>
+                      <td className="py-4 px-6">
+                        <input type="checkbox" checked={selectedRMAs.includes(ret.id)} onChange={() => handleSelectOne(ret.id)} className="rounded text-stone-900 focus:ring-stone-900 border-stone-300" />
+                      </td>
+                      <td className="py-4 px-2 font-inter font-medium text-sm text-stone-900">{ret.rmaId}</td>
+                      <td className="py-4 px-6 font-inter text-sm text-blue-600 hover:underline cursor-pointer">{ret.orderId}</td>
+                      <td className="py-4 px-6 font-inter text-sm text-stone-600">{ret.customer}</td>
+                      <td className="py-4 px-6 font-inter text-sm text-stone-500">{ret.date}</td>
+                      <td className="py-4 px-6">
+                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider ${statusInfo.bg} ${statusInfo.color}`}>
+                          <StatusIcon size={14} />
+                          {statusInfo.label}
+                        </div>
+                      </td>
+                      <td className="py-4 px-6 font-inter text-sm text-stone-900 text-right font-medium">LKR {ret.amount.toLocaleString()}</td>
+                      <td className="py-4 px-6 text-right">
+                        <Link 
+                          href={`/admin/returns/${ret.id}`}
+                          className="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-stone-300 text-stone-700 font-inter font-medium text-xs rounded hover:bg-stone-50 transition-colors shadow-sm"
+                        >
+                          Process
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
@@ -143,11 +193,23 @@ export default function AdminReturnsPage() {
         {/* Pagination */}
         <div className="flex items-center justify-between p-4 border-t border-stone-200 bg-stone-50/50">
           <span className="font-inter text-sm text-stone-500">
-            Showing <span className="font-medium text-stone-900">1</span> to <span className="font-medium text-stone-900">{filteredReturns.length}</span> of <span className="font-medium text-stone-900">{filteredReturns.length}</span> results
+            Showing <span className="font-medium text-stone-900">{(page - 1) * 10 + (returns.length > 0 ? 1 : 0)}</span> to <span className="font-medium text-stone-900">{(page - 1) * 10 + returns.length}</span> of <span className="font-medium text-stone-900">{total}</span> results
           </span>
           <div className="flex gap-2">
-            <button disabled className="px-3 py-1.5 bg-white border border-stone-200 text-stone-400 font-inter text-sm rounded-md shadow-sm">Previous</button>
-            <button disabled className="px-3 py-1.5 bg-white border border-stone-200 text-stone-400 font-inter text-sm rounded-md shadow-sm">Next</button>
+            <button 
+              disabled={page <= 1} 
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              className="px-3 py-1.5 bg-white border border-stone-200 text-stone-700 disabled:text-stone-400 hover:bg-stone-50 font-inter text-sm rounded-md shadow-sm transition-colors"
+            >
+              Previous
+            </button>
+            <button 
+              disabled={page >= totalPages} 
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              className="px-3 py-1.5 bg-white border border-stone-200 text-stone-700 disabled:text-stone-400 hover:bg-stone-50 font-inter text-sm rounded-md shadow-sm transition-colors"
+            >
+              Next
+            </button>
           </div>
         </div>
       </div>
@@ -166,7 +228,7 @@ export default function AdminReturnsPage() {
       {/* Bulk Modal */}
       {showBulkModal && (
         <BulkReturnModal 
-          selectedRMAs={filteredReturns.filter(r => selectedRMAs.includes(r.id))}
+          selectedRMAs={returns.filter((r: any) => selectedRMAs.includes(r.id))}
           onClose={() => setShowBulkModal(false)}
           onSuccess={() => {
             setShowBulkModal(false);

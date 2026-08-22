@@ -6,11 +6,76 @@ import { ChevronLeft, CheckCircle2, AlertCircle, Package, Truck, Info, Camera, R
 import PageHeader from "@/components/admin/PageHeader";
 import Image from "next/image";
 
+import { useReturnDetails, useUpdateReturnStatus } from "@/hooks/useReturns";
+import { useRouter } from "next/navigation";
+
 export default function AdminReturnDetailsPage({ params }: { params: Promise<{ rma: string }> }) {
   const resolvedParams = use(params);
   const rmaId = resolvedParams.rma;
+  const router = useRouter();
   
-  const [step, setStep] = useState<"MODERATION" | "INSPECTION" | "RESOLUTION">("MODERATION");
+  const { data: rma, isLoading } = useReturnDetails(rmaId);
+  const updateStatusMutation = useUpdateReturnStatus();
+  
+  // Base step logic on RMA status
+  const currentStatus = rma?.status || "REQUESTED";
+  let initialStep: "MODERATION" | "INSPECTION" | "RESOLUTION" = "MODERATION";
+  if (["IN_TRANSIT", "RECEIVED"].includes(currentStatus)) initialStep = "INSPECTION";
+  if (currentStatus === "APPROVED") initialStep = "INSPECTION"; // Awaiting Item
+  
+  const [step, setStep] = useState<"MODERATION" | "INSPECTION" | "RESOLUTION">(initialStep);
+
+  // Sync step if data loads later
+  use(
+    (async () => {
+       if (rma && step === "MODERATION" && ["IN_TRANSIT", "RECEIVED"].includes(rma.status)) {
+         setStep("INSPECTION");
+       }
+    })()
+  );
+
+  const [itemConditions, setItemConditions] = useState<Record<string, string>>({});
+
+  const handleUpdateStatus = async (newStatus: string) => {
+    try {
+      const itemsPayload = Object.keys(itemConditions).map(itemId => ({
+        id: itemId,
+        condition: "Inspected",
+        inspectionStatus: itemConditions[itemId]
+      }));
+
+      await updateStatusMutation.mutateAsync({
+        id: rma.id,
+        status: newStatus,
+        items: itemsPayload.length > 0 ? itemsPayload : undefined
+      });
+      
+      if (newStatus === 'APPROVED' || newStatus === 'IN_TRANSIT' || newStatus === 'RECEIVED') {
+        setStep("INSPECTION");
+      } else if (newStatus === 'REFUNDED') {
+        router.push("/admin/returns");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Failed to update status");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="font-inter text-stone-500">Loading RMA details...</div>
+      </div>
+    );
+  }
+
+  if (!rma) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="font-inter text-stone-500">Return request not found.</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -20,9 +85,10 @@ export default function AdminReturnDetailsPage({ params }: { params: Promise<{ r
           <ChevronLeft size={20} />
         </Link>
         <PageHeader 
-          title={`Return ${rmaId}`}
+          title={`Return ${rma.rmaId}`}
           subtitle="Review the customer's request, inspect items, and issue a resolution."
           actionLabel="View Original Order"
+
         />
       </div>
 
@@ -66,7 +132,7 @@ export default function AdminReturnDetailsPage({ params }: { params: Promise<{ r
                 <div className="flex flex-col gap-1">
                   <h4 className="font-inter font-medium text-sm text-stone-900">Reason for Return</h4>
                   <div className="p-4 bg-stone-50 border border-stone-200 rounded-lg font-inter text-sm text-stone-700 italic">
-                    "The zipper on the back gets stuck halfway up. It looks like the stitching is too close to the track. I need a refund."
+                    "{rma.reason || 'No reason provided.'}"
                   </div>
                 </div>
 
@@ -82,10 +148,10 @@ export default function AdminReturnDetailsPage({ params }: { params: Promise<{ r
                 </div>
 
                 <div className="flex gap-4 pt-4 border-t border-stone-100">
-                  <button onClick={() => setStep("INSPECTION")} className="flex-1 bg-stone-900 text-white font-inter font-medium py-3 rounded-lg hover:bg-stone-800 transition-colors shadow-sm">
+                  <button onClick={() => handleUpdateStatus("APPROVED")} disabled={updateStatusMutation.isPending} className="flex-1 bg-stone-900 text-white font-inter font-medium py-3 rounded-lg hover:bg-stone-800 transition-colors shadow-sm disabled:opacity-50">
                     Approve & Generate Shipping Label
                   </button>
-                  <button className="flex-1 bg-white border border-stone-300 text-red-600 font-inter font-medium py-3 rounded-lg hover:bg-red-50 transition-colors">
+                  <button onClick={() => handleUpdateStatus("REJECTED")} disabled={updateStatusMutation.isPending} className="flex-1 bg-white border border-stone-300 text-red-600 font-inter font-medium py-3 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50">
                     Reject Request
                   </button>
                 </div>
@@ -107,12 +173,16 @@ export default function AdminReturnDetailsPage({ params }: { params: Promise<{ r
                   <div className="flex items-center gap-3">
                     <Truck className="text-indigo-600" />
                     <div>
-                      <p className="font-inter font-medium text-sm text-indigo-900">Package Arrived at Warehouse</p>
-                      <p className="font-inter text-xs text-indigo-700">Tracking: #LK-009182312</p>
+                      <p className="font-inter font-medium text-sm text-indigo-900">Package Arrival Tracking</p>
+                      <p className="font-inter text-xs text-indigo-700">Awaiting receiving at warehouse</p>
                     </div>
                   </div>
-                  <button className="px-4 py-2 bg-white text-indigo-700 font-inter font-medium text-xs rounded-md shadow-sm border border-indigo-200 hover:bg-indigo-100">
-                    Mark as Received
+                  <button 
+                    onClick={() => handleUpdateStatus("RECEIVED")} 
+                    disabled={rma.status === 'RECEIVED' || updateStatusMutation.isPending}
+                    className="px-4 py-2 bg-white text-indigo-700 font-inter font-medium text-xs rounded-md shadow-sm border border-indigo-200 hover:bg-indigo-100 disabled:opacity-50"
+                  >
+                    {rma.status === 'RECEIVED' ? 'Received' : 'Mark as Received'}
                   </button>
                 </div>
 
@@ -120,34 +190,61 @@ export default function AdminReturnDetailsPage({ params }: { params: Promise<{ r
                   <h4 className="font-inter font-medium text-sm text-stone-900">Inspect Returned Items</h4>
                   
                   {/* Item Inspection Card */}
-                  <div className="border border-stone-200 rounded-lg p-4 flex gap-4">
-                    <div className="w-16 h-20 bg-stone-100 rounded flex-shrink-0"></div>
-                    <div className="flex flex-col flex-1 gap-2">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-inter font-semibold text-sm text-stone-900">Classic Silk Blouse</p>
-                          <p className="font-inter text-xs text-stone-500">Size M • Pink</p>
-                        </div>
-                        <span className="font-inter font-medium text-sm text-stone-900">LKR 8,500</span>
+                  {rma.items?.map((item: any) => (
+                    <div key={item.id} className="border border-stone-200 rounded-lg p-4 flex gap-4">
+                      <div className="w-16 h-20 bg-stone-100 rounded flex-shrink-0 relative overflow-hidden">
+                        {item.orderItem?.variant?.product?.featuredImage && (
+                          <Image src={item.orderItem.variant.product.featuredImage} alt="Product" fill className="object-cover" />
+                        )}
                       </div>
-                      
-                      <div className="flex gap-2 mt-2">
-                        <label className="flex-1 flex items-center gap-2 p-2 border border-stone-200 rounded-md cursor-pointer hover:bg-stone-50">
-                          <input type="radio" name="condition_1" className="text-stone-900 focus:ring-stone-900" />
-                          <span className="font-inter text-xs text-stone-700 font-medium">Restockable (A-Grade)</span>
-                        </label>
-                        <label className="flex-1 flex items-center gap-2 p-2 border border-stone-200 rounded-md cursor-pointer hover:bg-stone-50">
-                          <input type="radio" name="condition_1" className="text-stone-900 focus:ring-stone-900" />
-                          <span className="font-inter text-xs text-red-600 font-medium">Damaged / Write-off</span>
-                        </label>
+                      <div className="flex flex-col flex-1 gap-2">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-inter font-semibold text-sm text-stone-900">{item.orderItem?.variant?.product?.name}</p>
+                            <p className="font-inter text-xs text-stone-500">{item.orderItem?.variant?.name} • Qty: {item.quantity}</p>
+                          </div>
+                          <span className="font-inter font-medium text-sm text-stone-900">LKR {item.orderItem?.priceAtPurchase?.toLocaleString()}</span>
+                        </div>
+                        
+                        <div className="flex gap-2 mt-2">
+                          <label className="flex-1 flex items-center gap-2 p-2 border border-stone-200 rounded-md cursor-pointer hover:bg-stone-50">
+                            <input 
+                              type="radio" 
+                              name={`condition_${item.id}`} 
+                              checked={itemConditions[item.id] === 'RESTOCKABLE'}
+                              onChange={() => setItemConditions(prev => ({ ...prev, [item.id]: 'RESTOCKABLE' }))}
+                              className="text-stone-900 focus:ring-stone-900" 
+                            />
+                            <span className="font-inter text-xs text-stone-700 font-medium">Restockable (A-Grade)</span>
+                          </label>
+                          <label className="flex-1 flex items-center gap-2 p-2 border border-stone-200 rounded-md cursor-pointer hover:bg-stone-50">
+                            <input 
+                              type="radio" 
+                              name={`condition_${item.id}`} 
+                              checked={itemConditions[item.id] === 'DAMAGED'}
+                              onChange={() => setItemConditions(prev => ({ ...prev, [item.id]: 'DAMAGED' }))}
+                              className="text-stone-900 focus:ring-stone-900" 
+                            />
+                            <span className="font-inter text-xs text-red-600 font-medium">Damaged / Write-off</span>
+                          </label>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ))}
 
                 </div>
 
                 <div className="flex gap-4 pt-4 border-t border-stone-100">
-                  <button onClick={() => setStep("RESOLUTION")} className="w-full bg-stone-900 text-white font-inter font-medium py-3 rounded-lg hover:bg-stone-800 transition-colors shadow-sm flex items-center justify-center gap-2">
+                  <button 
+                    onClick={() => {
+                      if (Object.keys(itemConditions).length === rma.items.length) {
+                        setStep("RESOLUTION");
+                      } else {
+                        alert("Please inspect all items before proceeding.");
+                      }
+                    }} 
+                    className="w-full bg-stone-900 text-white font-inter font-medium py-3 rounded-lg hover:bg-stone-800 transition-colors shadow-sm flex items-center justify-center gap-2"
+                  >
                     Complete Inspection <ChevronLeft size={16} className="rotate-180" />
                   </button>
                 </div>
@@ -168,8 +265,8 @@ export default function AdminReturnDetailsPage({ params }: { params: Promise<{ r
                 <div className="flex flex-col gap-3">
                   <h4 className="font-inter font-medium text-sm text-stone-900">Calculate Refund</h4>
                   <div className="flex items-center justify-between py-2 border-b border-stone-100">
-                    <span className="font-inter text-sm text-stone-600">Subtotal (1 item)</span>
-                    <span className="font-inter text-sm font-medium text-stone-900">LKR 8,500</span>
+                    <span className="font-inter text-sm text-stone-600">Subtotal ({rma.items?.length || 0} item)</span>
+                    <span className="font-inter text-sm font-medium text-stone-900">LKR {rma.refundAmount?.toLocaleString()}</span>
                   </div>
                   <div className="flex items-center justify-between py-2 border-b border-stone-100">
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -180,7 +277,7 @@ export default function AdminReturnDetailsPage({ params }: { params: Promise<{ r
                   </div>
                   <div className="flex items-center justify-between py-3">
                     <span className="font-inter font-bold text-base text-stone-900">Total Refund</span>
-                    <span className="font-inter font-bold text-xl text-emerald-600">LKR 8,150</span>
+                    <span className="font-inter font-bold text-xl text-emerald-600">LKR {rma.refundAmount?.toLocaleString()}</span>
                   </div>
                 </div>
 
@@ -203,7 +300,11 @@ export default function AdminReturnDetailsPage({ params }: { params: Promise<{ r
                 </div>
 
                 <div className="flex gap-4 pt-4 border-t border-stone-100">
-                  <button className="w-full bg-emerald-600 text-white font-inter font-medium py-3 rounded-lg hover:bg-emerald-700 transition-colors shadow-sm flex items-center justify-center gap-2">
+                  <button 
+                    onClick={() => handleUpdateStatus("REFUNDED")} 
+                    disabled={updateStatusMutation.isPending}
+                    className="w-full bg-emerald-600 text-white font-inter font-medium py-3 rounded-lg hover:bg-emerald-700 transition-colors shadow-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
                     <CheckCircle2 size={18} /> Issue Refund & Close RMA
                   </button>
                 </div>
@@ -220,17 +321,17 @@ export default function AdminReturnDetailsPage({ params }: { params: Promise<{ r
             
             <div className="flex flex-col gap-1">
               <span className="font-inter text-xs font-medium text-stone-500 uppercase tracking-wider">Name</span>
-              <span className="font-inter font-medium text-sm text-stone-900">Kasun Perera</span>
+              <span className="font-inter font-medium text-sm text-stone-900">{rma.customer ? `${rma.customer.firstName} ${rma.customer.lastName || ''}` : 'Unknown'}</span>
             </div>
             
             <div className="flex flex-col gap-1">
               <span className="font-inter text-xs font-medium text-stone-500 uppercase tracking-wider">Original Order</span>
-              <Link href="/admin/orders/LC-10241" className="font-inter font-medium text-sm text-blue-600 hover:underline">#LC-10241</Link>
+              <Link href={`/admin/orders/${rma.order?.orderNumber}`} className="font-inter font-medium text-sm text-blue-600 hover:underline">#{rma.order?.orderNumber}</Link>
             </div>
             
             <div className="flex flex-col gap-1">
               <span className="font-inter text-xs font-medium text-stone-500 uppercase tracking-wider">Customer LTV</span>
-              <span className="font-inter font-medium text-sm text-emerald-600">LKR 45,200 (Top 10%)</span>
+              <span className="font-inter font-medium text-sm text-emerald-600">LKR {rma.customerLtv?.toLocaleString()}</span>
             </div>
 
             <div className="mt-2 bg-blue-50 border border-blue-100 p-3 rounded-lg flex items-start gap-2">
