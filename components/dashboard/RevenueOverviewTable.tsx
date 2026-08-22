@@ -1,13 +1,20 @@
 import { PaymentGatewayBadge } from "./Badges";
 
-export default function RevenueOverviewTable() {
-  const gateways = [
-    { name: "Koko", amount: "Rs.245K" },
-    { name: "Mintpay", amount: "Rs.184K" },
-    { name: "OnePay", amount: "Rs.152K" },
-    { name: "Payzy", amount: "Rs.126K" },
-    { name: "COD", amount: "Rs.132K" },
-  ];
+interface GatewayData {
+  gw: string;
+  amount: number;
+  count: number;
+  pct: number;
+}
+
+export default function RevenueOverviewTable({ data }: { data?: GatewayData[] }) {
+  const formatCurrency = (value: number) => {
+    if (value >= 1000000) return `Rs. ${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `Rs. ${(value / 1000).toFixed(1)}K`;
+    return `Rs. ${value.toFixed(0)}`;
+  };
+
+  const gateways = data || [];
 
   return (
     <div className="w-full h-full bg-white flex flex-col shrink-0">
@@ -22,20 +29,22 @@ export default function RevenueOverviewTable() {
       {/* Subheader */}
       <div className="px-4 py-2 border-b border-stone-300 flex items-center justify-center bg-stone-50 shrink-0">
         <span className="font-inter text-[11px] leading-[13px] text-stone-600">
-          Koko · Mintpay · OnePay · Payzy · COD
+          {gateways.length > 0 ? gateways.map(g => g.gw).join(' · ') : 'No data'}
         </span>
       </div>
 
       {/* List */}
       <div className="flex flex-col p-2">
-        {gateways.map((g) => (
-          <div key={g.name} className="flex justify-between items-center px-2 py-3 hover:bg-stone-50 rounded-lg transition-colors cursor-default">
-            <PaymentGatewayBadge gateway={g.name} status="paid" />
+        {gateways.length > 0 ? gateways.map((g) => (
+          <div key={g.gw} className="flex justify-between items-center px-2 py-3 hover:bg-stone-50 rounded-lg transition-colors cursor-default">
+            <PaymentGatewayBadge gateway={g.gw} status="paid" />
             <span className="font-inter font-medium text-[11px] leading-[13px] text-stone-900">
-              {g.amount}
+              {formatCurrency(g.amount)}
             </span>
           </div>
-        ))}
+        )) : (
+          <div className="text-center py-4 text-stone-400 text-xs">No transactions in period</div>
+        )}
       </div>
 
     </div>

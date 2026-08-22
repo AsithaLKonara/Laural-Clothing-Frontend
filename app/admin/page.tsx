@@ -7,8 +7,7 @@ import RevenueOverviewTable from "@/components/dashboard/RevenueOverviewTable";
 import RecentTransactionsTable from "@/components/dashboard/RecentTransactionsTable";
 import { TrendingUp, ShoppingCart, Users, Receipt, Package, Wallet, Gift, RefreshCcw } from "lucide-react";
 import { useBusinessOverview } from "@/hooks/useAnalytics";
-
-const BRANCHES = ["All", "Online", "Colombo", "Kandy", "Gampaha"];
+import { useBranches } from "@/hooks/useInventory";
 
 const GATEWAY_COLORS: Record<string, string> = {
   "KOKO": "bg-violet-500",
@@ -29,6 +28,12 @@ const formatCurrency = (value: number) => {
 export default function SuperAdminDashboard() {
   const [activeBranch, setActiveBranch] = useState("All");
   const [activePeriod, setActivePeriod] = useState("Today");
+
+  const { data: branchesData } = useBranches();
+  
+  // Combine static options with dynamic branches from DB
+  const dynamicBranches = branchesData ? branchesData.map((b: any) => b.name) : [];
+  const displayBranches = ["All", "Online", ...dynamicBranches];
 
   const { data: analytics, isLoading } = useBusinessOverview(activePeriod, activeBranch);
 
@@ -64,7 +69,7 @@ export default function SuperAdminDashboard() {
 
       {/* Branch Filter Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
-        {BRANCHES.map(branch => (
+        {displayBranches.map((branch: string) => (
           <button
             key={branch}
             onClick={() => setActiveBranch(branch)}
@@ -142,16 +147,16 @@ export default function SuperAdminDashboard() {
       {/* Charts & Breakdown Row */}
       <div className="flex flex-col lg:flex-row gap-5 mt-2">
         <div className="flex-1 bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden w-full overflow-x-auto">
-          <RevenueChart />
+          <RevenueChart data={analytics?.paymentGatewayPerformance} />
         </div>
         <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden w-full lg:w-[350px] shrink-0 overflow-x-auto">
-          <RevenueOverviewTable />
+          <RevenueOverviewTable data={analytics?.paymentGatewayPerformance} />
         </div>
       </div>
 
       {/* Recent Transactions */}
-      <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden">
-        <RecentTransactionsTable />
+      <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden mt-5">
+        <RecentTransactionsTable transactions={analytics?.recentTransactions} />
       </div>
 
       <div className="h-6" />
