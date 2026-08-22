@@ -32,9 +32,33 @@ export const useUpdateReturnStatus = () => {
       const res = await api.put(`/returns/${id}/status`, { status, items });
       return res.data;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['returns'] });
-      queryClient.invalidateQueries({ queryKey: ['returns', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['return'] });
+    }
+  });
+};
+
+export const useVerifyOrderForReturn = (orderNumber: string, email: string) => {
+  return useQuery({
+    queryKey: ['verifyReturnOrder', orderNumber, email],
+    queryFn: async () => {
+      if (!orderNumber || !email) return null;
+      const res = await api.get('/returns/verify', {
+        params: { orderNumber, email }
+      });
+      return res.data;
     },
+    enabled: !!orderNumber && !!email,
+    retry: false
+  });
+};
+
+export const useCreateReturn = () => {
+  return useMutation({
+    mutationFn: async (data: { orderId: string, items: { orderItemId: string, quantity: number, reason: string, details?: string }[] }) => {
+      const res = await api.post('/returns', data);
+      return res.data;
+    }
   });
 };
