@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { TicketPercent, CreditCard, Banknote, ShieldCheck, Award } from "lucide-react";
+import { TicketPercent, CreditCard, Banknote, ShieldCheck, Award, ChevronDown } from "lucide-react";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import LoyaltyPointsModal from "@/components/LoyaltyPointsModal";
@@ -14,6 +14,7 @@ import { useCartStore } from "@/store/useCartStore";
 import { useCart } from "@/hooks/useCart";
 import { useInitiateCheckout } from "@/hooks/useCheckout";
 import { useRouter } from "next/navigation";
+import { useAddresses, useAddAddress, MOCK_CUSTOMER_ID } from "@/hooks/useAddress";
 
 export default function CheckoutPage() {
   const {
@@ -42,14 +43,46 @@ export default function CheckoutPage() {
   const { sessionId } = useCartStore();
   const { data: cart, isLoading: isCartLoading } = useCart(sessionId);
   const initiateCheckout = useInitiateCheckout(sessionId);
+  const { data: addresses } = useAddresses(MOCK_CUSTOMER_ID);
+  const addAddress = useAddAddress(MOCK_CUSTOMER_ID);
+  const [saveAddress, setSaveAddress] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState("");
 
   const cartItems = cart?.items || [];
   const subtotal = cartItems.reduce((sum, item) => sum + (item.quantity * (item.variant.salePrice ?? item.variant.price)), 0);
   const shippingFee = 400; // Flat fee for now
   const total = subtotal + shippingFee - appliedLoyaltyPoints;
 
+  const handleSelectAddress = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const id = e.target.value;
+    setSelectedAddressId(id);
+    if (!id) return;
+    const addr = addresses?.find(a => a.id === id);
+    if (addr) {
+      setValue("fullName", `${addr.firstName} ${addr.lastName}`);
+      setValue("addressLine1", addr.addressLine1);
+      setValue("addressLine2", addr.addressLine2 || "");
+      setValue("city", addr.city);
+      setValue("phone", addr.phone);
+    }
+  };
+
   const onSubmit = (data: CheckoutFormData) => {
     if (!cart?.id) return;
+
+    if (saveAddress && !selectedAddressId) {
+      addAddress.mutate({
+        firstName: data.fullName.split(' ')[0],
+        lastName: data.fullName.split(' ').slice(1).join(' '),
+        addressLine1: data.addressLine1,
+        addressLine2: data.addressLine2 || null,
+        city: data.city,
+        postalCode: null,
+        phone: data.phone,
+        type: "SHIPPING",
+        isDefault: false
+      });
+    }
     
     initiateCheckout.mutate(
       {
@@ -99,10 +132,33 @@ export default function CheckoutPage() {
             
             {/* Shipping Information */}
             <div className="flex flex-col gap-6 w-full">
-              <h2 className="font-poppins font-medium text-xl text-primary">
+              <h2 className="font-poppins font-medium text-xl text-primary flex items-center justify-between">
                 Shipping Information
               </h2>
               
+              {addresses && addresses.length > 0 && (
+                <div className="flex flex-col gap-2 w-full mb-2">
+                  <label className="font-poppins font-medium text-xs uppercase tracking-wider text-stone-500">
+                    Use Saved Address
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={selectedAddressId}
+                      onChange={handleSelectAddress}
+                      className="w-full h-[52px] px-[20px] appearance-none border border-stone-200 rounded-full bg-stone-50 font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
+                    >
+                      <option value="">-- Select an address --</option>
+                      {addresses.map(a => (
+                        <option key={a.id} value={a.id}>
+                          {a.firstName} {a.lastName} - {a.addressLine1}, {a.city}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" size={18} />
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-col gap-5 w-full">
                 {/* Full Name */}
                 <div className="flex flex-col gap-2 w-full">
@@ -192,6 +248,22 @@ export default function CheckoutPage() {
                     />
                     {errors.email && <span className="text-red-500 text-xs mt-1 pl-4">{errors.email.message}</span>}
                   </div>
+                </div>
+              </div>
+
+              {/* Save Address Checkbox */}
+              <div className="flex flex-col gap-1 mt-2">
+                <div className="flex items-center gap-3">
+                  <input 
+                    type="checkbox" 
+                    id="saveAddress" 
+                    checked={saveAddress}
+                    onChange={(e) => setSaveAddress(e.target.checked)}
+                    className="w-5 h-5 accent-[#1C1917] rounded-sm cursor-pointer"
+                  />
+                  <label htmlFor="saveAddress" className="font-poppins text-sm text-primary cursor-pointer select-none mt-1">
+                    Save this address to my profile
+                  </label>
                 </div>
               </div>
             </div>
