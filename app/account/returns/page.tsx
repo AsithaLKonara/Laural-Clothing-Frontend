@@ -3,24 +3,7 @@
 import { Package, Truck, CheckCircle2, AlertCircle, Eye, RotateCcw } from "lucide-react";
 import Link from "next/link";
 
-const DUMMY_RETURNS = [
-  {
-    id: "RET-992384",
-    orderId: "ORD-12345",
-    date: "2026-08-12",
-    status: "APPROVED", // REQUESTED, APPROVED, SHIPPED, RECEIVED, REFUNDED, REJECTED
-    items: 1,
-    refundAmount: "LKR 12,500"
-  },
-  {
-    id: "RET-884712",
-    orderId: "ORD-12001",
-    date: "2026-07-28",
-    status: "REFUNDED",
-    items: 2,
-    refundAmount: "LKR 28,000"
-  }
-];
+import { useReturns } from "@/hooks/useReturns";
 
 const getStatusConfig = (status: string) => {
   switch (status) {
@@ -42,6 +25,9 @@ const getStatusConfig = (status: string) => {
 };
 
 export default function ReturnsPage() {
+  const { data, isLoading } = useReturns(1, 50); // Fetch up to 50 for now, no auth context yet
+  const returns = data?.returns || [];
+
   return (
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -59,7 +45,11 @@ export default function ReturnsPage() {
       </div>
 
       <div className="flex flex-col gap-4">
-        {DUMMY_RETURNS.length === 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center py-16">
+            <span className="font-inter text-stone-500">Loading returns...</span>
+          </div>
+        ) : returns.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-4 border border-stone-200 border-dashed rounded-xl bg-stone-50">
             <RotateCcw className="text-stone-300 mb-4" size={48} />
             <h3 className="font-inria text-xl text-stone-900 mb-2">No Returns Yet</h3>
@@ -81,13 +71,13 @@ export default function ReturnsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100 bg-white">
-                {DUMMY_RETURNS.map((ret) => {
+                {returns.map((ret: any) => {
                   const statusInfo = getStatusConfig(ret.status);
                   const StatusIcon = statusInfo.icon;
                   
                   return (
                     <tr key={ret.id} className="hover:bg-stone-50 transition-colors">
-                      <td className="py-4 px-6 font-inter font-medium text-sm text-stone-900">{ret.id}</td>
+                      <td className="py-4 px-6 font-inter font-medium text-sm text-stone-900">{ret.rmaId}</td>
                       <td className="py-4 px-6 font-inter text-sm text-stone-600">
                         <Link href={`/account/orders/${ret.orderId}`} className="hover:text-stone-900 hover:underline">
                           {ret.orderId}
@@ -101,7 +91,7 @@ export default function ReturnsPage() {
                         </div>
                       </td>
                       <td className="py-4 px-6 font-inter text-sm text-stone-900 text-right font-medium">
-                        {ret.refundAmount}
+                        LKR {ret.amount?.toLocaleString()}
                       </td>
                       <td className="py-4 px-6 text-right">
                         <button className="inline-flex items-center gap-1.5 text-stone-500 hover:text-stone-900 transition-colors font-inter text-sm font-medium">
