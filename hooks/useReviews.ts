@@ -17,6 +17,14 @@ export function useCustomerReviews(customerId: string) {
   });
 }
 
+export function usePendingReviews(customerId: string) {
+  return useQuery({
+    queryKey: ['reviews', 'pending', customerId],
+    queryFn: () => reviewService.getPendingReviews(customerId),
+    enabled: !!customerId,
+  });
+}
+
 export function useAllReviews(status?: string) {
   return useQuery({
     queryKey: ['reviews', 'all', status],
@@ -31,6 +39,7 @@ export function useCreateReview() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['reviews', 'product', variables.productId] });
       queryClient.invalidateQueries({ queryKey: ['reviews', 'customer', variables.customerId] });
+      queryClient.invalidateQueries({ queryKey: ['reviews', 'pending', variables.customerId] });
     },
   });
 }
