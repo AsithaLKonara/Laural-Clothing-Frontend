@@ -1,5 +1,6 @@
 import api from './api';
 
+<<<<<<< HEAD
 export interface CustomerData {
   id?: string;
   phone: string;
@@ -43,4 +44,19 @@ export const orderService = {
 
   updateOrderStatus: (id: string, status: string) => 
     api.patch<any>(`/orders/${id}/status`, { status }),
+
+  getAllOrders: async () => {
+    const { data } = await api.get('/orders');
+    return data;
+  },
+  
+  dispatchOrder: async (orderId: string) => {
+    const { data } = await api.post(`/orders/${orderId}/dispatch`);
+    return data;
+  },
+
+  trackOrderByPhone: async (phone: string) => {
+    const { data } = await api.get(`/orders/track/phone/${encodeURIComponent(phone)}`);
+    return data;
+  }
 };

@@ -4,9 +4,10 @@ import { useState, useRef } from "react";
 import {
   Search, Upload, Grid, List, Trash2, Copy, Download, CheckCircle2,
   Image as ImageIcon, Film, Filter, FolderOpen, X, ZoomIn, ExternalLink,
-  FileImage, AlertCircle, ArrowRight
+  FileImage, AlertCircle, ArrowRight, Loader2
 } from "lucide-react";
 import PageHeader from "@/components/admin/PageHeader";
+import { useMedia, useUploadMedia, useDeleteMedia } from "@/hooks/useMedia";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -26,20 +27,7 @@ interface MediaFile {
 
 const FOLDERS = ["All", "Products", "Hero", "Banners", "About", "Uncategorized"];
 
-const DUMMY_MEDIA: MediaFile[] = [
-  { id: "M-001", name: "black-tshirt-front.jpg", type: "image", folder: "Products", size: "184 KB", dimensions: "1200×1200", url: "/products/default.jpg", uploadedAt: "2026-08-14", usedIn: ["Black Oversized T-Shirt"] },
-  { id: "M-002", name: "black-tshirt-hover.jpg", type: "image", folder: "Products", size: "201 KB", dimensions: "1200×1200", url: "/products/hover.jpg", uploadedAt: "2026-08-14", usedIn: ["Black Oversized T-Shirt"] },
-  { id: "M-003", name: "hero-summer-2026.jpg", type: "image", folder: "Hero", size: "512 KB", dimensions: "1920×800", url: "/products/default.jpg", uploadedAt: "2026-08-10", usedIn: ["Hero Slide 1"] },
-  { id: "M-004", name: "banner-sale-aug.jpg", type: "image", folder: "Banners", size: "98 KB", dimensions: "1400×200", url: "/products/hover.jpg", uploadedAt: "2026-08-08", usedIn: ["August Sale Banner"] },
-  { id: "M-005", name: "floral-dress-main.jpg", type: "image", folder: "Products", size: "256 KB", dimensions: "1200×1600", url: "/products/default.jpg", uploadedAt: "2026-08-07", usedIn: ["Summer Floral Dress"] },
-  { id: "M-006", name: "about-team.jpg", type: "image", folder: "About", size: "620 KB", dimensions: "2000×1200", url: "/products/hover.jpg", uploadedAt: "2026-08-01", usedIn: ["About Page"] },
-  { id: "M-007", name: "linen-shirt-1.jpg", type: "image", folder: "Products", size: "178 KB", dimensions: "1200×1200", url: "/products/default.jpg", uploadedAt: "2026-07-28", usedIn: ["Classic Linen Shirt"] },
-  { id: "M-008", name: "hero-quiet-luxury.jpg", type: "image", folder: "Hero", size: "490 KB", dimensions: "1920×800", url: "/products/hover.jpg", uploadedAt: "2026-07-25", usedIn: [] },
-  { id: "M-009", name: "cargo-pants-detail.jpg", type: "image", folder: "Products", size: "210 KB", dimensions: "1200×1200", url: "/products/default.jpg", uploadedAt: "2026-07-20", usedIn: ["Cargo Pants"] },
-  { id: "M-010", name: "storefront-bg.jpg", type: "image", folder: "Uncategorized", size: "1.1 MB", dimensions: "2560×1440", url: "/products/hover.jpg", uploadedAt: "2026-07-15", usedIn: [] },
-  { id: "M-011", name: "collection-banner-luxury.jpg", type: "image", folder: "Banners", size: "340 KB", dimensions: "1400×600", url: "/products/default.jpg", uploadedAt: "2026-07-10", usedIn: ["Quiet Luxury Collection"] },
-  { id: "M-012", name: "promo-eid.jpg", type: "image", folder: "Banners", size: "265 KB", dimensions: "1400×400", url: "/products/hover.jpg", uploadedAt: "2026-06-28", usedIn: [] },
-];
+// Mock data removed in favor of real API
 
 // ─── Detail Panel ──────────────────────────────────────────────────────────────
 
@@ -127,12 +115,10 @@ function DetailPanel({ file, onClose, onDelete }: DetailPanelProps) {
         <div className="p-5 flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-3 text-sm font-inter">
             {[
-              ["Type", file.type.toUpperCase()],
+              ["Type", file.type?.toUpperCase() || 'UNKNOWN'],
               ["Folder", file.folder],
-              ["Size", file.size],
-              ["Dimensions", file.dimensions],
-              ["Uploaded", file.uploadedAt],
-              ["Used in", file.usedIn.length > 0 ? `${file.usedIn.length} place(s)` : "—"],
+              ["Size", `${(Number(file.size) / 1024).toFixed(0)} KB`],
+              ["Uploaded", new Date(file.uploadedAt).toLocaleDateString()],
             ].map(([label, value]) => (
               <div key={label} className="flex flex-col gap-0.5">
                 <span className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider">{label}</span>
@@ -141,7 +127,7 @@ function DetailPanel({ file, onClose, onDelete }: DetailPanelProps) {
             ))}
           </div>
 
-          {file.usedIn.length > 0 && (
+          {file.usedIn?.length > 0 && (
             <div className="bg-stone-50 border border-stone-200 rounded-lg p-3">
               <p className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2">Used In</p>
               <div className="flex flex-col gap-1">
@@ -193,7 +179,6 @@ function DetailPanel({ file, onClose, onDelete }: DetailPanelProps) {
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function AdminMediaPage() {
-  const [files, setFiles] = useState(DUMMY_MEDIA);
   const [view, setView] = useState<"grid" | "list">("grid");
   const [activeFolder, setActiveFolder] = useState("All");
   const [search, setSearch] = useState("");
@@ -201,9 +186,26 @@ export default function AdminMediaPage() {
   const [detailFile, setDetailFile] = useState<MediaFile | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const filtered = files.filter(f => {
+  const { data: serverFiles = [], isLoading } = useMedia();
+  const { mutateAsync: uploadMedia } = useUploadMedia();
+  const { mutateAsync: deleteMedia } = useDeleteMedia();
+
+  const files = serverFiles.map((f: any) => ({
+    id: f.id,
+    name: f.name,
+    type: f.type,
+    folder: f.folder,
+    size: f.size.toString(),
+    dimensions: f.dimensions,
+    url: f.url,
+    uploadedAt: f.createdAt,
+    usedIn: [], // TODO: relationships not implemented
+  }));
+
+  const filtered = files.filter((f: any) => {
     const matchFolder = activeFolder === "All" || f.folder === activeFolder;
     const matchSearch = !search || f.name.toLowerCase().includes(search.toLowerCase());
     return matchFolder && matchSearch;
@@ -212,58 +214,48 @@ export default function AdminMediaPage() {
   const toggleSelect = (id: string) =>
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
 
-  const bulkDelete = () => {
-    setFiles(prev => prev.filter(f => !selectedIds.includes(f.id)));
+  const bulkDelete = async () => {
+    for (const id of selectedIds) {
+      await deleteMedia(id);
+    }
     setSelectedIds([]);
   };
 
-  const deleteOne = (id: string) => setFiles(prev => prev.filter(f => f.id !== id));
+  const deleteOne = async (id: string) => {
+    await deleteMedia(id);
+  };
+
+  const handleUploadFiles = async (chosenFiles: File[]) => {
+    if (chosenFiles.length === 0) return;
+    setIsUploading(true);
+    
+    try {
+      for (const file of chosenFiles) {
+        await uploadMedia({ file, folder: activeFolder !== "All" ? activeFolder : "Uncategorized" });
+      }
+      setUploadSuccess(true);
+      setTimeout(() => setUploadSuccess(false), 3000);
+    } catch (error) {
+      console.error("Upload failed", error);
+      alert("Upload failed.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    if (droppedFiles.length === 0) return;
-    const newMedia: MediaFile[] = droppedFiles.map((f, idx) => ({
-      id: `M-NEW-${Date.now()}-${idx}`,
-      name: f.name,
-      type: f.type.startsWith("video") ? "video" : "image",
-      folder: "Uncategorized",
-      size: `${(f.size / 1024).toFixed(0)} KB`,
-      dimensions: "—",
-      url: "/products/default.jpg",
-      uploadedAt: new Date().toISOString().slice(0, 10),
-      usedIn: [],
-    }));
-    setFiles(prev => [...newMedia, ...prev]);
-    setUploadSuccess(true);
-    setTimeout(() => setUploadSuccess(false), 3000);
+    handleUploadFiles(Array.from(e.dataTransfer.files));
   };
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const chosen = Array.from(e.target.files || []);
-    if (chosen.length === 0) return;
-    const newMedia: MediaFile[] = chosen.map((f, idx) => ({
-      id: `M-NEW-${Date.now()}-${idx}`,
-      name: f.name,
-      type: f.type.startsWith("video") ? "video" : "image",
-      folder: "Uncategorized",
-      size: `${(f.size / 1024).toFixed(0)} KB`,
-      dimensions: "—",
-      url: "/products/default.jpg",
-      uploadedAt: new Date().toISOString().slice(0, 10),
-      usedIn: [],
-    }));
-    setFiles(prev => [...newMedia, ...prev]);
-    setUploadSuccess(true);
-    setTimeout(() => setUploadSuccess(false), 3000);
+    handleUploadFiles(Array.from(e.target.files || []));
   };
 
-  const totalSize = files.reduce((acc, f) => {
-    const num = parseFloat(f.size.replace(/[^\d.]/g, ""));
-    const isKB = f.size.includes("KB");
-    const isMB = f.size.includes("MB");
-    return acc + (isMB ? num * 1024 : isKB ? num : 0);
+  const totalSize = files.reduce((acc: any, f: any) => {
+    const num = Number(f.size);
+    return acc + num;
   }, 0);
 
   return (
@@ -278,9 +270,9 @@ export default function AdminMediaPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: "Total Files", value: files.length, color: "text-stone-900" },
-          { label: "Images", value: files.filter(f => f.type === "image").length, color: "text-blue-600" },
-          { label: "Unused Files", value: files.filter(f => f.usedIn.length === 0).length, color: "text-orange-600" },
-          { label: "Storage Used", value: `${(totalSize / 1024).toFixed(1)} MB`, color: "text-purple-600" },
+          { label: "Images", value: files.filter((f: any) => f.type === "image").length, color: "text-blue-600" },
+          { label: "Unused Files", value: files.filter((f: any) => f.usedIn?.length === 0).length, color: "text-orange-600" },
+          { label: "Storage Used", value: `${(totalSize / (1024 * 1024)).toFixed(2)} MB`, color: "text-purple-600" },
         ].map(({ label, value, color }) => (
           <div key={label} className="bg-white border border-stone-200 rounded-xl p-5 shadow-sm flex flex-col gap-1">
             <span className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">{label}</span>
@@ -301,19 +293,27 @@ export default function AdminMediaPage() {
         onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-        className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all ${
+        className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center gap-3 transition-all ${
           isDragging
             ? "border-stone-900 bg-stone-50 scale-[1.01]"
             : "border-stone-200 hover:border-stone-400 hover:bg-stone-50/50"
         }`}
       >
-        <div className="w-14 h-14 bg-stone-100 rounded-full flex items-center justify-center">
-          <Upload size={24} className="text-stone-500"/>
-        </div>
-        <div className="text-center">
-          <p className="font-inter font-semibold text-stone-700">Drag & drop files here</p>
-          <p className="font-inter text-sm text-stone-400 mt-1">or click to browse • JPG, PNG, WEBP, MP4 supported</p>
+        <div className="flex flex-col items-center gap-3 relative z-10 pointer-events-none">
+          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-stone-400">
+            {isUploading ? <Loader2 size={24} className="animate-spin text-stone-900" /> : <Upload size={24} />}
+          </div>
+          <div className="text-center">
+            <p className="font-inter font-bold text-stone-800">{isUploading ? "Uploading..." : "Drag & drop files here"}</p>
+            <p className="font-inter text-sm text-stone-500 mt-1">or click to browse from your computer</p>
+          </div>
+          <button 
+            className="mt-2 bg-white border border-stone-200 text-stone-700 px-5 py-2.5 rounded-lg font-inter text-sm font-medium hover:bg-stone-50 transition-colors pointer-events-auto shadow-sm disabled:opacity-50"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+          >
+            Select Files
+          </button>
         </div>
         <input ref={fileInputRef} type="file" multiple accept="image/*,video/*" className="hidden" onChange={handleFileInput}/>
       </div>

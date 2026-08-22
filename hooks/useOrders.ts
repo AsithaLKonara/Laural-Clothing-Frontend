@@ -36,3 +36,22 @@ export function useUpdateOrderStatus() {
     },
   });
 }
+
+export const useDispatchOrder = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (orderId: string) => orderService.dispatchOrder(orderId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    },
+  });
+};
+
+export const useTrackOrderByPhone = (phone: string | undefined) => {
+  return useQuery({
+    queryKey: ["trackOrder", phone],
+    queryFn: () => orderService.trackOrderByPhone(phone as string),
+    enabled: !!phone && phone.length > 5,
+    retry: false,
+  });
+};

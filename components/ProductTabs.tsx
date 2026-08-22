@@ -4,12 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { ExternalLink, Truck, Clock, ShieldCheck, ArrowRight } from "lucide-react";
 
-type TabName = "Product Details" | "Shipping Information" | "FAQs";
+import ProductReviews from "./ProductReviews";
 
-export default function ProductTabs({ description, excerpt }: { description?: string | null, excerpt?: string | null }) {
+type TabName = "Product Details" | "Shipping Information" | "FAQs" | "Reviews";
+
+export default function ProductTabs({ description, excerpt, productId }: { description?: string | null, excerpt?: string | null, productId: string }) {
   const [activeTab, setActiveTab] = useState<TabName>("Product Details");
 
-  const tabs: TabName[] = ["Product Details", "Shipping Information", "FAQs"];
+  const tabs: TabName[] = ["Product Details", "Reviews", "Shipping Information", "FAQs"];
 
   return (
     <div className="flex flex-col w-full mt-[80px]">
@@ -87,6 +89,10 @@ export default function ProductTabs({ description, excerpt }: { description?: st
               </Link>
             </div>
           </div>
+        )}
+
+        {activeTab === "Reviews" && (
+          <ProductReviews productId={productId} />
         )}
 
         {activeTab === "FAQs" && (
