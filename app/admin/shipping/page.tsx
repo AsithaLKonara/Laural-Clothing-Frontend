@@ -1,55 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { useCreateShipment } from '@/hooks/useShipping';
+import { useAllOrders, useDispatchOrder } from '@/hooks/useOrders';
 import { Button } from '@/components/ui/Button';
-import axios from 'axios';
-
-// A mock useOrders hook just for this page so we don't have to build the whole order service
-import { useQuery } from '@tanstack/react-query';
-const usePendingOrders = () => {
-  return useQuery({
-    queryKey: ['pending-orders'],
-    queryFn: async () => {
-      // In a real app this would call /api/orders?status=PROCESSING
-      return [
-        { id: 'ORD-1001', customerName: 'John Doe', phone: '0712345678', address: '123 Main St', city: 'Colombo', total: 4500, shippingStatus: 'PENDING' },
-        { id: 'ORD-1002', customerName: 'Jane Smith', phone: '0776543210', address: '45 Kandy Rd', city: 'Kandy', total: 8500, shippingStatus: 'PENDING' },
-      ];
-    }
-  });
-}
 
 export default function ShippingDashboard() {
-  const { data: orders, isLoading } = usePendingOrders();
-  const createShipment = useCreateShipment();
-  const [trackingData, setTrackingData] = useState<Record<string, any>>({});
-  const [shippedOrders, setShippedOrders] = useState<Record<string, any>>({});
-
-  const handleCreateShipment = (order: any) => {
-    createShipment.mutate(
-      {
-        orderId: order.id,
-        customerName: order.customerName,
-        customerPhone: order.phone,
-        customerAddress: order.address,
-        city: order.city,
-      },
-      {
-        onSuccess: (res) => {
-          setShippedOrders(prev => ({ ...prev, [order.id]: res }));
-        }
-      }
-    );
-  };
-
-  const handleTrack = async (trackingNumber: string) => {
-    try {
-      const res = await axios.get(`http://localhost:3001/api/inventory/shipping/${trackingNumber}`);
-      setTrackingData(prev => ({ ...prev, [trackingNumber]: res.data }));
-    } catch (e) {
-      console.error(e);
-    }
+  const { data: orders, isLoading } = useAllOrders();
+  const dispatchOrder = useDispatchOrder();
+  
+  const handleCreateShipment = (orderId: string) => {
+    dispatchOrder.mutate(orderId);
   };
 
   return (
@@ -67,49 +27,63 @@ export default function ShippingDashboard() {
               <tr>
                 <th className="p-4">Order ID</th>
                 <th className="p-4">Customer</th>
-                <th className="p-4">City</th>
+                <th className="p-4">Total</th>
                 <th className="p-4">Courier Status</th>
                 <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {orders?.map((order: any) => {
-                const shipment = shippedOrders[order.id];
-                const trackInfo = shipment ? trackingData[shipment.trackingNumber] : null;
+                const isDispatched = order.status === 'DISPATCHED' || !!order.trackingNumber;
 
                 return (
                   <tr key={order.id} className="border-t">
-                    <td className="p-4 font-medium">{order.id}</td>
+                    <td className="p-4 font-medium">{order.orderNumber}</td>
                     <td className="p-4">
-                      <div>{order.customerName}</div>
-                      <div className="text-xs text-gray-500">{order.phone}</div>
+                      <div>
+                        {order.customer 
+                          ? `${order.customer.firstName || ''} ${order.customer.lastName || ''}` 
+                          : order.shippingAddress?.firstName 
+                            ? `${order.shippingAddress.firstName} ${order.shippingAddress.lastName}`
+                            : 'Guest'}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {order.customer?.phone || order.shippingAddress?.phone || 'N/A'}
+                      </div>
                     </td>
-                    <td className="p-4">{order.city}</td>
+                    <td className="p-4">Rs. {order.total.toFixed(2)}</td>
                     <td className="p-4">
-                      {shipment ? (
+                      {isDispatched ? (
                         <div>
-                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">{trackInfo?.status || 'SHIPPED'}</span>
-                          <div className="text-xs mt-1 text-gray-500">{shipment.trackingNumber}</div>
+                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs uppercase">{order.status}</span>
+                          <div className="text-xs mt-1 text-gray-500">{order.trackingNumber}</div>
                         </div>
                       ) : (
-                        <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">PENDING DISPATCH</span>
+                        <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs uppercase">{order.status}</span>
                       )}
                     </td>
                     <td className="p-4 text-right space-x-2">
-                      {!shipment ? (
-                        <Button size="sm" onClick={() => handleCreateShipment(order)} isLoading={createShipment.isPending}>
-                          Create Label
+                      {!isDispatched ? (
+                        <Button size="sm" onClick={() => handleCreateShipment(order.id)} isLoading={dispatchOrder.isPending}>
+                          Dispatch & Create Label
                         </Button>
                       ) : (
                         <>
-                          <Button size="sm" variant="outline" onClick={() => handleTrack(shipment.trackingNumber)}>Track</Button>
-                          <a href={shipment.labelUrl} target="_blank" rel="noreferrer" className="text-sm text-blue-600 hover:underline inline-block ml-2">View Label</a>
+                          {order.trackingUrl && (
+                            <a href={order.trackingUrl} target="_blank" rel="noreferrer" className="text-sm text-blue-600 hover:underline inline-block">View Label</a>
+                          )}
                         </>
                       )}
                     </td>
                   </tr>
                 );
               })}
+              
+              {orders?.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="p-4 text-center text-gray-500">No orders found.</td>
+                </tr>
+              )}
             </tbody>
           </table>
         )}

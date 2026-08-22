@@ -1,5 +1,6 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../services/api";
+import { orderService } from '@/services/order.service';
 
 export interface Order {
   id: string;
@@ -35,3 +36,22 @@ export function useCreateOrder() {
     },
   });
 }
+
+export const useDispatchOrder = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (orderId: string) => orderService.dispatchOrder(orderId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    },
+  });
+};
+
+export const useTrackOrderByPhone = (phone: string | undefined) => {
+  return useQuery({
+    queryKey: ["trackOrder", phone],
+    queryFn: () => orderService.trackOrderByPhone(phone as string),
+    enabled: !!phone && phone.length > 5,
+    retry: false,
+  });
+};
