@@ -1,7 +1,4 @@
-import axios from 'axios';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-
+import { api } from './api';
 export interface SalesReport {
   summary: {
     totalRevenue: number;
@@ -53,7 +50,7 @@ export const reportService = {
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
     
-    const response = await axios.get(`${API_URL}/reports/sales?${params.toString()}`);
+    const response = await api.get(`/reports/sales?${params.toString()}`);
     return response.data;
   },
 
@@ -62,7 +59,7 @@ export const reportService = {
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
 
-    const response = await axios.get(`${API_URL}/reports/branches?${params.toString()}`);
+    const response = await api.get(`/reports/branches?${params.toString()}`);
     return response.data;
   },
 
@@ -71,12 +68,12 @@ export const reportService = {
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
 
-    const response = await axios.get(`${API_URL}/reports/payments?${params.toString()}`);
+    const response = await api.get(`/reports/payments?${params.toString()}`);
     return response.data;
   },
 
   getInventoryValuationReport: async (): Promise<InventoryValuationReport> => {
-    const response = await axios.get(`${API_URL}/reports/inventory`);
+    const response = await api.get(`/reports/inventory`);
     return response.data;
   }
 };

@@ -1,8 +1,5 @@
-import axios from 'axios';
+import { api } from './api';
 import { Product } from '@/types/product';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-
 export interface WishlistItem {
   id: string;
   wishlistId: string;
@@ -26,17 +23,17 @@ export const wishlistService = {
     if (sessionId) params.append('sessionId', sessionId);
     if (customerId) params.append('customerId', customerId);
     
-    const response = await axios.get(`${API_URL}/wishlist?${params.toString()}`);
+    const response = await api.get(`/wishlist?${params.toString()}`);
     return response.data;
   },
 
   addItem: async (wishlistId: string, productId: string): Promise<Wishlist> => {
-    const response = await axios.post(`${API_URL}/wishlist`, { wishlistId, productId });
+    const response = await api.post(`/wishlist`, { wishlistId, productId });
     return response.data;
   },
 
   removeItem: async (wishlistId: string, productId: string): Promise<Wishlist> => {
-    const response = await axios.delete(`${API_URL}/wishlist/${wishlistId}/${productId}`);
+    const response = await api.delete(`/wishlist/${wishlistId}/${productId}`);
     return response.data;
   }
 };

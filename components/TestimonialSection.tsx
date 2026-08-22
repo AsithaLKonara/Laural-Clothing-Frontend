@@ -3,7 +3,7 @@ import ReviewCard from "./ReviewCard";
 
 async function getReviews() {
   try {
-    let apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+    let apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
     if (!apiUrl.endsWith('/v1')) {
       apiUrl += '/v1';
     }

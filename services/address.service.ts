@@ -1,7 +1,4 @@
-import axios from 'axios';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-
+import { api } from './api';
 export interface Address {
   id: string;
   customerId: string;
@@ -22,26 +19,26 @@ export type AddressInput = Omit<Address, 'id' | 'customerId' | 'createdAt' | 'up
 
 export const addressService = {
   getAddresses: async (customerId: string): Promise<Address[]> => {
-    const response = await axios.get(`${API_URL}/addresses?customerId=${customerId}`);
+    const response = await api.get(`/addresses?customerId=${customerId}`);
     return response.data;
   },
 
   addAddress: async (customerId: string, data: AddressInput): Promise<Address> => {
-    const response = await axios.post(`${API_URL}/addresses?customerId=${customerId}`, data);
+    const response = await api.post(`/addresses?customerId=${customerId}`, data);
     return response.data;
   },
 
   updateAddress: async (id: string, customerId: string, data: Partial<AddressInput>): Promise<Address> => {
-    const response = await axios.put(`${API_URL}/addresses/${id}?customerId=${customerId}`, data);
+    const response = await api.put(`/addresses/${id}?customerId=${customerId}`, data);
     return response.data;
   },
 
   deleteAddress: async (id: string): Promise<void> => {
-    await axios.delete(`${API_URL}/addresses/${id}`);
+    await api.delete(`/addresses/${id}`);
   },
 
   setDefaultAddress: async (id: string, customerId: string, type: string): Promise<Address> => {
-    const response = await axios.patch(`${API_URL}/addresses/${id}/default`, { customerId, type });
+    const response = await api.patch(`/addresses/${id}/default`, { customerId, type });
     return response.data;
   }
 };
