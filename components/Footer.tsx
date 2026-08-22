@@ -72,6 +72,7 @@ export default function Footer() {
                 <h4 className="font-inter font-bold text-sm tracking-[0.02em] uppercase text-background">Support</h4>
                 <div className="flex flex-col gap-[10px]">
                   <Link href="/track-order" className="font-inter text-sm text-background/85 hover:text-white transition-colors">Track Order</Link>
+                  <Link href="/returns" className="font-inter text-sm text-background/85 hover:text-white transition-colors">Returns</Link>
                 </div>
               </div>
             </div>
