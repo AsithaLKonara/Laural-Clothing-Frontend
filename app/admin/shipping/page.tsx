@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useAllOrders, useDispatchOrder } from '@/hooks/useOrders';
+import { useOrders, useDispatchOrder } from '@/hooks/useOrders';
 import { Button } from '@/components/ui/Button';
 
 export default function ShippingDashboard() {
-  const { data: orders, isLoading } = useAllOrders();
+  const { data: orders, isLoading } = useOrders();
   const dispatchOrder = useDispatchOrder();
   
   const handleCreateShipment = (orderId: string) => {
