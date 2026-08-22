@@ -29,13 +29,44 @@ export default function SuperAdminDashboard() {
   const [activeBranch, setActiveBranch] = useState("All");
   const [activePeriod, setActivePeriod] = useState("Today");
 
-  const { data: branchesData } = useBranches();
+  const { data: branchesData, error: branchesError } = useBranches();
   
   // Combine static options with dynamic branches from DB
-  const dynamicBranches = branchesData ? branchesData.map((b: any) => b.name) : [];
+  const dynamicBranches = branchesData ? (Array.isArray(branchesData) ? branchesData.map((b: any) => b.name) : []) : [];
   const displayBranches = ["All", "Online", ...dynamicBranches];
 
-  const { data: analytics, isLoading } = useBusinessOverview(activePeriod, activeBranch);
+  const { data: analytics, isLoading, error: analyticsError } = useBusinessOverview(activePeriod, activeBranch);
+
+  const handleExport = () => {
+    if (!analytics || !analytics.recentTransactions || analytics.recentTransactions.length === 0) {
+      alert("No data available to export");
+      return;
+    }
+
+    const headers = ["Order ID", "Customer", "Branch", "Amount", "Payment Method", "Payment Status", "Order Status", "Date"];
+    const csvContent = [
+      headers.join(","),
+      ...analytics.recentTransactions.map((tx: any) => [
+        tx.id,
+        `"${tx.customer}"`,
+        `"${tx.branch}"`,
+        tx.amount,
+        tx.paymentMethod,
+        tx.paymentStatus,
+        tx.orderStatus,
+        new Date(tx.createdAt).toLocaleString()
+      ].join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `dashboard_export_${activePeriod.replace(/ /g, "_").toLowerCase()}_${new Date().getTime()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="flex flex-col gap-6 md:gap-8 p-4 md:p-10 max-w-[1280px] mx-auto w-full overflow-hidden md:overflow-visible">
@@ -61,7 +92,11 @@ export default function SuperAdminDashboard() {
             <option>Last 30 Days</option>
             <option>This Month</option>
           </select>
-          <button className="flex items-center gap-2 bg-white border border-stone-200 text-stone-700 hover:bg-stone-50 px-4 py-2.5 rounded-xl font-inter text-sm font-medium transition-colors shadow-sm">
+          <button 
+            onClick={handleExport}
+            disabled={isLoading || !analytics}
+            className="flex items-center gap-2 bg-white border border-stone-200 text-stone-700 hover:bg-stone-50 px-4 py-2.5 rounded-xl font-inter text-sm font-medium transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             Export
           </button>
         </div>
@@ -141,7 +176,10 @@ export default function SuperAdminDashboard() {
           </div>
         </>
       ) : (
-        <div className="text-center py-10 text-stone-500">Failed to load analytics data.</div>
+        <div className="text-center py-10 bg-red-50 text-red-500 rounded-2xl border border-red-200">
+          <p className="font-bold">Failed to load analytics data.</p>
+          <p className="text-sm mt-2">{analyticsError ? analyticsError.toString() : "Unknown error"}</p>
+        </div>
       )}
 
       {/* Charts & Breakdown Row */}
