@@ -46,6 +46,11 @@ export const reviewService = {
     return response.data;
   },
 
+  getPendingReviews: async (customerId: string): Promise<any[]> => {
+    const response = await api.get(`/api/reviews/pending/${customerId}`);
+    return response.data;
+  },
+
   getAllReviews: async (status?: string): Promise<Review[]> => {
     const params = status && status !== 'ALL' ? { status } : {};
     const response = await api.get('/api/reviews', { params });
