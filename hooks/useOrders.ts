@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { orderService } from "../services/order.service";
 
-export function useOrders(params?: { page?: number; limit?: number; status?: string; branchId?: string; paymentGateway?: string }) {
+export function useOrders(params?: { page?: number; limit?: number; status?: string; branchId?: string; paymentGateway?: string; customerId?: string }) {
   return useQuery({
     queryKey: ["orders", params],
     queryFn: async () => {
@@ -55,3 +55,12 @@ export const useTrackOrderByPhone = (phone: string | undefined) => {
     retry: false,
   });
 };
+
+export function useTrackOrder() {
+  return useMutation({
+    mutationFn: async ({ orderNumber, phone }: { orderNumber: string; phone: string }) => {
+      const response = await orderService.trackOrder(orderNumber, phone);
+      return response.data;
+    }
+  });
+}

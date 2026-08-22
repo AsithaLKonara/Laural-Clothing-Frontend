@@ -3,8 +3,17 @@
 import { useEffect } from "react";
 import { X, Heart } from "lucide-react";
 import CartItem from "./CartItem";
+import { useCartStore } from "@/store/useCartStore";
+import { useWishlist, useRemoveFromWishlist } from "@/hooks/useWishlist";
+import { useAddToCart } from "@/hooks/useCart";
+import Link from "next/link";
 
 export default function WishlistSidePanel({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const { sessionId } = useCartStore();
+  const { data: wishlist, isLoading } = useWishlist(sessionId);
+  const removeFromWishlist = useRemoveFromWishlist(sessionId, wishlist?.id);
+  const addToCart = useAddToCart(sessionId);
+
   // Prevent body scroll when wishlist is open
   useEffect(() => {
     if (isOpen) {
@@ -17,16 +26,7 @@ export default function WishlistSidePanel({ isOpen, onClose }: { isOpen: boolean
     };
   }, [isOpen]);
 
-  const wishlistItems = [
-    {
-      id: 1,
-      name: "Vesper Long Sleeve Top – Pink",
-      size: "UK : 08",
-      quantity: 1,
-      price: "2190.00",
-      image: "/products/default.jpg"
-    }
-  ];
+  const wishlistItems = wishlist?.items || [];
 
   return (
     <>
@@ -49,7 +49,7 @@ export default function WishlistSidePanel({ isOpen, onClose }: { isOpen: boolean
           {/* Header */}
           <div className="flex items-center justify-between py-6 px-6 border-b border-stone-100 flex-shrink-0">
             <h2 className="font-poppins font-light text-xl text-stone-900 tracking-wide">
-              My Wishlist
+              My Wishlist {wishlistItems.length > 0 && `(${wishlistItems.length})`}
             </h2>
             <button 
               onClick={onClose}
@@ -61,19 +61,40 @@ export default function WishlistSidePanel({ isOpen, onClose }: { isOpen: boolean
 
           {/* Scrollable Items Container */}
           <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col">
-            {wishlistItems.length > 0 ? (
-              wishlistItems.map((item) => (
-                <CartItem
-                  key={item.id}
-                  id={item.id}
-                  name={item.name}
-                  size={item.size}
-                  quantity={item.quantity}
-                  price={item.price}
-                  image={item.image}
-                  mode="wishlist"
-                />
-              ))
+            {isLoading ? (
+              <div className="flex-1 flex items-center justify-center text-stone-400 text-sm font-poppins">
+                Loading wishlist...
+              </div>
+            ) : wishlistItems.length > 0 ? (
+              wishlistItems.map((item) => {
+                const product = item.product;
+                let imageUrl = "/products/default.jpg";
+                const variant = product.variants?.[0]; // Best effort mapping for simple wishlist
+
+                if (variant?.featuredImage) imageUrl = variant.featuredImage;
+                else if (variant?.gallery?.[0]) imageUrl = variant.gallery[0];
+                
+                const price = variant?.salePrice || variant?.price || 0;
+
+                return (
+                  <CartItem
+                    key={item.id}
+                    id={item.productId}
+                    name={product.name}
+                    size={variant?.name || "N/A"}
+                    quantity={1}
+                    price={price.toLocaleString()}
+                    image={imageUrl}
+                    mode="wishlist"
+                    onRemove={(id) => removeFromWishlist.mutate(id as string)}
+                    onAddToCart={(id) => {
+                      if (variant) {
+                        addToCart.mutate({ variantId: variant.id, quantity: 1 });
+                      }
+                    }}
+                  />
+                );
+              })
             ) : (
               <div className="flex flex-col items-center justify-center h-full gap-4 text-stone-400">
                 <Heart className="w-10 h-10 stroke-[1]" />
@@ -85,14 +106,20 @@ export default function WishlistSidePanel({ isOpen, onClose }: { isOpen: boolean
 
         {/* Footer Area */}
         <div className="flex flex-col w-full flex-shrink-0 bg-stone-50 border-t border-stone-100 px-6 py-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02)]">
-          <button 
-            onClick={onClose}
-            className="flex justify-center items-center w-full py-3.5 bg-white border border-stone-200 text-stone-900 hover:border-stone-400 hover:bg-stone-50 transition-all duration-300"
-          >
-            <span className="font-poppins font-medium text-xs uppercase tracking-[0.15em]">
-              Continue Shopping
-            </span>
-          </button>
+          <Link href="/shop" onClick={onClose} className="w-full">
+            <button className="flex justify-center items-center w-full py-3.5 bg-white border border-stone-200 text-stone-900 hover:border-stone-400 hover:bg-stone-50 transition-all duration-300">
+              <span className="font-poppins font-medium text-xs uppercase tracking-[0.15em]">
+                Continue Shopping
+              </span>
+            </button>
+          </Link>
+          <Link href="/account/wishlist" onClick={onClose} className="w-full mt-3">
+            <button className="flex justify-center items-center w-full py-3.5 bg-stone-900 border border-stone-900 text-white hover:bg-black transition-all duration-300">
+              <span className="font-poppins font-medium text-xs uppercase tracking-[0.15em]">
+                View Full Wishlist
+              </span>
+            </button>
+          </Link>
         </div>
 
       </div>

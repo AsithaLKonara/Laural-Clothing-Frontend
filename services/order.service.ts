@@ -1,6 +1,5 @@
 import api from './api';
 
-<<<<<<< HEAD
 export interface CustomerData {
   id?: string;
   phone: string;
@@ -36,7 +35,7 @@ export const orderService = {
   createQuickDispatch: (data: QuickDispatchPayload) => 
     api.post<any>('/orders/quick-dispatch', data),
 
-  getOrders: (params?: { page?: number; limit?: number; status?: string; branchId?: string; paymentGateway?: string }) => 
+  getOrders: (params?: { page?: number; limit?: number; status?: string; branchId?: string; paymentGateway?: string; customerId?: string }) => 
     api.get<any>('/orders', { params }),
 
   getOrderById: (id: string) => 
@@ -58,5 +57,8 @@ export const orderService = {
   trackOrderByPhone: async (phone: string) => {
     const { data } = await api.get(`/orders/track/phone/${encodeURIComponent(phone)}`);
     return data;
-  }
+  },
+
+  trackOrder: (orderNumber: string, phone: string) =>
+    api.get<any>(`/orders/track?orderNumber=${encodeURIComponent(orderNumber)}&phone=${encodeURIComponent(phone)}`),
 };
