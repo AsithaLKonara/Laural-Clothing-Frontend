@@ -3,36 +3,7 @@
 import { Package, Box, Filter, Search, Eye } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-
-const DUMMY_ORDERS = [
-  {
-    id: "LC-10241",
-    date: "2026-08-14",
-    status: "PROCESSING", // PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED
-    items: 2,
-    total: "LKR 8,500",
-    payment: "Koko",
-    icon: Package
-  },
-  {
-    id: "LC-09942",
-    date: "2026-07-28",
-    status: "DELIVERED",
-    items: 1,
-    total: "LKR 4,900",
-    payment: "Mintpay",
-    icon: Box
-  },
-  {
-    id: "LC-09855",
-    date: "2026-06-15",
-    status: "DELIVERED",
-    items: 4,
-    total: "LKR 15,200",
-    payment: "Payzy",
-    icon: Package
-  }
-];
+import { useOrders } from "@/hooks/useOrders";
 
 const getStatusConfig = (status: string) => {
   switch (status) {
@@ -40,6 +11,7 @@ const getStatusConfig = (status: string) => {
       return { color: "text-orange-800", bg: "bg-orange-100", label: "Pending" };
     case "PROCESSING":
       return { color: "text-blue-800", bg: "bg-blue-100", label: "Processing" };
+    case "DISPATCHED":
     case "SHIPPED":
       return { color: "text-purple-800", bg: "bg-purple-100", label: "Shipped" };
     case "DELIVERED":
@@ -53,10 +25,14 @@ const getStatusConfig = (status: string) => {
 
 export default function OrdersPage() {
   const [filter, setFilter] = useState("all");
+  const customerId = "CUST-001"; // Hardcoded for demo
 
-  const filteredOrders = filter === "all" 
-    ? DUMMY_ORDERS 
-    : DUMMY_ORDERS.filter(o => o.status.toLowerCase() === filter);
+  const { data: ordersData, isLoading } = useOrders({ 
+    customerId,
+    status: filter === "all" ? undefined : filter.toUpperCase()
+  });
+
+  const orders = ordersData?.data || [];
 
   return (
     <div className="flex flex-col gap-6 md:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -82,7 +58,7 @@ export default function OrdersPage() {
       </div>
 
       <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
-        {["all", "processing", "shipped", "delivered", "cancelled"].map((f) => (
+        {["all", "pending", "processing", "dispatched", "delivered", "cancelled"].map((f) => (
           <button 
             key={f}
             onClick={() => setFilter(f)}
@@ -90,13 +66,17 @@ export default function OrdersPage() {
               filter === f ? "bg-stone-900 text-white" : "bg-white border border-stone-200 text-stone-600 hover:bg-stone-50"
             }`}
           >
-            {f}
+            {f === "dispatched" ? "Shipped" : f}
           </button>
         ))}
       </div>
 
       <div className="flex flex-col gap-4">
-        {filteredOrders.length === 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center items-center py-16">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-stone-900"></div>
+          </div>
+        ) : orders.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-4 border border-stone-200 border-dashed rounded-xl bg-stone-50">
             <Package className="text-stone-300 mb-4" size={48} />
             <h3 className="font-inria text-xl text-stone-900 mb-2">No Orders Found</h3>
@@ -105,9 +85,10 @@ export default function OrdersPage() {
             </p>
           </div>
         ) : (
-          filteredOrders.map((order) => {
+          orders.map((order: any) => {
             const statusInfo = getStatusConfig(order.status);
-            const Icon = order.icon;
+            // Default icon based on some items count logic or just Box for 1 item, Package for multiple
+            const Icon = order.items && order.items.length > 1 ? Package : Box;
             
             return (
               <div key={order.id} className="bg-white border border-stone-200 rounded-xl overflow-hidden hover:border-stone-300 transition-colors flex flex-col md:flex-row">
@@ -119,7 +100,7 @@ export default function OrdersPage() {
                         <div className="w-10 h-10 bg-stone-100 rounded-full flex items-center justify-center text-stone-500 shrink-0">
                           <Icon size={18} />
                         </div>
-                        <h3 className="font-inter font-bold text-stone-900 text-lg">Order #{order.id}</h3>
+                        <h3 className="font-inter font-bold text-stone-900 text-lg">Order #{order.orderNumber}</h3>
                       </div>
                       {/* Status on mobile moves up here for space */}
                       <span className={`md:hidden px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded ${statusInfo.bg} ${statusInfo.color}`}>
@@ -130,19 +111,19 @@ export default function OrdersPage() {
                     <div className="grid grid-cols-2 gap-y-4 gap-x-2 font-inter text-sm">
                       <div>
                         <p className="text-stone-500 mb-0.5">Date placed</p>
-                        <p className="font-medium text-stone-900">{order.date}</p>
+                        <p className="font-medium text-stone-900">{new Date(order.createdAt).toLocaleDateString()}</p>
                       </div>
                       <div>
                         <p className="text-stone-500 mb-0.5">Total amount</p>
-                        <p className="font-medium text-stone-900">{order.total}</p>
+                        <p className="font-medium text-stone-900">Rs. {order.total.toLocaleString()}</p>
                       </div>
                       <div>
                         <p className="text-stone-500 mb-0.5">Items</p>
-                        <p className="font-medium text-stone-900">{order.items}</p>
+                        <p className="font-medium text-stone-900">{order.items ? order.items.reduce((sum: number, i: any) => sum + i.quantity, 0) : 0}</p>
                       </div>
                       <div>
                         <p className="text-stone-500 mb-0.5">Payment</p>
-                        <p className="font-medium text-stone-900">{order.payment}</p>
+                        <p className="font-medium text-stone-900">{order.paymentMethod}</p>
                       </div>
                     </div>
                   </div>
@@ -160,9 +141,9 @@ export default function OrdersPage() {
                       <Eye size={16} /> View Details
                     </Link>
                     {order.status !== "DELIVERED" && order.status !== "CANCELLED" && (
-                      <button className="flex-1 md:flex-none flex items-center justify-center px-4 py-2.5 bg-stone-900 text-stone-50 font-inter font-medium text-sm rounded-lg hover:bg-stone-800 transition-colors">
+                      <Link href={`/track-order`} className="flex-1 md:flex-none flex items-center justify-center px-4 py-2.5 bg-stone-900 text-stone-50 font-inter font-medium text-sm rounded-lg hover:bg-stone-800 transition-colors">
                         Track Order
-                      </button>
+                      </Link>
                     )}
                   </div>
                 </div>
