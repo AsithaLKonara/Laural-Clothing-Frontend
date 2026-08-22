@@ -15,6 +15,8 @@ import { useProductBySlug, useProducts } from "@/hooks/useProducts";
 import { Product } from "@/types/product";
 import { useCartStore } from "@/store/useCartStore";
 import { useAddToCart } from "@/hooks/useCart";
+import { useCart } from "@/components/CartProvider";
+import { useAddToWishlist } from "@/hooks/useWishlist";
 
 const colorMap: Record<string, string> = {
   white: '#FFFFFF',
@@ -39,6 +41,8 @@ export default function ProductPageClient({ params }: { params: Promise<{ slug: 
   
   const { sessionId, openDrawer } = useCartStore();
   const addToCart = useAddToCart(sessionId);
+  const addToWishlist = useAddToWishlist(sessionId);
+  const { openWishlist } = useCart();
 
   const [emblaRef] = useEmblaCarousel(
     { loop: true, align: "start", dragFree: true },
@@ -298,8 +302,19 @@ export default function ProductPageClient({ params }: { params: Promise<{ slug: 
             <button className="flex items-center gap-2 font-poppins font-medium text-sm text-primary hover:text-accent transition-colors">
               <ArrowLeftRight size={18} strokeWidth={1.5} /> Compare
             </button>
-            <button className="flex items-center gap-2 font-poppins font-medium text-sm text-primary hover:text-accent transition-colors">
-              <Heart size={18} strokeWidth={1.5} /> Add to wishlist
+            <button 
+              onClick={() => {
+                if (product) {
+                  addToWishlist.mutate(product.id, {
+                    onSuccess: () => openWishlist()
+                  });
+                }
+              }}
+              disabled={addToWishlist.isPending}
+              className="flex items-center gap-2 font-poppins font-medium text-sm text-primary hover:text-accent transition-colors disabled:opacity-50"
+            >
+              <Heart size={18} strokeWidth={1.5} className={addToWishlist.isPending ? "animate-pulse fill-primary" : ""} /> 
+              {addToWishlist.isPending ? 'Adding...' : 'Add to wishlist'}
             </button>
             <button onClick={() => setIsSizeGuideOpen(true)} className="flex items-center gap-2 font-poppins font-medium text-sm text-primary hover:text-accent transition-colors">
               <Ruler size={18} strokeWidth={1.5} /> Size Guide
