@@ -1,12 +1,32 @@
 "use client";
 
 import { MoreVertical } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-export default function RevenueChart() {
-  const [activeTab, setActiveTab] = useState("Koko");
+interface GatewayData {
+  gw: string;
+  amount: number;
+  count: number;
+  pct: number;
+}
 
-  const tabs = ["Koko", "Mintpay", "OnePay"];
+export default function RevenueChart({ data }: { data?: GatewayData[] }) {
+  const [activeTab, setActiveTab] = useState<string>("");
+
+  const formatCurrency = (value: number) => {
+    if (value >= 1000000) return `Rs. ${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `Rs. ${(value / 1000).toFixed(1)}K`;
+    return `Rs. ${value.toFixed(0)}`;
+  };
+
+  // Default to top 3 gateways
+  const tabs = data?.slice(0, 3) || [];
+  
+  useEffect(() => {
+    if (tabs.length > 0 && !activeTab) {
+      setActiveTab(tabs[0].gw);
+    }
+  }, [tabs, activeTab]);
 
   return (
     <div className="flex-1 min-w-[600px] h-[476px] bg-white border border-stone-200 rounded-2xl shadow-sm flex flex-col relative overflow-hidden">
@@ -27,28 +47,30 @@ export default function RevenueChart() {
       </div>
 
       {/* Tabs */}
-      <div className="px-6 flex gap-5 border-b border-stone-100">
-        {tabs.map(tab => (
+      <div className="px-6 flex gap-5 border-b border-stone-100 min-h-[75px]">
+        {tabs.length > 0 ? tabs.map(tab => (
           <button 
-            key={tab}
-            onClick={() => setActiveTab(tab)}
+            key={tab.gw}
+            onClick={() => setActiveTab(tab.gw)}
             className={`flex flex-col items-start pb-4 gap-2 border-b-2 transition-colors ${
-              activeTab === tab 
+              activeTab === tab.gw 
                 ? "border-blue-600" 
                 : "border-transparent hover:border-stone-200"
             }`}
           >
-            <span className={`font-bold text-[24px] leading-[22px] ${activeTab === tab ? "text-stone-900" : "text-stone-400"}`}>
-              {tab === "Koko" ? "Rs.245K" : tab === "Mintpay" ? "Rs.184K" : "Rs.152K"}
+            <span className={`font-bold text-[24px] leading-[22px] ${activeTab === tab.gw ? "text-stone-900" : "text-stone-400"}`}>
+              {formatCurrency(tab.amount)}
             </span>
-            <span className={`font-medium text-[14px] leading-[20px] tracking-[-0.02em] ${activeTab === tab ? "text-stone-500" : "text-stone-400"}`}>
-              {tab}
+            <span className={`font-medium text-[14px] leading-[20px] tracking-[-0.02em] ${activeTab === tab.gw ? "text-stone-500" : "text-stone-400"}`}>
+              {tab.gw}
             </span>
           </button>
-        ))}
+        )) : (
+          <div className="text-stone-400 text-sm py-4">No data available</div>
+        )}
       </div>
 
-      {/* Chart Placeholder Area */}
+      {/* Chart Area */}
       <div className="flex-1 flex items-center justify-center relative p-6">
         
         {/* Decorative Grid Lines */}
@@ -58,13 +80,15 @@ export default function RevenueChart() {
           ))}
         </div>
 
-        {/* Decorative Bar Chart Placeholder */}
-        <div className="absolute inset-x-12 bottom-10 h-[180px] flex items-end justify-between z-10 px-8">
-           {[40, 70, 45, 90, 65, 80, 50, 100].map((h, i) => (
-             <div key={i} className="w-12 bg-blue-600/10 rounded-t-sm relative group cursor-pointer hover:bg-blue-600/20 transition-colors" style={{ height: `${h}%` }}>
-               <div className="absolute bottom-0 w-full bg-blue-600 rounded-t-sm" style={{ height: `${h * 0.7}%` }}></div>
+        {/* Dynamic Bar Chart based on Gateway Data */}
+        <div className="absolute inset-x-12 bottom-10 h-[180px] flex items-end justify-around z-10 px-8">
+           {tabs.length > 0 ? data?.map((g, i) => (
+             <div key={g.gw} className="w-16 bg-blue-600/10 rounded-t-sm relative group cursor-pointer hover:bg-blue-600/20 transition-colors" style={{ height: `${Math.max(10, g.pct * 2)}%` }} title={`${g.gw}: ${g.pct}%`}>
+               <div className="absolute bottom-0 w-full bg-blue-600 rounded-t-sm" style={{ height: `${g.pct}%` }}></div>
              </div>
-           ))}
+           )) : (
+             <div className="text-stone-400 text-sm">No transactions to display</div>
+           )}
         </div>
 
       </div>
