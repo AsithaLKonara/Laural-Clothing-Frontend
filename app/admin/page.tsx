@@ -45,11 +45,10 @@ export default function SuperAdminDashboard() {
           <button
             key={branch}
             onClick={() => setActiveBranch(branch)}
-            className={`px-4 py-2 rounded-xl text-sm font-inter font-medium transition-all ${
-              activeBranch === branch
+            className={`px-4 py-2 rounded-xl text-sm font-inter font-medium transition-all ${activeBranch === branch
                 ? "bg-stone-900 text-white shadow-md shadow-stone-900/20"
                 : "bg-white border border-stone-200 text-stone-600 hover:bg-stone-50 hover:border-stone-300"
-            }`}
+              }`}
           >
             {branch}
           </button>
@@ -86,23 +85,23 @@ export default function SuperAdminDashboard() {
         </div>
         <div className="p-6 flex flex-col gap-3 overflow-x-auto">
           <div className="min-w-[500px]">
-          {[
-            { gw: "Koko", amount: "Rs. 245,000", pct: 29, count: 42, color: "bg-violet-500" },
-            { gw: "Mintpay", amount: "Rs. 184,000", pct: 22, count: 31, color: "bg-purple-400" },
-            { gw: "OnePay", amount: "Rs. 152,000", pct: 18, count: 28, color: "bg-blue-500" },
-            { gw: "Payzy", amount: "Rs. 126,000", pct: 15, count: 21, color: "bg-sky-400" },
-            { gw: "COD", amount: "Rs. 132,000", pct: 16, count: 30, color: "bg-stone-400" },
-          ].map(g => (
-            <div key={g.gw} className="flex items-center gap-4">
-              <div className="w-20 font-inter font-bold text-sm text-stone-800 shrink-0">{g.gw}</div>
-              <div className="flex-1 bg-stone-100 rounded-full h-2 overflow-hidden">
-                <div className={`h-2 rounded-full ${g.color}`} style={{ width: `${g.pct}%` }} />
+            {[
+              { gw: "Koko", amount: "Rs. 245,000", pct: 29, count: 42, color: "bg-violet-500" },
+              { gw: "Mintpay", amount: "Rs. 184,000", pct: 22, count: 31, color: "bg-purple-400" },
+              { gw: "OnePay", amount: "Rs. 152,000", pct: 18, count: 28, color: "bg-blue-500" },
+              { gw: "Payzy", amount: "Rs. 126,000", pct: 15, count: 21, color: "bg-sky-400" },
+              { gw: "COD", amount: "Rs. 132,000", pct: 16, count: 30, color: "bg-stone-400" },
+            ].map(g => (
+              <div key={g.gw} className="flex items-center gap-4">
+                <div className="w-20 font-inter font-bold text-sm text-stone-800 shrink-0">{g.gw}</div>
+                <div className="flex-1 bg-stone-100 rounded-full h-2 overflow-hidden">
+                  <div className={`h-2 rounded-full ${g.color}`} style={{ width: `${g.pct}%` }} />
+                </div>
+                <div className="w-8 text-xs font-bold text-stone-500 text-right shrink-0">{g.pct}%</div>
+                <div className="w-28 font-inter font-bold text-sm text-stone-900 text-right shrink-0">{g.amount}</div>
+                <div className="w-20 font-inter text-xs text-stone-400 text-right shrink-0">{g.count} txns</div>
               </div>
-              <div className="w-8 text-xs font-bold text-stone-500 text-right shrink-0">{g.pct}%</div>
-              <div className="w-28 font-inter font-bold text-sm text-stone-900 text-right shrink-0">{g.amount}</div>
-              <div className="w-20 font-inter text-xs text-stone-400 text-right shrink-0">{g.count} txns</div>
-            </div>
-          ))}
+            ))}
           </div>
         </div>
       </div>
