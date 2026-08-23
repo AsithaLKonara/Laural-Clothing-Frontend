@@ -7,6 +7,8 @@ import { TicketPercent, CreditCard, Banknote, ShieldCheck, Award, ChevronDown } 
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import LoyaltyPointsModal from "@/components/LoyaltyPointsModal";
+import OtpVerificationModal from "@/components/OtpVerificationModal";
+import { useAuthStore } from "@/store/auth.store";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { checkoutSchema, CheckoutFormData } from "@/lib/validations";
@@ -39,6 +41,12 @@ export default function CheckoutPage() {
   const [discountCode, setDiscountCode] = useState("");
   const [isLoyaltyModalOpen, setIsLoyaltyModalOpen] = useState(false);
   const [appliedLoyaltyPoints, setAppliedLoyaltyPoints] = useState<number>(0);
+  
+  const { isAuthenticated } = useAuthStore();
+  const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
+  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+  const [pendingCheckoutData, setPendingCheckoutData] = useState<CheckoutFormData | null>(null);
+  const [verificationToken, setVerificationToken] = useState("");
 
   const router = useRouter();
   const { sessionId } = useCartStore();
@@ -68,7 +76,7 @@ export default function CheckoutPage() {
     }
   };
 
-  const onSubmit = (data: CheckoutFormData) => {
+  const executeCheckout = (data: CheckoutFormData, token?: string) => {
     if (!cart?.id) return;
 
     if (saveAddress && !selectedAddressId) {
@@ -88,6 +96,7 @@ export default function CheckoutPage() {
     initiateCheckout.mutate(
       {
         cartId: cart.id,
+        verificationToken: token || verificationToken,
         customer: {
           phone: data.phone,
           email: data.email,
@@ -115,6 +124,18 @@ export default function CheckoutPage() {
         }
       }
     );
+  };
+
+  const onSubmit = (data: CheckoutFormData) => {
+    if (!cart?.id) return;
+
+    if (!isAuthenticated && !isPhoneVerified) {
+      setPendingCheckoutData(data);
+      setIsOtpModalOpen(true);
+      return;
+    }
+    
+    executeCheckout(data);
   };
 
   return (
@@ -617,6 +638,19 @@ export default function CheckoutPage() {
         isOpen={isLoyaltyModalOpen} 
         onClose={() => setIsLoyaltyModalOpen(false)} 
         onApplyPoints={(points) => setAppliedLoyaltyPoints(points)} 
+      />
+      <OtpVerificationModal 
+        isOpen={isOtpModalOpen}
+        phone={pendingCheckoutData?.phone || ""}
+        onClose={() => setIsOtpModalOpen(false)}
+        onSuccess={(token) => {
+          setIsPhoneVerified(true);
+          setVerificationToken(token);
+          setIsOtpModalOpen(false);
+          if (pendingCheckoutData) {
+            executeCheckout(pendingCheckoutData, token);
+          }
+        }}
       />
 
     </main>

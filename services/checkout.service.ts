@@ -10,6 +10,7 @@ export interface CheckoutTotals {
 
 export interface InitiateCheckoutPayload {
   cartId: string;
+  verificationToken?: string;
   customer: {
     phone: string;
     email?: string;
