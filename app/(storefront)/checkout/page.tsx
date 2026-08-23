@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { useAddresses, useAddAddress, MOCK_CUSTOMER_ID } from "@/hooks/useAddress";
 import { globalDialog } from "@/store/dialog.store";
 import { generateDeviceFingerprint } from "@/lib/fingerprint";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 export default function CheckoutPage() {
   const {
@@ -408,6 +409,11 @@ export default function CheckoutPage() {
                 </div>
               </div>
             )}
+
+            {/* Turnstile CAPTCHA */}
+            <div className="flex w-full justify-center pt-4">
+              <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!} onSuccess={(token) => setValue("turnstileToken", token)} />
+            </div>
 
             {/* Mobile Place Order Button (Shows above cart on mobile) */}
             <div className="flex lg:hidden w-full pt-4">

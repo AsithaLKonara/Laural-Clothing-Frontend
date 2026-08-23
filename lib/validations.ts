@@ -18,6 +18,7 @@ export const checkoutSchema = z.object({
   paymentMethod: z.enum(["cod", "mintpay", "koko", "payzy", "onepay"]),
   _honeypot: z.string().optional(),
   deviceFingerprint: z.string().optional(),
+  turnstileToken: z.string().optional(),
 }).superRefine((data, ctx) => {
   if (!data.billingSameAsShipping) {
     if (!data.billingAddressLine1 || data.billingAddressLine1.length < 5) {
@@ -51,6 +52,7 @@ export const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(1, "Password is required"),
   _honeypot: z.string().optional(),
+  turnstileToken: z.string().optional(),
 });
 
 export type LoginFormData = z.infer<typeof loginSchema>;
@@ -67,6 +69,7 @@ export const registerSchema = z.object({
   birthday: z.string().optional().or(z.literal("")),
   phone: z.string().optional().or(z.literal("")),
   _honeypot: z.string().optional(),
+  turnstileToken: z.string().optional(),
 });
 
 export type RegisterFormData = z.infer<typeof registerSchema>;
@@ -75,6 +78,7 @@ export type RegisterFormData = z.infer<typeof registerSchema>;
 export const forgotPasswordSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   _honeypot: z.string().optional(),
+  turnstileToken: z.string().optional(),
 });
 
 export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
@@ -89,6 +93,7 @@ export const changePasswordSchema = z
       .regex(/[!@#$%^&*(),.?":{}|<>]/, "Password must contain at least one special character"),
     confirmPassword: z.string(),
     _honeypot: z.string().optional(),
+    turnstileToken: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",

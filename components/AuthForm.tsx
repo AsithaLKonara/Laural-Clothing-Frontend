@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Eye, EyeOff, ArrowRight, Calendar, CheckCircle2 } from "lucide-react";
+import { Turnstile } from "@marsidev/react-turnstile";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -58,7 +59,7 @@ function LoginForm({ setView }: { setView: (v: AuthView) => void }) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
 
@@ -151,6 +152,10 @@ function LoginForm({ setView }: { setView: (v: AuthView) => void }) {
           </div>
         )}
 
+        <div className="w-full flex justify-center mt-2">
+          <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!} onSuccess={(token) => setValue("turnstileToken", token)} />
+        </div>
+
         <button type="submit" disabled={loading} className="group w-full h-[56px] bg-stone-50 flex justify-between items-center px-[24px] hover:bg-stone-200 transition-colors disabled:opacity-50">
           <span className="font-urbanist font-bold text-sm text-black uppercase tracking-[0.1em]">
             {loading ? "Signing In..." : "Sign In"}
@@ -205,7 +210,7 @@ function RegisterForm({ setView }: { setView: (v: AuthView) => void }) {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   });
 
@@ -319,6 +324,10 @@ function RegisterForm({ setView }: { setView: (v: AuthView) => void }) {
             </div>
           )}
 
+          <div className="w-full flex justify-center mt-2">
+            <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!} onSuccess={(token) => setValue("turnstileToken", token)} />
+          </div>
+
           <button type="submit" disabled={loading} className="group w-full h-[56px] bg-stone-50 flex justify-between items-center px-[24px] hover:bg-stone-200 transition-colors mt-[8px] disabled:opacity-50">
             <span className="font-urbanist font-bold text-sm text-black uppercase tracking-[0.1em]">
               {loading ? "Creating Account..." : "Create Account"}
@@ -345,7 +354,7 @@ function RegisterForm({ setView }: { setView: (v: AuthView) => void }) {
 }
 
 function ForgotPasswordForm({ setView }: { setView: (v: AuthView) => void }) {
-  const { register, handleSubmit, formState: { errors } } = useForm<ForgotPasswordFormData>({
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(forgotPasswordSchema),
   });
 
@@ -379,6 +388,11 @@ function ForgotPasswordForm({ setView }: { setView: (v: AuthView) => void }) {
           />
           {errors.email && <span className="text-red-500 text-xs mt-1 block">{errors.email.message}</span>}
         </div>
+
+        <div className="w-full flex justify-center mt-2">
+          <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!} onSuccess={(token) => setValue("turnstileToken", token)} />
+        </div>
+
         <button 
           type="submit"
           className="group w-full h-[56px] bg-stone-50 flex justify-between items-center px-[24px] hover:bg-stone-200 transition-colors mt-[8px]"
@@ -455,7 +469,7 @@ function ChangePasswordForm({ setView }: { setView: (v: AuthView) => void }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
-  const { register, handleSubmit, formState: { errors } } = useForm<ChangePasswordFormData>({
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<ChangePasswordFormData>({
     resolver: zodResolver(changePasswordSchema),
   });
 
@@ -516,6 +530,10 @@ function ChangePasswordForm({ setView }: { setView: (v: AuthView) => void }) {
             </button>
           </div>
           {errors.confirmPassword && <span className="text-red-500 text-xs mt-1 block">{errors.confirmPassword.message}</span>}
+        </div>
+        
+        <div className="w-full flex justify-center mt-2">
+          <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!} onSuccess={(token) => setValue("turnstileToken", token)} />
         </div>
 
         <button 

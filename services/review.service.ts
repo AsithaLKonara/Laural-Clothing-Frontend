@@ -32,6 +32,7 @@ export const reviewService = {
     comment?: string;
     images?: string[];
     _honeypot?: string;
+    turnstileToken?: string;
   }): Promise<Review> => {
     const response = await api.post('/reviews', data);
     return response.data;

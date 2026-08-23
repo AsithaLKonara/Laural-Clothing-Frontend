@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Star, MessageSquare } from "lucide-react";
+import { Turnstile } from "@marsidev/react-turnstile";
 import { useProductReviews, useCreateReview } from "@/hooks/useReviews";
 import { globalDialog } from "@/store/dialog.store";
 
@@ -13,6 +14,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
   const [title, setTitle] = useState("");
   const [comment, setComment] = useState("");
   const [_honeypot, setHoneypot] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
   const [showForm, setShowForm] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,6 +31,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
         title,
         comment,
         _honeypot,
+        turnstileToken,
       });
       setShowForm(false);
       setTitle("");
@@ -122,15 +125,27 @@ export default function ProductReviews({ productId }: { productId: string }) {
               placeholder="Tell us what you liked or disliked about this product..."
               className="w-full border border-stone-200 rounded-lg px-4 py-2.5 text-sm font-inter outline-none focus:border-stone-900 resize-none"
             />
+            <div className="flex gap-3 mt-4">
+              <button 
+                type="button" 
+                onClick={() => setShowForm(false)}
+                className="flex-1 py-3 px-4 border border-stone-200 rounded-full font-poppins font-medium text-sm text-stone-600 hover:bg-stone-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                disabled={isPending || !turnstileToken}
+                className="flex-1 py-3 px-4 bg-primary text-white rounded-full font-poppins font-semibold text-sm hover:bg-stone-800 transition-colors disabled:opacity-50 flex justify-center items-center"
+              >
+                {isPending ? "Submitting..." : "Submit Review"}
+              </button>
+            </div>
+            
+            <div className="w-full flex justify-center mt-2">
+              <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!} onSuccess={(token) => setTurnstileToken(token)} />
+            </div>
           </div>
-
-          <button 
-            type="submit"
-            disabled={isPending}
-            className="w-full font-poppins font-medium text-sm text-white bg-primary px-6 py-3 rounded-xl hover:bg-stone-800 transition-colors disabled:opacity-50"
-          >
-            {isPending ? "Submitting..." : "Submit Review"}
-          </button>
         </form>
       )}
 
