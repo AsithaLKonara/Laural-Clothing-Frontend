@@ -19,7 +19,7 @@ const addressSchema = z.object({
   phone: z.string().min(1, "Phone is required"),
   isDefault: z.boolean(),
   type: z.enum(["SHIPPING", "BILLING"]),
-});
+}).strict();
 
 export default function AddressesPage() {
   const { data: addresses = [], isLoading } = useAddresses();
