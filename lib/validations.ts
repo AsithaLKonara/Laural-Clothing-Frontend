@@ -17,6 +17,7 @@ export const checkoutSchema = z.object({
   billingPhone: z.string().optional(),
   paymentMethod: z.enum(["cod", "mintpay", "koko", "payzy", "onepay"]),
   _honeypot: z.string().optional(),
+  deviceFingerprint: z.string().optional(),
 }).superRefine((data, ctx) => {
   if (!data.billingSameAsShipping) {
     if (!data.billingAddressLine1 || data.billingAddressLine1.length < 5) {

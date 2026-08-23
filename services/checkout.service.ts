@@ -27,6 +27,7 @@ export interface InitiateCheckoutPayload {
     phone: string;
   };
   paymentMethod?: string;
+  deviceFingerprint?: string;
 }
 
 const getHeaders = (sessionId: string) => ({

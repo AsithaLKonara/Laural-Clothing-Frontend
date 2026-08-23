@@ -18,6 +18,7 @@ import { useInitiateCheckout } from "@/hooks/useCheckout";
 import { useRouter } from "next/navigation";
 import { useAddresses, useAddAddress, MOCK_CUSTOMER_ID } from "@/hooks/useAddress";
 import { globalDialog } from "@/store/dialog.store";
+import { generateDeviceFingerprint } from "@/lib/fingerprint";
 
 export default function CheckoutPage() {
   const {
@@ -112,6 +113,7 @@ export default function CheckoutPage() {
           phone: data.phone,
         },
         paymentMethod: data.paymentMethod,
+        deviceFingerprint: data.deviceFingerprint,
       },
       {
         onSuccess: (order) => {
@@ -126,7 +128,7 @@ export default function CheckoutPage() {
     );
   };
 
-  const onSubmit = (data: CheckoutFormData) => {
+  const onSubmit = async (data: CheckoutFormData) => {
     if (!cart?.id) return;
 
     if (!isAuthenticated && !isPhoneVerified) {
@@ -134,6 +136,9 @@ export default function CheckoutPage() {
       setIsOtpModalOpen(true);
       return;
     }
+    
+    // Generate fingerprint right before submission
+    data.deviceFingerprint = await generateDeviceFingerprint();
     
     executeCheckout(data);
   };
