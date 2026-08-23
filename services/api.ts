@@ -1,14 +1,50 @@
 import axios from "axios";
 
-// In the future, replace the baseURL with the actual backend API URL
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1",
-  timeout: 10000,
+  timeout: 15000,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-console.log("API URL configured as:", process.env.NEXT_PUBLIC_API_URL);
+// Request interceptor to attach JWT Bearer token
+api.interceptors.request.use(
+  (config) => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("laural_access_token");
+      if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor to handle errors
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401 && typeof window !== "undefined") {
+      // If 401 on an authenticated request (and not already on login)
+      const currentPath = window.location.pathname;
+      if (currentPath.startsWith("/admin") || currentPath.startsWith("/pos") || currentPath.startsWith("/account")) {
+        // Clear stored token
+        localStorage.removeItem("laural_access_token");
+        localStorage.removeItem("laural_refresh_token");
+        localStorage.removeItem("laural_user");
+        document.cookie = "laural_token=; path=/; max-age=0;";
+        document.cookie = "laural_role=; path=/; max-age=0;";
+        
+        // Optional redirect if session completely invalid
+        // window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;

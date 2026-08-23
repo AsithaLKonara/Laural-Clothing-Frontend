@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Calendar, CheckCircle2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -14,7 +14,8 @@ import {
   ForgotPasswordFormData,
   ChangePasswordFormData,
 } from "@/lib/validations";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuthStore } from "@/store/auth.store";
 
 type AuthView = "login" | "register" | "forgot-password" | "otp" | "change-password";
 
@@ -49,6 +50,10 @@ export default function AuthForm() {
 
 function LoginForm({ setView }: { setView: (v: AuthView) => void }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams?.get("redirect");
+  const loginAction = useAuthStore((state) => state.login);
+
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -60,16 +65,26 @@ function LoginForm({ setView }: { setView: (v: AuthView) => void }) {
   const onSubmit = async (data: LoginFormData) => {
     setError(null);
     setLoading(true);
-    
+
     try {
-      // Mock authentication
-      setTimeout(() => {
+      const result = await loginAction(data);
+      const userRoles = result.user.roles || [];
+      const isStaffOrAdmin = userRoles.some(
+        (r) => r.toUpperCase() !== "PUBLIC_USER" && r.toLowerCase() !== "public user"
+      );
+
+      if (redirect) {
+        router.push(redirect);
+      } else if (isStaffOrAdmin) {
         router.push("/admin");
-      }, 500);
-    } catch (err) {
-      setError("An unexpected error occurred.");
+      } else {
+        router.push("/account");
+      }
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || "Failed to sign in. Please check your credentials.";
+      setError(msg);
     } finally {
-      // keep loading true while redirecting
+      setLoading(false);
     }
   };
 
@@ -127,7 +142,7 @@ function LoginForm({ setView }: { setView: (v: AuthView) => void }) {
         </div>
 
         {error && (
-          <div className="w-full bg-red-500/10 border border-red-500/50 text-red-500 text-sm px-4 py-3 text-center">
+          <div className="w-full bg-red-500/10 border border-red-500/50 text-red-400 text-sm px-4 py-3 text-center">
             {error}
           </div>
         )}
@@ -176,17 +191,51 @@ function LoginForm({ setView }: { setView: (v: AuthView) => void }) {
 }
 
 function RegisterForm({ setView }: { setView: (v: AuthView) => void }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams?.get("redirect");
+  const registerAction = useAuthStore((state) => state.register);
+
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = (data: RegisterFormData) => {
-    console.log("Register data:", data);
+  const onSubmit = async (data: RegisterFormData) => {
+    setError(null);
+    setLoading(true);
+
+    try {
+      await registerAction({
+        email: data.email,
+        password: data.password,
+        fullName: data.fullName,
+        birthday: data.birthday || null,
+        phone: data.phone || null,
+      });
+
+      setSuccess(true);
+      setTimeout(() => {
+        if (redirect) {
+          router.push(redirect);
+        } else {
+          router.push("/account");
+        }
+      }, 1000);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || "Failed to create account. Please try again.";
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="flex flex-col items-center w-full gap-[36px] animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="flex flex-col items-center w-full gap-[32px] animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col items-center gap-[8px]">
         <h2 className="font-inria text-4xl md:text-5xl leading-[1.2] text-center text-stone-50 tracking-wide">
           Join Laural
@@ -195,56 +244,83 @@ function RegisterForm({ setView }: { setView: (v: AuthView) => void }) {
           Discover pieces edited for quiet luxury.
         </p>
       </div>
-      
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col w-full gap-[16px]">
-        <div className="w-full">
-          <input 
-            type="text" 
-            placeholder="Full Name" 
-            {...register("fullName")}
-            className={`w-full h-[56px] px-[20px] bg-black/20 backdrop-blur-md border ${errors.fullName ? 'border-red-500' : 'border-white/10'} rounded-none font-urbanist font-light text-sm text-stone-50 placeholder:text-stone-400 focus:outline-none focus:border-stone-50 focus:bg-black/40 transition-all`}
-          />
-          {errors.fullName && <span className="text-red-500 text-xs mt-1 block">{errors.fullName.message}</span>}
-        </div>
 
-        <div className="w-full">
-          <input 
-            type="email" 
-            placeholder="Email Address" 
-            {...register("email")}
-            className={`w-full h-[56px] px-[20px] bg-black/20 backdrop-blur-md border ${errors.email ? 'border-red-500' : 'border-white/10'} rounded-none font-urbanist font-light text-sm text-stone-50 placeholder:text-stone-400 focus:outline-none focus:border-stone-50 focus:bg-black/40 transition-all`}
-          />
-          {errors.email && <span className="text-red-500 text-xs mt-1 block">{errors.email.message}</span>}
+      {success ? (
+        <div className="flex flex-col items-center gap-4 py-8 text-center animate-in fade-in">
+          <CheckCircle2 className="w-12 h-12 text-emerald-400" />
+          <h3 className="font-inria text-2xl text-stone-50">Welcome to Laural</h3>
+          <p className="font-urbanist text-stone-400 text-sm">Your account has been created. Redirecting you...</p>
         </div>
-
-        <div className="w-full">
-          <div className="relative w-full">
+      ) : (
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col w-full gap-[16px]">
+          <div className="w-full">
             <input 
-              type={showPassword ? "text" : "password"} 
-              placeholder="Password" 
-              {...register("password")}
-              className={`w-full h-[56px] pl-[20px] pr-[50px] bg-black/20 backdrop-blur-md border ${errors.password ? 'border-red-500' : 'border-white/10'} rounded-none font-urbanist font-light text-sm text-stone-50 placeholder:text-stone-400 focus:outline-none focus:border-stone-50 focus:bg-black/40 transition-all`}
+              type="text" 
+              placeholder="Full Name" 
+              {...register("fullName")}
+              className={`w-full h-[56px] px-[20px] bg-black/20 backdrop-blur-md border ${errors.fullName ? 'border-red-500' : 'border-white/10'} rounded-none font-urbanist font-light text-sm text-stone-50 placeholder:text-stone-400 focus:outline-none focus:border-stone-50 focus:bg-black/40 transition-all`}
             />
-            <button 
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-[20px] top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-50 transition-colors"
-            >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
+            {errors.fullName && <span className="text-red-500 text-xs mt-1 block">{errors.fullName.message}</span>}
           </div>
-          {errors.password && <span className="text-red-500 text-xs mt-1 block">{errors.password.message}</span>}
-        </div>
 
-        <button type="submit" className="group w-full h-[56px] bg-stone-50 flex justify-between items-center px-[24px] hover:bg-stone-200 transition-colors mt-[8px]">
-          <span className="font-urbanist font-bold text-sm text-black uppercase tracking-[0.1em]">
-            Create Account
-          </span>
-          <ArrowRight className="w-5 h-5 text-black transform group-hover:translate-x-1 transition-transform" />
-        </button>
-      </form>
+          <div className="w-full">
+            <input 
+              type="email" 
+              placeholder="Email Address" 
+              {...register("email")}
+              className={`w-full h-[56px] px-[20px] bg-black/20 backdrop-blur-md border ${errors.email ? 'border-red-500' : 'border-white/10'} rounded-none font-urbanist font-light text-sm text-stone-50 placeholder:text-stone-400 focus:outline-none focus:border-stone-50 focus:bg-black/40 transition-all`}
+            />
+            {errors.email && <span className="text-red-500 text-xs mt-1 block">{errors.email.message}</span>}
+          </div>
 
-      <div className="flex flex-row justify-center items-center gap-[8px] w-full mt-4">
+          <div className="w-full">
+            <div className="relative w-full">
+              <input 
+                type={showPassword ? "text" : "password"} 
+                placeholder="Password (min. 8 characters)" 
+                {...register("password")}
+                className={`w-full h-[56px] pl-[20px] pr-[50px] bg-black/20 backdrop-blur-md border ${errors.password ? 'border-red-500' : 'border-white/10'} rounded-none font-urbanist font-light text-sm text-stone-50 placeholder:text-stone-400 focus:outline-none focus:border-stone-50 focus:bg-black/40 transition-all`}
+              />
+              <button 
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-[20px] top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-50 transition-colors"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+            {errors.password && <span className="text-red-500 text-xs mt-1 block">{errors.password.message}</span>}
+          </div>
+
+          {/* Birthday Field (Optional) */}
+          <div className="w-full">
+            <div className="relative w-full">
+              <input 
+                type="date"
+                placeholder="Birthday (Optional)"
+                {...register("birthday")}
+                className="w-full h-[56px] px-[20px] bg-black/20 backdrop-blur-md border border-white/10 rounded-none font-urbanist font-light text-sm text-stone-200 placeholder:text-stone-400 focus:outline-none focus:border-stone-50 focus:bg-black/40 transition-all [color-scheme:dark]"
+              />
+            </div>
+            <span className="text-stone-400 text-xs mt-1 block pl-1">Optional — Receive an exclusive birthday gift & offer</span>
+          </div>
+
+          {error && (
+            <div className="w-full bg-red-500/10 border border-red-500/50 text-red-400 text-sm px-4 py-3 text-center">
+              {error}
+            </div>
+          )}
+
+          <button type="submit" disabled={loading} className="group w-full h-[56px] bg-stone-50 flex justify-between items-center px-[24px] hover:bg-stone-200 transition-colors mt-[8px] disabled:opacity-50">
+            <span className="font-urbanist font-bold text-sm text-black uppercase tracking-[0.1em]">
+              {loading ? "Creating Account..." : "Create Account"}
+            </span>
+            {!loading && <ArrowRight className="w-5 h-5 text-black transform group-hover:translate-x-1 transition-transform" />}
+          </button>
+        </form>
+      )}
+
+      <div className="flex flex-row justify-center items-center gap-[8px] w-full mt-2">
         <span className="font-poppins font-light text-sm text-stone-400">
           Already have an account?
         </span>
@@ -316,7 +392,6 @@ function ForgotPasswordForm({ setView }: { setView: (v: AuthView) => void }) {
 }
 
 function OTPForm({ setView }: { setView: (v: AuthView) => void }) {
-  // Simple check since Zod for OTP arrays is overkill right now for a single dummy form
   const handleVerify = () => setView("change-password");
 
   return (

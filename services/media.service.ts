@@ -16,12 +16,12 @@ export interface MediaFile {
 export const mediaService = {
   getMediaFiles: async (folder?: string): Promise<MediaFile[]> => {
     const params = folder && folder !== 'All' ? { folder } : {};
-    const { data } = await api.get('/api/media', { params });
+    const { data } = await api.get('/media', { params });
     return data;
   },
 
   generatePresignedUrl: async (filename: string, contentType: string, folder?: string): Promise<{ url: string, key: string, publicUrl: string }> => {
-    const { data } = await api.post('/api/media/presigned-url', { filename, contentType, folder });
+    const { data } = await api.post('/media/presigned-url', { filename, contentType, folder });
     return data;
   },
 
@@ -43,11 +43,11 @@ export const mediaService = {
     url: string;
     key: string;
   }): Promise<MediaFile> => {
-    const { data } = await api.post('/api/media', payload);
+    const { data } = await api.post('/media', payload);
     return data;
   },
 
   deleteMediaFile: async (id: string): Promise<void> => {
-    await api.delete(`/api/media/${id}`);
+    await api.delete(`/media/${id}`);
   },
 };

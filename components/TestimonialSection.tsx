@@ -3,9 +3,9 @@ import ReviewCard from "./ReviewCard";
 
 async function getReviews() {
   try {
-    let apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+    let apiUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1").replace(/\/$/, "");
     if (!apiUrl.endsWith('/v1')) {
-      apiUrl += '/v1';
+      apiUrl = apiUrl.endsWith('/api') ? `${apiUrl}/v1` : `${apiUrl}/api/v1`;
     }
     const res = await fetch(`${apiUrl}/reviews?status=APPROVED`, {
       next: { revalidate: 3600 }, // Cache for 1 hour
