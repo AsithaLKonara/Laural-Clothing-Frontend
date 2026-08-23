@@ -3,19 +3,27 @@ import { Search, Filter } from "lucide-react";
 interface FilterBarProps {
   placeholder?: string;
   filters?: React.ReactNode;
+  searchQuery?: string;
+  onSearchChange?: (val: string) => void;
 }
 
-export default function FilterBar({ placeholder = "Search...", filters }: FilterBarProps) {
+export default function FilterBar({
+  placeholder = "Search...",
+  filters,
+  searchQuery,
+  onSearchChange,
+}: FilterBarProps) {
   return (
     <div className="flex flex-col md:flex-row items-center gap-4 bg-surface p-4 rounded-xl border border-border mb-6 shadow-sm">
-      
       {/* Search */}
       <div className="flex-1 w-full relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <Search size={16} className="text-muted" />
         </div>
-        <input 
+        <input
           type="text"
+          value={searchQuery !== undefined ? searchQuery : undefined}
+          onChange={(e) => onSearchChange?.(e.target.value)}
           placeholder={placeholder}
           className="w-full bg-background border border-border rounded-lg py-2 pl-10 pr-4 text-sm font-inter text-foreground placeholder:text-muted focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
         />
@@ -31,7 +39,6 @@ export default function FilterBar({ placeholder = "Search...", filters }: Filter
           {filters}
         </div>
       )}
-
     </div>
   );
 }
