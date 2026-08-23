@@ -1,78 +1,117 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, UserPlus, Info } from "lucide-react";
-
-interface UserData {
-  id?: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: string;
-  branch: string;
-  status: string;
-}
+import { X, UserPlus, Info, Loader2 } from "lucide-react";
+import roleService, { RoleItem, SystemUserItem } from "@/services/role.service";
 
 interface UserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialData?: UserData | null;
+  onSuccess?: () => void;
+  initialData?: SystemUserItem | null;
+  availableRoles?: RoleItem[];
 }
 
-const ROLES = ["Super Admin", "Branch Admin", "Cashier", "Inventory Manager"];
-const BRANCHES = ["Global (All Branches)", "Colombo Main", "Kandy City Centre", "Gampaha Branch", "Online Store"];
+const DEFAULT_BRANCHES = [
+  "Global (All Branches)",
+  "Colombo Main",
+  "Kandy City Centre",
+  "Gampaha Branch",
+  "Online Store",
+];
 
-export default function UserModal({ isOpen, onClose, initialData }: UserModalProps) {
+export default function UserModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  initialData,
+  availableRoles = [],
+}: UserModalProps) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState(ROLES[2]); // Default to Cashier
-  const [branch, setBranch] = useState(BRANCHES[1]); // Default to Colombo Main
-  const [status, setStatus] = useState("Active");
+  const [phone, setPhone] = useState("");
+  const [selectedRoleId, setSelectedRoleId] = useState("");
+  const [branch, setBranch] = useState(DEFAULT_BRANCHES[1]);
+  const [status, setStatus] = useState("ACTIVE");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialData) {
-      setFirstName(initialData.firstName);
-      setLastName(initialData.lastName);
+      const parts = (initialData.name || "").split(" ");
+      setFirstName(parts[0] || "");
+      setLastName(parts.slice(1).join(" ") || "");
       setEmail(initialData.email);
-      setRole(initialData.role);
-      setBranch(initialData.branch);
-      setStatus(initialData.status);
+      setPhone(initialData.phone || "");
+      setSelectedRoleId(initialData.roleIds?.[0] || availableRoles[0]?.id || "");
+      setBranch(initialData.branch || DEFAULT_BRANCHES[1]);
+      setStatus(initialData.status || "ACTIVE");
     } else {
       setFirstName("");
       setLastName("");
       setEmail("");
-      setRole(ROLES[2]);
-      setBranch(BRANCHES[1]);
-      setStatus("Active");
+      setPhone("");
+      setSelectedRoleId(availableRoles[0]?.id || "");
+      setBranch(DEFAULT_BRANCHES[1]);
+      setStatus("ACTIVE");
     }
-  }, [initialData, isOpen]);
+    setError(null);
+  }, [initialData, isOpen, availableRoles]);
 
   if (!isOpen) return null;
 
-  function handleSave() {
-    onClose();
-  }
+  const currentRole = availableRoles.find((r) => r.id === selectedRoleId);
+  const isSuperAdmin = currentRole?.name === "Super Admin";
 
-  // Handle cross-dependencies
-  function handleRoleChange(newRole: string) {
-    setRole(newRole);
-    if (newRole === "Super Admin") {
-      setBranch("Global (All Branches)");
-    } else if (branch === "Global (All Branches)") {
-      setBranch(BRANCHES[1]); // Reset if demoted from Super Admin
+  async function handleSave() {
+    const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+    if (!fullName || !email.trim()) {
+      setError("Name and Email are required.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      if (initialData?.id) {
+        await roleService.updateUser(initialData.id, {
+          name: fullName,
+          email: email.trim(),
+          phone: phone.trim() || undefined,
+          status,
+          roleIds: selectedRoleId ? [selectedRoleId] : undefined,
+        });
+      } else {
+        await roleService.createUser({
+          name: fullName,
+          email: email.trim(),
+          phone: phone.trim() || undefined,
+          status,
+          roleIds: selectedRoleId ? [selectedRoleId] : undefined,
+        });
+      }
+
+      onSuccess?.();
+      onClose();
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || "Failed to save user.";
+      setError(msg);
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6">
       <div className="absolute inset-0 bg-stone-950/60 backdrop-blur-sm" onClick={onClose} />
-      
+
       <div className="relative w-full max-w-[550px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-[90vh]">
         <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200 bg-stone-50 shrink-0">
           <div>
             <h2 className="font-inter font-bold text-lg text-stone-900 flex items-center gap-2">
-              <UserPlus size={18} className="text-stone-900" /> 
+              <UserPlus size={18} className="text-stone-900" />
               {initialData ? "Edit User Access" : "Invite System User"}
             </h2>
           </div>
@@ -81,102 +120,144 @@ export default function UserModal({ isOpen, onClose, initialData }: UserModalPro
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 custom-scrollbar">
-          
+        <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-5 custom-scrollbar">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg">
+              {error}
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               <label className="font-inter text-xs font-semibold text-stone-700">First Name <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 value={firstName}
-                onChange={e => setFirstName(e.target.value)}
+                onChange={(e) => setFirstName(e.target.value)}
                 placeholder="e.g. Jane"
-                className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all font-inter"
+                className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-stone-900 bg-white font-inter"
               />
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               <label className="font-inter text-xs font-semibold text-stone-700">Last Name <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 value={lastName}
-                onChange={e => setLastName(e.target.value)}
+                onChange={(e) => setLastName(e.target.value)}
                 placeholder="e.g. Doe"
-                className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all font-inter"
+                className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-stone-900 bg-white font-inter"
               />
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <label className="font-inter text-xs font-semibold text-stone-700">Email Address <span className="text-red-500">*</span></label>
             <input
               type="email"
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={!!initialData?.id}
               placeholder="jane@laural.lk"
-              className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all font-inter"
+              className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-stone-900 bg-white font-inter disabled:bg-stone-100"
             />
-            <p className="font-inter text-xs text-stone-400">An invitation link will be sent to this email to set up their password.</p>
           </div>
 
-          <div className="h-px bg-stone-100 w-full my-2"></div>
+          <div className="flex flex-col gap-1.5">
+            <label className="font-inter text-xs font-semibold text-stone-700">Phone (Optional)</label>
+            <input
+              type="text"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="+94770000000"
+              className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-stone-900 bg-white font-inter"
+            />
+          </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="h-px bg-stone-100 w-full"></div>
+
+          <div className="flex flex-col gap-1.5">
             <label className="font-inter text-xs font-semibold text-stone-700">Role Assignment</label>
-            <select 
-              value={role} 
-              onChange={e => handleRoleChange(e.target.value)} 
-              className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all font-inter bg-white"
+            <select
+              value={selectedRoleId}
+              onChange={(e) => setSelectedRoleId(e.target.value)}
+              className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-stone-900 bg-white font-inter"
             >
-              {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+              {availableRoles.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name} ({r.level || "Custom"} Access)
+                </option>
+              ))}
             </select>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label className="font-inter text-xs font-semibold text-stone-700">Branch Assignment</label>
-            <select 
-              value={branch} 
-              onChange={e => setBranch(e.target.value)} 
-              disabled={role === "Super Admin"}
-              className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all font-inter bg-white disabled:bg-stone-100 disabled:text-stone-500"
+          <div className="flex flex-col gap-1.5">
+            <label className="font-inter text-xs font-semibold text-stone-700">Branch Scope</label>
+            <select
+              value={branch}
+              onChange={(e) => setBranch(e.target.value)}
+              disabled={isSuperAdmin}
+              className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-stone-900 bg-white font-inter disabled:bg-stone-100 disabled:text-stone-500"
             >
-              {BRANCHES.map(b => <option key={b} value={b}>{b}</option>)}
+              {DEFAULT_BRANCHES.map((b) => (
+                <option key={b} value={b}>
+                  {b}
+                </option>
+              ))}
             </select>
-            {role === "Super Admin" && (
+            {isSuperAdmin && (
               <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 p-2.5 rounded-lg mt-1">
                 <Info size={14} className="text-blue-600 mt-0.5 shrink-0" />
                 <p className="font-inter text-xs text-blue-700 leading-relaxed">
-                  Super Admins are automatically assigned to Global scope and can access all branch data.
+                  Super Admins are automatically assigned to Global scope and can access all branches.
                 </p>
               </div>
             )}
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <label className="font-inter text-xs font-semibold text-stone-700">Account Status</label>
             <div className="flex items-center gap-4 bg-stone-50 border border-stone-200 p-3 rounded-lg">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="radio" name="status" value="Active" checked={status === "Active"} onChange={() => setStatus("Active")} className="w-4 h-4 accent-stone-900" />
+                <input
+                  type="radio"
+                  name="status"
+                  value="ACTIVE"
+                  checked={status === "ACTIVE" || status === "Active"}
+                  onChange={() => setStatus("ACTIVE")}
+                  className="w-4 h-4 accent-stone-900"
+                />
                 <span className="text-sm font-inter text-stone-800">Active</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="radio" name="status" value="Suspended" checked={status === "Suspended"} onChange={() => setStatus("Suspended")} className="w-4 h-4 accent-stone-900" />
+                <input
+                  type="radio"
+                  name="status"
+                  value="SUSPENDED"
+                  checked={status === "SUSPENDED" || status === "Suspended"}
+                  onChange={() => setStatus("SUSPENDED")}
+                  className="w-4 h-4 accent-stone-900"
+                />
                 <span className="text-sm font-inter text-stone-800 text-red-600 font-medium">Suspended</span>
               </label>
             </div>
           </div>
-
         </div>
 
         <div className="border-t border-stone-200 px-6 py-4 bg-stone-50 shrink-0 flex items-center justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 bg-white border border-stone-300 rounded-lg font-inter font-medium text-sm text-stone-700 hover:bg-stone-50 transition-colors shadow-sm">
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="px-4 py-2 bg-white border border-stone-300 rounded-lg font-inter font-medium text-sm text-stone-700 hover:bg-stone-50 transition-colors shadow-sm"
+          >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            disabled={!firstName.trim() || !email.trim()}
-            className="px-5 py-2 bg-stone-900 text-white rounded-lg font-inter font-medium text-sm hover:bg-stone-800 transition-colors shadow-md shadow-stone-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loading || !firstName.trim() || !email.trim()}
+            className="px-5 py-2 bg-stone-900 text-white rounded-lg font-inter font-medium text-sm hover:bg-stone-800 transition-colors shadow-md shadow-stone-900/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            {initialData ? "Save Changes" : "Send Invitation"}
+            {loading && <Loader2 size={14} className="animate-spin" />}
+            {initialData ? "Save Changes" : "Create User"}
           </button>
         </div>
       </div>
