@@ -19,7 +19,7 @@ export const checkoutSchema = z.object({
   _honeypot: z.string().optional(),
   deviceFingerprint: z.string().optional(),
   turnstileToken: z.string().optional(),
-}).superRefine((data, ctx) => {
+}).strict().superRefine((data, ctx) => {
   if (!data.billingSameAsShipping) {
     if (!data.billingAddressLine1 || data.billingAddressLine1.length < 5) {
       ctx.addIssue({
@@ -53,7 +53,7 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
   _honeypot: z.string().optional(),
   turnstileToken: z.string().optional(),
-});
+}).strict();
 
 export type LoginFormData = z.infer<typeof loginSchema>;
 
@@ -70,7 +70,7 @@ export const registerSchema = z.object({
   phone: z.string().optional().or(z.literal("")),
   _honeypot: z.string().optional(),
   turnstileToken: z.string().optional(),
-});
+}).strict();
 
 export type RegisterFormData = z.infer<typeof registerSchema>;
 
@@ -79,7 +79,7 @@ export const forgotPasswordSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   _honeypot: z.string().optional(),
   turnstileToken: z.string().optional(),
-});
+}).strict();
 
 export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 
@@ -94,7 +94,7 @@ export const changePasswordSchema = z
     confirmPassword: z.string(),
     _honeypot: z.string().optional(),
     turnstileToken: z.string().optional(),
-  })
+  }).strict()
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ["confirmPassword"],
@@ -108,7 +108,7 @@ export const posCustomerSchema = z.object({
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
   phone: z.string().min(10, "Valid phone number is required"),
   email: z.string().email("Please enter a valid email address").optional().or(z.literal("")),
-});
+}).strict();
 
 export type POSCustomerFormData = z.infer<typeof posCustomerSchema>;
 
@@ -125,6 +125,6 @@ export const createProductSchema = z.object({
   tags: z.string().optional(),
   metaTitle: z.string().optional(),
   metaDesc: z.string().optional(),
-});
+}).strict();
 
 export type CreateProductFormData = z.infer<typeof createProductSchema>;
