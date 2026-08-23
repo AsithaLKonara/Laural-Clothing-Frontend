@@ -32,37 +32,37 @@ export const reviewService = {
     comment?: string;
     images?: string[];
   }): Promise<Review> => {
-    const response = await api.post('/api/reviews', data);
+    const response = await api.post('/reviews', data);
     return response.data;
   },
 
   getReviewsForProduct: async (productId: string): Promise<Review[]> => {
-    const response = await api.get(`/api/reviews/product/${productId}`);
+    const response = await api.get(`/reviews/product/${productId}`);
     return response.data;
   },
 
   getCustomerReviews: async (customerId: string): Promise<Review[]> => {
-    const response = await api.get(`/api/reviews/customer/${customerId}`);
+    const response = await api.get(`/reviews/customer/${customerId}`);
     return response.data;
   },
 
   getPendingReviews: async (customerId: string): Promise<any[]> => {
-    const response = await api.get(`/api/reviews/pending/${customerId}`);
+    const response = await api.get(`/reviews/pending/${customerId}`);
     return response.data;
   },
 
   getAllReviews: async (status?: string): Promise<Review[]> => {
     const params = status && status !== 'ALL' ? { status } : {};
-    const response = await api.get('/api/reviews', { params });
+    const response = await api.get('/reviews', { params });
     return response.data;
   },
 
   updateReviewStatus: async (id: string, status: 'PENDING' | 'APPROVED' | 'REJECTED'): Promise<Review> => {
-    const response = await api.patch(`/api/reviews/${id}/status`, { status });
+    const response = await api.patch(`/reviews/${id}/status`, { status });
     return response.data;
   },
 
   deleteReview: async (id: string): Promise<void> => {
-    await api.delete(`/api/reviews/${id}`);
+    await api.delete(`/reviews/${id}`);
   },
 };
