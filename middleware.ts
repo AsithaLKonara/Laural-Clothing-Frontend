@@ -1,10 +1,36 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+function decodeJwt(token: string) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    return null;
+  }
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const token = request.cookies.get("laural_token")?.value;
-  const role = request.cookies.get("laural_role")?.value;
+  
+  const token = request.cookies.get("laural_access_token")?.value;
+  let role = "PUBLIC_USER";
+  let isExpired = false;
+
+  if (token) {
+    const payload = decodeJwt(token);
+    if (payload) {
+      if (payload.exp && Date.now() >= payload.exp * 1000) {
+        isExpired = true;
+      } else if (payload.roles && payload.roles.length > 0) {
+        role = payload.roles[0];
+      }
+    }
+  }
 
   const isAdminRoute = pathname.startsWith("/admin");
   const isBranchAdminRoute = pathname.startsWith("/branch-admin");
@@ -14,18 +40,24 @@ export function middleware(request: NextRequest) {
 
   const isStaffRoute = isAdminRoute || isBranchAdminRoute || isPosRoute;
 
-  // 1. Unauthenticated user trying to access protected routes
+  // 1. Unauthenticated or expired user trying to access protected routes
   if (isStaffRoute || isAccountRoute) {
-    if (!token) {
+    if (!token || isExpired) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("redirect", pathname);
-      return NextResponse.redirect(loginUrl);
+      // Clear invalid cookies if expired
+      const response = NextResponse.redirect(loginUrl);
+      if (isExpired) {
+        response.cookies.delete("laural_access_token");
+        response.cookies.delete("laural_refresh_token");
+      }
+      return response;
     }
   }
 
   // 2. Strict isolation: PUBLIC_USER attempting to access Admin, Branch Admin, or POS routes
-  if (isStaffRoute && token) {
-    const isPublicUser = !role || role === "PUBLIC_USER" || role === "Public User" || role.toUpperCase() === "CUSTOMER";
+  if (isStaffRoute && token && !isExpired) {
+    const isPublicUser = role === "PUBLIC_USER" || role === "Public User" || role.toUpperCase() === "CUSTOMER";
     if (isPublicUser) {
       // Forbidden: redirect to customer account area
       const forbiddenUrl = new URL("/account", request.url);
@@ -35,8 +67,8 @@ export function middleware(request: NextRequest) {
   }
 
   // 3. Authenticated user visiting /login
-  if (isAuthRoute && token) {
-    const isPublicUser = !role || role === "PUBLIC_USER" || role === "Public User";
+  if (isAuthRoute && token && !isExpired) {
+    const isPublicUser = role === "PUBLIC_USER" || role === "Public User";
     const redirectTarget = isPublicUser ? "/account" : "/admin";
     return NextResponse.redirect(new URL(redirectTarget, request.url));
   }

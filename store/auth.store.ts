@@ -24,17 +24,6 @@ interface AuthState {
 
 const USER_KEY = "laural_user";
 
-function setCookie(name: string, value: string, days: number = 7) {
-  if (typeof document === "undefined") return;
-  const expires = new Date(Date.now() + days * 864e5).toUTCString();
-  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
-}
-
-function deleteCookie(name: string) {
-  if (typeof document === "undefined") return;
-  document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax`;
-}
-
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
@@ -43,13 +32,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setAuth: (user: UserProfile) => {
     if (typeof window !== "undefined") {
       localStorage.setItem(USER_KEY, JSON.stringify(user));
-
-      // Set cookie for middleware route protection
-      // We still set a dummy token flag for Next.js middleware, 
-      // but the actual HttpOnly token is handled by the backend
-      setCookie("laural_token", "true", 7);
-      const primaryRole = user.roles?.[0] || "PUBLIC_USER";
-      setCookie("laural_role", primaryRole, 7);
     }
 
     set({
@@ -89,8 +71,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } finally {
       if (typeof window !== "undefined") {
         localStorage.removeItem(USER_KEY);
-        deleteCookie("laural_token");
-        deleteCookie("laural_role");
       }
 
       set({
@@ -132,9 +112,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const freshUser = await authService.getMe();
         if (freshUser) {
           localStorage.setItem(USER_KEY, JSON.stringify(freshUser));
-          const primaryRole = freshUser.roles?.[0] || "PUBLIC_USER";
-          setCookie("laural_role", primaryRole, 7);
-          setCookie("laural_token", "true", 7);
           set({ user: freshUser, isAuthenticated: true, isLoading: false });
         }
       } catch (err: any) {
