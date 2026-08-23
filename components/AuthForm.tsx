@@ -277,7 +277,7 @@ function RegisterForm({ setView }: { setView: (v: AuthView) => void }) {
             <div className="relative w-full">
               <input 
                 type={showPassword ? "text" : "password"} 
-                placeholder="Password (min. 8 characters)" 
+                placeholder="Password (min. 12 chars + symbol)" 
                 {...register("password")}
                 className={`w-full h-[56px] pl-[20px] pr-[50px] bg-black/20 backdrop-blur-md border ${errors.password ? 'border-red-500' : 'border-white/10'} rounded-none font-urbanist font-light text-sm text-stone-50 placeholder:text-stone-400 focus:outline-none focus:border-stone-50 focus:bg-black/40 transition-all`}
               />
