@@ -12,6 +12,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
   const [rating, setRating] = useState(5);
   const [title, setTitle] = useState("");
   const [comment, setComment] = useState("");
+  const [_honeypot, setHoneypot] = useState("");
   const [showForm, setShowForm] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,10 +28,12 @@ export default function ProductReviews({ productId }: { productId: string }) {
         rating,
         title,
         comment,
+        _honeypot,
       });
       setShowForm(false);
       setTitle("");
       setComment("");
+      setHoneypot("");
       setRating(5);
       globalDialog.alert("Review submitted successfully! It will appear after moderation.");
     } catch (err) {
@@ -75,6 +78,11 @@ export default function ProductReviews({ productId }: { productId: string }) {
       {/* Review Form */}
       {showForm && (
         <form onSubmit={handleSubmit} className="flex flex-col gap-5 p-6 border border-stone-200 rounded-2xl animate-in slide-in-from-top-2">
+          {/* Honeypot Field */}
+          <div style={{ display: 'none' }} aria-hidden="true">
+            <input type="text" name="_honeypot" value={_honeypot} onChange={(e) => setHoneypot(e.target.value)} tabIndex={-1} autoComplete="off" />
+          </div>
+          
           <h4 className="font-poppins font-semibold text-lg text-primary">Write your review</h4>
           
           <div className="flex flex-col gap-2">

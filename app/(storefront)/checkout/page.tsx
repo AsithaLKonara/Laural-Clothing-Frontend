@@ -151,6 +151,10 @@ export default function CheckoutPage() {
           </div>
 
           <form id="checkout-form" onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-10 w-full">
+            {/* Honeypot Field */}
+            <div style={{ display: 'none' }} aria-hidden="true">
+              <input type="text" {...register('_honeypot' as any)} tabIndex={-1} autoComplete="off" />
+            </div>
             
             {/* Shipping Information */}
             <div className="flex flex-col gap-6 w-full">

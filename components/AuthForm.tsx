@@ -100,6 +100,10 @@ function LoginForm({ setView }: { setView: (v: AuthView) => void }) {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col w-full gap-[24px]">
+        {/* Honeypot Field */}
+        <div style={{ display: 'none' }} aria-hidden="true">
+          <input type="text" {...register('_honeypot' as any)} tabIndex={-1} autoComplete="off" />
+        </div>
         <div className="flex flex-col w-full gap-[16px]">
           <div className="w-full">
             <input 
@@ -253,6 +257,10 @@ function RegisterForm({ setView }: { setView: (v: AuthView) => void }) {
         </div>
       ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col w-full gap-[16px]">
+          {/* Honeypot Field */}
+          <div style={{ display: 'none' }} aria-hidden="true">
+            <input type="text" {...register('_honeypot' as any)} tabIndex={-1} autoComplete="off" />
+          </div>
           <div className="w-full">
             <input 
               type="text" 
@@ -358,6 +366,10 @@ function ForgotPasswordForm({ setView }: { setView: (v: AuthView) => void }) {
       </div>
       
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col w-full gap-[16px]">
+        {/* Honeypot Field */}
+        <div style={{ display: 'none' }} aria-hidden="true">
+          <input type="text" {...register('_honeypot' as any)} tabIndex={-1} autoComplete="off" />
+        </div>
         <div className="w-full">
           <input 
             type="email" 
@@ -464,6 +476,10 @@ function ChangePasswordForm({ setView }: { setView: (v: AuthView) => void }) {
       </div>
       
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col w-full gap-[16px]">
+        {/* Honeypot Field */}
+        <div style={{ display: 'none' }} aria-hidden="true">
+          <input type="text" {...register('_honeypot' as any)} tabIndex={-1} autoComplete="off" />
+        </div>
         <div className="w-full">
           <div className="relative w-full">
             <input 
