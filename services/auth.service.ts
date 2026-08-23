@@ -16,8 +16,6 @@ export interface UserProfile {
 
 export interface AuthResponse {
   user: UserProfile;
-  accessToken: string;
-  refreshToken: string;
 }
 
 export interface RegisterPayload {
@@ -50,14 +48,14 @@ export const authService = {
     return res.data.data;
   },
 
-  async refresh(refreshToken: string): Promise<{ accessToken: string; user: UserProfile }> {
-    const res = await api.post("/auth/refresh", { refreshToken });
+  async refresh(): Promise<{ user: UserProfile }> {
+    const res = await api.post("/auth/refresh", {});
     return res.data.data;
   },
 
-  async logout(refreshToken?: string): Promise<void> {
+  async logout(): Promise<void> {
     try {
-      await api.post("/auth/logout", { refreshToken });
+      await api.post("/auth/logout", {});
     } catch {
       // Ignore errors on logout
     }

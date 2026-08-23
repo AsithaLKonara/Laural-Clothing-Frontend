@@ -5,13 +5,11 @@ import authService, { UserProfile, RegisterPayload, LoginPayload, AuthResponse }
 
 interface AuthState {
   user: UserProfile | null;
-  token: string | null;
-  refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 
   // Actions
-  setAuth: (user: UserProfile, token: string, refreshToken: string) => void;
+  setAuth: (user: UserProfile) => void;
   login: (payload: LoginPayload) => Promise<AuthResponse>;
   register: (payload: RegisterPayload) => Promise<AuthResponse>;
   logout: () => Promise<void>;
@@ -24,8 +22,6 @@ interface AuthState {
   isPublicUser: () => boolean;
 }
 
-const TOKEN_KEY = "laural_access_token";
-const REFRESH_TOKEN_KEY = "laural_refresh_token";
 const USER_KEY = "laural_user";
 
 function setCookie(name: string, value: string, days: number = 7) {
@@ -41,27 +37,23 @@ function deleteCookie(name: string) {
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
-  token: null,
-  refreshToken: null,
   isAuthenticated: false,
   isLoading: true,
 
-  setAuth: (user: UserProfile, token: string, refreshToken: string) => {
+  setAuth: (user: UserProfile) => {
     if (typeof window !== "undefined") {
-      localStorage.setItem(TOKEN_KEY, token);
-      localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
       localStorage.setItem(USER_KEY, JSON.stringify(user));
 
       // Set cookie for middleware route protection
-      setCookie("laural_token", token, 7);
+      // We still set a dummy token flag for Next.js middleware, 
+      // but the actual HttpOnly token is handled by the backend
+      setCookie("laural_token", "true", 7);
       const primaryRole = user.roles?.[0] || "PUBLIC_USER";
       setCookie("laural_role", primaryRole, 7);
     }
 
     set({
       user,
-      token,
-      refreshToken,
       isAuthenticated: true,
       isLoading: false,
     });
@@ -71,7 +63,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true });
     try {
       const data = await authService.login(payload);
-      get().setAuth(data.user, data.accessToken, data.refreshToken);
+      get().setAuth(data.user);
       return data;
     } finally {
       set({ isLoading: false });
@@ -82,7 +74,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true });
     try {
       const data = await authService.register(payload);
-      get().setAuth(data.user, data.accessToken, data.refreshToken);
+      get().setAuth(data.user);
       return data;
     } finally {
       set({ isLoading: false });
@@ -90,17 +82,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
-    const rfToken = get().refreshToken || (typeof window !== "undefined" ? localStorage.getItem(REFRESH_TOKEN_KEY) : null);
     try {
-      if (rfToken) {
-        await authService.logout(rfToken);
-      }
+      await authService.logout();
     } catch {
       // Ignore
     } finally {
       if (typeof window !== "undefined") {
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(REFRESH_TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
         deleteCookie("laural_token");
         deleteCookie("laural_role");
@@ -108,8 +95,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       set({
         user: null,
-        token: null,
-        refreshToken: null,
         isAuthenticated: false,
         isLoading: false,
       });
@@ -123,14 +108,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     try {
-      const token = localStorage.getItem(TOKEN_KEY);
-      const rfToken = localStorage.getItem(REFRESH_TOKEN_KEY);
       const userJson = localStorage.getItem(USER_KEY);
-
-      if (!token) {
-        set({ user: null, token: null, isAuthenticated: false, isLoading: false });
-        return;
-      }
 
       let cachedUser: UserProfile | null = null;
       if (userJson) {
@@ -141,35 +119,36 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       }
 
-      set({
-        token,
-        refreshToken: rfToken,
-        user: cachedUser,
-        isAuthenticated: true,
-        isLoading: false,
-      });
+      if (cachedUser) {
+        set({
+          user: cachedUser,
+          isAuthenticated: true,
+          isLoading: false,
+        });
+      }
 
-      // Silently refresh profile in background
+      // Silently refresh profile in background using HttpOnly cookies
       try {
         const freshUser = await authService.getMe();
         if (freshUser) {
           localStorage.setItem(USER_KEY, JSON.stringify(freshUser));
           const primaryRole = freshUser.roles?.[0] || "PUBLIC_USER";
           setCookie("laural_role", primaryRole, 7);
-          set({ user: freshUser });
+          setCookie("laural_token", "true", 7);
+          set({ user: freshUser, isAuthenticated: true, isLoading: false });
         }
       } catch (err: any) {
-        if (err.response?.status === 401 && rfToken) {
+        if (err.response?.status === 401) {
           try {
-            const refreshed = await authService.refresh(rfToken);
-            get().setAuth(refreshed.user, refreshed.accessToken, rfToken);
+            const refreshed = await authService.refresh();
+            get().setAuth(refreshed.user);
           } catch {
             get().logout();
           }
         }
       }
     } catch {
-      set({ user: null, token: null, isAuthenticated: false, isLoading: false });
+      set({ user: null, isAuthenticated: false, isLoading: false });
     }
   },
 
