@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Image from "next/image";
 import AuthForm from "@/components/AuthForm";
 
@@ -44,7 +45,9 @@ export default function LoginPage() {
 
         {/* Right Side: Glassmorphic Auth Form Container */}
         <div className="flex flex-col justify-center items-center w-full md:w-[500px] lg:w-[600px] border-l border-white/5 bg-black/20 backdrop-blur-md px-4 sm:px-8 md:px-[40px] lg:px-[80px] py-[60px] animate-in fade-in slide-in-from-right-8 duration-1000">
-          <AuthForm />
+          <Suspense fallback={null}>
+            <AuthForm />
+          </Suspense>
         </div>
 
       </div>
