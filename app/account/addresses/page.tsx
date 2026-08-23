@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AddressInput } from "@/services/address.service";
+import { globalDialog } from "@/store/dialog.store";
 
 const addressSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -231,8 +232,8 @@ export default function AddressesPage() {
                     <Edit2 size={14} /> Edit
                   </button>
                   <button 
-                    onClick={() => {
-                      if (confirm('Are you sure you want to delete this address?')) {
+                    onClick={async () => {
+                      if (await globalDialog.confirm('Are you sure you want to delete this address?')) {
                         deleteAddress.mutate(address.id);
                       }
                     }}

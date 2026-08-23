@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Star, MessageSquare } from "lucide-react";
 import { useProductReviews, useCreateReview } from "@/hooks/useReviews";
+import { globalDialog } from "@/store/dialog.store";
 
 export default function ProductReviews({ productId }: { productId: string }) {
   const { data: reviews = [], isLoading } = useProductReviews(productId);
@@ -31,9 +32,9 @@ export default function ProductReviews({ productId }: { productId: string }) {
       setTitle("");
       setComment("");
       setRating(5);
-      alert("Review submitted successfully! It will appear after moderation.");
+      globalDialog.alert("Review submitted successfully! It will appear after moderation.");
     } catch (err) {
-      alert("Failed to submit review");
+      globalDialog.alert("Failed to submit review");
     }
   };
 

@@ -7,6 +7,7 @@ import StatCard from "@/components/dashboard/StatCard";
 import DataTable from "@/components/dashboard/DataTable";
 import { useBranches, useDeleteBranch } from "@/hooks/useInventory";
 import BranchModal from "@/components/dashboard/BranchModal";
+import { globalDialog } from "@/store/dialog.store";
 
 export default function BranchesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,7 +23,7 @@ export default function BranchesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to deactivate this branch?")) {
+    if (await globalDialog.confirm("Are you sure you want to deactivate this branch?")) {
       const rawBranch = realBranches?.find((b: any) => b.code === id);
       if (rawBranch) {
         await deleteMutation.mutateAsync(rawBranch.id);

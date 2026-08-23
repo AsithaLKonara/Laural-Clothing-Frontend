@@ -8,6 +8,7 @@ import FilterBar from "@/components/dashboard/FilterBar";
 import AddCollectionModal from "@/components/dashboard/AddCollectionModal";
 import { useAdminCollections, useDeleteCollection } from "@/hooks/useAdminCollections";
 import { Collection } from "@/services/collections.service";
+import { globalDialog } from "@/store/dialog.store";
 
 export default function CollectionsPage() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -28,7 +29,7 @@ export default function CollectionsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this collection?")) {
+    if (await globalDialog.confirm("Are you sure you want to delete this collection?")) {
       await deleteCollectionMutation.mutateAsync(id);
     }
   };

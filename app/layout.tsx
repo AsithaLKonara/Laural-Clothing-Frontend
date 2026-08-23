@@ -54,6 +54,7 @@ export const metadata: Metadata = {
 
 import Providers from "./providers";
 import OrganizationSchema from "@/components/seo/OrganizationSchema";
+import GlobalDialog from "@/components/ui/GlobalDialog";
 
 export default function RootLayout({
   children,
@@ -68,6 +69,7 @@ export default function RootLayout({
         <Providers>
           <OrganizationSchema />
           {children}
+          <GlobalDialog />
         </Providers>
       </body>
     </html>

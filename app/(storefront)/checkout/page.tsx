@@ -15,6 +15,7 @@ import { useCart } from "@/hooks/useCart";
 import { useInitiateCheckout } from "@/hooks/useCheckout";
 import { useRouter } from "next/navigation";
 import { useAddresses, useAddAddress, MOCK_CUSTOMER_ID } from "@/hooks/useAddress";
+import { globalDialog } from "@/store/dialog.store";
 
 export default function CheckoutPage() {
   const {
@@ -110,7 +111,7 @@ export default function CheckoutPage() {
         },
         onError: (error) => {
           console.error("Checkout failed:", error);
-          alert("Checkout failed. Please try again.");
+          globalDialog.alert("Checkout failed. Please try again.");
         }
       }
     );

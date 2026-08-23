@@ -12,6 +12,7 @@ import Link from "next/link";
 import { Barcode, Edit, ArchiveRestore, CheckCircle2 } from "lucide-react";
 import { useProducts, useDeleteProduct } from "@/hooks/useProducts";
 import { Product } from "@/types/product";
+import { globalDialog } from "@/store/dialog.store";
 
 export default function ProductsPage() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -37,7 +38,7 @@ export default function ProductsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to archive/delete this product?")) {
+    if (await globalDialog.confirm("Are you sure you want to archive/delete this product?")) {
       await deleteProductMutation.mutateAsync(id);
     }
   };

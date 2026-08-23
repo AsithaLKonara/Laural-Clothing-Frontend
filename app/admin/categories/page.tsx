@@ -8,6 +8,7 @@ import FilterBar from "@/components/dashboard/FilterBar";
 import CategoryFormModal from "@/components/dashboard/CategoryFormModal";
 import { useCategories, useDeleteCategory } from "@/hooks/useCategories";
 import { Category } from "@/types/category";
+import { globalDialog } from "@/store/dialog.store";
 
 export default function CategoriesPage() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -29,7 +30,7 @@ export default function CategoriesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this category?")) {
+    if (await globalDialog.confirm("Are you sure you want to delete this category?")) {
       await deleteCategoryMutation.mutateAsync(id);
     }
   };

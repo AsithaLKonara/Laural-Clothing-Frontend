@@ -13,6 +13,7 @@ import CouponModal from "@/components/dashboard/CouponModal";
 import FlashSaleModal from "@/components/dashboard/FlashSaleModal";
 import { useCoupons, useDeleteCoupon, useFlashSales, useDeleteFlashSale } from "@/hooks/usePromotions";
 import { Loader2, Zap } from "lucide-react";
+import { globalDialog } from "@/store/dialog.store";
 
 export default function PromotionsPage() {
   const router = useRouter();
@@ -100,7 +101,7 @@ export default function PromotionsPage() {
             className="text-xs text-red-500 hover:underline font-medium"
             onClick={async (e) => { 
               e.stopPropagation(); 
-              if(confirm('Delete this coupon?')) { 
+              if(await globalDialog.confirm('Delete this coupon?')) { 
                 await deleteCoupon(row.id);
               } 
             }}
@@ -238,7 +239,7 @@ export default function PromotionsPage() {
                       className="text-xs text-red-500 hover:underline font-medium"
                       onClick={async (e) => { 
                         e.stopPropagation(); 
-                        if(confirm('Delete this flash sale?')) { 
+                        if(await globalDialog.confirm('Delete this flash sale?')) { 
                           await deleteFlashSale(row.id);
                         } 
                       }}

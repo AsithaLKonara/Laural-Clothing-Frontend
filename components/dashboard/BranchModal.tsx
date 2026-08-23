@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useCreateBranch, useUpdateBranch } from "@/hooks/useInventory";
+import { globalDialog } from "@/store/dialog.store";
 
 export default function BranchModal({ 
   isOpen, 
@@ -52,7 +53,7 @@ export default function BranchModal({
       }
       onClose();
     } catch (err: any) {
-      alert("Error saving branch: " + (err.response?.data?.error || err.message));
+      globalDialog.alert("Error saving branch: " + (err.response?.data?.error || err.message));
     }
   };
 

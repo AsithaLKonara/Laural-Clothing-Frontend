@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { X, Zap, Loader2, Plus, Trash2 } from "lucide-react";
 import { useCreateFlashSale, useUpdateFlashSale } from "@/hooks/usePromotions";
 import { useProducts } from "@/hooks/useProducts";
+import { globalDialog } from "@/store/dialog.store";
 
 interface FlashSaleModalProps {
   isOpen: boolean;
@@ -83,7 +84,7 @@ export default function FlashSaleModal({ isOpen, onClose, initialData }: FlashSa
       onClose();
     } catch (error) {
       console.error("Failed to save flash sale", error);
-      alert("Failed to save flash sale");
+      globalDialog.alert("Failed to save flash sale");
     }
   }
 

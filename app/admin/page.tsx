@@ -8,6 +8,7 @@ import RecentTransactionsTable from "@/components/dashboard/RecentTransactionsTa
 import { TrendingUp, ShoppingCart, Users, Receipt, Package, Wallet, Gift, RefreshCcw } from "lucide-react";
 import { useBusinessOverview } from "@/hooks/useAnalytics";
 import { useBranches } from "@/hooks/useInventory";
+import { globalDialog } from "@/store/dialog.store";
 
 const GATEWAY_COLORS: Record<string, string> = {
   "KOKO": "bg-violet-500",
@@ -39,7 +40,7 @@ export default function SuperAdminDashboard() {
 
   const handleExport = () => {
     if (!analytics || !analytics.recentTransactions || analytics.recentTransactions.length === 0) {
-      alert("No data available to export");
+      globalDialog.alert("No data available to export");
       return;
     }
 

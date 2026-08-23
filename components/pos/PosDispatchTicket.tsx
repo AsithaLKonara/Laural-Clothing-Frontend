@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { X, Phone, MapPin, Truck, CheckCircle2, Trash2, Link as LinkIcon, User, CreditCard, Banknote } from "lucide-react";
 import { useCreateShipment } from "@/hooks/useShipping";
+import { globalDialog } from "@/store/dialog.store";
 
 interface PosDispatchTicketProps {
   isMobileCartOpen: boolean;
@@ -59,7 +60,7 @@ export default function PosDispatchTicket({ isMobileCartOpen, setIsMobileCartOpe
       setSuccess(true);
     } catch (error) {
       console.error(error);
-      alert("Failed to create Fardar shipment.");
+      globalDialog.alert("Failed to create Fardar shipment.");
     } finally {
       setIsDispatching(false);
     }

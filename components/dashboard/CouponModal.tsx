@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X, Tag, RefreshCcw, Loader2 } from "lucide-react";
 import { useCreateCoupon, useUpdateCoupon } from "@/hooks/usePromotions";
+import { globalDialog } from "@/store/dialog.store";
 
 interface CouponData {
   id?: string;
@@ -82,7 +83,7 @@ export default function CouponModal({ isOpen, onClose, initialData }: CouponModa
       onClose();
     } catch (error) {
       console.error("Failed to save coupon", error);
-      alert("Failed to save coupon");
+      globalDialog.alert("Failed to save coupon");
     }
   }
 

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import PageHeader from "@/components/dashboard/PageHeader";
 import { useSettings, useUpdateSettings } from "@/hooks/useSettings";
+import { globalDialog } from "@/store/dialog.store";
 
 type SettingsFormData = Record<string, any>;
 
@@ -38,9 +39,9 @@ export default function SettingsPage() {
 
     try {
       await updateSettings.mutateAsync(updates);
-      alert("Settings updated successfully!"); // Replace with toast in production
+      globalDialog.alert("Settings updated successfully!"); // Replace with toast in production
     } catch (err) {
-      alert("Failed to update settings.");
+      globalDialog.alert("Failed to update settings.");
     }
   };
 

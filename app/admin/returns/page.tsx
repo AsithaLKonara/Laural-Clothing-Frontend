@@ -7,6 +7,7 @@ import PageHeader from "@/components/admin/PageHeader";
 import BulkReturnModal from "@/components/admin/BulkReturnModal";
 
 import { useReturns } from "@/hooks/useReturns";
+import { globalDialog } from "@/store/dialog.store";
 
 const getStatusConfig = (status: string) => {
   switch (status) {
@@ -42,7 +43,7 @@ export default function AdminReturnsPage() {
 
   const handleExport = () => {
     if (!returns || returns.length === 0) {
-      alert("No data to export");
+      globalDialog.alert("No data to export");
       return;
     }
     const headers = ["RMA Number", "Order ID", "Customer", "Date", "Status", "Amount"];

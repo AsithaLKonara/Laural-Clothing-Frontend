@@ -9,6 +9,7 @@ import { Plus, Users, Shield, Loader2, Trash2, RefreshCw } from "lucide-react";
 import RoleModal from "@/components/dashboard/RoleModal";
 import UserModal from "@/components/dashboard/UserModal";
 import roleService, { RoleItem, SystemUserItem } from "@/services/role.service";
+import { globalDialog } from "@/store/dialog.store";
 
 export default function AccessControlPage() {
   const [activeTab, setActiveTab] = useState<"roles" | "users">("roles");
@@ -54,16 +55,16 @@ export default function AccessControlPage() {
 
   const handleDeleteRole = async (role: RoleItem) => {
     if (role.isSystem) {
-      alert("System roles cannot be deleted.");
+      globalDialog.alert("System roles cannot be deleted.");
       return;
     }
 
-    if (confirm(`Are you sure you want to delete role '${role.name}'?`)) {
+    if (await globalDialog.confirm(`Are you sure you want to delete role '${role.name}'?`)) {
       try {
         await roleService.deleteRole(role.id);
         fetchData();
       } catch (err: any) {
-        alert(err.response?.data?.message || "Failed to delete role.");
+        globalDialog.alert(err.response?.data?.message || "Failed to delete role.");
       }
     }
   };

@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import PageHeader from "@/components/admin/PageHeader";
 import { useMedia, useUploadMedia, useDeleteMedia } from "@/hooks/useMedia";
+import { globalDialog } from "@/store/dialog.store";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -237,7 +238,7 @@ export default function AdminMediaPage() {
       setTimeout(() => setUploadSuccess(false), 3000);
     } catch (error) {
       console.error("Upload failed", error);
-      alert("Upload failed.");
+      globalDialog.alert("Upload failed.");
     } finally {
       setIsUploading(false);
     }

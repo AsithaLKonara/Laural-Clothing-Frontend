@@ -8,6 +8,7 @@ import Image from "next/image";
 
 import { useReturnDetails, useUpdateReturnStatus } from "@/hooks/useReturns";
 import { useRouter } from "next/navigation";
+import { globalDialog } from "@/store/dialog.store";
 
 export default function AdminReturnDetailsPage({ params }: { params: Promise<{ rma: string }> }) {
   const resolvedParams = use(params);
@@ -57,7 +58,7 @@ export default function AdminReturnDetailsPage({ params }: { params: Promise<{ r
       }
     } catch (e) {
       console.error(e);
-      alert("Failed to update status");
+      globalDialog.alert("Failed to update status");
     }
   };
 
@@ -240,7 +241,7 @@ export default function AdminReturnDetailsPage({ params }: { params: Promise<{ r
                       if (Object.keys(itemConditions).length === rma.items.length) {
                         setStep("RESOLUTION");
                       } else {
-                        alert("Please inspect all items before proceeding.");
+                        globalDialog.alert("Please inspect all items before proceeding.");
                       }
                     }} 
                     className="w-full bg-stone-900 text-white font-inter font-medium py-3 rounded-lg hover:bg-stone-800 transition-colors shadow-sm flex items-center justify-center gap-2"
