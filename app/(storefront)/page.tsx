@@ -2,8 +2,10 @@ import Hero from "@/components/Hero";
 import CollectionsSection from "@/components/CollectionsSection";
 import NewArrivalsSection from "@/components/NewArrivalsSection";
 import CuratedCollectionsSection from "@/components/CuratedCollectionsSection";
-import OfferCollectionSection from "@/components/OfferCollectionSection";
+import dynamic from "next/dynamic";
 import AdBannerSection from "@/components/AdBannerSection";
+
+const OfferCollectionSection = dynamic(() => import("@/components/OfferCollectionSection"));
 import BrandStorySection from "@/components/BrandStorySection";
 import TestimonialSection from "@/components/TestimonialSection";
 import { serverFetch } from "@/lib/server-fetch";

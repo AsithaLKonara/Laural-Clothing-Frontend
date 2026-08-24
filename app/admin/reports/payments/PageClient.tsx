@@ -2,10 +2,13 @@
 
 import PageHeader from "@/components/dashboard/PageHeader";
 import { usePaymentReport } from "@/hooks/useReports";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Download } from "lucide-react";
+import dynamic from "next/dynamic";
 
-const COLORS = ['#1c1917', '#44403c', '#78716c', '#a8a29e', '#d6d3d1', '#f5f5f4'];
+const PaymentsChart = dynamic(() => import("./PaymentsChart"), { 
+  ssr: false, 
+  loading: () => <div className="h-[300px] w-full flex items-center justify-center bg-stone-50 rounded-lg animate-pulse text-stone-400">Loading chart...</div> 
+});
 
 export default function PaymentReportPage() {
   const { data, isLoading, error } = usePaymentReport();
@@ -46,31 +49,7 @@ export default function PaymentReportPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white border border-stone-200 rounded-xl p-6">
           <h3 className="text-lg font-semibold text-primary font-poppins mb-6">Revenue Distribution</h3>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={data}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={80}
-                  outerRadius={120}
-                  paddingAngle={2}
-                  dataKey="revenue"
-                  nameKey="method"
-                >
-                  {data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  formatter={(value: any) => [`Rs. ${Number(value).toLocaleString()}`, "Revenue"]}
-                  contentStyle={{ borderRadius: '8px', border: '1px solid #e7e5e4', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                />
-                <Legend iconType="circle" />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+          <PaymentsChart data={data} />
         </div>
 
         <div className="bg-white border border-stone-200 rounded-xl p-6">
