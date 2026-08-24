@@ -9,7 +9,7 @@ import { useAddToCart } from "@/hooks/useCart";
 import Link from "next/link";
 
 export default function WishlistSidePanel({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const { sessionId } = useCartStore();
+  const sessionId = useCartStore((state) => state.sessionId);
   const { data: wishlist, isLoading } = useWishlist(sessionId);
   const removeFromWishlist = useRemoveFromWishlist(sessionId, wishlist?.id);
   const addToCart = useAddToCart(sessionId);

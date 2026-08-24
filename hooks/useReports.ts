@@ -13,6 +13,7 @@ export function useSalesReport(startDate?: string, endDate?: string) {
   return useQuery({
     queryKey: REPORT_KEYS.sales(startDate, endDate),
     queryFn: () => reportService.getSalesReport(startDate, endDate),
+    staleTime: 15000,
   });
 }
 
@@ -20,6 +21,7 @@ export function useBranchReport(startDate?: string, endDate?: string) {
   return useQuery({
     queryKey: REPORT_KEYS.branches(startDate, endDate),
     queryFn: () => reportService.getBranchReport(startDate, endDate),
+    staleTime: 15000,
   });
 }
 
@@ -27,6 +29,7 @@ export function usePaymentReport(startDate?: string, endDate?: string) {
   return useQuery({
     queryKey: REPORT_KEYS.payments(startDate, endDate),
     queryFn: () => reportService.getPaymentReport(startDate, endDate),
+    staleTime: 15000,
   });
 }
 
@@ -34,5 +37,6 @@ export function useInventoryValuationReport() {
   return useQuery({
     queryKey: REPORT_KEYS.inventory,
     queryFn: () => reportService.getInventoryValuationReport(),
+    staleTime: 15000,
   });
 }

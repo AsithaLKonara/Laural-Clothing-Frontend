@@ -16,7 +16,8 @@ interface ProductCardProps {
 export default function ProductCard({ product, imageUrl = "/products/default.jpg" }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const router = useRouter();
-  const { sessionId, openDrawer } = useCartStore();
+  const sessionId = useCartStore((state) => state.sessionId);
+  const openDrawer = useCartStore((state) => state.openDrawer);
   const addToCart = useAddToCart(sessionId);
 
   const defaultVariant = product?.variants?.[0];

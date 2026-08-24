@@ -17,7 +17,8 @@ export default function Navbar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { openWishlist } = useOldCart();
-  const { sessionId, openDrawer } = useCartStore();
+  const sessionId = useCartStore((state) => state.sessionId);
+  const openDrawer = useCartStore((state) => state.openDrawer);
   const { data: cart } = useCart(sessionId);
 
   const cartItems = cart?.items || [];

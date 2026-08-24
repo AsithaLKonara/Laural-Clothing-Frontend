@@ -49,7 +49,8 @@ export default function ProductPageClient({
   const { data: relatedResponse } = useProducts({ skip: 0, take: 8 }, initialRelatedProducts);
   const relatedProducts = relatedResponse?.data || [];
   
-  const { sessionId, openDrawer } = useCartStore();
+  const sessionId = useCartStore((state) => state.sessionId);
+  const openDrawer = useCartStore((state) => state.openDrawer);
   const addToCart = useAddToCart(sessionId);
   const addToWishlist = useAddToWishlist(sessionId);
   const { openWishlist } = useCart();

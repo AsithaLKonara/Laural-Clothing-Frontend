@@ -17,6 +17,7 @@ export function useProducts(params?: GetProductsParams, initialData?: PaginatedR
   return useQuery({
     queryKey: PRODUCT_QUERY_KEYS.list(params),
     queryFn: () => productsService.getProducts(params),
+    staleTime: 1000 * 60 * 5, // 5 minutes
     initialData,
   });
 }
@@ -29,6 +30,7 @@ export function useInfiniteProducts(params?: GetProductsParams) {
       const nextSkip = allPages.length * (params?.take || 12);
       return nextSkip < lastPage.meta.total ? nextSkip : undefined;
     },
+    staleTime: 1000 * 60 * 5, // 5 minutes
     initialPageParam: 0,
   });
 }
@@ -38,6 +40,7 @@ export function useProduct(id: string, initialData?: Product) {
     queryKey: PRODUCT_QUERY_KEYS.detail(id),
     queryFn: () => productsService.getProductById(id),
     enabled: !!id,
+    staleTime: 1000 * 60 * 5, // 5 minutes
     initialData,
   });
 }
@@ -47,6 +50,7 @@ export function useProductBySlug(slug: string, initialData?: Product) {
     queryKey: PRODUCT_QUERY_KEYS.detailBySlug(slug),
     queryFn: () => productsService.getProductBySlug(slug),
     enabled: !!slug,
+    staleTime: 1000 * 60 * 5, // 5 minutes
     initialData,
   });
 }

@@ -12,6 +12,7 @@ export function useCategories(initialData?: any) {
   return useQuery({
     queryKey: CATEGORY_QUERY_KEYS.lists(),
     queryFn: () => categoriesService.getCategories(),
+    staleTime: 1000 * 60 * 60, // 1 hour
     initialData,
   });
 }
@@ -21,6 +22,7 @@ export function useCategory(id: string, initialData?: Category) {
     queryKey: CATEGORY_QUERY_KEYS.detail(id),
     queryFn: () => categoriesService.getCategoryById(id),
     enabled: !!id,
+    staleTime: 1000 * 60 * 60, // 1 hour
     initialData,
   });
 }

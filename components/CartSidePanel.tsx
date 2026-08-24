@@ -8,7 +8,10 @@ import Link from "next/link";
 import Image from "next/image";
 
 export default function CartSidePanel() {
-  const { sessionId, initSession, isDrawerOpen, closeDrawer } = useCartStore();
+  const sessionId = useCartStore((state) => state.sessionId);
+  const initSession = useCartStore((state) => state.initSession);
+  const isDrawerOpen = useCartStore((state) => state.isDrawerOpen);
+  const closeDrawer = useCartStore((state) => state.closeDrawer);
 
   useEffect(() => {
     initSession();

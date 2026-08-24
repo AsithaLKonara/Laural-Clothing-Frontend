@@ -8,7 +8,8 @@ import { useWishlist, useRemoveFromWishlist } from "@/hooks/useWishlist";
 import { useAddToCart } from "@/hooks/useCart";
 
 export default function WishlistPage() {
-  const { sessionId, openDrawer } = useCartStore();
+  const sessionId = useCartStore((state) => state.sessionId);
+  const openDrawer = useCartStore((state) => state.openDrawer);
   const { data: wishlist, isLoading } = useWishlist(sessionId);
   const removeFromWishlist = useRemoveFromWishlist(sessionId, wishlist?.id);
   const addToCart = useAddToCart(sessionId);

@@ -36,7 +36,9 @@ export const useCurrentSession = (terminalId?: string) => {
       const res = await api.get(`/pos/sessions/current?terminalId=${terminalId}`);
       return res.data;
     },
-    enabled: !!terminalId
+    enabled: !!terminalId,
+    staleTime: 10000,
+    refetchOnWindowFocus: true,
   });
 };
 

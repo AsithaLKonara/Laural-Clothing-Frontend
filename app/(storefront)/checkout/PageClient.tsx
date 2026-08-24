@@ -44,14 +44,14 @@ export default function CheckoutPage() {
   const [isLoyaltyModalOpen, setIsLoyaltyModalOpen] = useState(false);
   const [appliedLoyaltyPoints, setAppliedLoyaltyPoints] = useState<number>(0);
   
-  const { isAuthenticated } = useAuthStore();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
   const [isPhoneVerified, setIsPhoneVerified] = useState(false);
   const [pendingCheckoutData, setPendingCheckoutData] = useState<CheckoutFormData | null>(null);
   const [verificationToken, setVerificationToken] = useState("");
 
   const router = useRouter();
-  const { sessionId } = useCartStore();
+  const sessionId = useCartStore((state) => state.sessionId);
   const { data: cart, isLoading: isCartLoading } = useCart(sessionId);
   const initiateCheckout = useInitiateCheckout(sessionId);
   const { data: addresses } = useAddresses(MOCK_CUSTOMER_ID);
