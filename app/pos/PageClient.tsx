@@ -19,6 +19,7 @@ import { useIntersection } from "@/hooks/useIntersection";
 import { useCategories } from "@/hooks/useCategories";
 import { useRouter } from "next/navigation";
 import { useProcessPosOrder, useCurrentSession, useValidateVoucher } from "@/hooks/usePos";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function POSPage() {
   const router = useRouter();
@@ -114,6 +115,7 @@ export default function POSPage() {
   const categories = categoriesResponse?.data || [];
   
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [selectedCategory, setSelectedCategory] = useState("All");
 
   const { 
@@ -123,7 +125,7 @@ export default function POSPage() {
     hasNextPage, 
     isFetchingNextPage 
   } = useInfiniteProducts({
-    search: searchTerm,
+    search: debouncedSearchTerm,
     category: selectedCategory !== "All" ? selectedCategory : undefined,
     take: 12
   });

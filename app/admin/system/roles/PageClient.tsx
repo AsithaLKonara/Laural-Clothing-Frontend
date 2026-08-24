@@ -10,6 +10,7 @@ import RoleModal from "@/components/dashboard/RoleModal";
 import UserModal from "@/components/dashboard/UserModal";
 import roleService, { RoleItem, SystemUserItem } from "@/services/role.service";
 import { globalDialog } from "@/store/dialog.store";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function AccessControlPage() {
   const [activeTab, setActiveTab] = useState<"roles" | "users">("roles");
@@ -22,6 +23,7 @@ export default function AccessControlPage() {
 
   // Search & Filter
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [roleFilter, setRoleFilter] = useState("All");
 
   // Modals
@@ -37,7 +39,7 @@ export default function AccessControlPage() {
     try {
       const [fetchedRoles, fetchedUsers] = await Promise.all([
         roleService.getRoles(),
-        roleService.getUsers(searchTerm || undefined, roleFilter !== "All" ? roleFilter : undefined),
+        roleService.getUsers(debouncedSearchTerm || undefined, roleFilter !== "All" ? roleFilter : undefined),
       ]);
       setRoles(fetchedRoles);
       setUsers(fetchedUsers);
@@ -47,7 +49,7 @@ export default function AccessControlPage() {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, roleFilter]);
+  }, [debouncedSearchTerm, roleFilter]);
 
   useEffect(() => {
     fetchData();
@@ -70,8 +72,8 @@ export default function AccessControlPage() {
   };
 
   const filteredRoles = roles.filter((r) =>
-    r.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    r.description.toLowerCase().includes(searchTerm.toLowerCase())
+    r.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+    r.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
   );
 
   const columns = [

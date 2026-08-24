@@ -6,9 +6,13 @@ import RevenueChart from "@/components/dashboard/RevenueChart";
 import RevenueOverviewTable from "@/components/dashboard/RevenueOverviewTable";
 import RecentTransactionsTable from "@/components/dashboard/RecentTransactionsTable";
 import { TrendingUp, ShoppingCart, Users, Receipt, Package, Wallet, Gift, RefreshCcw } from "lucide-react";
-import { useBusinessOverview } from "@/hooks/useAnalytics";
 import { useBranches } from "@/hooks/useInventory";
 import { globalDialog } from "@/store/dialog.store";
+import { Suspense } from "react";
+import dynamic from "next/dynamic";
+import { useQueryClient } from "@tanstack/react-query";
+
+const DashboardData = dynamic(() => import("@/components/dashboard/DashboardData"), { ssr: false });
 
 const GATEWAY_COLORS: Record<string, string> = {
   "KOKO": "bg-violet-500",
@@ -20,11 +24,16 @@ const GATEWAY_COLORS: Record<string, string> = {
   "CARD": "bg-teal-500"
 };
 
-const formatCurrency = (value: number) => {
-  if (value >= 1000000) return `Rs. ${(value / 1000000).toFixed(1)}M`;
-  if (value >= 1000) return `Rs. ${(value / 1000).toFixed(1)}K`;
-  return `Rs. ${value.toFixed(0)}`;
-};
+const DashboardSkeleton = () => (
+  <div className="flex flex-col gap-4 mt-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {[1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-stone-100 rounded-2xl animate-pulse"></div>)}
+    </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {[1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-stone-100 rounded-2xl animate-pulse"></div>)}
+    </div>
+  </div>
+);
 
 export default function SuperAdminDashboard() {
   const [activeBranch, setActiveBranch] = useState("All");
@@ -35,10 +44,10 @@ export default function SuperAdminDashboard() {
   // Combine static options with dynamic branches from DB
   const dynamicBranches = branchesData ? (Array.isArray(branchesData) ? branchesData.map((b: any) => b.name) : []) : [];
   const displayBranches = ["All", "Online", ...dynamicBranches];
-
-  const { data: analytics, isLoading, error: analyticsError } = useBusinessOverview(activePeriod, activeBranch);
+  const queryClient = useQueryClient();
 
   const handleExport = () => {
+    const analytics: any = queryClient.getQueryData(['analytics', 'overview', activePeriod, activeBranch]);
     if (!analytics || !analytics.recentTransactions || analytics.recentTransactions.length === 0) {
       globalDialog.alert("No data available to export");
       return;
@@ -95,7 +104,6 @@ export default function SuperAdminDashboard() {
           </select>
           <button 
             onClick={handleExport}
-            disabled={isLoading || !analytics}
             className="flex items-center gap-2 bg-white border border-stone-200 text-stone-700 hover:bg-stone-50 px-4 py-2.5 rounded-xl font-inter text-sm font-medium transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Export
@@ -120,83 +128,9 @@ export default function SuperAdminDashboard() {
         ))}
       </div>
 
-      {isLoading ? (
-        <div className="flex flex-col gap-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-stone-100 rounded-2xl animate-pulse"></div>)}
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-stone-100 rounded-2xl animate-pulse"></div>)}
-          </div>
-        </div>
-      ) : analytics ? (
-        <>
-          {/* Stat Cards Row 1 */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard label="Revenue" value={formatCurrency(analytics.revenue.value)} trend={analytics.revenue.trend} trendType={analytics.revenue.trendType} icon={<TrendingUp size={16} />} />
-            <StatCard label="Orders" value={analytics.orders.value.toString()} trend={analytics.orders.trend} trendType={analytics.orders.trendType} icon={<ShoppingCart size={16} />} />
-            <StatCard label="New Customers" value={analytics.newCustomers.value.toString()} trend={analytics.newCustomers.trend} trendType={analytics.newCustomers.trendType} icon={<Users size={16} />} />
-            <StatCard label="Avg Order Value" value={formatCurrency(analytics.avgOrderValue.value)} trend={analytics.avgOrderValue.trend} trendType={analytics.avgOrderValue.trendType} icon={<Receipt size={16} />} />
-          </div>
-
-          {/* Stat Cards Row 2 */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard label="Pending Orders" value={analytics.pendingOrders.value.toString()} trend={analytics.pendingOrders.trend} trendType={analytics.pendingOrders.trendType} icon={<Package size={16} />} />
-            <StatCard label="Inventory Value" value={formatCurrency(analytics.inventoryValue.value)} trend={analytics.inventoryValue.trend} trendType={analytics.inventoryValue.trendType} icon={<Wallet size={16} />} />
-            <StatCard label="Loyalty Points" value={analytics.loyaltyPoints.value.toString()} trend={analytics.loyaltyPoints.trend} trendType={analytics.loyaltyPoints.trendType} icon={<Gift size={16} />} />
-            <StatCard label="Returns" value={formatCurrency(analytics.returns.value)} trend={analytics.returns.trend} trendType={analytics.returns.trendType} icon={<RefreshCcw size={16} />} />
-          </div>
-
-          {/* Payment Gateway Performance */}
-          <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden w-full">
-            <div className="px-4 md:px-6 py-4 md:py-5 border-b border-stone-200 bg-stone-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
-              <div>
-                <h2 className="font-inter font-bold text-stone-900 text-base">Payment Gateway Performance</h2>
-                <p className="font-inter text-xs text-stone-400 mt-0.5">Breakdown by gateway for the selected period</p>
-              </div>
-            </div>
-            <div className="p-6 flex flex-col gap-3 overflow-x-auto">
-              <div className="min-w-[500px]">
-                {analytics.paymentGatewayPerformance?.length > 0 ? (
-                  analytics.paymentGatewayPerformance.map((g: any) => (
-                    <div key={g.gw} className="flex items-center gap-4 py-1">
-                      <div className="w-20 font-inter font-bold text-sm text-stone-800 shrink-0">{g.gw}</div>
-                      <div className="flex-1 bg-stone-100 rounded-full h-2 overflow-hidden">
-                        <div className={`h-2 rounded-full ${GATEWAY_COLORS[g.gw] || "bg-stone-500"}`} style={{ width: `${g.pct}%` }} />
-                      </div>
-                      <div className="w-8 text-xs font-bold text-stone-500 text-right shrink-0">{g.pct}%</div>
-                      <div className="w-28 font-inter font-bold text-sm text-stone-900 text-right shrink-0">{formatCurrency(g.amount)}</div>
-                      <div className="w-20 font-inter text-xs text-stone-400 text-right shrink-0">{g.count} txns</div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-4 text-stone-500 font-inter text-sm">No payment data for this period.</div>
-                )}
-              </div>
-            </div>
-          </div>
-        </>
-      ) : (
-        <div className="text-center py-10 bg-red-50 text-red-500 rounded-2xl border border-red-200">
-          <p className="font-bold">Failed to load analytics data.</p>
-          <p className="text-sm mt-2">{analyticsError ? analyticsError.toString() : "Unknown error"}</p>
-        </div>
-      )}
-
-      {/* Charts & Breakdown Row */}
-      <div className="flex flex-col lg:flex-row gap-5 mt-2">
-        <div className="flex-1 bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden w-full overflow-x-auto">
-          <RevenueChart data={analytics?.paymentGatewayPerformance} />
-        </div>
-        <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden w-full lg:w-[350px] shrink-0 overflow-x-auto">
-          <RevenueOverviewTable data={analytics?.paymentGatewayPerformance} />
-        </div>
-      </div>
-
-      {/* Recent Transactions */}
-      <div className="bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden mt-5">
-        <RecentTransactionsTable transactions={analytics?.recentTransactions} />
-      </div>
+      <Suspense fallback={<DashboardSkeleton />}>
+        <DashboardData activePeriod={activePeriod} activeBranch={activeBranch} />
+      </Suspense>
 
       <div className="h-6" />
     </div>

@@ -8,6 +8,7 @@ import BulkReturnModal from "@/components/admin/BulkReturnModal";
 
 import { useReturns } from "@/hooks/useReturns";
 import { globalDialog } from "@/store/dialog.store";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const getStatusConfig = (status: string) => {
   switch (status) {
@@ -23,13 +24,13 @@ const getStatusConfig = (status: string) => {
 
 export default function AdminReturnsPage() {
   const [filter, setFilter] = useState("ALL");
-  const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const debouncedSearch = useDebounce(searchInput, 300);
   const [page, setPage] = useState(1);
   const [selectedRMAs, setSelectedRMAs] = useState<string[]>([]);
   const [showBulkModal, setShowBulkModal] = useState(false);
 
-  const { data, isLoading } = useReturns(page, 10, search, filter);
+  const { data, isLoading } = useReturns(page, 10, debouncedSearch, filter);
   
   const returns = data?.returns || [];
   const total = data?.total || 0;
@@ -37,7 +38,6 @@ export default function AdminReturnsPage() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setSearch(searchInput);
     setPage(1);
   };
 

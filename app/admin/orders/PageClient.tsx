@@ -23,11 +23,13 @@ export default function OrdersPage() {
   const [status, setStatus] = useState<string>("");
   const [branchId, setBranchId] = useState<string>("");
   const [paymentGateway, setPaymentGateway] = useState<string>("");
+  const [page, setPage] = useState<number>(1);
 
   const { data: ordersData, isLoading: ordersLoading } = useOrders({
     status: status || undefined,
     branchId: branchId || undefined,
     paymentGateway: paymentGateway || undefined,
+    page: page
   });
 
   const orders = ordersData?.data || [];
@@ -71,7 +73,7 @@ export default function OrdersPage() {
     <>
       <select 
         value={status} 
-        onChange={e => setStatus(e.target.value)}
+        onChange={e => { setStatus(e.target.value); setPage(1); }}
         className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400"
       >
         <option value="">All Statuses</option>
@@ -84,7 +86,7 @@ export default function OrdersPage() {
       
       <select 
         value={paymentGateway}
-        onChange={e => setPaymentGateway(e.target.value)}
+        onChange={e => { setPaymentGateway(e.target.value); setPage(1); }}
         className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400"
       >
         <option value="">All Gateways</option>
@@ -123,7 +125,11 @@ export default function OrdersPage() {
         columns={columns}
         keyExtractor={(row) => row.id}
         onRowClick={(row) => router.push(`/admin/orders/${row.id}`)}
-        pagination={{ currentPage: meta.page, totalPages: meta.totalPages || 1 }}
+        pagination={{ 
+          currentPage: meta.page, 
+          totalPages: meta.totalPages || 1,
+          onPageChange: (newPage) => setPage(newPage) 
+        }}
       />
 
       {/* Floating Bulk Action Bar */}

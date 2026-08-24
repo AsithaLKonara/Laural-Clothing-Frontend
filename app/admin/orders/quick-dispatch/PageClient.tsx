@@ -8,6 +8,7 @@ import { useOrder } from "@/hooks/useOrder";
 import { useBranches } from "@/hooks/useInventory";
 import { useProducts } from "@/hooks/useProducts";
 import Image from "next/image";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface CartItem {
   variantId: string;
@@ -39,7 +40,8 @@ export default function QuickDispatchPage() {
   const [shippingFee, setShippingFee] = useState(400);
   
   const [searchTerm, setSearchTerm] = useState("");
-  const { data: productsData, isLoading: productsLoading } = useProducts(searchTerm.length > 2 ? { search: searchTerm } : undefined);
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  const { data: productsData, isLoading: productsLoading } = useProducts(debouncedSearchTerm.length > 2 ? { search: debouncedSearchTerm } : undefined);
   
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isSearchingCustomer, setIsSearchingCustomer] = useState(false);

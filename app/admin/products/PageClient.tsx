@@ -21,8 +21,16 @@ export default function ProductsPage() {
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [showBulkEditModal, setShowBulkEditModal] = useState(false);
 
-  const { data: response, isLoading } = useProducts();
+  const [page, setPage] = useState(1);
+  const take = 12;
+
+  const { data: response, isLoading } = useProducts({
+    skip: (page - 1) * take,
+    take: take,
+  });
   const products = response?.data || [];
+  const meta = response?.meta || { total: 0, skip: 0, take: take };
+  const totalPages = Math.ceil(meta.total / (meta.take || take)) || 1;
   const deleteProductMutation = useDeleteProduct();
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -157,7 +165,11 @@ export default function ProductsPage() {
             data={products}
             columns={columns}
             keyExtractor={(row) => row.id}
-            pagination={{ currentPage: 1, totalPages: 8 }}
+            pagination={{ 
+              currentPage: page, 
+              totalPages: totalPages,
+              onPageChange: (newPage) => setPage(newPage)
+            }}
           />
         </div>
       </div>
