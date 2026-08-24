@@ -14,7 +14,7 @@ export default function CategoryCard({ title, imageUrl, href }: CategoryCardProp
       className="relative group block w-full aspect-[3/4] md:aspect-[4/5] overflow-hidden bg-stone-200 transition-transform duration-300 hover:scale-105"
     >
       <Image
-        src={imageUrl}
+        src={imageUrl?.replace(/\.jpg$/, '.jpeg') || imageUrl}
         alt={`${title} category`}
         fill
         sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
