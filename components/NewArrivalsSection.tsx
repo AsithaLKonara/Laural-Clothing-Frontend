@@ -43,9 +43,9 @@ export default function NewArrivalsSection({ initialData }: { initialData?: Pagi
               <div className="w-full max-w-[245px] h-[380px] bg-stone-100 animate-pulse rounded-lg"></div>
             </div>
           ))
-        ) : products.slice(0, 8).map((product: Product) => (
+        ) : products.slice(0, 8).map((product: Product, idx: number) => (
           <div key={product.id} className="w-full flex justify-center">
-            <ProductCard product={product} />
+            <ProductCard product={product} priority={idx < 4} />
           </div>
         ))}
       </div>

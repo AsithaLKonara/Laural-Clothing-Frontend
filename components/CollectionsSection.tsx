@@ -54,6 +54,7 @@ export default function CollectionsSection({ initialData }: { initialData?: Pagi
                 title={category.name}
                 imageUrl={imageUrl}
                 href={`/categories/${category.slug}`}
+                priority={idx < 6}
               />
             );
           })}

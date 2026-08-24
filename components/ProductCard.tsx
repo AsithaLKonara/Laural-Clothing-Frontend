@@ -11,9 +11,10 @@ import { useAddToCart } from "@/hooks/useCart";
 interface ProductCardProps {
   product?: Product;
   imageUrl?: string;
+  priority?: boolean;
 }
 
-export default function ProductCard({ product, imageUrl = "/products/default.jpg" }: ProductCardProps) {
+export default function ProductCard({ product, imageUrl = "/products/default.jpg", priority = false }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const router = useRouter();
   const sessionId = useCartStore((state) => state.sessionId);
@@ -92,17 +93,20 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
             src={displayImage}
             alt={title}
             fill
+            priority={priority}
             sizes="(max-width: 768px) 50vw, 250px"
-            className={`object-cover transition-opacity duration-300 ${isHovered ? 'opacity-0' : 'opacity-100'}`}
+            className={`object-cover transition-opacity duration-300 ${isHovered && allImages.length > 1 ? 'opacity-0' : 'opacity-100'}`}
           />
           {/* Hover Image */}
-          <Image
-            src={hoverImage}
-            alt={`${title} - Back View`}
-            fill
-            sizes="(max-width: 768px) 50vw, 250px"
-            className={`object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
-          />
+          {allImages.length > 1 && (
+            <Image
+              src={hoverImage}
+              alt={`${title} - Back View`}
+              fill
+              sizes="(max-width: 768px) 50vw, 250px"
+              className={`object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+            />
+          )}
         </Link>
         
         {/* Discount Tag */}
