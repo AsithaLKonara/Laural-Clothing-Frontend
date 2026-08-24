@@ -8,7 +8,11 @@ export async function serverFetch<T>(endpoint: string, options?: ServerFetchOpti
   let apiUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1").replace(/\/$/, "");
   
   // Ensure endpoint starts with a slash
-  const url = endpoint.startsWith('/') ? `${apiUrl}${endpoint}` : `${apiUrl}/${endpoint}`;
+  let url = endpoint.startsWith('/') ? `${apiUrl}${endpoint}` : `${apiUrl}/${endpoint}`;
+  
+  // Append a hardcoded cache buster to completely bypass the stale Next.js fetch cache key
+  const cacheBuster = "cb=20260824v3";
+  url = url.includes('?') ? `${url}&${cacheBuster}` : `${url}?${cacheBuster}`;
 
   const fetchOptions: RequestInit = {
     ...options,
