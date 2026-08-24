@@ -9,7 +9,7 @@ export default function LoginPage() {
       {/* Full Page Background Layer */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/auth/bg.jpg?v=2"
+          src="/auth/bg.jpeg?v=2"
           alt="Laural Clothing Collection"
           fill
           sizes="100vw"

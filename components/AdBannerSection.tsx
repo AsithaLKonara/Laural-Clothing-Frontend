@@ -5,7 +5,7 @@ export default function AdBannerSection() {
     <section className="relative flex flex-col justify-center items-center px-4 md:px-8 lg:px-[120px] py-10 md:py-[60px] w-full h-[150px] md:h-[250px]">
       {/* Background Image */}
       <Image
-        src="/Untitled-1.jpg"
+        src="/Untitled-1.jpeg"
         alt="Ad Banner Background"
         fill
         className="object-cover z-0"

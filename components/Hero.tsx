@@ -4,9 +4,9 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 
 const HERO_IMAGES = [
-  "/hero-image/hero-1.jpg",
-  "/hero-image/hero-2.jpg",
-  "/hero-image/hero-3.jpg",
+  "/hero-image/hero-1.jpeg",
+  "/hero-image/hero-2.jpeg",
+  "/hero-image/hero-3.jpeg",
 ];
 
 export default function Hero() {

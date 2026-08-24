@@ -21,7 +21,7 @@ export default function Footer() {
         {/* Background Layer */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/footer/bg.jpg"
+            src="/footer/bg.jpeg"
             alt="Footer Background"
             fill
             sizes="100vw"

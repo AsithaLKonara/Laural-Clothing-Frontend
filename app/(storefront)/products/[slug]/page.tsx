@@ -71,7 +71,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 
   allImages = deduplicateImages(allImages);
-  const ogImage = allImages[0] || '/hero-image/hero-1.jpg';
+  const ogImage = allImages[0] || '/hero-image/hero-1.jpeg';
     
   return {
     title: product.name,
@@ -138,7 +138,7 @@ export default async function ProductPage({ params }: Props) {
   };
 
   allImages = deduplicateImages(allImages);
-  const schemaImage = allImages[0] || `${baseUrl}/hero-image/hero-1.jpg`;
+  const schemaImage = allImages[0] || `${baseUrl}/hero-image/hero-1.jpeg`;
 
   return (
     <>

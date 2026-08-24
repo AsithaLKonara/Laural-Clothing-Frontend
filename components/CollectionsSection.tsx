@@ -12,9 +12,9 @@ export default function CollectionsSection({ initialData }: { initialData?: Pagi
   
   // Use a mix of aesthetic placeholder images for categories
   const placeholderImages = [
-    "/hero-image/hero-1.jpg",
-    "/hero-image/hero-2.jpg",
-    "/hero-image/hero-3.jpg",
+    "/hero-image/hero-1.jpeg",
+    "/hero-image/hero-2.jpeg",
+    "/hero-image/hero-3.jpeg",
   ];
 
   return (
