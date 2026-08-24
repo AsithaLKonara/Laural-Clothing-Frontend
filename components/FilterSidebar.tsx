@@ -88,7 +88,7 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
 
       {/* Categories */}
       <div className="flex flex-col w-full gap-[20px]">
-        {categories.map((cat) => (
+        {categories.map((cat: any) => (
           <div key={cat.id} className="flex justify-between items-center cursor-pointer group">
             <span className="font-poppins text-base text-[#44403B] group-hover:text-primary transition-colors">{cat.name}</span>
             <ChevronDown size={16} className="text-[#44403B] -rotate-90 group-hover:text-primary transition-transform" />

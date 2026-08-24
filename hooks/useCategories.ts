@@ -8,18 +8,20 @@ export const CATEGORY_QUERY_KEYS = {
   detail: (id: string) => [...CATEGORY_QUERY_KEYS.all, 'detail', id] as const,
 };
 
-export function useCategories() {
+export function useCategories(initialData?: any) {
   return useQuery({
     queryKey: CATEGORY_QUERY_KEYS.lists(),
     queryFn: () => categoriesService.getCategories(),
+    initialData,
   });
 }
 
-export function useCategory(id: string) {
+export function useCategory(id: string, initialData?: Category) {
   return useQuery({
     queryKey: CATEGORY_QUERY_KEYS.detail(id),
     queryFn: () => categoriesService.getCategoryById(id),
     enabled: !!id,
+    initialData,
   });
 }
 

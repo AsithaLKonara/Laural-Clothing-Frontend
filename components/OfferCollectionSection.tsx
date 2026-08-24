@@ -6,13 +6,16 @@ import Autoplay from "embla-carousel-autoplay";
 import ProductCard from "./ProductCard";
 import { useProducts } from "@/hooks/useProducts";
 
-export default function OfferCollectionSection() {
+import { PaginatedResponse } from "@/types/api";
+import { Product } from "@/types/product";
+
+export default function OfferCollectionSection({ initialData }: { initialData?: PaginatedResponse<Product> }) {
   const [emblaRef] = useEmblaCarousel(
     { loop: true, align: "start", dragFree: true },
     [Autoplay({ delay: 3000, stopOnInteraction: true })]
   );
 
-  const { data: response, isLoading } = useProducts({ skip: 8, take: 8 });
+  const { data: response, isLoading } = useProducts({ skip: 8, take: 8 }, initialData);
   const products = response?.data || [];
 
   return (
@@ -47,7 +50,7 @@ export default function OfferCollectionSection() {
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="flex-[0_0_245px] min-w-[245px] h-[380px] bg-stone-100 animate-pulse rounded-lg"></div>
             ))
-          ) : products.map((product) => (
+          ) : products.map((product: Product) => (
             <div key={product.id} className="flex-[0_0_245px] min-w-[245px]">
               <ProductCard product={product} />
             </div>

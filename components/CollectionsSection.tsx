@@ -3,8 +3,11 @@ import Link from "next/link";
 import CategoryCard from "./CategoryCard";
 import { useCategories } from "@/hooks/useCategories";
 
-export default function CollectionsSection() {
-  const { data: response } = useCategories();
+import { PaginatedResponse } from "@/types/api";
+import { Category } from "@/types/category";
+
+export default function CollectionsSection({ initialData }: { initialData?: PaginatedResponse<Category> }) {
+  const { data: response } = useCategories(initialData);
   const categories = response?.data || [];
   
   // Use a mix of aesthetic placeholder images for categories
@@ -43,7 +46,7 @@ export default function CollectionsSection() {
 
       {/* Cards Row */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-[20px] w-full mt-4 md:mt-8">
-          {categories.slice(0, 6).map((category, idx) => {
+          {categories.slice(0, 6).map((category: Category, idx: number) => {
             const imageUrl = category.imageUrl || placeholderImages[idx % placeholderImages.length];
             return (
               <CategoryCard

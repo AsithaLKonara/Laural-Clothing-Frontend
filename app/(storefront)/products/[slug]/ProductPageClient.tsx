@@ -18,6 +18,8 @@ import { useAddToCart } from "@/hooks/useCart";
 import { useCart } from "@/components/CartProvider";
 import { useAddToWishlist } from "@/hooks/useWishlist";
 
+import { PaginatedResponse } from "@/types/api";
+
 const colorMap: Record<string, string> = {
   white: '#FFFFFF',
   black: '#000000',
@@ -31,12 +33,20 @@ const colorMap: Record<string, string> = {
   ash: '#B2BEB5'
 };
 
-export default function ProductPageClient({ params }: { params: Promise<{ slug: string }> }) {
+export default function ProductPageClient({ 
+  params,
+  initialProduct,
+  initialRelatedProducts,
+}: { 
+  params: Promise<{ slug: string }>;
+  initialProduct?: Product;
+  initialRelatedProducts?: PaginatedResponse<Product>;
+}) {
   const resolvedParams = use(params);
   const slug = resolvedParams.slug;
   
-  const { data: product, isLoading } = useProductBySlug(slug);
-  const { data: relatedResponse } = useProducts({ skip: 0, take: 8 });
+  const { data: product, isLoading } = useProductBySlug(slug, initialProduct);
+  const { data: relatedResponse } = useProducts({ skip: 0, take: 8 }, initialRelatedProducts);
   const relatedProducts = relatedResponse?.data || [];
   
   const { sessionId, openDrawer } = useCartStore();

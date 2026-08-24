@@ -98,7 +98,7 @@ export default function CategoriesPage() {
           { label: "Total Categories", value: categories.length.toString() },
           { label: "Active", value: categories.length.toString() },
           { label: "Draft", value: "0" },
-          { label: "Total Products Categorized", value: categories.reduce((sum, c) => sum + (c._count?.products || 0), 0).toString() },
+          { label: "Total Products Categorized", value: categories.reduce((sum: number, c: any) => sum + (c._count?.products || 0), 0).toString() },
         ].map((s) => (
           <div key={s.label} className="bg-white border border-stone-200 rounded-xl p-5 shadow-sm">
             <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider font-inter">{s.label}</p>

@@ -27,7 +27,7 @@ export default function ProductsPage() {
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedProducts(products.map(p => p.id));
+      setSelectedProducts(products.map((p: Product) => p.id));
     } else {
       setSelectedProducts([]);
     }
@@ -189,7 +189,7 @@ export default function ProductsPage() {
 
       {showBulkEditModal && (
         <BulkEditModal 
-          selectedProducts={products.filter(p => selectedProducts.includes(p.id)).map(p => ({ sku: (p as any).sku || p.id, name: p.name }))}
+          selectedProducts={products.filter((p: Product) => selectedProducts.includes(p.id)).map((p: Product) => ({ sku: (p as any).sku || p.id, name: p.name }))}
           onClose={() => setShowBulkEditModal(false)}
           onSuccess={() => {
             setShowBulkEditModal(false);

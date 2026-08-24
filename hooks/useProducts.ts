@@ -1,6 +1,7 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsService, GetProductsParams } from '../services/products.service';
 import { Product } from '../types/product';
+import { PaginatedResponse } from '../types/api';
 
 export const PRODUCT_QUERY_KEYS = {
   all: ['products'] as const,
@@ -12,10 +13,11 @@ export const PRODUCT_QUERY_KEYS = {
   detailBySlug: (slug: string) => [...PRODUCT_QUERY_KEYS.details(), 'slug', slug] as const,
 };
 
-export function useProducts(params?: GetProductsParams) {
+export function useProducts(params?: GetProductsParams, initialData?: PaginatedResponse<Product>) {
   return useQuery({
     queryKey: PRODUCT_QUERY_KEYS.list(params),
     queryFn: () => productsService.getProducts(params),
+    initialData,
   });
 }
 
@@ -31,19 +33,21 @@ export function useInfiniteProducts(params?: GetProductsParams) {
   });
 }
 
-export function useProduct(id: string) {
+export function useProduct(id: string, initialData?: Product) {
   return useQuery({
     queryKey: PRODUCT_QUERY_KEYS.detail(id),
     queryFn: () => productsService.getProductById(id),
     enabled: !!id,
+    initialData,
   });
 }
 
-export function useProductBySlug(slug: string) {
+export function useProductBySlug(slug: string, initialData?: Product) {
   return useQuery({
     queryKey: PRODUCT_QUERY_KEYS.detailBySlug(slug),
     queryFn: () => productsService.getProductBySlug(slug),
     enabled: !!slug,
+    initialData,
   });
 }
 

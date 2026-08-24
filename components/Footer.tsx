@@ -77,11 +77,10 @@ export default function Footer() {
               </div>
             </div>
             
-            {/* Categories Col */}
             <div className="flex flex-col gap-[16px]">
               <h4 className="font-inter font-bold text-sm tracking-[0.02em] uppercase text-background">Categories</h4>
               <div className="flex flex-col gap-[10px]">
-                {categories.map(cat => (
+                {categories.map((cat: any) => (
                   <Link href={`/categories/${cat.slug}`} key={cat.id} className="font-inter text-sm text-background/85 hover:text-white transition-colors">{cat.name}</Link>
                 ))}
               </div>

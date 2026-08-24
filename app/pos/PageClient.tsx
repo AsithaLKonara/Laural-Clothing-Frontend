@@ -307,7 +307,7 @@ export default function POSPage() {
               >
                 All
               </button>
-              {categories.map((cat) => (
+              {categories.map((cat: any) => (
                 <button 
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
