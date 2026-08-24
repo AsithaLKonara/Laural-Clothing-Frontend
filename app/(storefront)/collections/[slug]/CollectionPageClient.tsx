@@ -8,8 +8,9 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import Image from "next/image";
 import { useProducts } from "@/hooks/useProducts";
 import { Product } from "@/types/product";
+import { PaginatedResponse } from "@/types/api";
 
-export default function CollectionPageClient() {
+export default function CollectionPageClient({ initialData }: { initialData?: PaginatedResponse<Product> }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const params = useParams();
   const slug = params.slug as string;
@@ -19,7 +20,7 @@ export default function CollectionPageClient() {
   const collectionName = slug ? slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : 'Collection';
 
   // Using a category filter simulating collection for now since there's no collections endpoint
-  const { data: response, isLoading } = useProducts({ skip, take });
+  const { data: response, isLoading } = useProducts({ skip, take }, skip === 0 ? initialData : undefined);
   const products = response?.data || [];
   const total = response?.meta.total || 0;
 

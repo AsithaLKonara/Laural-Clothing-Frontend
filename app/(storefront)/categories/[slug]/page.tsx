@@ -5,7 +5,11 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 
-export const revalidate = 3600;
+import { serverFetch } from "@/lib/server-fetch";
+import { Product } from "@/types/product";
+import { PaginatedResponse } from "@/types/api";
+
+export const revalidate = 300;
 
 // This function can eventually use prisma.category.findUnique() based on the slug.
 // For now, it returns mock metadata based on the slug.
@@ -40,6 +44,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default function CategoryPage() {
-  return <CategoryPageClient />;
+export default async function CategoryPage({ params }: Props) {
+  const { slug } = await params;
+  const productsRes = await serverFetch<PaginatedResponse<Product>>(`/products?skip=0&take=12&category=${slug}`, {
+    next: { tags: ["products"], revalidate: 300 }
+  }).catch(() => undefined);
+
+  return <CategoryPageClient initialData={productsRes} />;
 }

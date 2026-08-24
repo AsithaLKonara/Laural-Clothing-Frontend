@@ -7,8 +7,9 @@ import CategoryBar from "@/components/CategoryBar";
 import { SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { Product } from "@/types/product";
+import { PaginatedResponse } from "@/types/api";
 
-export default function ShopContent() {
+export default function ShopContent({ initialData }: { initialData?: PaginatedResponse<Product> }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
@@ -21,7 +22,7 @@ export default function ShopContent() {
 
   // Pagination logic
   const skip = (currentPage - 1) * itemsPerPage;
-  const { data: response, isLoading } = useProducts({ skip, take: itemsPerPage });
+  const { data: response, isLoading } = useProducts({ skip, take: itemsPerPage }, skip === 0 ? initialData : undefined);
   
   const products = response?.data || [];
   const totalItems = response?.meta.total || 0;

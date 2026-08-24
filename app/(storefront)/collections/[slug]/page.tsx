@@ -5,7 +5,11 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 
-export const revalidate = 3600;
+import { serverFetch } from "@/lib/server-fetch";
+import { Product } from "@/types/product";
+import { PaginatedResponse } from "@/types/api";
+
+export const revalidate = 300;
 
 // This function can eventually use prisma.collection.findUnique() based on the slug.
 // For now, it returns mock metadata based on the slug.
@@ -40,9 +44,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default function CollectionPage() {
+export default async function CollectionPage({ params }: Props) {
   // Wait, does the client component accept params? Let's not pass params if we don't know it takes it.
   // The client component uses useParams() based on the head command output! 
   // "import { useParams } from 'next/navigation';"
-  return <CollectionPageClient />;
+  // Using a category filter simulating collection for now since there's no collections endpoint
+  const productsRes = await serverFetch<PaginatedResponse<Product>>(`/products?skip=0&take=12`, {
+    next: { tags: ["products"], revalidate: 300 }
+  }).catch(() => undefined);
+
+  return <CollectionPageClient initialData={productsRes} />;
 }
