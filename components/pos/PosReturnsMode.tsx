@@ -153,7 +153,7 @@ export default function PosReturnsMode() {
                       />
                     </div>
                     <div className="w-16 h-20 relative bg-stone-100 rounded-md overflow-hidden shrink-0">
-                      <Image src={item.image} alt={item.name} fill className="object-cover" />
+                      <Image src={item.image} alt={item.name} fill sizes="100px" className="object-cover" />
                     </div>
                     <div className="flex flex-col flex-1">
                       <div className="flex justify-between items-start">
@@ -190,7 +190,7 @@ export default function PosReturnsMode() {
                     </div>
                     
                     <div className="w-16 h-20 relative bg-stone-100 rounded-md overflow-hidden shrink-0">
-                      <Image src={item.image} alt={item.name} fill className="object-cover" />
+                      <Image src={item.image} alt={item.name} fill sizes="100px" className="object-cover" />
                     </div>
                     
                     <div className="flex flex-col flex-1">

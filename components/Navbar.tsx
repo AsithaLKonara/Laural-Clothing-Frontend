@@ -102,6 +102,7 @@ export default function Navbar() {
                 src={logoImage}
                 alt="Laural Clothing"
                 fill
+                sizes="200px"
                 className="object-contain"
                 priority
               />

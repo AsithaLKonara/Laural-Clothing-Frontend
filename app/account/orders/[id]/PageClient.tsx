@@ -147,7 +147,7 @@ export default function CustomerOrderDetailPage({ params }: { params: Promise<{ 
                 return (
                   <div key={item.id} className="flex gap-4 pb-6 border-b border-stone-100 last:border-0 last:pb-0">
                     <div className="w-20 h-24 relative bg-stone-100 rounded-md overflow-hidden shrink-0">
-                      {imageUrl && <Image src={imageUrl} alt={productName} fill className="object-cover" />}
+                      {imageUrl && <Image src={imageUrl} alt={productName} fill sizes="150px" className="object-cover" />}
                     </div>
                     <div className="flex flex-col flex-1">
                       <span className="font-inter font-bold text-stone-900 text-sm">{productName}</span>

@@ -461,7 +461,7 @@ export default function CheckoutPage() {
                       const imgUrl = allImages[0] || "/products/default.jpg";
                       
                       return (
-                        <Image src={imgUrl} alt={item.variant.product.name} fill className="object-cover object-top" />
+                        <Image src={imgUrl} alt={item.variant.product.name} fill sizes="100px" className="object-cover object-top" />
                       );
                     })()}
                   </div>

@@ -37,6 +37,7 @@ export default function CollectionPageClient({ initialData }: { initialData?: Pa
           src="/hero_image_3.jpg" 
           alt={collectionName} 
           fill 
+          sizes="100vw"
           className="object-cover object-center"
           priority
         />

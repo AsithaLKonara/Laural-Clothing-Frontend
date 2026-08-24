@@ -144,6 +144,7 @@ export default function OrderDetailPage() {
                       src={item.variant?.product?.featuredImage || "/products/default.jpg"} 
                       alt="Product"
                       fill
+                      sizes="100px"
                       className="object-cover"
                     />
                   </div>

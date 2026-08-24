@@ -59,7 +59,7 @@ export default function ReviewsPage() {
               <div key={item.id} className="flex flex-col sm:flex-row gap-6 p-6 border border-stone-200 rounded-xl bg-white">
                 <div className="w-24 h-32 relative bg-stone-100 rounded-lg overflow-hidden shrink-0">
                   {item.image ? (
-                    <Image src={item.image} alt={item.name} fill className="object-cover" />
+                    <Image src={item.image} alt={item.name} fill sizes="100px" className="object-cover" />
                   ) : (
                     <div className="w-full h-full bg-stone-100" />
                   )}
@@ -196,7 +196,7 @@ function ReviewModal({ item, customerId, onClose }: { item: any; customerId: str
         {/* Product Info */}
         <div className="px-6 py-4 flex items-center gap-4 bg-stone-50">
            <div className="w-12 h-16 relative bg-stone-200 rounded overflow-hidden shrink-0">
-             {item.image && <Image src={item.image} alt={item.name} fill className="object-cover" />}
+             {item.image && <Image src={item.image} alt={item.name} fill sizes="100px" className="object-cover" />}
            </div>
            <div>
              <h3 className="font-inter font-semibold text-stone-900 text-sm">{item.name}</h3>

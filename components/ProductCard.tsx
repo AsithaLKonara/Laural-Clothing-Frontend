@@ -91,6 +91,7 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
             src={displayImage}
             alt={title}
             fill
+            sizes="(max-width: 768px) 50vw, 250px"
             className={`object-cover transition-opacity duration-300 ${isHovered ? 'opacity-0' : 'opacity-100'}`}
           />
           {/* Hover Image */}
@@ -98,6 +99,7 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
             src={hoverImage}
             alt={`${title} - Back View`}
             fill
+            sizes="(max-width: 768px) 50vw, 250px"
             className={`object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
           />
         </Link>
@@ -189,13 +191,13 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
             </span>
             <div className="flex items-center gap-1">
               <div className="flex items-center justify-center w-[28px] h-[10px] relative">
-                <Image src="/payment-methods/koko.png" alt="koko" fill className="object-contain" />
+                <Image src="/payment-methods/koko.png" alt="koko" fill sizes="28px" className="object-contain" />
               </div>
               <div className="flex items-center justify-center w-[28px] h-[10px] relative">
-                <Image src="/payment-methods/mintpay-pill.png" alt="mintpay" fill className="object-contain" />
+                <Image src="/payment-methods/mintpay-pill.png" alt="mintpay" fill sizes="28px" className="object-contain" />
               </div>
               <div className="flex items-center justify-center w-[28px] h-[10px] relative">
-                <Image src="/payment-methods/payzy.png" alt="payzy" fill className="object-contain" />
+                <Image src="/payment-methods/payzy.png" alt="payzy" fill sizes="28px" className="object-contain" />
               </div>
             </div>
           </div>

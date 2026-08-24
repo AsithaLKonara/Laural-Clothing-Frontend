@@ -24,6 +24,7 @@ export default function Footer() {
             src="/footer/bg.jpg"
             alt="Footer Background"
             fill
+            sizes="100vw"
             className="object-cover"
           />
           <div className="absolute inset-0 bg-black/80" />
@@ -36,7 +37,7 @@ export default function Footer() {
           <div className="flex flex-col items-start gap-[20px] w-[320px]">
             {/* Logo */}
             <div className="relative w-[180px] h-[40px]">
-               <Image src="/logo-white.png" alt="Laural Clothing" fill className="object-contain object-left" />
+               <Image src="/logo-white.png" alt="Laural Clothing" fill sizes="200px" className="object-contain object-left" />
             </div>
             
             {/* Contact Items */}
@@ -144,7 +145,7 @@ export default function Footer() {
           © 2026 Laural Clothing. All Rights Reserved. Developed by ScriptLK Digital
         </p>
         <div className="relative w-[309px] h-[24px]">
-          <Image src="/footer/payments.webp" alt="Payment Methods" fill className="object-contain md:object-right" />
+          <Image src="/footer/payments.webp" alt="Payment Methods" fill sizes="400px" className="object-contain md:object-right" />
         </div>
       </div>
     </footer>

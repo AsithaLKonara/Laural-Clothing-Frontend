@@ -348,7 +348,7 @@ export default function POSPage() {
                       className="bg-surface border border-border rounded-xl flex flex-col hover:border-accent hover:shadow-md transition-all text-left active:scale-95 overflow-hidden"
                     >
                       <div className="relative w-full aspect-square bg-stone-100">
-                        <Image src={imageUrl} alt={p.name} fill className="object-cover" />
+                        <Image src={imageUrl} alt={p.name} fill sizes="150px" className="object-cover" />
                       </div>
                       <div className="p-3 flex flex-col justify-between flex-1">
                         <span className="font-inter font-bold text-foreground text-sm leading-snug line-clamp-2 mb-2">

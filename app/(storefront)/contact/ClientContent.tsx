@@ -125,6 +125,7 @@ export default function ClientContent() {
                 src="/logo.webp" 
                 alt="Laural Clothing" 
                 fill 
+                sizes="200px"
                 className="object-contain object-left" 
               />
             </div>

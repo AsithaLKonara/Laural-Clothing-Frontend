@@ -111,10 +111,7 @@ export default function CartSidePanel() {
                     }
                     
                     const imgUrl = allImages[0] || "/products/default.jpg";
-                    
-                    return (
-                      <Image src={imgUrl} alt={item.variant.product.name} fill className="object-cover" />
-                    );
+                    return <Image src={imgUrl} alt={item.variant.product.name} fill sizes="100px" className="object-cover" />;
                   })()}
                 </div>
 

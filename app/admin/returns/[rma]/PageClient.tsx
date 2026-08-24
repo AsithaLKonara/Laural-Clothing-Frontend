@@ -195,7 +195,7 @@ export default function AdminReturnDetailsPage({ params }: { params: Promise<{ r
                     <div key={item.id} className="border border-stone-200 rounded-lg p-4 flex gap-4">
                       <div className="w-16 h-20 bg-stone-100 rounded flex-shrink-0 relative overflow-hidden">
                         {item.orderItem?.variant?.product?.featuredImage && (
-                          <Image src={item.orderItem.variant.product.featuredImage} alt="Product" fill className="object-cover" />
+                          <Image src={item.orderItem.variant.product.featuredImage} alt="Product" fill sizes="100px" className="object-cover" />
                         )}
                       </div>
                       <div className="flex flex-col flex-1 gap-2">

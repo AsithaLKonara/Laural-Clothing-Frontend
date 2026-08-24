@@ -257,7 +257,7 @@ export default function QuickDispatchPage() {
                         <div key={v.id} className="flex items-center justify-between p-2 hover:bg-stone-50 rounded-lg group cursor-pointer" onClick={() => addToCart(v, prod.name)}>
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 relative rounded bg-stone-100 overflow-hidden shrink-0">
-                              {v.featuredImage && <Image src={v.featuredImage} alt="" fill className="object-cover"/>}
+                              {v.featuredImage && <Image src={v.featuredImage} alt="" fill sizes="100px" className="object-cover"/>}
                             </div>
                             <div className="flex flex-col">
                               <span className="font-inter text-sm text-stone-700">{v.name || 'Default'}</span>
@@ -286,7 +286,7 @@ export default function QuickDispatchPage() {
                 cart.map(item => (
                   <div key={item.variantId} className="flex items-center gap-3 py-2 border-b border-stone-100 last:border-0">
                     <div className="w-12 h-16 bg-stone-100 rounded overflow-hidden relative shrink-0">
-                      {item.image && <Image src={item.image} alt="" fill className="object-cover"/>}
+                      {item.image && <Image src={item.image} alt="" fill sizes="100px" className="object-cover"/>}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-inter font-semibold text-sm text-stone-900 truncate" title={item.name}>{item.name}</p>

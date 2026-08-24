@@ -21,6 +21,7 @@ export default function ClientContent() {
               src="/about/image1.jpg"
               alt="Editorial"
               fill
+              sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover"
             />
           </div>
@@ -106,6 +107,7 @@ export default function ClientContent() {
             src="/about/bg.jpg"
             alt="Why Choose Us Background"
             fill
+            sizes="100vw"
             className="object-cover"
           />
           {/* Overlay to ensure text readability against any image */}

@@ -201,13 +201,13 @@ export default function ProductPageClient({
               <span>3 X Rs. {installment} with</span>
               <div className="flex items-center gap-2">
                 <div className="w-[45px] h-[15px] relative">
-                  <Image src="/payment-methods/koko.png" alt="koko" fill className="object-contain" />
+                  <Image src="/payment-methods/koko.png" alt="koko" fill sizes="45px" className="object-contain" />
                 </div>
                 <div className="w-[45px] h-[15px] relative">
-                  <Image src="/payment-methods/mintpay-pill.png" alt="mintpay" fill className="object-contain" />
+                  <Image src="/payment-methods/mintpay-pill.png" alt="mintpay" fill sizes="45px" className="object-contain" />
                 </div>
                 <div className="w-[45px] h-[15px] relative">
-                  <Image src="/payment-methods/payzy.png" alt="payzy" fill className="object-contain" />
+                  <Image src="/payment-methods/payzy.png" alt="payzy" fill sizes="45px" className="object-contain" />
                 </div>
               </div>
               <Info size={16} className="text-primary" fill="currentColor" color="white" />

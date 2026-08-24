@@ -81,7 +81,7 @@ export default function VariantSelectionModal({ product, onClose, onAdd }: { pro
           {/* Product Summary */}
           <div className="flex gap-4">
             <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-stone-100 shrink-0 border border-border">
-              <Image src={imageUrl} alt={product.name} fill className="object-cover" />
+              <Image src={imageUrl} alt={product.name} fill sizes="100px" className="object-cover" />
             </div>
             <div className="flex flex-col justify-center">
               <h4 className="font-inter font-bold text-foreground leading-snug">{product.name}</h4>

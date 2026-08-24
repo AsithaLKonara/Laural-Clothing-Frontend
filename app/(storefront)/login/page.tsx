@@ -12,6 +12,7 @@ export default function LoginPage() {
           src="/auth/bg.jpg?v=2"
           alt="Laural Clothing Collection"
           fill
+          sizes="100vw"
           className="object-cover object-top scale-105"
           quality={100}
         />
@@ -36,7 +37,7 @@ export default function LoginPage() {
             </p>
 
             <div className="relative w-[180px] h-[34px]">
-              <Image src="/logo-white.png" alt="Laural Clothing" fill className="object-contain" />
+              <Image src="/logo-white.png" alt="Laural Clothing" fill sizes="200px" className="object-contain" />
             </div>
 
             <div className="h-[1px] w-[120px] bg-stone-50/20 mt-4" />

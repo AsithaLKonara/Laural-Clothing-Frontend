@@ -118,7 +118,7 @@ function HeroTab() {
                     <div className="flex gap-3 items-center">
                       {editData.image && (
                         <div className="relative w-20 h-14 bg-stone-100 rounded-lg overflow-hidden shrink-0 border border-stone-200">
-                          <Image src={editData.image} alt="preview" fill className="object-cover" />
+                          <Image src={editData.image} alt="preview" fill sizes="100px" className="object-cover" />
                         </div>
                       )}
                       <div className="flex flex-col gap-2 flex-1">
@@ -145,7 +145,7 @@ function HeroTab() {
                 </div>
                 <GripVertical size={16} className="text-stone-300 shrink-0"/>
                 <div className="w-16 h-10 bg-stone-100 rounded-md overflow-hidden shrink-0 flex items-center justify-center relative">
-                  {slide.image ? <Image src={slide.image} alt="slide" fill className="object-cover"/> : <ImageIcon size={16} className="text-stone-300"/>}
+                  {slide.image ? <Image src={slide.image} alt="slide" fill sizes="100px" className="object-cover"/> : <ImageIcon size={16} className="text-stone-300"/>}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-inter font-bold text-sm text-stone-900 truncate">{slide.title}</p>
@@ -196,7 +196,7 @@ function HeroTab() {
                     <div className="flex gap-3 items-center">
                       {editData.image && (
                         <div className="relative w-20 h-14 bg-stone-100 rounded-lg overflow-hidden shrink-0 border border-stone-200">
-                          <Image src={editData.image} alt="preview" fill className="object-cover" />
+                          <Image src={editData.image} alt="preview" fill sizes="100px" className="object-cover" />
                         </div>
                       )}
                       <div className="flex flex-col gap-2 flex-1">

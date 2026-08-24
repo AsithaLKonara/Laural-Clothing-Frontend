@@ -17,6 +17,7 @@ export default function CategoryCard({ title, imageUrl, href }: CategoryCardProp
         src={imageUrl}
         alt={`${title} category`}
         fill
+        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
         className="object-cover transition-opacity duration-300 group-hover:opacity-80"
       />
       {/* Gradient to ensure text readability */}
