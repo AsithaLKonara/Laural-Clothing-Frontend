@@ -25,8 +25,9 @@ export async function serverFetch<T>(endpoint: string, options?: ServerFetchOpti
 
   // Handle Next.js cache options
   if (options?.tags || options?.revalidate !== undefined) {
+    const defaultTags = options?.tags || [];
     fetchOptions.next = {
-      ...(options.tags && { tags: options.tags }),
+      tags: [...defaultTags, 'v2-cache'],
       ...(options.revalidate !== undefined && { revalidate: options.revalidate }),
     };
   }
