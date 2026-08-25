@@ -45,13 +45,15 @@ export default function OfferCollectionSection({ initialData }: { initialData?: 
 
       {/* Product Carousel */}
       <div className="w-full max-w-[1040px] overflow-hidden" ref={emblaRef}>
-        <div className="flex gap-[20px]">
+        <div className="flex -ml-[20px]">
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex-[0_0_245px] min-w-[245px] h-[380px] bg-stone-100 animate-pulse rounded-lg"></div>
+              <div key={i} className="flex-[0_0_265px] min-w-0 pl-[20px]">
+                <div className="h-[380px] w-full bg-stone-100 animate-pulse rounded-lg"></div>
+              </div>
             ))
           ) : products.map((product: Product) => (
-            <div key={product.id} className="flex-[0_0_245px] min-w-[245px]">
+            <div key={product.id} className="flex-[0_0_265px] min-w-0 pl-[20px]">
               <ProductCard product={product} />
             </div>
           ))}
