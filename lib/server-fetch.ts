@@ -20,6 +20,7 @@ export async function serverFetch<T>(endpoint: string, options?: ServerFetchOpti
       'Content-Type': 'application/json',
       ...options?.headers,
     },
+    signal: options?.signal || AbortSignal.timeout(15000), // 15 second timeout
   };
 
   // Stringify body if it's an object and not already a string
