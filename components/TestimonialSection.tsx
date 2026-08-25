@@ -9,6 +9,7 @@ async function getReviews() {
     }
     const res = await fetch(`${apiUrl}/reviews/public`, {
       next: { revalidate: 3600 }, // Cache for 1 hour
+      signal: AbortSignal.timeout(5000), // 5 second timeout to prevent build hangs
     });
     
     if (!res.ok) {
