@@ -5,7 +5,10 @@ export interface ServerFetchOptions extends Omit<RequestInit, 'body'> {
 }
 
 export async function serverFetch<T>(endpoint: string, options?: ServerFetchOptions): Promise<T> {
-  let apiUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1").replace(/\/$/, "");
+  const DEFAULT_API_URL = process.env.NODE_ENV === 'production' 
+    ? "https://laural-clothing-backend-production.up.railway.app/api/v1" 
+    : "http://localhost:5000/api/v1";
+  let apiUrl = (process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL).replace(/\/$/, "");
   
   // Ensure endpoint starts with a slash
   let url = endpoint.startsWith('/') ? `${apiUrl}${endpoint}` : `${apiUrl}/${endpoint}`;
