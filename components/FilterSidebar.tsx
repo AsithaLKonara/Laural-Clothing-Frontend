@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { ChevronDown, ChevronUp, SlidersHorizontal, Check, Filter, X } from "lucide-react";
 import { useCategories } from "@/hooks/useCategories";
 import { useProductFiltersMeta } from "@/hooks/useProducts";
+import colorNames from "color-name";
 
 interface FilterState {
   search?: string;
@@ -71,21 +72,28 @@ export default function FilterSidebar({ isOpen = true, onToggle, initialFilters,
   
   const stylesList = ["Casual", "Formal", "Party", "Gym", "Vintage", "Minimalist"];
   
-  // Mapping for explicit hex overrides. Fallback is the color name directly as CSS backgroundColor.
-  const colorHexMap: Record<string, string> = {
-    blue: "#063AF5",
-    purple: "#7D06F5",
-    pink: "#F506A4",
-    white: "#FAFAF9",
-    black: "#1C1917",
-    red: "#EF4444",
-    green: "#22C55E",
-    yellow: "#EAB308"
-  };
-
   const getColorStyle = (colorName: string) => {
-    const key = colorName.toLowerCase().trim();
-    return colorHexMap[key] || key;
+    if (!colorName) return 'transparent';
+    const normalized = colorName.toLowerCase().replace(/[^a-z]/g, '');
+    
+    if (normalized in colorNames) {
+      const [r, g, b] = colorNames[normalized as keyof typeof colorNames];
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    let bestMatch = '';
+    for (const known of Object.keys(colorNames)) {
+      if (normalized.includes(known) && known.length > bestMatch.length) {
+        bestMatch = known;
+      }
+    }
+    
+    if (bestMatch) {
+      const [r, g, b] = colorNames[bestMatch as keyof typeof colorNames];
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    return colorName.toLowerCase().trim();
   };
 
   const toggleArrayItem = (key: 'sizes' | 'colors' | 'styles', value: string) => {
