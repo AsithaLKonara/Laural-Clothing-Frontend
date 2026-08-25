@@ -3,10 +3,7 @@ import ReviewCard from "./ReviewCard";
 
 async function getReviews() {
   try {
-    const DEFAULT_API_URL = process.env.NODE_ENV === 'production' 
-      ? "https://laural-clothing-backend-production.up.railway.app/api/v1" 
-      : "http://localhost:5000/api/v1";
-    let apiUrl = (process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL).replace(/\/$/, "");
+    let apiUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1").replace(/\/$/, "");
     if (!apiUrl.endsWith('/v1')) {
       apiUrl = apiUrl.endsWith('/api') ? `${apiUrl}/v1` : `${apiUrl}/api/v1`;
     }
