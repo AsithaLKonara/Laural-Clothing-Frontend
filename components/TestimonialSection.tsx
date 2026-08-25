@@ -7,7 +7,7 @@ async function getReviews() {
     if (!apiUrl.endsWith('/v1')) {
       apiUrl = apiUrl.endsWith('/api') ? `${apiUrl}/v1` : `${apiUrl}/api/v1`;
     }
-    const res = await fetch(`${apiUrl}/reviews?status=APPROVED`, {
+    const res = await fetch(`${apiUrl}/reviews/public`, {
       next: { revalidate: 3600 }, // Cache for 1 hour
     });
     

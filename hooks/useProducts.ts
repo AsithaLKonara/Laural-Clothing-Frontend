@@ -11,7 +11,16 @@ export const PRODUCT_QUERY_KEYS = {
   details: () => [...PRODUCT_QUERY_KEYS.all, 'detail'] as const,
   detail: (id: string) => [...PRODUCT_QUERY_KEYS.details(), id] as const,
   detailBySlug: (slug: string) => [...PRODUCT_QUERY_KEYS.details(), 'slug', slug] as const,
+  filtersMeta: () => [...PRODUCT_QUERY_KEYS.all, 'filters-meta'] as const,
 };
+
+export function useProductFiltersMeta() {
+  return useQuery({
+    queryKey: PRODUCT_QUERY_KEYS.filtersMeta(),
+    queryFn: () => productsService.getFilterMetadata(),
+    staleTime: 1000 * 60 * 60, // 1 hour (metadata rarely changes)
+  });
+}
 
 export function useProducts(params?: GetProductsParams, initialData?: PaginatedResponse<Product>) {
   return useQuery({
