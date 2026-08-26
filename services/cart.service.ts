@@ -1,11 +1,16 @@
 import api from './api';
+import { ProductVariant, Product } from '@/types/product';
+
+export interface CartVariant extends ProductVariant {
+  product: Product;
+}
 
 export interface CartItem {
   id: string;
   cartId: string;
   variantId: string;
   quantity: number;
-  variant: any; // Add more specific type if needed
+  variant: CartVariant;
 }
 
 export interface Cart {
@@ -18,11 +23,13 @@ export interface Cart {
   updatedAt: string;
 }
 
-const getHeaders = (sessionId: string) => ({
-  headers: {
-    'x-session-id': sessionId,
-  },
-});
+const getHeaders = (sessionId?: string | null) => {
+  const headers: Record<string, string> = {};
+  if (sessionId) {
+    headers['x-session-id'] = sessionId;
+  }
+  return { headers };
+};
 
 export const cartService = {
   async getCart(sessionId: string): Promise<Cart> {
@@ -44,4 +51,17 @@ export const cartService = {
     const { data } = await api.delete<Cart>(`/cart/items/${itemId}`, getHeaders(sessionId));
     return data;
   },
+
+  async clearCart(sessionId: string): Promise<Cart> {
+    const { data } = await api.delete<Cart>('/cart', getHeaders(sessionId));
+    return data;
+  },
+
+  async mergeCarts(sessionId: string, customerId: string): Promise<Cart> {
+    const { data } = await api.post<Cart>('/cart/merge', { sessionId, customerId }, getHeaders(sessionId));
+    return data;
+  },
 };
+
+export default cartService;
+
