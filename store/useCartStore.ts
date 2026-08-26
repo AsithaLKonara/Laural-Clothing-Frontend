@@ -12,6 +12,7 @@ interface CartState {
   
   // Gets or initializes the session ID
   initSession: () => string;
+  getSessionId: () => string;
   clearSession: () => void;
 }
 
@@ -33,12 +34,24 @@ export const useCartStore = create<CartState>()(
         set({ sessionId: newSessionId });
         return newSessionId;
       },
+
+      getSessionId: () => {
+        const { sessionId, initSession } = get();
+        if (sessionId) return sessionId;
+        return initSession();
+      },
       
       clearSession: () => set({ sessionId: null }),
     }),
     {
       name: 'laural-cart-session',
       partialize: (state) => ({ sessionId: state.sessionId }), // Only persist sessionId
+      onRehydrateStorage: () => (state) => {
+        if (state && !state.sessionId && typeof window !== 'undefined') {
+          state.initSession();
+        }
+      },
     }
   )
 );
+
