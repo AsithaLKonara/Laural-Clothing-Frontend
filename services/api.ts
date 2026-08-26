@@ -66,7 +66,8 @@ api.interceptors.response.use(
     // Format error message to use backend's structured message/error if available
     if (error.response?.data) {
       const data = error.response.data;
-      error.message = data.message || data.error || error.message;
+      const msg = data.message || data.error || error.message;
+      error.message = typeof msg === 'object' ? JSON.stringify(msg) : String(msg);
     } else if (error.request) {
       error.message = "Network error. Please check your connection.";
     }

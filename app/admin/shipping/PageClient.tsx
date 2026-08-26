@@ -5,7 +5,8 @@ import { useOrders, useDispatchOrder } from '@/hooks/useOrders';
 import { Button } from '@/components/ui/Button';
 
 export default function ShippingDashboard() {
-  const { data: orders, isLoading } = useOrders();
+  const { data: ordersData, isLoading } = useOrders();
+  const orders = ordersData?.data || [];
   const dispatchOrder = useDispatchOrder();
   
   const handleCreateShipment = (orderId: string) => {
