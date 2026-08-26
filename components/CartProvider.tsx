@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, ReactNode } from "react";
+import { useCartStore } from "@/store/useCartStore";
 import CartSidePanel from "./CartSidePanel";
 import WishlistSidePanel from "./WishlistSidePanel";
 
@@ -16,15 +17,15 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+  const { isDrawerOpen, openDrawer, closeDrawer } = useCartStore();
 
   return (
     <CartContext.Provider 
       value={{ 
-        isCartOpen, 
-        openCart: () => setIsCartOpen(true), 
-        closeCart: () => setIsCartOpen(false),
+        isCartOpen: isDrawerOpen, 
+        openCart: openDrawer, 
+        closeCart: closeDrawer,
         isWishlistOpen,
         openWishlist: () => setIsWishlistOpen(true),
         closeWishlist: () => setIsWishlistOpen(false)
@@ -42,3 +43,4 @@ export function useCart() {
   if (!context) throw new Error("useCart must be used within a CartProvider");
   return context;
 }
+
