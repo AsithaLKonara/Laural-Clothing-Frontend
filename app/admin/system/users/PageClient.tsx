@@ -6,15 +6,21 @@ import FilterBar from "@/components/dashboard/FilterBar";
 import DataTable from "@/components/dashboard/DataTable";
 import { StatusBadge, BranchBadge } from "@/components/dashboard/Badges";
 
+import { useState } from "react";
+import { useUsers } from "@/hooks/useUsers";
+
 export default function UsersPage() {
   const router = useRouter();
+  
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("");
+  // Branch filter isn't directly supported by backend yet, but we can add it or ignore for now.
+  // The service only supports search and role Filter right now.
 
-  const users = [
-    { id: "USR-001", name: "Super Admin", email: "admin@laural.com", role: "Super Admin", branch: "All Branches", status: "Active", lastLogin: "10 mins ago" },
-    { id: "USR-002", name: "Kandy Manager", email: "kandy@laural.com", role: "Branch Admin", branch: "Kandy", status: "Active", lastLogin: "2 hours ago" },
-    { id: "USR-003", name: "Kasun Perera", email: "kasun.p@laural.com", role: "Cashier", branch: "Kandy", status: "Active", lastLogin: "4 hours ago" },
-    { id: "USR-004", name: "Colombo Manager", email: "colombo@laural.com", role: "Branch Admin", branch: "Colombo", status: "Inactive", lastLogin: "5 days ago" },
-  ];
+  const { data: users = [], isLoading } = useUsers({ 
+    search: searchQuery || undefined, 
+    role: roleFilter === "All Roles" ? undefined : (roleFilter || undefined)
+  });
 
   const columns = [
     { header: "Name", accessor: "name" as const },
@@ -30,29 +36,34 @@ export default function UsersPage() {
     },
     { 
       header: "Branch", 
-      accessor: (row: any) => row.branch === "All Branches" ? <span className="text-sm font-medium text-stone-600">All Branches</span> : <BranchBadge branch={row.branch} /> 
+      accessor: (row: any) => row.branch === "All Branches" || row.branch === "Global (All Branches)" ? <span className="text-sm font-medium text-stone-600">All Branches</span> : <BranchBadge branch={row.branch} /> 
     },
     { 
       header: "Status", 
       accessor: (row: any) => (
         <StatusBadge 
           label={row.status} 
-          variant={row.status === "Active" ? "success" : "error"} 
+          variant={row.status === "ACTIVE" || row.status === "Active" ? "success" : "error"} 
           dot 
         />
       ) 
     },
-    { header: "Last Login", accessor: "lastLogin" as const },
+    { header: "Last Login", accessor: (row: any) => row.lastLogin || "Never" },
   ];
 
   const filters = (
     <>
-      <select className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400">
-        <option>All Roles</option>
-        <option>Super Admin</option>
-        <option>Branch Admin</option>
-        <option>Cashier</option>
+      <select 
+        value={roleFilter}
+        onChange={(e) => setRoleFilter(e.target.value)}
+        className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400"
+      >
+        <option value="">All Roles</option>
+        <option value="Super Admin">Super Admin</option>
+        <option value="Branch Admin">Branch Admin</option>
+        <option value="Cashier">Cashier</option>
       </select>
+      {/* Keeping branch static as mock since it's not in backend yet */}
       <select className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400">
         <option>All Branches</option>
         <option>Kandy</option>
@@ -70,7 +81,9 @@ export default function UsersPage() {
       />
 
       <FilterBar 
-        placeholder="Search by name or email..." 
+        placeholder="Search by name, email, or phone..." 
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
         filters={filters} 
       />
 

@@ -6,15 +6,36 @@ import FilterBar from "@/components/dashboard/FilterBar";
 import DataTable from "@/components/dashboard/DataTable";
 import { StatusBadge } from "@/components/dashboard/Badges";
 
+import { useState } from "react";
+import { useAuditLogs } from "@/hooks/useAudit";
+
 export default function AuditPage() {
   const router = useRouter();
 
-  const logs = [
-    { id: "AUD-1004", timestamp: "Oct 24, 14:32:10", user: "admin@laural.com", action: "DELETE", resource: "Product", details: "Deleted product LC-TSH-001" },
-    { id: "AUD-1003", timestamp: "Oct 24, 14:28:45", user: "admin@laural.com", action: "UPDATE", resource: "Settings", details: "Updated tax rate to 18%" },
-    { id: "AUD-1002", timestamp: "Oct 24, 12:15:00", user: "kandy@laural.com", action: "CREATE", resource: "StockTransfer", details: "Initiated transfer TRN-9921" },
-    { id: "AUD-1001", timestamp: "Oct 24, 10:00:12", user: "system", action: "SYSTEM", resource: "PaymentWebhook", details: "Processed Koko webhook for LC-10241" },
-  ];
+  const [searchQuery, setSearchQuery] = useState("");
+  const [actionFilter, setActionFilter] = useState("");
+  const [timeframeFilter, setTimeframeFilter] = useState("");
+  const [page, setPage] = useState(1);
+
+  const { data: auditData, isLoading } = useAuditLogs({
+    search: searchQuery || undefined,
+    action: actionFilter === "All Actions" ? undefined : (actionFilter || undefined),
+    timeframe: timeframeFilter === "All Time" ? undefined : (timeframeFilter || undefined),
+    page: page
+  });
+
+  const logs = auditData?.data || [];
+  const meta = auditData?.meta || { totalPages: 1, page: 1 };
+
+  const formattedLogs = logs.map((log: any) => ({
+    id: log.id,
+    timestamp: new Date(log.createdAt).toLocaleString(),
+    user: log.userId || "System",
+    action: log.action,
+    resource: log.entity,
+    details: log.entityId ? `${log.action} ${log.entity} ID: ${log.entityId}` : `${log.action} ${log.entity}`,
+    raw: log
+  }));
 
   const columns = [
     { header: "Timestamp", accessor: "timestamp" as const },
@@ -34,17 +55,27 @@ export default function AuditPage() {
 
   const filters = (
     <>
-      <select className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400">
-        <option>All Actions</option>
-        <option>CREATE</option>
-        <option>UPDATE</option>
-        <option>DELETE</option>
-        <option>SYSTEM</option>
+      <select 
+        value={actionFilter}
+        onChange={e => { setActionFilter(e.target.value); setPage(1); }}
+        className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400"
+      >
+        <option value="">All Actions</option>
+        <option value="CREATE">CREATE</option>
+        <option value="UPDATE">UPDATE</option>
+        <option value="DELETE">DELETE</option>
+        <option value="SYSTEM">SYSTEM</option>
+        <option value="LOGIN">LOGIN</option>
       </select>
-      <select className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400">
-        <option>Last 24 Hours</option>
-        <option>Last 7 Days</option>
-        <option>Last 30 Days</option>
+      <select 
+        value={timeframeFilter}
+        onChange={e => { setTimeframeFilter(e.target.value); setPage(1); }}
+        className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400"
+      >
+        <option value="">All Time</option>
+        <option value="Last 24 Hours">Last 24 Hours</option>
+        <option value="Last 7 Days">Last 7 Days</option>
+        <option value="Last 30 Days">Last 30 Days</option>
       </select>
     </>
   );
@@ -57,16 +88,22 @@ export default function AuditPage() {
       />
 
       <FilterBar 
-        placeholder="Search logs by user, resource, or details..." 
+        placeholder="Search logs by user or resource..." 
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
         filters={filters} 
       />
 
       <DataTable 
-        data={logs}
+        data={formattedLogs}
         columns={columns}
         keyExtractor={(row) => row.id}
         onRowClick={(row) => console.log("Navigate to", row.id)}
-        pagination={{ currentPage: 1, totalPages: 120 }}
+        pagination={{ 
+          currentPage: meta.page, 
+          totalPages: meta.totalPages || 1,
+          onPageChange: (newPage) => setPage(newPage) 
+        }}
       />
     </div>
   );

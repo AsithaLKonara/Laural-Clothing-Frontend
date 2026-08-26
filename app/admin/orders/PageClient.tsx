@@ -20,12 +20,14 @@ export default function OrdersPage() {
   const [showFardarModal, setShowFardarModal] = useState(false);
 
   // Filter states
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [status, setStatus] = useState<string>("");
   const [branchId, setBranchId] = useState<string>("");
   const [paymentGateway, setPaymentGateway] = useState<string>("");
   const [page, setPage] = useState<number>(1);
 
   const { data: ordersData, isLoading: ordersLoading } = useOrders({
+    search: searchQuery || undefined,
     status: status || undefined,
     branchId: branchId || undefined,
     paymentGateway: paymentGateway || undefined,
@@ -117,6 +119,8 @@ export default function OrdersPage() {
 
       <FilterBar 
         placeholder="Search order, phone, customer, tracking..." 
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
         filters={filters} 
       />
 

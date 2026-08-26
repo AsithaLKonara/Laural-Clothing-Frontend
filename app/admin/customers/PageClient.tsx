@@ -1,6 +1,7 @@
 "use client";
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/dashboard/PageHeader";
 import FilterBar from "@/components/dashboard/FilterBar";
@@ -11,7 +12,20 @@ import { useCustomers } from "@/hooks/useCustomers";
 export default function CustomersPage() {
   const router = useRouter();
 
-  const { data: customers = [], isLoading } = useCustomers();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+  const [sortFilter, setSortFilter] = useState("Sort By: Newest");
+  const [page, setPage] = useState(1);
+
+  const { data: customerData, isLoading } = useCustomers({
+    search: searchQuery || undefined,
+    type: typeFilter === "All Types" ? undefined : (typeFilter || undefined),
+    sort: sortFilter || undefined,
+    page: page
+  });
+
+  const customers = customerData?.data || [];
+  const meta = customerData?.meta || { totalPages: 1, page: 1 };
 
   const columns = [
     { header: "Name", accessor: "name" as const },
@@ -34,15 +48,23 @@ export default function CustomersPage() {
 
   const filters = (
     <>
-      <select className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400">
-        <option>All Types</option>
-        <option>Registered</option>
-        <option>Guest</option>
+      <select 
+        value={typeFilter}
+        onChange={e => { setTypeFilter(e.target.value); setPage(1); }}
+        className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400"
+      >
+        <option value="">All Types</option>
+        <option value="Registered">Registered</option>
+        <option value="Guest">Guest</option>
       </select>
-      <select className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400">
-        <option>Sort By: Newest</option>
-        <option>Sort By: Highest Spend</option>
-        <option>Sort By: Most Orders</option>
+      <select 
+        value={sortFilter}
+        onChange={e => { setSortFilter(e.target.value); setPage(1); }}
+        className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400"
+      >
+        <option value="Sort By: Newest">Sort By: Newest</option>
+        <option value="Sort By: Highest Spend">Sort By: Highest Spend</option>
+        <option value="Sort By: Most Orders">Sort By: Most Orders</option>
       </select>
     </>
   );
@@ -56,6 +78,8 @@ export default function CustomersPage() {
 
       <FilterBar 
         placeholder="Search by name, phone, or email..." 
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
         filters={filters} 
       />
 
@@ -64,7 +88,11 @@ export default function CustomersPage() {
         columns={columns}
         keyExtractor={(row) => row.id}
         onRowClick={(row) => console.log("Navigate to", row.id)}
-        pagination={{ currentPage: 1, totalPages: 5 }}
+        pagination={{ 
+          currentPage: meta.page, 
+          totalPages: meta.totalPages || 1,
+          onPageChange: (newPage) => setPage(newPage)
+        }}
       />
     </div>
   );

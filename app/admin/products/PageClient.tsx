@@ -24,9 +24,16 @@ export default function ProductsPage() {
   const [page, setPage] = useState(1);
   const take = 12;
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+
   const { data: response, isLoading } = useProducts({
     skip: (page - 1) * take,
     take: take,
+    search: searchQuery || undefined,
+    categoryId: categoryFilter === "All Categories" ? undefined : (categoryFilter || undefined),
+    status: statusFilter === "All Status" ? undefined : (statusFilter || undefined)
   });
   const products = response?.data || [];
   const meta = response?.meta || { total: 0, skip: 0, take: take };
@@ -124,19 +131,28 @@ export default function ProductsPage() {
 
   const filters = (
     <>
-      <select className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-accent/50">
-        <option>All Categories</option>
-        <option>T-Shirts</option>
-        <option>Shirts</option>
-        <option>Dresses</option>
-        <option>Pants</option>
+      <select 
+        value={categoryFilter}
+        onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
+        className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-accent/50"
+      >
+        <option value="">All Categories</option>
+        {/* In reality, you'd map from useCategories here, but hardcoding for now as it was before */}
+        <option value="T-Shirts">T-Shirts</option>
+        <option value="Shirts">Shirts</option>
+        <option value="Dresses">Dresses</option>
+        <option value="Pants">Pants</option>
       </select>
-      <select className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-accent/50">
-        <option>All Status</option>
-        <option>Active</option>
-        <option>Low Stock</option>
-        <option>Out of Stock</option>
-        <option>Draft</option>
+      <select 
+        value={statusFilter}
+        onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+        className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-accent/50"
+      >
+        <option value="">All Status</option>
+        <option value="ACTIVE">Active</option>
+        <option value="LOW_STOCK">Low Stock</option>
+        <option value="OUT_OF_STOCK">Out of Stock</option>
+        <option value="DRAFT">Draft</option>
       </select>
       <button
         onClick={handleAdd}
@@ -157,6 +173,8 @@ export default function ProductsPage() {
 
         <FilterBar
           placeholder="Search products by name or SKU..."
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
           filters={filters}
         />
 

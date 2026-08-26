@@ -2,8 +2,8 @@ import api from './api';
 import { Category } from '../types/category';
 
 export const categoriesService = {
-  async getCategories(): Promise<{ data: Category[]; total: number }> {
-    const { data } = await api.get<{ data: Category[]; total: number }>('/categories');
+  async getCategories(params?: { search?: string }): Promise<{ data: Category[]; total: number }> {
+    const { data } = await api.get<{ data: Category[]; total: number }>('/categories', { params });
     return data;
   },
 

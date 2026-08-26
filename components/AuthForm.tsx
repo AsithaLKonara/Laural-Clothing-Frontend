@@ -82,7 +82,10 @@ function LoginForm({ setView }: { setView: (v: AuthView) => void }) {
         router.push("/account");
       }
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || "Failed to sign in. Please check your credentials.";
+      let msg = err.response?.data?.message || err.response?.data?.error || err.message || "Failed to sign in. Please check your credentials.";
+      if (typeof msg !== 'string') {
+        msg = msg.message || JSON.stringify(msg);
+      }
       setError(msg);
     } finally {
       setLoading(false);
@@ -236,7 +239,10 @@ function RegisterForm({ setView }: { setView: (v: AuthView) => void }) {
         }
       }, 1000);
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || "Failed to create account. Please try again.";
+      let msg = err.response?.data?.message || err.response?.data?.error || err.message || "Failed to create account. Please try again.";
+      if (typeof msg !== 'string') {
+        msg = msg.message || JSON.stringify(msg);
+      }
       setError(msg);
     } finally {
       setLoading(false);

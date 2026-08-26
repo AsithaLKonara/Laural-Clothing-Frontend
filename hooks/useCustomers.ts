@@ -12,18 +12,18 @@ export interface Customer {
   lastActive: string;
 }
 
-const fetchCustomers = async (): Promise<Customer[]> => {
+const fetchCustomers = async (params?: { search?: string; type?: string; sort?: string; page?: number; limit?: number }): Promise<{ data: Customer[]; meta: any }> => {
   try {
-    const response = await api.get<Customer[]>("/customers");
+    const response = await api.get("/customers", { params });
     return response.data;
   } catch (error) {
-    return [];
+    return { data: [], meta: {} };
   }
 };
 
-export function useCustomers() {
+export function useCustomers(params?: { search?: string; type?: string; sort?: string; page?: number; limit?: number }) {
   return useQuery({
-    queryKey: ["customers"],
-    queryFn: fetchCustomers,
+    queryKey: ["customers", params],
+    queryFn: () => fetchCustomers(params),
   });
 }

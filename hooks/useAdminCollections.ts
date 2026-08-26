@@ -3,14 +3,14 @@ import { collectionsService, Collection } from "../services/collections.service"
 
 export const COLLECTION_QUERY_KEYS = {
   all: ['admin_collections'] as const,
-  lists: () => [...COLLECTION_QUERY_KEYS.all, 'list'] as const,
+  lists: (params?: any) => params ? [...COLLECTION_QUERY_KEYS.all, 'list', params] as const : [...COLLECTION_QUERY_KEYS.all, 'list'] as const,
   detail: (id: string) => [...COLLECTION_QUERY_KEYS.all, 'detail', id] as const,
 };
 
-export function useAdminCollections() {
+export function useAdminCollections(params?: { search?: string }) {
   return useQuery({
-    queryKey: COLLECTION_QUERY_KEYS.lists(),
-    queryFn: () => collectionsService.getCollections(),
+    queryKey: COLLECTION_QUERY_KEYS.lists(params),
+    queryFn: () => collectionsService.getCollections(params),
   });
 }
 

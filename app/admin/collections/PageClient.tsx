@@ -13,8 +13,9 @@ import { globalDialog } from "@/store/dialog.store";
 export default function CollectionsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [collectionToEdit, setCollectionToEdit] = useState<Collection | undefined>(undefined);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: response } = useAdminCollections();
+  const { data: response } = useAdminCollections({ search: searchQuery });
   const collections = response?.data || [];
   const deleteCollectionMutation = useDeleteCollection();
 
@@ -112,7 +113,12 @@ export default function CollectionsPage() {
         ))}
       </div>
 
-      <FilterBar placeholder="Search collections..." filters={filters} />
+      <FilterBar 
+        placeholder="Search collections..." 
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        filters={filters} 
+      />
 
       <div className="bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden">
         <DataTable

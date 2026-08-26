@@ -13,8 +13,9 @@ import { globalDialog } from "@/store/dialog.store";
 export default function CategoriesPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [categoryToEdit, setCategoryToEdit] = useState<Category | undefined>(undefined);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: response, isLoading } = useCategories();
+  const { data: response, isLoading } = useCategories({ search: searchQuery });
   const categories = response?.data || [];
   
   const deleteCategoryMutation = useDeleteCategory();
@@ -71,11 +72,7 @@ export default function CategoriesPage() {
 
   const filters = (
     <>
-      <select className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-accent/50">
-        <option>All Status</option>
-        <option>Active</option>
-        <option>Draft</option>
-      </select>
+      {/* Category status filter doesn't currently exist in schema. Hiding static mock for now. */}
       <button 
         onClick={handleAdd}
         className="bg-stone-900 text-white hover:bg-stone-800 active:scale-95 px-5 py-2 rounded-lg font-inter text-sm font-semibold transition-all whitespace-nowrap ml-auto shadow-md shadow-stone-900/20 flex items-center gap-2"
@@ -107,7 +104,12 @@ export default function CategoriesPage() {
         ))}
       </div>
 
-      <FilterBar placeholder="Search categories..." filters={filters} />
+      <FilterBar 
+        placeholder="Search categories..." 
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        filters={filters} 
+      />
 
       <div className="bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden">
         <DataTable

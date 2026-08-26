@@ -29,10 +29,29 @@ export default function PromotionsPage() {
   
   const [activeTab, setActiveTab] = useState<"coupons" | "flash-sales">("coupons");
 
-  const { data: coupons = [], isLoading: isLoadingCoupons } = useCoupons();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+
+  const { data: coupons = [], isLoading: isLoadingCoupons } = useCoupons(
+    activeTab === "coupons" 
+      ? { 
+          search: searchQuery || undefined, 
+          status: statusFilter === "All Statuses" ? undefined : (statusFilter || undefined), 
+          type: typeFilter === "All Types" ? undefined : (typeFilter || undefined) 
+        } 
+      : undefined
+  );
   const { mutateAsync: deleteCoupon } = useDeleteCoupon();
 
-  const { data: flashSales = [], isLoading: isLoadingFlashSales } = useFlashSales();
+  const { data: flashSales = [], isLoading: isLoadingFlashSales } = useFlashSales(
+    activeTab === "flash-sales" 
+      ? { 
+          search: searchQuery || undefined, 
+          status: statusFilter === "All Statuses" ? undefined : (statusFilter || undefined) 
+        } 
+      : undefined
+  );
   const { mutateAsync: deleteFlashSale } = useDeleteFlashSale();
   
   const menuRef = useRef<HTMLDivElement>(null);
@@ -80,7 +99,7 @@ export default function PromotionsPage() {
       accessor: (row: any) => (
         <StatusBadge 
           label={row.status} 
-          variant={row.status === "Active" ? "success" : "neutral"} 
+          variant={row.status === "ACTIVE" || row.status === "Active" ? "success" : "neutral"} 
           dot 
         />
       ) 
@@ -115,18 +134,28 @@ export default function PromotionsPage() {
 
   const filters = (
     <>
-      <select className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400">
-        <option>All Statuses</option>
-        <option>Active</option>
-        <option>Scheduled</option>
-        <option>Expired</option>
+      <select 
+        value={statusFilter}
+        onChange={e => setStatusFilter(e.target.value)}
+        className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400"
+      >
+        <option value="">All Statuses</option>
+        <option value="ACTIVE">Active</option>
+        <option value="SCHEDULED">Scheduled</option>
+        <option value="EXPIRED">Expired</option>
+        <option value="DISABLED">Disabled</option>
       </select>
-      <select className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400">
-        <option>All Types</option>
-        <option>Percentage</option>
-        <option>Fixed Amount</option>
-        <option>BOGO</option>
-      </select>
+      {activeTab === "coupons" && (
+        <select 
+          value={typeFilter}
+          onChange={e => setTypeFilter(e.target.value)}
+          className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400"
+        >
+          <option value="">All Types</option>
+          <option value="PERCENTAGE">Percentage</option>
+          <option value="FIXED">Fixed Amount</option>
+        </select>
+      )}
     </>
   );
 
@@ -196,6 +225,8 @@ export default function PromotionsPage() {
 
       <FilterBar 
         placeholder={`Search by ${activeTab === 'coupons' ? 'coupon' : 'flash sale'} name or code...`} 
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
         filters={filters} 
       />
 

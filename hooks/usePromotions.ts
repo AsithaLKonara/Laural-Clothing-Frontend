@@ -2,10 +2,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { promotionService } from '../services/promotion.service';
 
 // --- Coupons ---
-export function useCoupons() {
+export function useCoupons(params?: { search?: string; status?: string; type?: string }) {
   return useQuery({
-    queryKey: ['coupons'],
-    queryFn: promotionService.getCoupons,
+    queryKey: ['coupons', params],
+    queryFn: () => promotionService.getCoupons(params),
   });
 }
 
@@ -40,10 +40,10 @@ export function useDeleteCoupon() {
 }
 
 // --- Flash Sales ---
-export function useFlashSales() {
+export function useFlashSales(params?: { search?: string; status?: string }) {
   return useQuery({
-    queryKey: ['flash-sales'],
-    queryFn: promotionService.getFlashSales,
+    queryKey: ['flash-sales', params],
+    queryFn: () => promotionService.getFlashSales(params),
   });
 }
 
