@@ -1,58 +1,99 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { cartService } from '@/services/cart.service';
+import { cartService, Cart } from '@/services/cart.service';
+import { useCartStore } from '@/store/useCartStore';
 
 export const CART_KEYS = {
   all: ['cart'] as const,
-  session: (sessionId: string | null) => ['cart', sessionId] as const,
+  session: (sessionId?: string | null) => ['cart', sessionId] as const,
 };
 
-export function useCart(sessionId: string | null) {
+export function useCart(sessionId?: string | null) {
+  const storeSessionId = useCartStore((state) => state.sessionId);
+  const activeSessionId = sessionId || storeSessionId;
+
   return useQuery({
-    queryKey: CART_KEYS.session(sessionId),
+    queryKey: CART_KEYS.session(activeSessionId),
     queryFn: () => {
-      if (!sessionId) throw new Error('No session ID');
-      return cartService.getCart(sessionId);
+      const resolvedSessionId = activeSessionId || useCartStore.getState().getSessionId();
+      return cartService.getCart(resolvedSessionId);
     },
-    enabled: !!sessionId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: typeof window !== 'undefined',
+    staleTime: 1000 * 60 * 2, // 2 minutes
   });
 }
 
-export function useAddToCart(sessionId: string | null) {
+export function useAddToCart(sessionId?: string | null) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: { variantId: string; quantity: number }) => {
-      if (!sessionId) throw new Error('No session ID');
-      return cartService.addItem(sessionId, payload);
+      const activeSessionId = sessionId || useCartStore.getState().getSessionId();
+      return cartService.addItem(activeSessionId, payload);
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData(CART_KEYS.session(sessionId), data);
+    onSuccess: (data: Cart) => {
+      const activeSessionId = sessionId || useCartStore.getState().sessionId;
+      queryClient.setQueryData(CART_KEYS.session(activeSessionId), data);
+      queryClient.invalidateQueries({ queryKey: CART_KEYS.all });
     },
   });
 }
 
-export function useUpdateCartItem(sessionId: string | null) {
+export function useUpdateCartItem(sessionId?: string | null) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ itemId, quantity }: { itemId: string; quantity: number }) => {
-      if (!sessionId) throw new Error('No session ID');
-      return cartService.updateItemQuantity(sessionId, itemId, quantity);
+      const activeSessionId = sessionId || useCartStore.getState().getSessionId();
+      return cartService.updateItemQuantity(activeSessionId, itemId, quantity);
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData(CART_KEYS.session(sessionId), data);
+    onSuccess: (data: Cart) => {
+      const activeSessionId = sessionId || useCartStore.getState().sessionId;
+      queryClient.setQueryData(CART_KEYS.session(activeSessionId), data);
+      queryClient.invalidateQueries({ queryKey: CART_KEYS.all });
     },
   });
 }
 
-export function useRemoveCartItem(sessionId: string | null) {
+export function useRemoveCartItem(sessionId?: string | null) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (itemId: string) => {
-      if (!sessionId) throw new Error('No session ID');
-      return cartService.removeItem(sessionId, itemId);
+      const activeSessionId = sessionId || useCartStore.getState().getSessionId();
+      return cartService.removeItem(activeSessionId, itemId);
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData(CART_KEYS.session(sessionId), data);
+    onSuccess: (data: Cart) => {
+      const activeSessionId = sessionId || useCartStore.getState().sessionId;
+      queryClient.setQueryData(CART_KEYS.session(activeSessionId), data);
+      queryClient.invalidateQueries({ queryKey: CART_KEYS.all });
     },
   });
 }
+
+export function useClearCart(sessionId?: string | null) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => {
+      const activeSessionId = sessionId || useCartStore.getState().getSessionId();
+      return cartService.clearCart(activeSessionId);
+    },
+    onSuccess: (data: Cart) => {
+      const activeSessionId = sessionId || useCartStore.getState().sessionId;
+      queryClient.setQueryData(CART_KEYS.session(activeSessionId), data);
+      queryClient.invalidateQueries({ queryKey: CART_KEYS.all });
+    },
+  });
+}
+
+export function useMergeCart(sessionId?: string | null) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (customerId: string) => {
+      const activeSessionId = sessionId || useCartStore.getState().getSessionId();
+      return cartService.mergeCarts(activeSessionId, customerId);
+    },
+    onSuccess: (data: Cart) => {
+      const activeSessionId = sessionId || useCartStore.getState().sessionId;
+      queryClient.setQueryData(CART_KEYS.session(activeSessionId), data);
+      queryClient.invalidateQueries({ queryKey: CART_KEYS.all });
+    },
+  });
+}
+
