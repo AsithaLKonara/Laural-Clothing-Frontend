@@ -4,17 +4,19 @@ import Link from "next/link";
 import Image from "next/image";
 import { Search, Heart, ShoppingCart, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCart as useOldCart } from "@/components/CartProvider";
 import { useCartStore } from "@/store/useCartStore";
 import { useCart } from "@/hooks/useCart";
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const isHome = pathname === "/";
   const isAuth = pathname === "/login";
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { openWishlist } = useOldCart();
   const sessionId = useCartStore((state) => state.sessionId);
@@ -148,6 +150,39 @@ export default function Navbar() {
           </div>
         </div>
       </div>
+
+      {/* Search Dropdown */}
+      {isSearchOpen && (
+        <div className="absolute top-[83px] left-0 w-full bg-background shadow-md border-b border-stone-200 p-4 md:px-8 lg:px-[120px] flex items-center gap-4 animate-in slide-in-from-top-2">
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (searchQuery.trim()) {
+                router.push(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
+                setIsSearchOpen(false);
+                setSearchQuery("");
+              }
+            }}
+            className="flex-1 flex items-center relative max-w-3xl mx-auto"
+          >
+            <Search size={20} className="absolute left-4 text-stone-400" />
+            <input 
+              type="text" 
+              placeholder="Search for products, categories, or styles..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              autoFocus
+              className="w-full h-12 pl-12 pr-[100px] bg-stone-100 rounded-full font-urbanist text-stone-900 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+            />
+            <button 
+              type="submit" 
+              className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-primary text-background rounded-full font-poppins text-xs font-medium hover:bg-[#2c2824] transition-colors"
+            >
+              Search
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* Mobile Menu Dropdown */}
       {isMobileMenuOpen && (
