@@ -22,7 +22,8 @@ export default function Navbar() {
 
   const cartItems = cart?.items || [];
   const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.quantity * (item.variant.salePrice ?? item.variant.price)), 0);
+  const subtotal = cartItems.reduce((sum, item) => sum + (item.quantity * (item.variant?.salePrice ?? item.variant?.price ?? 0)), 0);
+
   const navLinks = [
     { name: "HOME", href: "/" },
     { name: "SHOP", href: "/shop" },
