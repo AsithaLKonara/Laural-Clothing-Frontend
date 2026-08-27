@@ -11,6 +11,7 @@ import { globalDialog } from "@/store/dialog.store";
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const DashboardData = dynamic(() => import("@/components/dashboard/DashboardData"), { ssr: false });
 
@@ -128,9 +129,11 @@ export default function SuperAdminDashboard() {
         ))}
       </div>
 
-      <Suspense fallback={<DashboardSkeleton />}>
-        <DashboardData activePeriod={activePeriod} activeBranch={activeBranch} />
-      </Suspense>
+      <ErrorBoundary>
+        <Suspense fallback={<DashboardSkeleton />}>
+          <DashboardData activePeriod={activePeriod} activeBranch={activeBranch} />
+        </Suspense>
+      </ErrorBoundary>
 
       <div className="h-6" />
     </div>
