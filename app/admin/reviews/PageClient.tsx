@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Star, Check, X, Flag, MessageSquare, Eye } from "lucide-react";
 import PageHeader from "@/components/admin/PageHeader";
-import { useAllReviews, useUpdateReviewStatus } from "@/hooks/useReviews";
+import { useAllReviews, useUpdateReviewStatus, useReviewStats } from "@/hooks/useReviews";
 
 // Mock data removed in favor of real API
 
@@ -30,11 +30,31 @@ function StarRating({ rating }: { rating: number }) {
 export default function AdminReviewsPage() {
   const [filter, setFilter] = useState("ALL");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit] = useState(20);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const { data: serverReviews = [], isLoading } = useAllReviews();
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1); // Reset page on new search
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  useEffect(() => {
+    setPage(1); // Reset page on filter change
+  }, [filter]);
+
+  const { data: stats } = useReviewStats();
+  const { data: response, isLoading } = useAllReviews(filter, page, limit, debouncedSearch);
   const { mutateAsync: updateStatus } = useUpdateReviewStatus();
+
+  const serverReviews = response?.data || [];
+  const totalReviews = response?.total || 0;
+  const totalPages = response?.totalPages || 1;
 
   const reviews = serverReviews.map((r: any) => ({
     id: r.id,
@@ -51,17 +71,32 @@ export default function AdminReviewsPage() {
     flagged: false,
   }));
 
-  const displayed = reviews.filter((r: any) => {
-    const matchesFilter = filter === "ALL" || r.status === filter;
-    const matchesSearch =
-      !search ||
-      r.customer.toLowerCase().includes(search.toLowerCase()) ||
-      r.product.toLowerCase().includes(search.toLowerCase()) ||
-      r.title.toLowerCase().includes(search.toLowerCase());
-    return matchesFilter && matchesSearch;
-  });
+  const displayed = reviews; // Filtering is now server-side
+  const pendingCount = stats?.pending || 0;
 
-  const pendingCount = reviews.filter((r: any) => r.status === "PENDING").length;
+  const handleExportCsv = async () => {
+    const query = new URLSearchParams();
+    if (filter !== "ALL") query.set("status", filter);
+    if (debouncedSearch) query.set("search", debouncedSearch);
+    
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+    
+    try {
+      const res = await fetch(`${apiUrl}/reviews/export?${query.toString()}`, {
+        credentials: "include"
+      });
+      if (!res.ok) throw new Error("Failed to export");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `reviews_export_${new Date().getTime()}.csv`;
+      a.click();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to export CSV");
+    }
+  };
 
   const approve = async (id: string) => {
     await updateStatus({ id, status: "APPROVED" });
@@ -97,15 +132,16 @@ export default function AdminReviewsPage() {
         title="Reviews & Ratings"
         subtitle="Moderate customer reviews before they appear on the storefront."
         actionLabel="Export CSV"
+        onAction={handleExportCsv}
       />
 
       {/* KPI Strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Pending Review", value: pendingCount, color: "text-orange-600" },
-          { label: "Approved", value: reviews.filter((r: any) => r.status === "APPROVED").length, color: "text-emerald-600" },
-          { label: "Rejected / Spam", value: reviews.filter((r: any) => r.status === "REJECTED").length, color: "text-red-600" },
-          { label: "Average Rating", value: "4.2 ★", color: "text-amber-500" },
+          { label: "Pending Review", value: stats?.pending || 0, color: "text-orange-600" },
+          { label: "Approved", value: stats?.approved || 0, color: "text-emerald-600" },
+          { label: "Rejected / Spam", value: stats?.rejected || 0, color: "text-red-600" },
+          { label: "Average Rating", value: `${stats?.averageRating || 0} ★`, color: "text-amber-500" },
         ].map(({ label, value, color }) => (
           <div key={label} className="bg-white border border-stone-200 rounded-xl p-5 shadow-sm flex flex-col gap-1">
             <span className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">{label}</span>
@@ -275,14 +311,22 @@ export default function AdminReviewsPage() {
         {/* Pagination */}
         <div className="flex items-center justify-between p-4 border-t border-stone-200 bg-stone-50/50">
           <span className="font-inter text-sm text-stone-500">
-            Showing <span className="font-medium text-stone-900">{displayed.length}</span> of{" "}
-            <span className="font-medium text-stone-900">{reviews.length}</span> reviews
+            Showing <span className="font-medium text-stone-900">{displayed.length > 0 ? (page - 1) * limit + 1 : 0}</span> to <span className="font-medium text-stone-900">{Math.min(page * limit, totalReviews)}</span> of{" "}
+            <span className="font-medium text-stone-900">{totalReviews}</span> reviews
           </span>
           <div className="flex gap-2">
-            <button disabled className="px-3 py-1.5 bg-white border border-stone-200 text-stone-400 font-inter text-sm rounded-md shadow-sm">
+            <button 
+              disabled={page === 1} 
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              className="px-3 py-1.5 bg-white border border-stone-200 text-stone-700 font-inter text-sm rounded-md shadow-sm hover:bg-stone-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
               Previous
             </button>
-            <button disabled className="px-3 py-1.5 bg-white border border-stone-200 text-stone-400 font-inter text-sm rounded-md shadow-sm">
+            <button 
+              disabled={page >= totalPages} 
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              className="px-3 py-1.5 bg-white border border-stone-200 text-stone-700 font-inter text-sm rounded-md shadow-sm hover:bg-stone-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
               Next
             </button>
           </div>

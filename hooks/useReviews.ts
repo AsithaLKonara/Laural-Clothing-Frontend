@@ -25,10 +25,17 @@ export function usePendingReviews(customerId: string) {
   });
 }
 
-export function useAllReviews(status?: string) {
+export function useAllReviews(status?: string, page: number = 1, limit: number = 20, search?: string) {
   return useQuery({
-    queryKey: ['reviews', 'all', status],
-    queryFn: () => reviewService.getAllReviews(status),
+    queryKey: ['reviews', 'all', status, page, limit, search],
+    queryFn: () => reviewService.getAllReviews(status, page, limit, search),
+  });
+}
+
+export function useReviewStats() {
+  return useQuery({
+    queryKey: ['reviews', 'stats'],
+    queryFn: () => reviewService.getReviewStats(),
   });
 }
 

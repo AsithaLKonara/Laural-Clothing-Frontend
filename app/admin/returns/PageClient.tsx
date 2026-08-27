@@ -84,10 +84,10 @@ export default function AdminReturnsPage() {
   return (
     <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <PageHeader 
-        title="Returns Management" 
-        subtitle="Process online return requests and manage warehouse inspections."
-        actionLabel="Export Report"
-        onActionClick={handleExport}
+        title="Returns & RMAs" 
+        subtitle="Manage customer return requests and inspect returned items."
+        actionLabel="Export CSV"
+        onAction={() => console.log("Export CSV")}
       />
 
       {/* Filters & Search */}

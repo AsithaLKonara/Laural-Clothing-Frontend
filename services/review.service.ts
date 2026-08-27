@@ -53,9 +53,16 @@ export const reviewService = {
     return response.data;
   },
 
-  getAllReviews: async (status?: string): Promise<Review[]> => {
-    const params = status && status !== 'ALL' ? { status } : {};
+  getAllReviews: async (status?: string, page: number = 1, limit: number = 20, search?: string): Promise<{ data: Review[], total: number, page: number, totalPages: number }> => {
+    const params: any = { page, limit };
+    if (status && status !== 'ALL') params.status = status;
+    if (search) params.search = search;
     const response = await api.get('/reviews', { params });
+    return response.data;
+  },
+
+  getReviewStats: async (): Promise<{ pending: number; approved: number; rejected: number; averageRating: number }> => {
+    const response = await api.get('/reviews/stats');
     return response.data;
   },
 

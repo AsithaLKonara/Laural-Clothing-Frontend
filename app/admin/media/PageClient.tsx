@@ -9,6 +9,7 @@ import {
 import PageHeader from "@/components/admin/PageHeader";
 import { useMedia, useUploadMedia, useDeleteMedia } from "@/hooks/useMedia";
 import { globalDialog } from "@/store/dialog.store";
+import Image from "next/image";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -107,9 +108,8 @@ function DetailPanel({ file, onClose, onDelete }: DetailPanelProps) {
 
       <div className="flex-1 overflow-y-auto flex flex-col">
         {/* Preview */}
-        <div className="bg-stone-100 flex items-center justify-center h-56 shrink-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={file.url} alt={file.name} className="max-h-full max-w-full object-contain" />
+        <div className="bg-stone-100 flex items-center justify-center h-56 shrink-0 relative">
+          <Image src={file.url} alt={file.name} fill className="object-contain" />
         </div>
 
         {/* Metadata */}
@@ -190,7 +190,11 @@ export default function AdminMediaPage() {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: serverFiles = [], isLoading } = useMedia();
+  const [page, setPage] = useState(1);
+
+  const { data: mediaResponse, isLoading } = useMedia(activeFolder !== "All" ? activeFolder : undefined, page, 20);
+  const serverFiles = mediaResponse?.data || [];
+  const totalPages = mediaResponse?.totalPages || 1;
   const { mutateAsync: uploadMedia } = useUploadMedia();
   const { mutateAsync: deleteMedia } = useDeleteMedia();
 
@@ -203,13 +207,12 @@ export default function AdminMediaPage() {
     dimensions: f.dimensions,
     url: f.url,
     uploadedAt: f.createdAt,
-    usedIn: [], // TODO: relationships not implemented
+    usedIn: f.usedIn || [],
   }));
 
   const filtered = files.filter((f: any) => {
-    const matchFolder = activeFolder === "All" || f.folder === activeFolder;
     const matchSearch = !search || f.name.toLowerCase().includes(search.toLowerCase());
-    return matchFolder && matchSearch;
+    return matchSearch;
   });
 
   const toggleSelect = (id: string) =>
@@ -270,9 +273,9 @@ export default function AdminMediaPage() {
       {/* KPI Strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Total Files", value: files.length, color: "text-stone-900" },
+          { label: "Total Files", value: mediaResponse?.total || files.length, color: "text-stone-900" },
           { label: "Images", value: files.filter((f: any) => f.type === "image").length, color: "text-blue-600" },
-          { label: "Unused Files", value: files.filter((f: any) => f.usedIn?.length === 0).length, color: "text-orange-600" },
+          { label: "Unused Files", value: files.filter((f: any) => !f.usedIn || f.usedIn.length === 0).length, color: "text-orange-600" },
           { label: "Storage Used", value: `${(totalSize / (1024 * 1024)).toFixed(2)} MB`, color: "text-purple-600" },
         ].map(({ label, value, color }) => (
           <div key={label} className="bg-white border border-stone-200 rounded-xl p-5 shadow-sm flex flex-col gap-1">
@@ -337,7 +340,7 @@ export default function AdminMediaPage() {
           {FOLDERS.map(f => (
             <button
               key={f}
-              onClick={() => setActiveFolder(f)}
+              onClick={() => { setActiveFolder(f); setPage(1); }}
               className={`px-3 py-1.5 text-xs font-inter font-semibold rounded-lg transition-colors whitespace-nowrap ${
                 activeFolder === f ? "bg-stone-900 text-white" : "bg-white text-stone-600 border border-stone-200 hover:bg-stone-50"
               }`}
@@ -384,8 +387,7 @@ export default function AdminMediaPage() {
                   className="relative aspect-square bg-stone-100 flex items-center justify-center overflow-hidden"
                   onClick={() => setDetailFile(file)}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={file.url} alt={file.name} className="w-full h-full object-cover"/>
+                  <Image src={file.url} alt={file.name} fill className="object-cover"/>
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
                     <ZoomIn size={20} className="text-white opacity-0 group-hover:opacity-100 transition-opacity"/>
                   </div>
@@ -450,9 +452,8 @@ export default function AdminMediaPage() {
                     </td>
                     <td className="py-3 px-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-stone-100 rounded-lg overflow-hidden shrink-0">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={file.url} alt={file.name} className="w-full h-full object-cover"/>
+                        <div className="w-10 h-10 bg-stone-100 rounded-lg overflow-hidden shrink-0 relative">
+                          <Image src={file.url} alt={file.name} fill className="object-cover"/>
                         </div>
                         <div>
                           <p className="font-inter font-semibold text-sm text-stone-900">{file.name}</p>
@@ -485,6 +486,29 @@ export default function AdminMediaPage() {
           {filtered.length === 0 && (
             <div className="py-16 text-center font-inter text-sm text-stone-400">No media found.</div>
           )}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between py-4">
+          <p className="font-inter text-sm text-stone-500">Page {page} of {totalPages}</p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-4 py-2 border border-stone-200 bg-white rounded-lg font-inter text-sm font-medium hover:bg-stone-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="px-4 py-2 border border-stone-200 bg-white rounded-lg font-inter text-sm font-medium hover:bg-stone-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
         </div>
       )}
 
