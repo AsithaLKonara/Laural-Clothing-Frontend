@@ -7,8 +7,8 @@ import { PaginatedResponse } from "@/types/api";
 import { Category } from "@/types/category";
 
 export default function CollectionsSection({ initialData }: { initialData?: PaginatedResponse<Category> }) {
-  const { data: response } = useCategories(initialData);
-  const categories = response?.data || [];
+  const { data: response } = useCategories();
+  const categories = response?.data || initialData?.data || [];
   
   // Use a mix of aesthetic placeholder images for categories
   const placeholderImages = [

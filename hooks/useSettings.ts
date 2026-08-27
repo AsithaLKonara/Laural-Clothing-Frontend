@@ -30,3 +30,25 @@ export function useUpdateSettings() {
     },
   });
 }
+
+export function useCreateSetting() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Omit<Setting, "description"> & { description?: string }) => settingsService.createSetting(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SETTINGS_QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: SETTINGS_QUERY_KEYS.public });
+    },
+  });
+}
+
+export function useDeleteSetting() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (key: string) => settingsService.deleteSetting(key),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SETTINGS_QUERY_KEYS.all });
+      queryClient.invalidateQueries({ queryKey: SETTINGS_QUERY_KEYS.public });
+    },
+  });
+}
