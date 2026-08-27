@@ -2,30 +2,27 @@
 
 import { useState } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";
-import { useSalesReport } from "@/hooks/useReports";
-import { Download } from "lucide-react";
+import { usePosReport } from "@/hooks/useReports";
+import { Download, MonitorSmartphone } from "lucide-react";
 import dynamic from "next/dynamic";
 
-const SalesChart = dynamic(() => import("./SalesChart"), { 
+const PosChart = dynamic(() => import("./PosChart"), { 
   ssr: false, 
   loading: () => <div className="h-[400px] w-full flex items-center justify-center bg-stone-50 rounded-lg animate-pulse text-stone-400">Loading chart...</div> 
 });
 
-export default function SalesReportPage() {
-  const [dateRange, setDateRange] = useState("30"); // 30 days
-  
+export default function PosReportPage() {
+  const [dateRange, setDateRange] = useState("30");
   const endDate = new Date().toISOString();
   const startDate = new Date(Date.now() - parseInt(dateRange) * 24 * 60 * 60 * 1000).toISOString();
-  
-  const { data, isLoading, error } = useSalesReport(startDate, endDate);
+
+  const { data, isLoading, error } = usePosReport(startDate, endDate);
 
   const handleDownloadCSV = () => {
     if (!data) return;
-    const csvRows = [];
-    csvRows.push("Date,Total Revenue,Total Orders,Ecommerce Revenue,POS Revenue");
-    
-    data.dailyTrend.forEach(row => {
-      csvRows.push(`${row.date},${row.revenue},${row.orders},${row.ecommerceRevenue},${row.posRevenue}`);
+    const csvRows = ["Terminal,Session Count,Total Revenue"];
+    data.terminals.forEach((row: any) => {
+      csvRows.push(`${row.terminalName},${row.sessionCount},${row.revenue}`);
     });
 
     const csvString = csvRows.join("\n");
@@ -33,7 +30,7 @@ export default function SalesReportPage() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `sales_report_${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `pos_report_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
   };
@@ -45,8 +42,8 @@ export default function SalesReportPage() {
     <div className="flex flex-col p-4 md:p-10 max-w-[1280px] mx-auto w-full gap-8">
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <PageHeader 
-          title="Sales & Revenue Report" 
-          description="Detailed breakdown of sales performance over time."
+          title="Point of Sale (POS) Report" 
+          description="Analyze cashier sessions, cash variances, and terminal performance."
         />
         <div className="flex items-center gap-3">
           <select 
@@ -66,25 +63,30 @@ export default function SalesReportPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white border border-stone-200 rounded-xl p-6">
-          <h3 className="text-sm font-medium text-stone-500 font-inter">Total Revenue</h3>
-          <p className="text-3xl font-semibold text-primary font-poppins mt-2">Rs. {data.summary.totalRevenue.toLocaleString()}</p>
+          <h3 className="text-sm font-medium text-stone-500 font-inter">Total Sessions</h3>
+          <p className="text-3xl font-semibold text-primary font-poppins mt-2">{data.summary.totalSessions}</p>
         </div>
         <div className="bg-white border border-stone-200 rounded-xl p-6">
-          <h3 className="text-sm font-medium text-stone-500 font-inter">Total Orders</h3>
-          <p className="text-3xl font-semibold text-primary font-poppins mt-2">{data.summary.totalOrders.toLocaleString()}</p>
+          <h3 className="text-sm font-medium text-stone-500 font-inter">Expected Cash</h3>
+          <p className="text-3xl font-semibold text-primary font-poppins mt-2">Rs. {data.summary.expectedTotal.toLocaleString()}</p>
         </div>
         <div className="bg-white border border-stone-200 rounded-xl p-6">
-          <h3 className="text-sm font-medium text-stone-500 font-inter">Average Order Value (AOV)</h3>
-          <p className="text-3xl font-semibold text-primary font-poppins mt-2">Rs. {data.summary.aov.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
+          <h3 className="text-sm font-medium text-stone-500 font-inter">Actual Cash Counted</h3>
+          <p className="text-3xl font-semibold text-primary font-poppins mt-2">Rs. {data.summary.actualTotal.toLocaleString()}</p>
+        </div>
+        <div className="bg-white border border-stone-200 rounded-xl p-6 relative overflow-hidden">
+          <h3 className="text-sm font-medium text-stone-500 font-inter">Total Cash Variance</h3>
+          <p className={`text-3xl font-semibold font-poppins mt-2 ${data.summary.totalVariance < 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+            Rs. {data.summary.totalVariance.toLocaleString()}
+          </p>
         </div>
       </div>
 
-      {/* Charts */}
       <div className="bg-white border border-stone-200 rounded-xl p-6">
-        <h3 className="text-lg font-semibold text-primary font-poppins mb-6">Revenue Trend</h3>
-        <SalesChart data={data.dailyTrend} />
+        <h3 className="text-lg font-semibold text-primary font-poppins mb-6">Revenue by Terminal</h3>
+        <PosChart data={data.terminals} />
       </div>
     </div>
   );

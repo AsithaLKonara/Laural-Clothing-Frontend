@@ -32,9 +32,8 @@ export default function ProductsPage() {
     skip: (page - 1) * take,
     take: take,
     search: searchQuery || undefined,
-    categoryId: categoryFilter === "All Categories" ? undefined : (categoryFilter || undefined),
-    status: statusFilter === "All Status" ? undefined : (statusFilter || undefined)
-  });
+    category: categoryFilter === "All Categories" ? undefined : (categoryFilter || undefined)
+  } as any);
   const products = response?.data || [];
   const meta = response?.meta || { total: 0, skip: 0, take: take };
   const totalPages = Math.ceil(meta.total / (meta.take || take)) || 1;

@@ -1,7 +1,7 @@
 "use client";
 
 import PageHeader from "@/components/dashboard/PageHeader";
-import { BarChart3, TrendingUp, Users, ShoppingBag, Box, MapPin, CreditCard } from "lucide-react";
+import { BarChart3, TrendingUp, Users, ShoppingBag, Box, MapPin, CreditCard, MonitorSmartphone, Tag } from "lucide-react";
 import Link from "next/link";
 
 export default function ReportsPage() {
@@ -10,9 +10,9 @@ export default function ReportsPage() {
     { title: "Payments", description: "Payment gateway performance, success rates, and fee analysis.", icon: CreditCard, href: "/admin/reports/payments" },
     { title: "Inventory", description: "Stock health, valuation, low stock alerts, and transfer logs.", icon: Box, href: "/admin/reports/inventory" },
     { title: "Branches", description: "Performance comparison across physical locations and POS terminals.", icon: MapPin, href: "/admin/reports/branches" },
-    { title: "POS", description: "Cashier shifts, cash management, and POS-specific transaction reports.", icon: ShoppingBag, href: null },
-    { title: "Customers", description: "New vs returning customers, demographics, and lifetime value.", icon: Users, href: null },
-    { title: "Loyalty", description: "Points issued, redeemed, outstanding liabilities, and campaign ROI.", icon: BarChart3, href: null },
+    { title: "Point of Sale (POS)", description: "Analyze cashier sessions, cash variances, and terminal performance.", icon: MonitorSmartphone, href: "/admin/reports/pos" },
+    { title: "Customer Insights", description: "Analyze customer acquisition, guest vs registered metrics, and lifetime value.", icon: Users, href: "/admin/reports/customers" },
+    { title: "Promotions & Vouchers", description: "Track the usage and liability of exchange vouchers and discount coupons.", icon: Tag, href: "/admin/reports/promotions" },
   ] as const;
 
   return (

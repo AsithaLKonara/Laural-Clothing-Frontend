@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";
 import { useBranchReport } from "@/hooks/useReports";
 import { Download, Building2 } from "lucide-react";
@@ -11,7 +12,11 @@ const BranchesChart = dynamic(() => import("./BranchesChart"), {
 });
 
 export default function BranchReportPage() {
-  const { data, isLoading, error } = useBranchReport();
+  const [dateRange, setDateRange] = useState("30");
+  const endDate = new Date().toISOString();
+  const startDate = new Date(Date.now() - parseInt(dateRange) * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data, isLoading, error } = useBranchReport(startDate, endDate);
 
   const handleDownloadCSV = () => {
     if (!data) return;
@@ -42,10 +47,21 @@ export default function BranchReportPage() {
           title="Branch Performance Report" 
           description="Revenue and order volume analysis across all physical and virtual locations."
         />
-        <button onClick={handleDownloadCSV} className="h-10 px-4 bg-primary text-white text-sm font-medium rounded-lg flex items-center gap-2 hover:bg-stone-800 transition-colors">
-          <Download size={16} />
-          Export CSV
-        </button>
+        <div className="flex items-center gap-3">
+          <select 
+            value={dateRange} 
+            onChange={(e) => setDateRange(e.target.value)}
+            className="h-10 px-4 border border-stone-200 rounded-lg bg-white text-sm font-inter text-stone-700 outline-none focus:border-primary"
+          >
+            <option value="7">Last 7 Days</option>
+            <option value="30">Last 30 Days</option>
+            <option value="90">Last 90 Days</option>
+          </select>
+          <button onClick={handleDownloadCSV} className="h-10 px-4 bg-primary text-white text-sm font-medium rounded-lg flex items-center gap-2 hover:bg-stone-800 transition-colors">
+            <Download size={16} />
+            Export CSV
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";
 import { usePaymentReport } from "@/hooks/useReports";
 import { Download } from "lucide-react";
@@ -11,7 +12,11 @@ const PaymentsChart = dynamic(() => import("./PaymentsChart"), {
 });
 
 export default function PaymentReportPage() {
-  const { data, isLoading, error } = usePaymentReport();
+  const [dateRange, setDateRange] = useState("30");
+  const endDate = new Date().toISOString();
+  const startDate = new Date(Date.now() - parseInt(dateRange) * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data, isLoading, error } = usePaymentReport(startDate, endDate);
 
   const handleDownloadCSV = () => {
     if (!data) return;
@@ -40,10 +45,21 @@ export default function PaymentReportPage() {
           title="Payment Gateway Report" 
           description="Distribution of revenue and transaction volume across payment methods."
         />
-        <button onClick={handleDownloadCSV} className="h-10 px-4 bg-primary text-white text-sm font-medium rounded-lg flex items-center gap-2 hover:bg-stone-800 transition-colors">
-          <Download size={16} />
-          Export CSV
-        </button>
+        <div className="flex items-center gap-3">
+          <select 
+            value={dateRange} 
+            onChange={(e) => setDateRange(e.target.value)}
+            className="h-10 px-4 border border-stone-200 rounded-lg bg-white text-sm font-inter text-stone-700 outline-none focus:border-primary"
+          >
+            <option value="7">Last 7 Days</option>
+            <option value="30">Last 30 Days</option>
+            <option value="90">Last 90 Days</option>
+          </select>
+          <button onClick={handleDownloadCSV} className="h-10 px-4 bg-primary text-white text-sm font-medium rounded-lg flex items-center gap-2 hover:bg-stone-800 transition-colors">
+            <Download size={16} />
+            Export CSV
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
