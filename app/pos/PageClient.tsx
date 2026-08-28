@@ -280,9 +280,9 @@ export default function POSPage() {
           </div>
 
           <div className="hidden lg:flex items-center gap-4 text-sm font-inter text-muted ml-4">
-            <span>Kandy Branch</span>
+            <span>{activeSession?.branch?.name || "Kandy Branch"}</span>
             <span className="w-1 h-1 rounded-full bg-muted"></span>
-            <span>Terminal #02</span>
+            <span>{activeSession?.terminal?.name || "Terminal #02"}</span>
           </div>
         </div>
         
@@ -310,7 +310,7 @@ export default function POSPage() {
             )}
           </button>
           <div className="hidden md:flex items-center gap-2 text-sm font-inter text-muted border-l border-border pl-6 pr-4">
-            <span>Cashier: {session?.user?.name || "User"}</span>
+            <span>Cashier: {activeSession?.user?.firstName ? `${activeSession.user.firstName} ${activeSession.user.lastName}` : (session?.user?.name || "User")}</span>
           </div>
           <button 
             onClick={() => router.push("/login")}
