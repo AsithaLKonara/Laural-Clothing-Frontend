@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import Image from "next/image";
 import { useState, useMemo, useEffect } from "react";
 
-export default function VariantSelectionModal({ product, onClose, onAdd }: { product: any, onClose: () => void, onAdd?: (product: any, variant: any, qty: number) => void }) {
+export default function VariantSelectionModal({ product, onClose, onAdd, allowOutOfStock = false }: { product: any, onClose: () => void, onAdd?: (product: any, variant: any, qty: number) => void, allowOutOfStock?: boolean }) {
   const variants = product?.variants || [];
   
   // Extract unique colors and sizes
@@ -145,10 +145,10 @@ export default function VariantSelectionModal({ product, onClose, onAdd }: { pro
           {/* Quantity */}
           <div className="flex flex-col gap-3">
             <label className="font-inter font-semibold text-sm text-foreground">Quantity</label>
-            <div className={`flex items-center border border-border rounded-lg h-[44px] w-[140px] bg-surface overflow-hidden ${!inStock ? 'opacity-50 pointer-events-none' : ''}`}>
-              <button disabled={!inStock} onClick={() => setQty(Math.max(1, qty - 1))} className="flex-1 text-lg text-muted border-r border-border h-full hover:bg-background">-</button>
+            <div className={`flex items-center border border-border rounded-lg h-[44px] w-[140px] bg-surface overflow-hidden ${(!inStock && !allowOutOfStock) ? 'opacity-50 pointer-events-none' : ''}`}>
+              <button disabled={!inStock && !allowOutOfStock} onClick={() => setQty(Math.max(1, qty - 1))} className="flex-1 text-lg text-muted border-r border-border h-full hover:bg-background">-</button>
               <span className="flex-1 font-inter font-bold text-primary flex items-center justify-center h-full bg-background">{qty}</span>
-              <button disabled={!inStock} onClick={() => setQty(qty + 1)} className="flex-1 text-lg text-muted border-l border-border h-full hover:bg-background">+</button>
+              <button disabled={!inStock && !allowOutOfStock} onClick={() => setQty(qty + 1)} className="flex-1 text-lg text-muted border-l border-border h-full hover:bg-background">+</button>
             </div>
           </div>
 
@@ -160,10 +160,10 @@ export default function VariantSelectionModal({ product, onClose, onAdd }: { pro
             Cancel
           </button>
           <button 
-            disabled={!inStock}
+            disabled={!inStock && !allowOutOfStock}
             onClick={handleAdd} 
             className={`px-8 py-2 rounded-lg font-inter font-bold text-sm text-white transition-colors shadow-md ${
-              inStock ? 'bg-primary hover:bg-primary-hover' : 'bg-stone-400 cursor-not-allowed'
+              (inStock || allowOutOfStock) ? 'bg-primary hover:bg-primary-hover' : 'bg-stone-400 cursor-not-allowed'
             }`}
           >
             Add to Order

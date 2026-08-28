@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../services/api";
 
 export interface Customer {
@@ -25,5 +25,18 @@ export function useCustomers(params?: { search?: string; type?: string; sort?: s
   return useQuery({
     queryKey: ["customers", params],
     queryFn: () => fetchCustomers(params),
+  });
+}
+
+export function useCreateCustomer() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: any) => {
+      const response = await api.post("/customers", data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+    }
   });
 }

@@ -3,6 +3,10 @@
 import React, { useState } from "react";
 import { X, CheckCircle2, Trash2, Search, MinusCircle } from "lucide-react";
 import { useGenerateVoucher } from "@/hooks/usePos";
+import { useScanBarcode } from "@/hooks/useProducts";
+import { globalDialog } from "@/store/dialog.store";
+
+import { orderService } from "@/services/order.service";
 
 interface PosExchangeTicketProps {
   isMobileCartOpen: boolean;
@@ -16,21 +20,70 @@ export default function PosExchangeTicket({ isMobileCartOpen, setIsMobileCartOpe
   const [returnedItems, setReturnedItems] = useState<any[]>([]);
   const [scanQuery, setScanQuery] = useState("");
   
+  const [orderQuery, setOrderQuery] = useState("");
+  const [loadedOrder, setLoadedOrder] = useState<any>(null);
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
   const [voucherCode, setVoucherCode] = useState<string | null>(null);
 
-  const handleReturnScan = (e: React.FormEvent) => {
+  const scanBarcodeMutation = useScanBarcode();
+
+  const handleOrderLookup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!orderQuery.trim()) return;
+    setIsProcessing(true);
+    try {
+      const { data } = await orderService.getOrderById(orderQuery.trim());
+      setLoadedOrder(data);
+      setReturnedItems([]);
+    } catch (error) {
+      globalDialog.alert("Order not found or error loading order.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleReturnScan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loadedOrder) {
+      globalDialog.alert("Please lookup an order first.");
+      return;
+    }
+    
     if (scanQuery.trim()) {
-      const newItem = {
-        id: `EX-${Math.floor(Math.random() * 10000)}`,
-        name: "Returned Scanned Item",
-        price: 2500, // mock price
-        qty: 1
-      };
-      setReturnedItems(prev => [...prev, newItem]);
-      setScanQuery("");
+      try {
+        const product = await scanBarcodeMutation.mutateAsync(scanQuery.trim());
+        if (product && product.variants) {
+          const matchingVariant = product.variants.find((v: any) => v.sku === scanQuery.trim());
+          if (matchingVariant) {
+            const orderItem = loadedOrder.items.find((i: any) => i.variantId === matchingVariant.id);
+            if (!orderItem) {
+               globalDialog.alert("Item not found in this order.");
+               return;
+            }
+            const alreadyScanned = returnedItems.filter(i => i.id === matchingVariant.id).length;
+            const availableToReturn = orderItem.quantity - orderItem.returnedQty;
+            if (alreadyScanned >= availableToReturn) {
+               globalDialog.alert(`Cannot return more than ${availableToReturn} of this item.`);
+               return;
+            }
+            
+            setReturnedItems(prev => [...prev, {
+              id: matchingVariant.id,
+              name: `${product.name} - ${matchingVariant.color || 'Default'} ${matchingVariant.size || ''}`.trim(),
+              price: orderItem.priceAtPurchase, // Use original purchase price
+              qty: 1
+            }]);
+            setScanQuery("");
+          } else {
+            globalDialog.alert("Barcode matched a product but no specific variant SKU.");
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        globalDialog.alert("Product not found or invalid barcode.");
+      }
     }
   };
 
@@ -46,8 +99,9 @@ export default function PosExchangeTicket({ isMobileCartOpen, setIsMobileCartOpe
     try {
       const result = await generateVoucherMutation.mutateAsync({
         branchId: "BR-001", // Hardcoded for now
-        returnedItems: returnedItems,
-        value: returnTotal
+        returnedItems: returnedItems.map(i => ({ variantId: i.id, qty: i.qty })),
+        value: returnTotal,
+        orderId: loadedOrder.id
       });
       setVoucherCode(result.code);
       setSuccess(true);
@@ -76,16 +130,43 @@ export default function PosExchangeTicket({ isMobileCartOpen, setIsMobileCartOpe
           </div>
           <div className="flex flex-col gap-3 w-full">
             <button 
+              onClick={() => window.print()}
               className="w-full py-4 bg-surface border border-border text-foreground font-inter font-bold rounded-xl hover:bg-background transition-colors shadow-sm"
             >
               Print Voucher Receipt
             </button>
             <button 
-              onClick={() => { setSuccess(false); setReturnedItems([]); setVoucherCode(null); setIsMobileCartOpen(false); }}
+              onClick={() => { setSuccess(false); setReturnedItems([]); setVoucherCode(null); setIsMobileCartOpen(false); setOrderQuery(""); setLoadedOrder(null); }}
               className="w-full py-4 bg-primary text-white rounded-xl font-inter font-bold hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20"
             >
               New Exchange
             </button>
+          </div>
+        </div>
+
+        {/* Hidden Printable Receipt */}
+        <div className="print-receipt print-only bg-white text-black p-4 font-mono text-sm leading-snug mx-auto">
+          <div className="text-center flex flex-col items-center gap-1 mb-4">
+            <h2 className="font-bold text-xl tracking-widest">LAURAL</h2>
+            <span className="text-xs">EXCHANGE VOUCHER</span>
+          </div>
+          <div className="flex justify-between mb-1">
+            <span>Date:</span>
+            <span>{new Date().toLocaleDateString()}</span>
+          </div>
+          <div className="flex justify-between mb-4">
+            <span>Code:</span>
+            <span className="font-bold">{voucherCode}</span>
+          </div>
+          <div className="border-t border-dashed border-black my-2"></div>
+          <div className="flex justify-between font-bold text-lg my-2">
+            <span>VOUCHER VALUE:</span>
+            <span>Rs. {returnTotal.toFixed(2)}</span>
+          </div>
+          <div className="border-t border-dashed border-black my-2"></div>
+          <div className="text-center mt-6 text-xs">
+            Scan this code at checkout to redeem.<br/>
+            Valid at all branches.
           </div>
         </div>
       </div>
@@ -106,9 +187,29 @@ export default function PosExchangeTicket({ isMobileCartOpen, setIsMobileCartOpe
       </div>
 
       <div className="flex-1 overflow-y-auto flex flex-col">
+        {/* Order Lookup Section */}
+        <div className="p-4 border-b border-border bg-white flex flex-col gap-3">
+          <form onSubmit={handleOrderLookup} className="relative">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+            <input 
+              type="text" 
+              value={orderQuery}
+              onChange={(e) => setOrderQuery(e.target.value)}
+              placeholder="Enter Order ID to exchange..."
+              className="w-full bg-surface border border-border rounded-lg pl-9 pr-3 py-2 text-sm font-inter text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          </form>
+          {loadedOrder && (
+            <div className="p-3 bg-stone-50 border border-stone-200 rounded-lg text-sm text-stone-700">
+              <span className="font-bold">Loaded Order:</span> {loadedOrder.orderNumber}
+              <br/>
+              <span className="text-stone-500">{loadedOrder.items.length} items purchased.</span>
+            </div>
+          )}
+        </div>
         
         {/* Section 1: Returned Items */}
-        <div className="p-4 flex flex-col gap-3 bg-red-50/50 flex-1">
+        <div className={`p-4 flex flex-col gap-3 bg-red-50/50 flex-1 ${!loadedOrder ? 'opacity-50 pointer-events-none' : ''}`}>
           <div className="flex items-center gap-2 text-red-700 mb-1">
             <MinusCircle size={16} />
             <h3 className="font-inter font-bold text-sm uppercase tracking-wider">Returning Items</h3>

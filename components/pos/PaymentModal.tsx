@@ -72,7 +72,16 @@ export default function PaymentModal({ total, onClose, onSuccess }: { total: str
               <div className="flex flex-col gap-4 md:gap-6 animate-in fade-in">
                 <div className="grid grid-cols-3 gap-2 md:gap-3">
                   {['10,000', '5,000', 'Exact'].map(amt => (
-                    <button key={amt} className="py-3 bg-surface border border-border rounded-xl font-inter font-semibold text-foreground hover:border-primary hover:text-primary transition-colors">
+                    <button 
+                      key={amt} 
+                      onClick={() => {
+                        if (amt === 'Exact') {
+                          setTenderedAmount(total.replace(/,/g, ''));
+                        } else {
+                          setTenderedAmount(amt.replace(/,/g, ''));
+                        }
+                      }}
+                      className="py-3 bg-surface border border-border rounded-xl font-inter font-semibold text-foreground hover:border-primary hover:text-primary transition-colors">
                       {amt === 'Exact' ? 'Exact Amount' : `Rs. ${amt}`}
                     </button>
                   ))}

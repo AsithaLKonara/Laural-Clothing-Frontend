@@ -1,25 +1,41 @@
 "use client";
 
-import { X, Search, UserPlus, Phone, User } from "lucide-react";
+import { X, Search, UserPlus, Phone, User, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { posCustomerSchema, POSCustomerFormData } from "@/lib/validations";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
+import { useCustomers, useCreateCustomer } from "@/hooks/useCustomers";
+import { useDebounce } from "@/hooks/useDebounce";
 
-export default function CustomerSelectionModal({ onClose }: { onClose: () => void }) {
+export default function CustomerSelectionModal({ onClose, onSelect }: { onClose: () => void, onSelect?: (customer: any) => void }) {
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [isCreating, setIsCreating] = useState(false);
+
+  const { data: customersResponse, isLoading } = useCustomers({ search: debouncedSearchQuery, limit: 10 });
+  const customers = customersResponse?.data || [];
+
+  const createCustomerMutation = useCreateCustomer();
 
   const { register, handleSubmit, control, formState: { errors }, reset } = useForm<POSCustomerFormData>({
     resolver: zodResolver(posCustomerSchema),
   });
 
-  const onSubmit = (data: POSCustomerFormData) => {
-    console.log("New customer data:", data);
-    // Simulate successful creation and selection
-    onClose();
+  const onSubmit = async (data: POSCustomerFormData) => {
+    try {
+      const newCustomer = await createCustomerMutation.mutateAsync({
+        name: `${data.firstName} ${data.lastName}`.trim(),
+        phone: data.phone,
+        email: data.email
+      });
+      if (onSelect) onSelect(newCustomer);
+      onClose();
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
@@ -54,25 +70,34 @@ export default function CustomerSelectionModal({ onClose }: { onClose: () => voi
             </div>
 
             <div className="flex-1 overflow-y-auto p-2">
-              {/* Dummy Results */}
-              <button className="w-full flex items-center gap-4 p-3 hover:bg-surface rounded-xl transition-colors text-left border border-transparent hover:border-border">
-                <div className="w-10 h-10 rounded-full bg-primary-soft text-primary flex items-center justify-center font-bold">
-                  JS
+              {isLoading ? (
+                <div className="flex justify-center items-center h-full text-muted">
+                  <Loader2 className="animate-spin" size={24} />
                 </div>
-                <div className="flex flex-col">
-                  <span className="font-inter font-bold text-sm text-foreground">Jane Smith</span>
-                  <span className="font-inter text-xs text-muted">077 123 4567</span>
+              ) : customers.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-muted p-4 text-center">
+                  <p className="font-inter text-sm">No customers found.</p>
                 </div>
-              </button>
-              <button className="w-full flex items-center gap-4 p-3 hover:bg-surface rounded-xl transition-colors text-left border border-transparent hover:border-border">
-                <div className="w-10 h-10 rounded-full bg-primary-soft text-primary flex items-center justify-center font-bold">
-                  DP
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-inter font-bold text-sm text-foreground">David Perera</span>
-                  <span className="font-inter text-xs text-muted">071 987 6543</span>
-                </div>
-              </button>
+              ) : (
+                customers.map(c => (
+                  <button 
+                    key={c.id}
+                    onClick={() => {
+                      if (onSelect) onSelect(c);
+                      onClose();
+                    }}
+                    className="w-full flex items-center gap-4 p-3 hover:bg-surface rounded-xl transition-colors text-left border border-transparent hover:border-border"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-primary-soft text-primary flex items-center justify-center font-bold uppercase">
+                      {c.name.substring(0, 2)}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-inter font-bold text-sm text-foreground">{c.name}</span>
+                      <span className="font-inter text-xs text-muted">{c.phone || c.email}</span>
+                    </div>
+                  </button>
+                ))
+              )}
             </div>
 
             <div className="p-4 border-t border-border bg-surface shrink-0">

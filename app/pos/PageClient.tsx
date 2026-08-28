@@ -20,14 +20,20 @@ import { useCategories } from "@/hooks/useCategories";
 import { useRouter } from "next/navigation";
 import { useProcessPosOrder, useCurrentSession, useValidateVoucher } from "@/hooks/usePos";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
+import { globalDialog } from "@/store/dialog.store";
 
 export default function POSPage() {
   const router = useRouter();
-  const session = { user: { name: "Mock User" } }; // Mock session
+  // We'll use a mocked session for the user ID/name for now, but in a real app this comes from next-auth
+  const session = { user: { id: "USER-001", name: "Mock User" } }; 
+  const branchId = "BR-001";
+  const terminalId = "TERM-001";
+  
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [posMode, setPosMode] = useState<"SALES" | "RETURNS" | "DISPATCH" | "EXCHANGE">("SALES");
   
-  const { data: activeSession } = useCurrentSession("TERM-001");
+  const { data: activeSession } = useCurrentSession(terminalId);
   const processOrderMutation = useProcessPosOrder();
   const scanBarcodeMutation = useScanBarcode();
   
@@ -39,15 +45,38 @@ export default function POSPage() {
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   
   // New States for POS Upgrades
+  // New States for POS Upgrades
+  // Default to OPEN if activeSession exists, else CLOSED
   const [shiftState, setShiftState] = useState<"CLOSED" | "OPEN">("CLOSED");
   const [shiftModalMode, setShiftModalMode] = useState<"OPEN" | "CLOSE" | null>(null);
+  const isShiftModalOpen = shiftModalMode !== null;
+  
+  useEffect(() => {
+    if (activeSession) setShiftState("OPEN");
+    else setShiftState("CLOSED");
+  }, [activeSession]);
   
   const [heldCarts, setHeldCarts] = useState<{id: string, time: string, items: any[]}[]>([]);
   const [isHeldCartsModalOpen, setIsHeldCartsModalOpen] = useState(false);
 
+  useEffect(() => {
+    const saved = localStorage.getItem('posHeldCarts');
+    if (saved) {
+      try {
+        setHeldCarts(JSON.parse(saved));
+      } catch (e) {}
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('posHeldCarts', JSON.stringify(heldCarts));
+  }, [heldCarts]);
+
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [cart, setCart] = useState<any[]>([]);
   const [cartVouchers, setCartVouchers] = useState<{code: string, amount: number}[]>([]);
+  const [lastOrderData, setLastOrderData] = useState<any>(null);
 
   const holdCurrentCart = () => {
     if (cart.length === 0) return;
@@ -98,6 +127,31 @@ export default function POSPage() {
   };
 
   const clearCart = () => { setCart([]); setCartVouchers([]); };
+
+  useBarcodeScanner({
+    onScan: async (barcode) => {
+      if (shiftState === 'CLOSED' || posMode !== 'SALES') return;
+      try {
+        const product = await scanBarcodeMutation.mutateAsync(barcode);
+        if (product && product.variants) {
+          const matchingVariant = product.variants.find((v: any) => v.sku === barcode);
+          if (matchingVariant) {
+            // If in SALES mode, don't allow scanning out-of-stock items
+            if (posMode === 'SALES' && matchingVariant.stockStatus !== 'instock' && matchingVariant.quantity <= 0) {
+              globalDialog.alert("Scanned item is out of stock.");
+              return;
+            }
+            addToCart(product, matchingVariant, 1);
+          } else {
+            globalDialog.alert("Barcode matched a product but no specific variant SKU.");
+          }
+        }
+      } catch (err) {
+        globalDialog.alert("Product not found or invalid barcode.");
+      }
+    },
+    disabled: isPaymentModalOpen || isCustomerModalOpen || isVariantModalOpen || isShiftModalOpen || shiftState === 'CLOSED' || posMode !== 'SALES'
+  });
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -423,9 +477,9 @@ export default function POSPage() {
                 </h2>
                 <button 
                   onClick={() => setIsCustomerModalOpen(true)}
-                  className="flex items-center gap-2 text-sm font-inter text-primary bg-primary-soft px-3 py-1.5 rounded-lg hover:bg-primary/20 transition-colors"
+                  className={`flex items-center gap-2 text-sm font-inter px-3 py-1.5 rounded-lg transition-colors ${selectedCustomer ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'text-primary bg-primary-soft hover:bg-primary/20'}`}
                 >
-                  <UserPlus size={16} /> Add Customer
+                  <UserPlus size={16} /> {selectedCustomer ? selectedCustomer.name : 'Add Customer'}
                 </button>
               </div>
 
@@ -480,11 +534,14 @@ export default function POSPage() {
 
                 <div className="mt-4">
                   <button 
+                    disabled={shiftState === "CLOSED"}
                     onClick={() => setIsPaymentModalOpen(true)}
-                    className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover rounded-xl py-4 transition-colors shadow-lg shadow-primary/20"
+                    className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover disabled:bg-stone-300 disabled:cursor-not-allowed rounded-xl py-4 transition-colors shadow-lg shadow-primary/20"
                   >
-                    <span className="font-inter font-bold text-lg text-white">Charge</span>
-                    <ChevronRight size={20} className="text-white" />
+                    <span className="font-inter font-bold text-lg text-white">
+                      {shiftState === "CLOSED" ? "Shift Closed" : "Charge"}
+                    </span>
+                    {shiftState === "OPEN" && <ChevronRight size={20} className="text-white" />}
                   </button>
                 </div>
                 <div className="grid grid-cols-2 gap-3 mt-2">
@@ -510,7 +567,11 @@ export default function POSPage() {
       {/* Modals */}
       {shiftModalMode && (
         <PosShiftModal 
-          mode={shiftModalMode} 
+          mode={shiftModalMode}
+          activeSession={activeSession}
+          branchId={branchId}
+          terminalId={terminalId}
+          userId={session.user.id}
           onClose={() => setShiftModalMode(null)} 
           onSuccess={() => {
             setShiftState(shiftModalMode === "OPEN" ? "OPEN" : "CLOSED");
@@ -518,33 +579,26 @@ export default function POSPage() {
           }} 
         />
       )}
-      
-      {/* Held Carts Modal Slide-out */}
       {isHeldCartsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 max-h-[80vh]">
-            <div className="flex items-center justify-between p-6 border-b border-stone-200 bg-stone-50 shrink-0">
-              <h2 className="font-inter font-bold text-xl text-stone-900 flex items-center gap-2">
-                <History className="text-stone-700" size={24} /> Held Orders
-              </h2>
-              <button onClick={() => setIsHeldCartsModalOpen(false)} className="p-2 text-stone-400 hover:text-stone-900 hover:bg-stone-200 rounded-lg transition-colors">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="relative w-full max-w-[500px] bg-background shadow-2xl rounded-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
+            <div className="flex justify-between items-center p-4 border-b border-border bg-surface shrink-0">
+              <h3 className="font-inter font-bold text-lg text-foreground">Held Carts</h3>
+              <button onClick={() => setIsHeldCartsModalOpen(false)} className="p-2 text-muted hover:text-foreground hover:bg-background rounded-full transition-colors">
                 <X size={20} />
               </button>
             </div>
-            <div className="p-4 bg-stone-100 flex-1 overflow-y-auto flex flex-col gap-3">
+            <div className="p-4 flex flex-col gap-3 max-h-[60vh] overflow-y-auto">
               {heldCarts.length === 0 ? (
-                <div className="text-center text-stone-500 py-10 font-inter">No held orders.</div>
+                <div className="py-8 text-center text-muted font-inter">No held carts available.</div>
               ) : (
                 heldCarts.map(hc => (
-                  <div key={hc.id} className="bg-white p-4 rounded-xl shadow-sm border border-stone-200 flex items-center justify-between">
-                    <div>
-                      <p className="font-bold text-stone-900 font-inter">{hc.id}</p>
-                      <p className="text-sm text-stone-500 font-inter">{hc.items.length} items • {hc.time}</p>
+                  <div key={hc.id} className="flex justify-between items-center bg-surface border border-border p-3 rounded-xl">
+                    <div className="flex flex-col">
+                      <span className="font-inter font-bold text-sm text-foreground">Cart {hc.id}</span>
+                      <span className="font-inter text-xs text-muted">{hc.time} - {hc.items.length} items</span>
                     </div>
-                    <button 
-                      onClick={() => restoreHeldCart(hc.id)}
-                      className="px-4 py-2 bg-stone-900 text-white font-inter font-semibold text-sm rounded-lg hover:bg-stone-800 transition-colors"
-                    >
+                    <button onClick={() => restoreHeldCart(hc.id)} className="px-4 py-2 bg-primary text-white rounded-lg font-inter text-sm font-bold hover:bg-primary-hover transition-colors">
                       Resume
                     </button>
                   </div>
@@ -555,7 +609,7 @@ export default function POSPage() {
         </div>
       )}
 
-      {isVariantModalOpen && <VariantSelectionModal product={selectedProduct} onClose={() => setIsVariantModalOpen(false)} onAdd={addToCart} />}
+      {isVariantModalOpen && <VariantSelectionModal product={selectedProduct} onClose={() => setIsVariantModalOpen(false)} onAdd={addToCart} allowOutOfStock={posMode !== 'SALES'} />}
       {isPaymentModalOpen && <PaymentModal 
         onClose={() => setIsPaymentModalOpen(false)} 
         onSuccess={async (method: string) => {
@@ -563,9 +617,10 @@ export default function POSPage() {
           const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
           const voucherAmount = cartVouchers.reduce((sum, v) => sum + v.amount, 0);
           const total = Math.max(0, subtotal - voucherAmount);
-          await processOrderMutation.mutateAsync({
+          const orderRes = await processOrderMutation.mutateAsync({
             branchId: "BR-001",
             sessionId: activeSession?.id || "mock-session-id",
+            customerId: selectedCustomer?.id,
             items: cart,
             paymentMethod: method,
             appliedVouchers: cartVouchers.map(v => v.code),
@@ -573,13 +628,27 @@ export default function POSPage() {
             total,
             tax: 0
           });
+          
+          setLastOrderData({
+            orderId: orderRes?.orderNumber || `POS-${Date.now()}`,
+            cashierName: session.user.name,
+            items: cart,
+            subtotal,
+            discount: voucherAmount,
+            total,
+            paymentMethod: method,
+            tendered: total, // we don't have tendered from PaymentModal yet, assume exact change for now
+            change: 0
+          });
+
           clearCart();
+          setSelectedCustomer(null);
           setIsSuccessModalOpen(true); 
-        }} 
+        }}  
         total={Math.max(0, cart.reduce((sum, item) => sum + (item.price * item.qty), 0) - cartVouchers.reduce((sum, v) => sum + v.amount, 0)).toFixed(2)} 
       />}
-      {isCustomerModalOpen && <CustomerSelectionModal onClose={() => setIsCustomerModalOpen(false)} />}
-      {isSuccessModalOpen && <OrderSuccessModal onClose={() => setIsSuccessModalOpen(false)} />}
+      {isCustomerModalOpen && <CustomerSelectionModal onClose={() => setIsCustomerModalOpen(false)} onSelect={(c) => setSelectedCustomer(c)} />}
+      {isSuccessModalOpen && <OrderSuccessModal onClose={() => setIsSuccessModalOpen(false)} orderData={lastOrderData} />}
 
     </div>
   );

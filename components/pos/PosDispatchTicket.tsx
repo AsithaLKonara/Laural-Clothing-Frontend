@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { X, Phone, MapPin, Truck, CheckCircle2, Trash2, Link as LinkIcon, User, CreditCard, Banknote } from "lucide-react";
 import { useCreateShipment } from "@/hooks/useShipping";
+import { useProcessPosOrder, useCurrentSession } from "@/hooks/usePos";
 import { globalDialog } from "@/store/dialog.store";
 
 interface PosDispatchTicketProps {
@@ -42,13 +43,30 @@ export default function PosDispatchTicket({ isMobileCartOpen, setIsMobileCartOpe
   const total = subtotal + deliveryFee;
 
   const createShipmentMutation = useCreateShipment();
+  const processPosOrderMutation = useProcessPosOrder();
+  const { data: activeSession } = useCurrentSession("TERM-001"); // In real app, pass from parent
 
   const handleDispatch = async () => {
     setIsDispatching(true);
     try {
+      if (!activeSession) throw new Error("No active shift session");
+
+      // 1. Create POS Order to deduct inventory and log sale
+      const orderRes = await processPosOrderMutation.mutateAsync({
+        branchId: "BR-001",
+        sessionId: activeSession.id,
+        items: cart.map(i => ({ variantId: i.id, qty: i.qty })),
+        paymentMethod: paymentMethod === "Transfer" ? "BANK_TRANSFER" : paymentMethod,
+        appliedVouchers: [],
+        subtotal,
+        total,
+        tax: 0
+      });
+
+      // 2. Forward to 3PL if applicable
       if (deliveryMethod === "Fardar") {
         await createShipmentMutation.mutateAsync({
-          orderReference: "POS-DISPATCH-" + Math.floor(Math.random() * 100000),
+          orderReference: orderRes.orderNumber || "POS-DISPATCH-" + Math.floor(Math.random() * 100000),
           customerName: customerName || "Guest",
           customerPhone: phone,
           customerAddress: address || "No address provided",
@@ -60,7 +78,7 @@ export default function PosDispatchTicket({ isMobileCartOpen, setIsMobileCartOpe
       setSuccess(true);
     } catch (error) {
       console.error(error);
-      globalDialog.alert("Failed to create Fardar shipment.");
+      globalDialog.alert("Failed to process dispatch order.");
     } finally {
       setIsDispatching(false);
     }

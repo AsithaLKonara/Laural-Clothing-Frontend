@@ -3,68 +3,104 @@
 import { useState } from "react";
 import { Search, Package, RotateCcw, CheckCircle2, ChevronRight, X, AlertCircle } from "lucide-react";
 import Image from "next/image";
+import { orderService } from "@/services/order.service";
+import { useGenerateVoucher } from "@/hooks/usePos";
 
 export default function PosReturnsMode() {
   const [searchQuery, setSearchQuery] = useState("");
   const [orderFound, setOrderFound] = useState(false);
-  const [selectedItems, setSelectedItems] = useState<any[]>([]); // Changed to store full item objects
+  const [loadedOrder, setLoadedOrder] = useState<any>(null);
+  
+  const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const [refundMethod, setRefundMethod] = useState<"CASH" | "CARD" | "STORE_CREDIT">("CASH");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  
+  const [errorMsg, setErrorMsg] = useState("");
 
-  const DUMMY_ORDER = {
-    id: "LC-09942",
-    customer: "Amila Silva",
-    date: "2026-08-10",
-    items: [
-      { id: "ITEM-1", name: "Black Oversized T-Shirt", size: "M", price: 2500, image: "/products/default.jpg", returned: false },
-      { id: "ITEM-2", name: "Classic Linen Shirt", size: "L", price: 4900, image: "/products/hover.jpg", returned: true },
-      { id: "ITEM-3", name: "Summer Floral Dress", size: "S", price: 6500, image: "/products/default.jpg", returned: false },
-    ]
-  };
+  const generateVoucherMutation = useGenerateVoucher();
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg("");
     if (searchQuery.length > 3) {
-      if (searchQuery.toUpperCase().startsWith("LC-")) {
-        setOrderFound(true);
-        // Automatically add all eligible items from the order to the return list for demo purposes
-        setSelectedItems([]);
+      if (searchQuery.toUpperCase().startsWith("LC-") || searchQuery.toUpperCase().startsWith("POS-")) {
+        try {
+          // Search for the exact order number
+          const res = await orderService.getOrders({ search: searchQuery });
+          if (res.data && res.data.data && res.data.data.length > 0) {
+            setLoadedOrder(res.data.data[0]);
+            setOrderFound(true);
+            setSelectedItems([]);
+          } else {
+            setErrorMsg("Order not found.");
+            setOrderFound(false);
+            setLoadedOrder(null);
+          }
+        } catch (error) {
+          console.error(error);
+          setErrorMsg("Failed to search order.");
+        }
       } else {
-        // Treat as a direct barcode scan
+        // Direct barcode scan fallback logic for unreceipted returns
         setOrderFound(true);
         const newItem = {
           id: `SCAN-${Math.floor(Math.random() * 1000)}`,
           name: "Scanned Item",
-          size: "O/S",
-          price: 3500,
-          image: "/products/default.jpg",
-          returned: false,
+          price: 3500, // Hardcoded fallback for untracked items
+          qty: 1,
           isScanned: true
         };
         setSelectedItems(prev => [...prev, newItem]);
-        setSearchQuery(""); // clear for next scan
+        setSearchQuery("");
       }
       setIsSuccess(false);
     }
   };
 
-  const toggleItem = (item: any) => {
-    setSelectedItems(prev => 
-      prev.find(i => i.id === item.id) ? prev.filter(i => i.id !== item.id) : [...prev, item]
-    );
+  const toggleItem = (item: any, price: number) => {
+    setSelectedItems(prev => {
+      const exists = prev.find(i => i.id === item.id);
+      if (exists) {
+        return prev.filter(i => i.id !== item.id);
+      } else {
+        return [...prev, { ...item, price, qty: 1 }];
+      }
+    });
   };
 
   const calculateRefund = () => {
     return selectedItems.reduce((sum, item) => sum + item.price, 0);
   };
 
-  const handleCompleteReturn = () => {
+  const handleCompleteReturn = async () => {
     setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
+    setErrorMsg("");
+    try {
+      if (refundMethod === "STORE_CREDIT") {
+        await generateVoucherMutation.mutateAsync({
+          branchId: "BR-001",
+          returnedItems: selectedItems.map(i => ({ variantId: i.variantId || i.id, qty: i.qty })),
+          value: calculateRefund(),
+          orderId: loadedOrder?.id
+        });
+      } else {
+        // For cash/card, we use the backend order refund endpoint if we have an order
+        if (loadedOrder) {
+          const itemsToReturn = selectedItems.map(i => ({ variantId: i.variantId || i.id, qty: i.qty }));
+          await orderService.refundPartialOrder(loadedOrder.id, itemsToReturn, refundMethod);
+        } else {
+          // Unreceipted cash refund just drops state here
+          console.log("Processed unreceipted manual return.");
+        }
+      }
       setIsSuccess(true);
-    }, 1500);
+    } catch (error: any) {
+      console.error(error);
+      setErrorMsg(error?.response?.data?.error || "Failed to process return.");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (isSuccess) {
@@ -76,16 +112,52 @@ export default function PosReturnsMode() {
         <h2 className="font-signature text-4xl text-foreground mb-2">Return Completed</h2>
         <p className="font-inter text-muted mb-8 text-center max-w-md">
           Successfully refunded Rs. {calculateRefund().toLocaleString()} to {refundMethod}. 
-          Inventory has been automatically updated for restockable items.
+          Inventory has been automatically updated.
         </p>
         <div className="flex gap-4">
-          <button className="px-6 py-3 bg-surface border border-border text-foreground font-inter font-medium rounded-xl hover:bg-background transition-colors shadow-sm">
+          <button 
+            onClick={() => window.print()}
+            className="px-6 py-3 bg-surface border border-border text-foreground font-inter font-medium rounded-xl hover:bg-background transition-colors shadow-sm"
+          >
             Print Return Receipt
           </button>
-          <button onClick={() => { setOrderFound(false); setSearchQuery(""); setIsSuccess(false); }} className="px-6 py-3 bg-primary text-white font-inter font-medium rounded-xl hover:bg-primary-hover transition-colors shadow-sm">
+          <button onClick={() => { setOrderFound(false); setLoadedOrder(null); setSearchQuery(""); setIsSuccess(false); setSelectedItems([]); }} className="px-6 py-3 bg-primary text-white font-inter font-medium rounded-xl hover:bg-primary-hover transition-colors shadow-sm">
             Process Another Return
           </button>
         </div>
+
+        {/* Hidden Printable Receipt */}
+        <div className="print-receipt print-only bg-white text-black p-4 font-mono text-sm leading-snug mx-auto">
+          <div className="text-center flex flex-col items-center gap-1 mb-4">
+            <h2 className="font-bold text-xl tracking-widest">LAURAL</h2>
+            <span className="text-xs">RETURN RECEIPT</span>
+          </div>
+          <div className="flex justify-between mb-1">
+            <span>Date:</span>
+            <span>{new Date().toLocaleDateString()}</span>
+          </div>
+          <div className="flex justify-between mb-4">
+            <span>Method:</span>
+            <span className="font-bold">{refundMethod}</span>
+          </div>
+          <div className="border-t border-dashed border-black my-2"></div>
+          {selectedItems.map((item, idx) => (
+            <div key={idx} className="flex justify-between text-xs mb-1">
+              <span className="truncate pr-2">{item.qty}x {item.name}</span>
+              <span>{(item.price * item.qty).toFixed(2)}</span>
+            </div>
+          ))}
+          <div className="border-t border-dashed border-black my-2"></div>
+          <div className="flex justify-between font-bold text-lg my-2">
+            <span>TOTAL REFUND:</span>
+            <span>Rs. {calculateRefund().toFixed(2)}</span>
+          </div>
+          <div className="border-t border-dashed border-black my-2"></div>
+          <div className="text-center mt-6 text-xs">
+            Thank you for shopping with us!
+          </div>
+        </div>
+
       </div>
     );
   }
@@ -105,7 +177,7 @@ export default function PosReturnsMode() {
               type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Scan receipt barcode or enter Order ID (e.g. LC-09942)"
+              placeholder="Scan receipt barcode or enter Order ID (e.g. LC-09942 or POS-123)"
               className="w-full bg-surface border border-border rounded-xl py-4 pl-12 pr-32 text-lg font-inter text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
               autoFocus
             />
@@ -116,11 +188,12 @@ export default function PosReturnsMode() {
               Search
             </button>
           </form>
+          {errorMsg && <p className="mt-2 text-sm text-error font-inter font-bold">{errorMsg}</p>}
         </div>
 
         {/* Order Results */}
         <div className="flex-1 overflow-y-auto p-6 bg-background">
-          {!orderFound ? (
+          {!orderFound && !loadedOrder && selectedItems.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center opacity-50">
               <RotateCcw size={64} className="text-muted mb-4" />
               <p className="font-inter font-medium text-lg text-foreground">Waiting for order lookup...</p>
@@ -128,15 +201,19 @@ export default function PosReturnsMode() {
           ) : (
             <div className="flex flex-col gap-6 max-w-3xl">
               
-              <div className="flex items-center justify-between p-4 bg-surface border border-border rounded-xl">
-                <div>
-                  <p className="font-inter font-bold text-lg text-foreground">Order #{DUMMY_ORDER.id}</p>
-                  <p className="font-inter text-sm text-muted">Purchased on {DUMMY_ORDER.date} • by {DUMMY_ORDER.customer}</p>
+              {loadedOrder && (
+                <div className="flex items-center justify-between p-4 bg-surface border border-border rounded-xl">
+                  <div>
+                    <p className="font-inter font-bold text-lg text-foreground">Order #{loadedOrder.orderNumber}</p>
+                    <p className="font-inter text-sm text-muted">
+                      Purchased on {new Date(loadedOrder.createdAt).toLocaleDateString()} • by {loadedOrder.customer?.firstName || 'Guest'}
+                    </p>
+                  </div>
+                  <div className="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-widest rounded-md">
+                    Eligible for Return
+                  </div>
                 </div>
-                <div className="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-widest rounded-md">
-                  Eligible for Return
-                </div>
-              </div>
+              )}
 
               <div className="flex flex-col gap-4">
                 <h3 className="font-inter font-bold text-foreground">Select Items to Return</h3>
@@ -148,12 +225,9 @@ export default function PosReturnsMode() {
                       <input 
                         type="checkbox" 
                         checked={true}
-                        onChange={() => toggleItem(item)}
+                        onChange={() => toggleItem(item, item.price)}
                         className="w-5 h-5 rounded border-border text-primary focus:ring-primary"
                       />
-                    </div>
-                    <div className="w-16 h-20 relative bg-stone-100 rounded-md overflow-hidden shrink-0">
-                      <Image src={item.image} alt={item.name} fill sizes="100px" className="object-cover" />
                     </div>
                     <div className="flex flex-col flex-1">
                       <div className="flex justify-between items-start">
@@ -163,73 +237,44 @@ export default function PosReturnsMode() {
                         </div>
                         <span className="font-inter font-bold text-foreground">Rs. {item.price.toLocaleString()}</span>
                       </div>
-                      <div className="grid grid-cols-2 gap-3 mt-4">
-                        <div className="flex flex-col gap-1">
-                          <select className="bg-background border border-border rounded-md text-sm p-2 outline-none focus:border-primary">
-                            <option>New with tags (Restockable)</option>
-                            <option>Damaged (Write-off)</option>
-                          </select>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 ))}
 
-                {/* Render Dummy Order Items */}
-                {DUMMY_ORDER.items.map(item => (
-                  <div key={item.id} className={`flex items-start gap-4 p-4 border rounded-xl transition-all ${item.returned ? 'bg-background border-border opacity-60' : selectedItems.find(i => i.id === item.id) ? 'bg-primary/5 border-primary shadow-sm' : 'bg-surface border-border hover:border-muted'}`}>
-                    
-                    <div className="pt-2">
-                      <input 
-                        type="checkbox" 
-                        disabled={item.returned}
-                        checked={!!selectedItems.find(i => i.id === item.id)}
-                        onChange={() => toggleItem(item)}
-                        className="w-5 h-5 rounded border-border text-primary focus:ring-primary disabled:opacity-50"
-                      />
-                    </div>
-                    
-                    <div className="w-16 h-20 relative bg-stone-100 rounded-md overflow-hidden shrink-0">
-                      <Image src={item.image} alt={item.name} fill sizes="100px" className="object-cover" />
-                    </div>
-                    
-                    <div className="flex flex-col flex-1">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-inter font-bold text-foreground">{item.name}</p>
-                          <p className="font-inter text-sm text-muted">Size {item.size}</p>
+                {/* Render Fetched Order Items */}
+                {loadedOrder?.items?.map((item: any) => {
+                  const variant = item.variant;
+                  const price = item.priceAtPurchase;
+                  
+                  // In real app, we track if an orderItem is already returned. Here we allow it for now.
+                  const alreadyReturned = false; 
+
+                  return (
+                    <div key={item.id} className={`flex items-start gap-4 p-4 border rounded-xl transition-all ${alreadyReturned ? 'bg-background border-border opacity-60' : selectedItems.find(i => i.id === item.id) ? 'bg-primary/5 border-primary shadow-sm' : 'bg-surface border-border hover:border-muted'}`}>
+                      
+                      <div className="pt-2">
+                        <input 
+                          type="checkbox" 
+                          disabled={alreadyReturned}
+                          checked={!!selectedItems.find(i => i.id === item.id)}
+                          onChange={() => toggleItem({ ...variant, id: item.id }, price)}
+                          className="w-5 h-5 rounded border-border text-primary focus:ring-primary disabled:opacity-50"
+                        />
+                      </div>
+                      
+                      <div className="flex flex-col flex-1">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-inter font-bold text-foreground">{variant?.product?.name || variant?.name || 'Product'}</p>
+                            <p className="font-inter text-sm text-muted">SKU: {variant?.sku}</p>
+                          </div>
+                          <span className="font-inter font-bold text-foreground">Rs. {price.toLocaleString()}</span>
                         </div>
-                        <span className="font-inter font-bold text-foreground">Rs. {item.price.toLocaleString()}</span>
                       </div>
 
-                      {item.returned ? (
-                        <div className="mt-2 text-xs font-inter font-medium text-error bg-error-soft px-2 py-1 rounded inline-block self-start">
-                          Already Returned
-                        </div>
-                      ) : selectedItems.find(i => i.id === item.id) ? (
-                        <div className="grid grid-cols-2 gap-3 mt-4">
-                          <div className="flex flex-col gap-1">
-                            <label className="font-inter text-xs font-medium text-muted">Condition</label>
-                            <select className="bg-background border border-border rounded-md text-sm p-2 outline-none focus:border-primary">
-                              <option>New with tags (Restockable)</option>
-                              <option>Damaged (Write-off)</option>
-                              <option>Worn (Write-off)</option>
-                            </select>
-                          </div>
-                          <div className="flex flex-col gap-1">
-                            <label className="font-inter text-xs font-medium text-muted">Reason</label>
-                            <select className="bg-background border border-border rounded-md text-sm p-2 outline-none focus:border-primary">
-                              <option>Changed mind</option>
-                              <option>Wrong size</option>
-                              <option>Defective</option>
-                            </select>
-                          </div>
-                        </div>
-                      ) : null}
                     </div>
-
-                  </div>
-                ))}
+                  );
+                })}
 
               </div>
             </div>
@@ -238,7 +283,7 @@ export default function PosReturnsMode() {
 
       </div>
 
-      {/* Right Side: Refund Actions (1/3 width, fixed 400px min) */}
+      {/* Right Side: Refund Actions */}
       <div className="fixed inset-y-0 right-0 w-[420px] bg-surface flex flex-col shrink-0 shadow-2xl z-50 transform transition-transform duration-300 translate-x-0 border-l border-border">
         
         <div className="p-6 border-b border-border bg-background flex flex-col justify-center shrink-0 h-[80px]">
@@ -302,7 +347,7 @@ export default function PosReturnsMode() {
                 </div>
                 <div>
                   <p className="font-inter font-bold text-foreground">Store Credit</p>
-                  <p className="font-inter text-xs text-muted">Issue as points to customer account</p>
+                  <p className="font-inter text-xs text-muted">Issue a voucher code instantly</p>
                 </div>
               </button>
             </div>
