@@ -22,13 +22,20 @@ import { useProcessPosOrder, useCurrentSession, useValidateVoucher } from "@/hoo
 import { useDebounce } from "@/hooks/useDebounce";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { globalDialog } from "@/store/dialog.store";
+import { useAuthStore } from "@/store/auth.store";
 
 export default function POSPage() {
   const router = useRouter();
-  // We'll use a mocked session for the user ID/name for now, but in a real app this comes from next-auth
-  const session = { user: { id: "USER-001", name: "Mock User" } }; 
-  const branchId = "BR-001";
-  const terminalId = "TERM-001";
+  const { user } = useAuthStore();
+  const branchId = user?.branchId || user?.branch?.id || "BR-001";
+  
+  const [terminalId, setTerminalId] = useState("TERM-001");
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("pos_terminal_id");
+      if (saved) setTerminalId(saved);
+    }
+  }, []);
   
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [posMode, setPosMode] = useState<"SALES" | "RETURNS" | "DISPATCH" | "EXCHANGE">("SALES");
@@ -280,9 +287,9 @@ export default function POSPage() {
           </div>
 
           <div className="hidden lg:flex items-center gap-4 text-sm font-inter text-muted ml-4">
-            <span>{activeSession?.branch?.name || "Kandy Branch"}</span>
+            <span>{activeSession?.branch?.name || user?.branch?.name || "Branch"}</span>
             <span className="w-1 h-1 rounded-full bg-muted"></span>
-            <span>{activeSession?.terminal?.name || "Terminal #02"}</span>
+            <span>{activeSession?.terminal?.name || terminalId}</span>
           </div>
         </div>
         
@@ -310,7 +317,7 @@ export default function POSPage() {
             )}
           </button>
           <div className="hidden md:flex items-center gap-2 text-sm font-inter text-muted border-l border-border pl-6 pr-4">
-            <span>Cashier: {activeSession?.user?.firstName ? `${activeSession.user.firstName} ${activeSession.user.lastName}` : (session?.user?.name || "User")}</span>
+            <span>Cashier: {activeSession?.user?.firstName ? `${activeSession.user.firstName} ${activeSession.user.lastName}` : (user?.name || "User")}</span>
           </div>
           <button 
             onClick={() => router.push("/login")}
@@ -571,7 +578,7 @@ export default function POSPage() {
           activeSession={activeSession}
           branchId={branchId}
           terminalId={terminalId}
-          userId={session.user.id}
+          userId={user?.id || "USER-001"}
           onClose={() => setShiftModalMode(null)} 
           onSuccess={() => {
             setShiftState(shiftModalMode === "OPEN" ? "OPEN" : "CLOSED");
@@ -631,7 +638,7 @@ export default function POSPage() {
           
           setLastOrderData({
             orderId: orderRes?.orderNumber || `POS-${Date.now()}`,
-            cashierName: session.user.name,
+            cashierName: user?.name || "User",
             items: cart,
             subtotal,
             discount: voucherAmount,
