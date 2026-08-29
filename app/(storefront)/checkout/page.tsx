@@ -115,15 +115,22 @@ export default function CheckoutPage() {
         },
         paymentMethod: data.paymentMethod,
         deviceFingerprint: data.deviceFingerprint,
+        appliedLoyaltyPoints: appliedLoyaltyPoints > 0 ? appliedLoyaltyPoints : undefined,
       },
       {
-        onSuccess: (order) => {
-          // In a real app, if payment method is not COD, redirect to payment gateway here
-          router.push(`/checkout/success?orderNumber=${order.orderNumber}`);
+        onSuccess: (res: any) => {
+          // If payment gateway provides a redirect URL (OnePay), redirect user to gateway
+          if (res?.payment?.redirectUrl && res?.payment?.method !== 'COD') {
+            window.location.href = res.payment.redirectUrl;
+            return;
+          }
+          const orderNum = res?.order?.orderNumber || res?.orderNumber;
+          router.push(`/checkout/success?orderNumber=${orderNum}`);
         },
-        onError: (error) => {
+        onError: (error: any) => {
           console.error("Checkout failed:", error);
-          globalDialog.alert("Checkout failed. Please try again.");
+          const msg = error?.response?.data?.error || error?.message || "Checkout failed. Please try again.";
+          globalDialog.alert(msg);
         }
       }
     );
@@ -525,6 +532,12 @@ export default function CheckoutPage() {
               <span className="font-poppins font-semibold text-base text-primary">Total</span>
               <span className="font-poppins font-bold text-xl text-primary">Rs. {total.toLocaleString()}</span>
             </div>
+            
+            {/* Loyalty points earned incentive */}
+            <div className="flex items-center gap-2 bg-emerald-50 text-emerald-800 p-2.5 rounded-xl text-xs font-poppins mt-1">
+              <Award size={16} className="text-emerald-600 shrink-0" />
+              <span>You'll earn <strong>+{Math.round(total * 0.01)} points</strong> (1%) on this order!</span>
+            </div>
           </div>
 
           {/* Payment Methods */}
@@ -588,25 +601,35 @@ export default function CheckoutPage() {
                 </div>
               </label>
 
-              {/* Credit Card / Bank Account */}
+              {/* Credit Card / Bank Account (OnePay) */}
               <label className={`flex flex-col p-4 cursor-pointer hover:bg-stone-50 transition-colors ${paymentMethod === 'onepay' ? 'bg-stone-50/50' : ''}`}>
-                <div className="flex items-center gap-4">
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === 'onepay' ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
-                    {paymentMethod === 'onepay' && <div className="w-2 h-2 rounded-full bg-white" />}
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === 'onepay' ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
+                      {paymentMethod === 'onepay' && <div className="w-2 h-2 rounded-full bg-white" />}
+                    </div>
+                    <input type="radio" value="onepay" {...register("paymentMethod")} className="hidden" />
+                    <div className="flex items-center gap-2">
+                      <CreditCard size={18} className="text-stone-500" />
+                      <span className="font-poppins text-sm text-primary font-medium">Bank Card / Bank Account</span>
+                    </div>
                   </div>
-                  <input type="radio" value="onepay" {...register("paymentMethod")} className="hidden" />
-                  <div className="flex items-center gap-2">
-                    <CreditCard size={18} className="text-stone-500" />
-                    <span className="font-poppins text-sm text-primary font-medium">Bank Card / Bank Account</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] uppercase font-semibold tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded">OnePay</span>
                   </div>
                 </div>
                 
                 {/* Expanded Card Details (OnePay) */}
                 {paymentMethod === 'onepay' && (
                   <div className="ml-9 mt-4 flex flex-col gap-3 animate-in slide-in-from-top-2 duration-300">
-                    <div className="flex items-center gap-2 text-stone-500 bg-white p-3 rounded-lg border border-stone-200 shadow-sm text-sm font-poppins">
-                      <ShieldCheck size={18} className="text-emerald-600" />
-                      Secure checkout powered by OnePay
+                    <div className="flex flex-col gap-2 text-stone-600 bg-white p-3.5 rounded-xl border border-stone-200 shadow-sm text-xs font-poppins">
+                      <div className="flex items-center gap-2 font-medium text-stone-800">
+                        <ShieldCheck size={16} className="text-emerald-600 shrink-0" />
+                        <span>Secure IPG checkout powered by OnePay</span>
+                      </div>
+                      <p className="text-stone-500 leading-relaxed pl-6">
+                        Pay securely with your Visa, MasterCard, LankaPay, or Direct Bank Account Debit via OnePay payment gateway.
+                      </p>
                     </div>
                   </div>
                 )}

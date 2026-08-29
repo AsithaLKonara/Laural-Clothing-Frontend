@@ -64,3 +64,16 @@ export function useTrackOrder() {
     }
   });
 }
+
+export function useOrderConfirmation(orderNumber: string, simulated?: boolean) {
+  return useQuery({
+    queryKey: ["orderConfirmation", orderNumber, simulated],
+    queryFn: async () => {
+      const response = await orderService.getOrderConfirmation(orderNumber, simulated);
+      return response.data;
+    },
+    enabled: !!orderNumber,
+    retry: 2,
+  });
+}
+

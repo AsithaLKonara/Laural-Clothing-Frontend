@@ -61,4 +61,11 @@ export const orderService = {
 
   trackOrder: (orderNumber: string, phone: string) =>
     api.get<any>(`/orders/track?orderNumber=${encodeURIComponent(orderNumber)}&phone=${encodeURIComponent(phone)}`),
+
+  getOrderConfirmation: (orderNumber: string, simulated?: boolean) =>
+    api.get<any>(`/orders/confirmation/${encodeURIComponent(orderNumber)}${simulated ? '?simulated=true' : ''}`),
+
+  getLoyaltyPoints: (phone: string) =>
+    api.get<any>(`/checkout/loyalty/${encodeURIComponent(phone)}`),
 };
+
