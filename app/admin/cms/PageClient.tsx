@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Layout, Image as ImageIcon, FileText, Megaphone, Plus, Trash2,
   GripVertical, Eye, EyeOff, Edit3, Check, X, ChevronDown, ChevronUp,
@@ -437,9 +437,31 @@ function HomepageTab() {
                     <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Section Name</label>
                     <input value={editData.name||""} onChange={e=>setEditData(p=>({...p,name:e.target.value}))} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900"/>
                   </div>
-                  <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-col gap-1.5 md:col-span-2">
                     <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Description</label>
                     <input value={editData.description||""} onChange={e=>setEditData(p=>({...p,description:e.target.value}))} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900"/>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Section Type</label>
+                    <select value={editData.type||"STATIC"} onChange={e=>setEditData(p=>({...p,type:e.target.value}))} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900">
+                      <option value="STATIC">Static / Custom</option>
+                      <option value="FEATURED_PRODUCTS">Featured Products</option>
+                      <option value="CATEGORY_GRID">Category Grid</option>
+                      <option value="NEW_ARRIVALS">New Arrivals</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Config JSON</label>
+                    <textarea 
+                      value={typeof editData.config === 'string' ? editData.config : JSON.stringify(editData.config||{}, null, 2)} 
+                      onChange={e=>{
+                        try { setEditData(p=>({...p,config:JSON.parse(e.target.value)})); } 
+                        catch(err) { setEditData(p=>({...p,config:e.target.value as any})); }
+                      }} 
+                      rows={4} 
+                      className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-mono outline-none focus:ring-1 focus:ring-stone-900" 
+                      placeholder='{"count": 8, "categoryId": "..."}' 
+                    />
                   </div>
                 </div>
                 <div className="flex gap-3 justify-end border-t border-stone-100 pt-4">
@@ -480,9 +502,31 @@ function HomepageTab() {
                 <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Section Name</label>
                 <input value={editData.name||""} onChange={e=>setEditData(p=>({...p,name:e.target.value}))} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900"/>
               </div>
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1.5 md:col-span-2">
                 <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Description</label>
                 <input value={editData.description||""} onChange={e=>setEditData(p=>({...p,description:e.target.value}))} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900"/>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Section Type</label>
+                <select value={editData.type||"STATIC"} onChange={e=>setEditData(p=>({...p,type:e.target.value}))} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900">
+                  <option value="STATIC">Static / Custom</option>
+                  <option value="FEATURED_PRODUCTS">Featured Products</option>
+                  <option value="CATEGORY_GRID">Category Grid</option>
+                  <option value="NEW_ARRIVALS">New Arrivals</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Config JSON</label>
+                <textarea 
+                  value={typeof editData.config === 'string' ? editData.config : JSON.stringify(editData.config||{}, null, 2)} 
+                  onChange={e=>{
+                    try { setEditData(p=>({...p,config:JSON.parse(e.target.value)})); } 
+                    catch(err) { setEditData(p=>({...p,config:e.target.value as any})); }
+                  }} 
+                  rows={4} 
+                  className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-mono outline-none focus:ring-1 focus:ring-stone-900" 
+                  placeholder='{"count": 8, "categoryId": "..."}' 
+                />
               </div>
             </div>
             <div className="flex gap-3 justify-end border-t border-stone-100 pt-4">
@@ -501,6 +545,31 @@ function PagesTab() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<StaticPage>>({});
   const [saved, setSaved] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const insertFormat = (syntax: string) => {
+    if (!textareaRef.current) return;
+    const start = textareaRef.current.selectionStart;
+    const end = textareaRef.current.selectionEnd;
+    const currentContent = editData.content || "";
+    let newContent = currentContent;
+
+    if (syntax === 'B') {
+      newContent = currentContent.substring(0, start) + "**" + currentContent.substring(start, end) + "**" + currentContent.substring(end);
+    } else if (syntax === 'I') {
+      newContent = currentContent.substring(0, start) + "*" + currentContent.substring(start, end) + "*" + currentContent.substring(end);
+    } else if (syntax === 'H1') {
+      newContent = currentContent.substring(0, start) + "\n# " + currentContent.substring(start, end) + currentContent.substring(end);
+    } else if (syntax === 'H2') {
+      newContent = currentContent.substring(0, start) + "\n## " + currentContent.substring(start, end) + currentContent.substring(end);
+    } else if (syntax === '—') {
+      newContent = currentContent.substring(0, start) + "\n\n---\n\n" + currentContent.substring(start, end) + currentContent.substring(end);
+    } else if (syntax === 'Link') {
+      newContent = currentContent.substring(0, start) + "[Link Text](url)" + currentContent.substring(start, end) + currentContent.substring(end);
+    }
+    
+    setEditData(p => ({...p, content: newContent}));
+  };
 
   const startEdit = (page: StaticPage) => { setEditingId(page.id); setEditData({...page}); };
   const cancelEdit = () => { setEditingId(null); setEditData({}); };
@@ -543,15 +612,34 @@ function PagesTab() {
             <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Slug</label>
             <input value={editData.slug||""} onChange={e=>setEditData(p=>({...p,slug:e.target.value}))} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900"/>
           </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">SEO Title (metaTitle)</label>
+            <input value={editData.metaTitle||""} onChange={e=>setEditData(p=>({...p,metaTitle:e.target.value}))} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900" placeholder="Optional SEO title"/>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">SEO Keywords (metaKeywords)</label>
+            <input value={editData.metaKeywords||""} onChange={e=>setEditData(p=>({...p,metaKeywords:e.target.value}))} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900" placeholder="Optional comma-separated keywords"/>
+          </div>
+          <div className="flex flex-col gap-1.5 md:col-span-2">
+            <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">SEO Description (metaDescription)</label>
+            <textarea value={editData.metaDescription||""} onChange={e=>setEditData(p=>({...p,metaDescription:e.target.value}))} rows={2} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900" placeholder="Optional SEO description"/>
+          </div>
         </div>
 
         <div className="bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden">
           <div className="flex gap-2 p-3 border-b border-stone-100 bg-stone-50 flex-wrap">
             {["B", "I", "H1", "H2", "—", "Link"].map(tool => (
-              <button key={tool} className="px-2.5 py-1 bg-white border border-stone-200 text-stone-700 font-inter font-bold text-xs rounded hover:bg-stone-100 transition-colors shadow-sm">{tool}</button>
+              <button 
+                key={tool} 
+                onClick={() => insertFormat(tool)}
+                className="px-2.5 py-1 bg-white border border-stone-200 text-stone-700 font-inter font-bold text-xs rounded hover:bg-stone-100 transition-colors shadow-sm"
+              >
+                {tool}
+              </button>
             ))}
           </div>
           <textarea
+            ref={textareaRef}
             value={editData.content||""}
             onChange={e => setEditData(p=>({...p,content:e.target.value}))}
             rows={20}
