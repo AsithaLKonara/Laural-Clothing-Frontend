@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { X, Send, Users, AlertCircle } from "lucide-react";
+import { X, Send, Users, AlertCircle, Link } from "lucide-react";
+import { notificationsService } from "../../services/notifications.service";
+import { useFlashSales } from "../../hooks/usePromotions";
 
 interface BulkMessageModalProps {
   isOpen: boolean;
@@ -11,6 +13,12 @@ interface BulkMessageModalProps {
 export default function BulkMessageModal({ isOpen, onClose }: BulkMessageModalProps) {
   const [numbers, setNumbers] = useState("");
   const [message, setMessage] = useState("");
+  const [selectedFlashSale, setSelectedFlashSale] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  const { data: flashSalesData } = useFlashSales({ status: 'ACTIVE' });
+  const activeFlashSales = flashSalesData || [];
   
   if (!isOpen) return null;
 
@@ -18,9 +26,42 @@ export default function BulkMessageModal({ isOpen, onClose }: BulkMessageModalPr
   const messageLength = message.length;
   const smsCount = Math.ceil(messageLength / 160) || 1;
 
-  function handleSend() {
-    // TODO: Hook into backend SMS API
-    onClose();
+  async function handleSend() {
+    setError(null);
+    if (!message.trim() || numberCount === 0) {
+      setError("Please provide at least one number and a message.");
+      return;
+    }
+    
+    setIsSending(true);
+    try {
+      const numberArray = numbers.split(",").map(n => n.trim()).filter(n => n.length > 0);
+      await notificationsService.sendBulkSms({
+        numbers: numberArray,
+        message,
+        flashSaleId: selectedFlashSale || undefined
+      });
+      setNumbers("");
+      setMessage("");
+      setSelectedFlashSale("");
+      onClose();
+    } catch (err: any) {
+      setError(err?.response?.data?.error || "Failed to send SMS");
+    } finally {
+      setIsSending(false);
+    }
+  }
+
+  function handleFlashSaleSelect(e: React.ChangeEvent<HTMLSelectElement>) {
+    const fsId = e.target.value;
+    setSelectedFlashSale(fsId);
+    
+    if (fsId) {
+      const fs = activeFlashSales.find((s: any) => s.id === fsId);
+      if (fs && !message) {
+        setMessage(`Flash Sale: ${fs.name}! Shop now at laural.lk`);
+      }
+    }
   }
 
   return (
@@ -60,9 +101,9 @@ export default function BulkMessageModal({ isOpen, onClose }: BulkMessageModalPr
 
           <div className="flex flex-col gap-2">
             <label className="font-inter text-xs font-semibold text-stone-700 flex justify-between">
-              Message Body
-              <span className={`font-normal ${messageLength > 160 ? "text-amber-600" : "text-stone-500"}`}>
-                {messageLength} chars ({smsCount} SMS/person)
+              Message Content
+              <span className={`font-normal ${smsCount > 1 ? 'text-amber-600' : 'text-stone-500'}`}>
+                {messageLength} chars ({smsCount} SMS)
               </span>
             </label>
             <textarea
@@ -72,15 +113,39 @@ export default function BulkMessageModal({ isOpen, onClose }: BulkMessageModalPr
               placeholder="Hi there! Get 20% off all oversized tees this weekend with code TEE20..."
               className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all font-inter resize-none"
             />
-            {messageLength > 160 && (
-              <div className="flex items-start gap-2 bg-amber-50 p-3 rounded-lg border border-amber-200 mt-1">
-                <AlertCircle size={14} className="text-amber-600 mt-0.5 shrink-0" />
-                <p className="text-xs text-amber-700 font-inter leading-relaxed">
-                  Your message exceeds 160 characters and will be split into multiple SMS segments, which may increase billing costs.
-                </p>
-              </div>
-            )}
           </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="font-inter text-xs font-semibold text-stone-700 flex items-center gap-1.5">
+              <Link size={12} /> Link to Flash Sale (Optional)
+            </label>
+            <select
+              value={selectedFlashSale}
+              onChange={handleFlashSaleSelect}
+              className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all font-inter bg-white appearance-none"
+            >
+              <option value="">-- None --</option>
+              {activeFlashSales.map((fs: any) => (
+                <option key={fs.id} value={fs.id}>{fs.name} ({fs.discount}% off)</option>
+              ))}
+            </select>
+          </div>
+          
+          {error && (
+            <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg flex items-center gap-2">
+              <AlertCircle size={16} />
+              {error}
+            </div>
+          )}
+
+          {messageLength > 160 && (
+            <div className="flex items-start gap-2 bg-amber-50 p-3 rounded-lg border border-amber-200 mt-1">
+              <AlertCircle size={14} className="text-amber-600 mt-0.5 shrink-0" />
+              <p className="text-xs text-amber-700 font-inter leading-relaxed">
+                Your message exceeds 160 characters and will be split into multiple SMS segments, which may increase billing costs.
+              </p>
+            </div>
+          )}
 
           <div className="bg-stone-50 border border-stone-200 rounded-xl p-4 flex flex-col gap-3">
             <h3 className="font-inter text-xs font-bold text-stone-700 uppercase tracking-wider">Campaign Summary</h3>
@@ -95,20 +160,28 @@ export default function BulkMessageModal({ isOpen, onClose }: BulkMessageModalPr
               </div>
             </div>
           </div>
-
         </div>
 
-        <div className="border-t border-stone-200 px-6 py-4 bg-stone-50 shrink-0 flex items-center justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 bg-white border border-stone-300 rounded-lg font-inter font-medium text-sm text-stone-700 hover:bg-stone-50 transition-colors shadow-sm">
-            Cancel
-          </button>
-          <button
-            onClick={handleSend}
-            disabled={numberCount === 0 || messageLength === 0}
-            className="px-5 py-2 bg-stone-900 text-white rounded-lg font-inter font-medium text-sm hover:bg-stone-800 transition-colors shadow-md shadow-stone-900/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            <Send size={14} /> Send Message
-          </button>
+        <div className="p-4 sm:p-6 border-t border-stone-200 bg-stone-50 shrink-0 flex items-center justify-between">
+          <p className="text-xs text-stone-500 font-inter">
+            Messages will be queued for delivery.
+          </p>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onClose}
+              disabled={isSending}
+              className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSend}
+              disabled={isSending || numberCount === 0 || message.length === 0}
+              className="px-6 py-2 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {isSending ? "Sending..." : "Send SMS"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
