@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { X, Bell, ImagePlus, Link } from "lucide-react";
+import { X, Bell, ImagePlus, Link, AlertCircle } from "lucide-react";
+import { notificationsService } from "../../services/notifications.service";
+import { useFlashSales } from "../../hooks/usePromotions";
 
 interface PushNotificationModalProps {
   isOpen: boolean;
@@ -12,12 +14,53 @@ export default function PushNotificationModal({ isOpen, onClose }: PushNotificat
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [link, setLink] = useState("");
+  const [selectedFlashSale, setSelectedFlashSale] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const { data: flashSalesData } = useFlashSales({ status: 'ACTIVE' });
+  const activeFlashSales = flashSalesData || [];
   
   if (!isOpen) return null;
 
-  function handleSend() {
-    // TODO: Hook into backend Push Notification API (Firebase FCM etc)
-    onClose();
+  async function handleSend() {
+    setError(null);
+    if (!title.trim() || !body.trim()) {
+      setError("Please provide a title and body for the push notification.");
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      await notificationsService.broadcastPush({
+        title,
+        body,
+        url: link || undefined,
+        flashSaleId: selectedFlashSale || undefined
+      });
+      setTitle("");
+      setBody("");
+      setLink("");
+      setSelectedFlashSale("");
+      onClose();
+    } catch (err: any) {
+      setError(err?.response?.data?.error || "Failed to broadcast push notification");
+    } finally {
+      setIsSending(false);
+    }
+  }
+
+  function handleFlashSaleSelect(e: React.ChangeEvent<HTMLSelectElement>) {
+    const fsId = e.target.value;
+    setSelectedFlashSale(fsId);
+    
+    if (fsId) {
+      const fs = activeFlashSales.find((s: any) => s.id === fsId);
+      if (fs) {
+        if (!title) setTitle(`Flash Sale: ${fs.name}!`);
+        if (!link) setLink(`https://laural.lk/sale`);
+      }
+    }
   }
 
   return (
@@ -68,6 +111,22 @@ export default function PushNotificationModal({ isOpen, onClose }: PushNotificat
 
             <div className="flex flex-col gap-2">
               <label className="font-inter text-xs font-semibold text-stone-700 flex items-center gap-1.5">
+                <Link size={12} /> Link to Flash Sale (Optional)
+              </label>
+              <select
+                value={selectedFlashSale}
+                onChange={handleFlashSaleSelect}
+                className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all font-inter bg-white appearance-none"
+              >
+                <option value="">-- None --</option>
+                {activeFlashSales.map((fs: any) => (
+                  <option key={fs.id} value={fs.id}>{fs.name} ({fs.discount}% off)</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="font-inter text-xs font-semibold text-stone-700 flex items-center gap-1.5">
                 <Link size={12} /> Target URL (Optional)
               </label>
               <input
@@ -89,18 +148,24 @@ export default function PushNotificationModal({ isOpen, onClose }: PushNotificat
                 <input type="file" accept="image/*" className="hidden" />
               </label>
             </div>
+            {error && (
+              <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg flex items-center gap-2">
+                <AlertCircle size={16} />
+                {error}
+              </div>
+            )}
           </div>
 
           <div className="mt-auto border-t border-stone-200 px-6 py-4 bg-stone-50 shrink-0 flex items-center justify-end gap-3">
-            <button onClick={onClose} className="px-4 py-2 bg-white border border-stone-300 rounded-lg font-inter font-medium text-sm text-stone-700 hover:bg-stone-50 transition-colors shadow-sm hidden md:block">
+            <button onClick={onClose} disabled={isSending} className="px-4 py-2 bg-white border border-stone-300 rounded-lg font-inter font-medium text-sm text-stone-700 hover:bg-stone-50 transition-colors shadow-sm hidden md:block">
               Cancel
             </button>
             <button
               onClick={handleSend}
-              disabled={!title.trim() || !body.trim()}
+              disabled={isSending || !title.trim() || !body.trim()}
               className="px-5 py-2 bg-stone-900 text-white rounded-lg font-inter font-medium text-sm hover:bg-stone-800 transition-colors shadow-md shadow-stone-900/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              <Bell size={14} /> Send Now
+              <Bell size={14} /> {isSending ? "Sending..." : "Send Now"}
             </button>
           </div>
         </div>
