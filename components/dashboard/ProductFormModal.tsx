@@ -22,6 +22,8 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createProductSchema, CreateProductFormData } from "@/lib/validations";
 import { useCreateProduct, useUpdateProduct } from "@/hooks/useProducts";
+import MediaPickerModal from "@/components/admin/MediaPickerModal";
+import Image from "next/image";
 
 interface Variant {
   id: string;
@@ -84,6 +86,9 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
   const [newColorHex, setNewColorHex] = useState("#000000");
   const [isAddingSize, setIsAddingSize] = useState(false);
   const [isAddingColor, setIsAddingColor] = useState(false);
+  const [images, setImages] = useState<string[]>(["", "", "", ""]);
+  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+  const [activeImageSlot, setActiveImageSlot] = useState<number | null>(null);
 
   const createProductMutation = useCreateProduct();
   const updateProductMutation = useUpdateProduct();
@@ -145,6 +150,11 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
           compareAtPrice: v.salePrice ? v.salePrice.toString() : "",
         }));
 
+        if (firstVariant.featuredImage) {
+          const newImages = [firstVariant.featuredImage, ...(firstVariant.gallery || []), "", "", ""].slice(0, 4);
+          setImages(newImages);
+        }
+
         const sizes = Array.from(new Set(loadedVariants.map((v: any) => v.size).filter(Boolean))) as string[];
         const colors = Array.from(new Set(loadedVariants.map((v: any) => v.color).filter(Boolean))) as string[];
         
@@ -163,6 +173,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
       setSelectedSizes([]);
       setSelectedColors([]);
       setVariants([]);
+      setImages(["", "", "", ""]);
       setActiveTab("basic");
     }
   }, [productToEdit, isOpen, setValue]);
@@ -249,6 +260,8 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
         salePrice: v.compareAtPrice ? parseFloat(v.compareAtPrice) : null,
         quantity: Object.values(v.stock).reduce((sum, qty) => sum + qty, 0),
         stockStatus: "instock",
+        featuredImage: images[0] || null,
+        gallery: images.slice(1).filter(url => url !== ""),
       }));
 
       const payload = {
@@ -407,11 +420,34 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
               <div className="flex flex-col gap-6">
                 <div className="grid grid-cols-4 gap-4">
                   {[...Array(4)].map((_, i) => (
-                    <label key={i} className={`aspect-square border-2 border-dashed border-stone-300 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-stone-50 hover:border-accent transition-all group ${i === 0 ? "col-span-2 row-span-2" : ""}`}>
-                      <ImagePlus size={i === 0 ? 32 : 20} className="text-stone-300 group-hover:text-accent transition-colors" />
-                      <span className="font-inter text-xs text-stone-400 group-hover:text-accent transition-colors">{i === 0 ? "Main Image" : "Image " + (i + 1)}</span>
-                      <input type="file" accept="image/*" className="hidden" />
-                    </label>
+                    <div 
+                      key={i} 
+                      onClick={() => { setActiveImageSlot(i); setIsMediaModalOpen(true); }}
+                      className={`relative aspect-square border-2 border-dashed border-stone-300 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-stone-50 hover:border-accent transition-all group overflow-hidden ${i === 0 ? "col-span-2 row-span-2" : ""}`}
+                    >
+                      {images[i] ? (
+                        <>
+                          <Image src={images[i]} alt={`Product Image ${i + 1}`} fill className="object-cover" />
+                          <div className="absolute inset-0 bg-stone-900/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                            <p className="font-inter text-white text-xs font-medium">Change Image</p>
+                          </div>
+                          <button 
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              setImages(prev => { const n = [...prev]; n[i] = ""; return n; });
+                            }}
+                            className="absolute top-2 right-2 bg-white/80 backdrop-blur-sm rounded-full p-1 text-stone-700 hover:bg-white transition-colors z-20"
+                          >
+                            <X size={14} />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <ImagePlus size={i === 0 ? 32 : 20} className="text-stone-300 group-hover:text-accent transition-colors" />
+                          <span className="font-inter text-xs text-stone-400 group-hover:text-accent transition-colors">{i === 0 ? "Main Image" : "Image " + (i + 1)}</span>
+                        </>
+                      )}
+                    </div>
                   ))}
                 </div>
                 <p className="text-xs text-stone-400 font-inter">Upload high-quality images. First image will be the primary product photo. Recommended: 800×1000px, JPG/PNG/WEBP.</p>
@@ -822,23 +858,21 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
           </div>
 
           {/* Footer */}
-          <div className="border-t border-stone-200 px-8 py-5 bg-stone-50 shrink-0 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-stone-500 text-sm font-inter">
-              <span className="w-2 h-2 bg-amber-400 rounded-full"></span>
-              Draft mode — product will not be published until you click Save Product
-            </div>
-            <div className="flex gap-3">
-              <button type="button" onClick={onClose} className="px-5 py-2.5 border border-stone-300 rounded-lg font-inter font-medium text-sm text-stone-700 hover:bg-stone-100 transition-colors">
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={createProductMutation.isPending || updateProductMutation.isPending}
-                className="px-6 py-2.5 bg-stone-900 text-white rounded-lg font-inter font-semibold text-sm hover:bg-stone-800 transition-colors shadow-md shadow-stone-900/20 disabled:opacity-50"
-              >
-                {createProductMutation.isPending || updateProductMutation.isPending ? "Saving..." : "Save Product"}
-              </button>
-            </div>
+          <div className="border-t border-stone-200 px-8 py-5 bg-stone-50 shrink-0 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-2.5 bg-white border border-stone-300 rounded-lg font-inter font-medium text-sm text-stone-700 hover:bg-stone-50 transition-colors shadow-sm"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={createProductMutation.isPending || updateProductMutation.isPending}
+              className="px-8 py-2.5 bg-stone-900 text-white rounded-lg font-inter font-medium text-sm hover:bg-stone-800 transition-colors shadow-md shadow-stone-900/20 disabled:opacity-50 flex items-center gap-2"
+            >
+              {(createProductMutation.isPending || updateProductMutation.isPending) ? "Saving..." : "Save Product"}
+            </button>
           </div>
         </form>
       </div>
@@ -866,6 +900,19 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
           box-shadow: 0 0 0 2px rgba(168, 162, 158, 0.15);
         }
       `}</style>
+      
+      {isMediaModalOpen && (
+        <MediaPickerModal
+          onClose={() => { setIsMediaModalOpen(false); setActiveImageSlot(null); }}
+          onSelect={(url) => {
+            if (activeImageSlot !== null) {
+              setImages(prev => { const n = [...prev]; n[activeImageSlot] = url; return n; });
+            }
+            setIsMediaModalOpen(false);
+          }}
+          title="Select Product Image"
+        />
+      )}
     </div>
   );
 }

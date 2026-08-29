@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, ImagePlus } from "lucide-react";
+import Image from "next/image";
 
-import { useEffect } from "react";
 import { useCreateCategory, useUpdateCategory } from "@/hooks/useCategories";
 import { Category } from "@/types/category";
+import MediaPickerModal from "@/components/admin/MediaPickerModal";
 
 interface CategoryFormModalProps {
   isOpen: boolean;
@@ -22,7 +23,9 @@ export default function CategoryFormModal({ isOpen, onClose, categoryToEdit }: C
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
   const [description, setDescription] = useState("");
-  const [status, setStatus] = useState("Active");
+  const [imageUrl, setImageUrl] = useState("");
+  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+  // status is not used in DB for categories right now
 
   const createCategoryMutation = useCreateCategory();
   const updateCategoryMutation = useUpdateCategory();
@@ -32,11 +35,13 @@ export default function CategoryFormModal({ isOpen, onClose, categoryToEdit }: C
       setName(categoryToEdit.name || "");
       setSlug(categoryToEdit.slug || "");
       setDescription(categoryToEdit.description || "");
+      setImageUrl(categoryToEdit.imageUrl || "");
       setSlugEdited(true);
     } else if (!categoryToEdit && isOpen) {
       setName("");
       setSlug("");
       setDescription("");
+      setImageUrl("");
       setSlugEdited(false);
     }
   }, [categoryToEdit, isOpen]);
@@ -54,6 +59,7 @@ export default function CategoryFormModal({ isOpen, onClose, categoryToEdit }: C
         name,
         slug: slug || undefined,
         description,
+        imageUrl: imageUrl || undefined,
       };
 
       if (categoryToEdit) {
@@ -73,7 +79,7 @@ export default function CategoryFormModal({ isOpen, onClose, categoryToEdit }: C
       <div className="absolute inset-0 bg-stone-950/60 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal Content */}
-      <div className="relative w-full max-w-[600px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-[90vh]">
+      <div className="relative w-full max-w-[600px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-[90vh] animate-in zoom-in-95 duration-200">
         
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200 bg-stone-50 shrink-0">
@@ -89,6 +95,37 @@ export default function CategoryFormModal({ isOpen, onClose, categoryToEdit }: C
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 custom-scrollbar">
           
+          <div className="flex flex-col gap-2">
+            <label className="font-inter text-xs font-semibold text-stone-700">Category Cover Image</label>
+            <div 
+              onClick={() => setIsMediaModalOpen(true)}
+              className="w-full h-40 rounded-xl border-2 border-dashed border-stone-200 hover:border-stone-400 hover:bg-stone-50 transition-colors flex flex-col items-center justify-center cursor-pointer overflow-hidden relative group"
+            >
+              {imageUrl ? (
+                <>
+                  <Image src={imageUrl} alt="Category Cover" fill className="object-cover" />
+                  <div className="absolute inset-0 bg-stone-900/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <p className="font-inter text-white text-xs font-medium">Change Image</p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <ImagePlus size={24} className="text-stone-400 mb-2" />
+                  <p className="font-inter text-sm font-medium text-stone-600">Browse Media</p>
+                  <p className="font-inter text-xs text-stone-400">Click to select from library</p>
+                </>
+              )}
+            </div>
+            {imageUrl && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); setImageUrl(""); }}
+                className="self-start text-[11px] font-inter font-medium text-red-500 hover:text-red-700"
+              >
+                Remove Image
+              </button>
+            )}
+          </div>
+
           <div className="flex flex-col gap-2">
             <label className="font-inter text-xs font-semibold text-stone-700">Category Name <span className="text-red-500">*</span></label>
             <input
@@ -143,6 +180,14 @@ export default function CategoryFormModal({ isOpen, onClose, categoryToEdit }: C
           </button>
         </div>
       </div>
+      
+      {isMediaModalOpen && (
+        <MediaPickerModal
+          onClose={() => setIsMediaModalOpen(false)}
+          onSelect={(url) => { setImageUrl(url); setIsMediaModalOpen(false); }}
+          title="Select Category Image"
+        />
+      )}
     </div>
   );
 }

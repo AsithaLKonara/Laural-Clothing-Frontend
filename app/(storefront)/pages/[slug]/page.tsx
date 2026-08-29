@@ -26,8 +26,9 @@ async function getPageData(slug: string) {
   }
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const page = await getPageData(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const page = await getPageData(slug);
   
   if (!page) {
     return { title: "Page Not Found - Laural Clothing" };
@@ -43,8 +44,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function StaticPage({ params }: { params: { slug: string } }) {
-  const page = await getPageData(params.slug);
+export default async function StaticPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const page = await getPageData(slug);
   
   if (!page) {
     notFound();

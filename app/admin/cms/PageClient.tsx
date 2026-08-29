@@ -384,6 +384,7 @@ function HomepageTab() {
   const { sections, isLoadingSections, updateHomepageSection, createHomepageSection } = useCms();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<HomepageSection>>({});
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
 
   const toggleVisible = async (id: string) => {
     const sec = sections.find((s: HomepageSection) => s.id === id);
@@ -450,8 +451,13 @@ function HomepageTab() {
                       <option value="NEW_ARRIVALS">New Arrivals</option>
                     </select>
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Config JSON</label>
+                  <div className="flex flex-col gap-1.5 md:col-span-2">
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Config JSON</label>
+                      <button type="button" onClick={() => setShowMediaPicker(true)} className="text-xs font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 px-2 py-1 rounded flex items-center gap-1 border border-stone-200">
+                        <ImageIcon size={12}/> Pick Image for Config
+                      </button>
+                    </div>
                     <textarea 
                       value={typeof editData.config === 'string' ? editData.config : JSON.stringify(editData.config||{}, null, 2)} 
                       onChange={e=>{
@@ -515,8 +521,13 @@ function HomepageTab() {
                   <option value="NEW_ARRIVALS">New Arrivals</option>
                 </select>
               </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Config JSON</label>
+              <div className="flex flex-col gap-1.5 md:col-span-2">
+                <div className="flex justify-between items-center mb-1">
+                  <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Config JSON</label>
+                  <button type="button" onClick={() => setShowMediaPicker(true)} className="text-xs font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 px-2 py-1 rounded flex items-center gap-1 border border-stone-200">
+                    <ImageIcon size={12}/> Pick Image for Config
+                  </button>
+                </div>
                 <textarea 
                   value={typeof editData.config === 'string' ? editData.config : JSON.stringify(editData.config||{}, null, 2)} 
                   onChange={e=>{
@@ -536,6 +547,25 @@ function HomepageTab() {
           </div>
         )}
       </div>
+
+      {showMediaPicker && (
+        <MediaPickerModal
+          title="Select Section Image"
+          onClose={() => setShowMediaPicker(false)}
+          onSelect={(url) => {
+            setEditData(p => {
+              let currentConfig = {};
+              if (typeof p.config === 'object' && p.config !== null) {
+                currentConfig = p.config;
+              } else if (typeof p.config === 'string') {
+                try { currentConfig = JSON.parse(p.config); } catch (e) {}
+              }
+              return { ...p, config: { ...currentConfig, image: url } };
+            });
+            setShowMediaPicker(false);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -545,6 +575,7 @@ function PagesTab() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<StaticPage>>({});
   const [saved, setSaved] = useState(false);
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const insertFormat = (syntax: string) => {
@@ -624,6 +655,20 @@ function PagesTab() {
             <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">SEO Description (metaDescription)</label>
             <textarea value={editData.metaDescription||""} onChange={e=>setEditData(p=>({...p,metaDescription:e.target.value}))} rows={2} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900" placeholder="Optional SEO description"/>
           </div>
+          <div className="flex flex-col gap-1.5 md:col-span-2">
+            <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">OG Image</label>
+            <div className="flex gap-2">
+              <input value={editData.ogImage||""} onChange={e=>setEditData(p=>({...p,ogImage:e.target.value}))} className="flex-1 border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900" placeholder="Image URL"/>
+              <button type="button" onClick={() => setShowMediaPicker(true)} className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-200 rounded-lg font-inter font-semibold text-xs transition-colors whitespace-nowrap">
+                Browse Media
+              </button>
+            </div>
+            {editData.ogImage && (
+              <div className="relative w-32 h-20 rounded-lg border border-stone-200 overflow-hidden mt-1">
+                <Image src={editData.ogImage} alt="OG Preview" fill className="object-cover" />
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden">
@@ -651,6 +696,16 @@ function PagesTab() {
           <p className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2">Preview</p>
           <div className="font-inter text-sm text-stone-700 leading-relaxed whitespace-pre-wrap">{editData.content}</div>
         </div>
+        {showMediaPicker && (
+          <MediaPickerModal
+            title="Select OG Image"
+            onClose={() => setShowMediaPicker(false)}
+            onSelect={(url) => {
+              setEditData(p => ({ ...p, ogImage: url }));
+              setShowMediaPicker(false);
+            }}
+          />
+        )}
       </div>
     );
   }

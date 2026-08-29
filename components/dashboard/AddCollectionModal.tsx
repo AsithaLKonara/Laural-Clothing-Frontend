@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { X, Layers, Image as ImageIcon } from "lucide-react";
 import { useCreateCollection, useUpdateCollection } from "@/hooks/useAdminCollections";
 import { Collection } from "@/services/collections.service";
+import MediaPickerModal from "@/components/admin/MediaPickerModal";
 
 interface AddCollectionModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export default function AddCollectionModal({ isOpen, onClose, collectionToEdit }
   const [ruleField, setRuleField] = useState("price");
   const [ruleOp, setRuleOp] = useState(">");
   const [ruleVal, setRuleVal] = useState("");
+  const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
 
   const createMutation = useCreateCollection();
   const updateMutation = useUpdateCollection();
@@ -126,13 +128,21 @@ export default function AddCollectionModal({ isOpen, onClose, collectionToEdit }
               Cover Image URL
               <span className="font-normal text-stone-400 text-xs">(optional — auto-picked from products if blank)</span>
             </label>
-            <input
-              type="url"
-              value={imageUrl}
-              onChange={e => setImageUrl(e.target.value)}
-              placeholder="https://example.com/image.jpg or leave blank for auto-selection"
-              className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm font-inter outline-none focus:ring-2 focus:ring-stone-900 bg-white"
-            />
+            <div className="flex gap-2">
+              <input
+                type="url"
+                value={imageUrl}
+                onChange={e => setImageUrl(e.target.value)}
+                placeholder="https://example.com/image.jpg or leave blank"
+                className="flex-1 border border-stone-200 rounded-lg px-3 py-2.5 text-sm font-inter outline-none focus:ring-2 focus:ring-stone-900 bg-white"
+              />
+              <button
+                onClick={() => setIsMediaModalOpen(true)}
+                className="px-4 py-2.5 bg-stone-100 text-stone-700 border border-stone-200 rounded-lg font-inter text-sm font-medium hover:bg-stone-200 transition-colors whitespace-nowrap"
+              >
+                Browse Media
+              </button>
+            </div>
             {imageUrl && (
               <div className="relative w-full h-32 rounded-lg overflow-hidden border border-stone-200 mt-1">
                 <img src={imageUrl} alt="Cover preview" className="w-full h-full object-cover" />
@@ -219,6 +229,13 @@ export default function AddCollectionModal({ isOpen, onClose, collectionToEdit }
           </button>
         </div>
       </div>
+      {isMediaModalOpen && (
+        <MediaPickerModal
+          onClose={() => setIsMediaModalOpen(false)}
+          onSelect={(url) => { setImageUrl(url); setIsMediaModalOpen(false); }}
+          title="Select Collection Cover"
+        />
+      )}
     </div>
   );
 }
