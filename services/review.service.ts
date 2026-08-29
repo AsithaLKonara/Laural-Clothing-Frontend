@@ -8,7 +8,9 @@ export interface Review {
   title?: string;
   comment?: string;
   images: string[];
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SPAM';
+  adminReply?: string;
+  adminReplyAt?: string;
   isVerifiedPurchase: boolean;
   createdAt: string;
   updatedAt: string;
@@ -61,13 +63,18 @@ export const reviewService = {
     return response.data;
   },
 
-  getReviewStats: async (): Promise<{ pending: number; approved: number; rejected: number; averageRating: number }> => {
+  getReviewStats: async (): Promise<{ pending: number; approved: number; rejected: number; spam: number; averageRating: number }> => {
     const response = await api.get('/reviews/stats');
     return response.data;
   },
 
-  updateReviewStatus: async (id: string, status: 'PENDING' | 'APPROVED' | 'REJECTED'): Promise<Review> => {
+  updateReviewStatus: async (id: string, status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SPAM'): Promise<Review> => {
     const response = await api.patch(`/reviews/${id}/status`, { status });
+    return response.data;
+  },
+
+  addAdminReply: async (id: string, reply: string): Promise<Review> => {
+    const response = await api.post(`/reviews/${id}/reply`, { reply });
     return response.data;
   },
 

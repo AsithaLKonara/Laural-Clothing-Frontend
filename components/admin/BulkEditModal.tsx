@@ -2,9 +2,11 @@
 
 import React, { useState } from "react";
 import { Edit, X } from "lucide-react";
+import { useBulkEditProducts } from "@/hooks/useProducts";
 
 interface BulkEditModalProps {
   selectedProducts: {
+    id: string;
     sku: string;
     name: string;
   }[];
@@ -13,17 +15,22 @@ interface BulkEditModalProps {
 }
 
 export default function BulkEditModal({ selectedProducts, onClose, onSuccess }: BulkEditModalProps) {
-  const [isProcessing, setIsProcessing] = useState(false);
+  const bulkEditMutation = useBulkEditProducts();
   const [status, setStatus] = useState<string>("no_change");
   const [category, setCategory] = useState<string>("no_change");
   const [collection, setCollection] = useState<string>("no_change");
 
-  const handleProcess = () => {
-    setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      onSuccess();
-    }, 1000);
+  const handleProcess = async () => {
+    const productIds = selectedProducts.map(p => p.id);
+    await bulkEditMutation.mutateAsync({
+      productIds,
+      data: {
+        status: status !== "no_change" ? status : undefined,
+        categoryId: category !== "no_change" ? category : undefined,
+        collectionId: collection !== "no_change" ? collection : undefined
+      }
+    });
+    onSuccess();
   };
 
   return (
@@ -90,11 +97,11 @@ export default function BulkEditModal({ selectedProducts, onClose, onSuccess }: 
         </div>
 
         <div className="p-6 border-t border-stone-200 bg-white flex justify-end gap-3 shrink-0">
-          <button onClick={onClose} disabled={isProcessing} className="px-5 py-2.5 bg-white border border-stone-200 text-stone-700 font-inter font-medium text-sm rounded-lg hover:bg-stone-50 transition-colors shadow-sm disabled:opacity-50">
+          <button onClick={onClose} disabled={bulkEditMutation.isPending} className="px-5 py-2.5 bg-white border border-stone-200 text-stone-700 font-inter font-medium text-sm rounded-lg hover:bg-stone-50 transition-colors shadow-sm disabled:opacity-50">
             Cancel
           </button>
-          <button onClick={handleProcess} disabled={isProcessing} className="px-8 py-2.5 bg-stone-900 text-white font-inter font-medium text-sm rounded-lg hover:bg-stone-800 transition-colors shadow-sm flex items-center gap-2 disabled:opacity-80">
-            {isProcessing ? "Saving..." : `Save Changes`}
+          <button onClick={handleProcess} disabled={bulkEditMutation.isPending} className="px-8 py-2.5 bg-stone-900 text-white font-inter font-medium text-sm rounded-lg hover:bg-stone-800 transition-colors shadow-sm flex items-center gap-2 disabled:opacity-80">
+            {bulkEditMutation.isPending ? "Saving..." : `Save Changes`}
           </button>
         </div>
       </div>

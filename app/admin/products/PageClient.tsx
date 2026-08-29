@@ -85,7 +85,7 @@ export default function ProductsPage() {
         </button>
       ),
     },
-    { header: "Category", accessor: "categoryId" as const },
+    { header: "Category", accessor: (row: any) => row.category?.name || <span className="text-stone-400">Uncategorized</span> },
     { 
       header: "Price", 
       accessor: (row: any) => {
@@ -108,6 +108,9 @@ export default function ProductsPage() {
     {
       header: "Status",
       accessor: (row: any) => {
+        const statusStr = row.status || "ACTIVE";
+        if (statusStr === "DRAFT") return <StatusBadge label="Draft" variant="warning" />;
+        if (statusStr === "ARCHIVED") return <StatusBadge label="Archived" variant="neutral" />;
         const inStock = row.variants?.some((v: any) => v.stockStatus === 'instock' && v.quantity > 0) ?? false;
         return <StatusBadge label={inStock ? "In Stock" : "Out of Stock"} variant={inStock ? "success" : "error"} />;
       },
@@ -218,7 +221,7 @@ export default function ProductsPage() {
 
       {showBulkEditModal && (
         <BulkEditModal 
-          selectedProducts={products.filter((p: Product) => selectedProducts.includes(p.id)).map((p: Product) => ({ sku: (p as any).sku || p.id, name: p.name }))}
+          selectedProducts={products.filter((p: Product) => selectedProducts.includes(p.id)).map((p: Product) => ({ id: p.id, sku: (p as any).sku || p.id, name: p.name }))}
           onClose={() => setShowBulkEditModal(false)}
           onSuccess={() => {
             setShowBulkEditModal(false);

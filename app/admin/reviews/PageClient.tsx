@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { Search, Star, Check, X, Flag, MessageSquare, Eye } from "lucide-react";
 import PageHeader from "@/components/admin/PageHeader";
-import { useAllReviews, useUpdateReviewStatus, useReviewStats } from "@/hooks/useReviews";
+import { useAllReviews, useUpdateReviewStatus, useReviewStats, useAddReviewReply } from "@/hooks/useReviews";
 
 // Mock data removed in favor of real API
 
@@ -11,6 +11,7 @@ const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }>
   PENDING:  { bg: "bg-orange-100", text: "text-orange-700", label: "Pending" },
   APPROVED: { bg: "bg-emerald-100", text: "text-emerald-700", label: "Approved" },
   REJECTED: { bg: "bg-red-100",  text: "text-red-700",  label: "Rejected" },
+  SPAM: { bg: "bg-stone-200", text: "text-stone-800", label: "Spam" },
 };
 
 function StarRating({ rating }: { rating: number }) {
@@ -35,6 +36,8 @@ export default function AdminReviewsPage() {
   const [limit] = useState(20);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [replyingToId, setReplyingToId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -51,6 +54,7 @@ export default function AdminReviewsPage() {
   const { data: stats } = useReviewStats();
   const { data: response, isLoading } = useAllReviews(filter, page, limit, debouncedSearch);
   const { mutateAsync: updateStatus } = useUpdateReviewStatus();
+  const { mutateAsync: addReply } = useAddReviewReply();
 
   const serverReviews = response?.data || [];
   const totalReviews = response?.total || 0;
@@ -68,11 +72,13 @@ export default function AdminReviewsPage() {
     status: r.status,
     verified: r.isVerifiedPurchase,
     helpful: 0,
-    flagged: false,
+    flagged: r.status === "SPAM",
+    adminReply: r.adminReply,
   }));
 
   const displayed = reviews; // Filtering is now server-side
   const pendingCount = stats?.pending || 0;
+  const spamCount = stats?.spam || 0;
 
   const handleExportCsv = async () => {
     const query = new URLSearchParams();
@@ -113,9 +119,20 @@ export default function AdminReviewsPage() {
     setSelectedIds([]);
   };
 
+  const markSpam = async (id: string) => {
+    await updateStatus({ id, status: "SPAM" });
+  };
+
   const bulkReject = async () => {
     for (const id of selectedIds) {
       await updateStatus({ id, status: "REJECTED" });
+    }
+    setSelectedIds([]);
+  };
+
+  const bulkSpam = async () => {
+    for (const id of selectedIds) {
+      await updateStatus({ id, status: "SPAM" });
     }
     setSelectedIds([]);
   };
@@ -163,7 +180,7 @@ export default function AdminReviewsPage() {
           />
         </div>
         <div className="flex gap-2 flex-wrap">
-          {["ALL", "PENDING", "APPROVED", "REJECTED"].map((f) => (
+          {["ALL", "PENDING", "APPROVED", "REJECTED", "SPAM"].map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -173,6 +190,11 @@ export default function AdminReviewsPage() {
             >
               {f === "ALL" ? "All Reviews" : f.charAt(0) + f.slice(1).toLowerCase()}
               {f === "PENDING" && pendingCount > 0 && (
+                <span className="ml-2 bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                  {pendingCount}
+                </span>
+              )}
+              {f === "SPAM" && spamCount > 0 && (
                 <span className="ml-2 bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
                   {pendingCount}
                 </span>
@@ -209,10 +231,10 @@ export default function AdminReviewsPage() {
                 const st = STATUS_STYLES[review.status];
                 const isExpanded = expandedId === review.id;
                 return (
-                  <tr
-                    key={review.id}
-                    className={`transition-colors group ${selectedIds.includes(review.id) ? "bg-stone-50" : "hover:bg-stone-50/60"}`}
-                  >
+                  <Fragment key={review.id}>
+                    <tr
+                      className={`transition-colors group ${selectedIds.includes(review.id) ? "bg-stone-50" : "hover:bg-stone-50/60"}`}
+                    >
                     <td className="py-4 px-6 align-top">
                       <input
                         type="checkbox"
@@ -285,9 +307,17 @@ export default function AdminReviewsPage() {
                             >
                               <X size={15} />
                             </button>
+                            <button
+                              onClick={() => markSpam(review.id)}
+                              title="Mark as Spam"
+                              className="w-8 h-8 flex items-center justify-center bg-stone-100 text-stone-600 border border-stone-300 rounded-lg hover:bg-stone-200 transition-colors shadow-sm"
+                            >
+                              <Flag size={14} />
+                            </button>
                           </>
                         )}
                         <button
+                          onClick={() => { setReplyingToId(review.id); setReplyText(review.adminReply || ""); }}
                           title="Reply"
                           className="w-8 h-8 flex items-center justify-center bg-stone-50 text-stone-500 border border-stone-200 rounded-lg hover:bg-stone-100 transition-colors shadow-sm"
                         >
@@ -296,6 +326,48 @@ export default function AdminReviewsPage() {
                       </div>
                     </td>
                   </tr>
+                  {review.adminReply && !replyingToId && (
+                    <tr key={`${review.id}-reply-show`} className="bg-stone-50/30">
+                      <td colSpan={2}></td>
+                      <td colSpan={5} className="pb-4 px-4 align-top">
+                        <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 relative">
+                          <span className="text-[10px] uppercase font-bold text-blue-800 absolute -top-2 bg-blue-100 px-2 rounded">Admin Reply</span>
+                          <p className="text-sm font-inter text-blue-900 mt-1">{review.adminReply}</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  {replyingToId === review.id && (
+                    <tr key={`${review.id}-reply`} className="bg-stone-50/50">
+                      <td colSpan={2}></td>
+                      <td colSpan={5} className="py-4 px-4">
+                        <div className="flex flex-col gap-2 max-w-2xl">
+                          <textarea 
+                            autoFocus
+                            className="w-full border border-stone-300 rounded-lg p-3 text-sm font-inter outline-none focus:ring-2 focus:ring-stone-900"
+                            rows={3}
+                            placeholder="Type your reply to the customer..."
+                            value={replyText}
+                            onChange={e => setReplyText(e.target.value)}
+                          />
+                          <div className="flex gap-2 justify-end">
+                            <button onClick={() => setReplyingToId(null)} className="px-3 py-1.5 border border-stone-300 text-stone-700 text-xs font-semibold rounded hover:bg-stone-100 transition-colors">Cancel</button>
+                            <button 
+                              onClick={async () => {
+                                await addReply({ id: review.id, reply: replyText });
+                                setReplyingToId(null);
+                              }} 
+                              disabled={!replyText.trim()}
+                              className="px-3 py-1.5 bg-stone-900 text-white text-xs font-semibold rounded hover:bg-stone-800 disabled:opacity-50 transition-colors"
+                            >
+                              Post Reply
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 );
               })}
             </tbody>

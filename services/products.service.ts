@@ -63,4 +63,9 @@ export const productsService = {
   async deleteProduct(id: string): Promise<void> {
     await api.delete(`/products/${id}`);
   },
+
+  async bulkEditProducts(productIds: string[], data: { status?: string; categoryId?: string; collectionId?: string }): Promise<any> {
+    const response = await api.post('/products/bulk-edit', { productIds, data });
+    return response.data;
+  },
 };

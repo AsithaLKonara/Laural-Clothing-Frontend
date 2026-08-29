@@ -54,8 +54,18 @@ export function useCreateReview() {
 export function useUpdateReviewStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: 'PENDING' | 'APPROVED' | 'REJECTED' }) =>
+    mutationFn: ({ id, status }: { id: string; status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SPAM' }) =>
       reviewService.updateReviewStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reviews'] });
+    },
+  });
+}
+
+export function useAddReviewReply() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reply }: { id: string; reply: string }) => reviewService.addAdminReply(id, reply),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reviews'] });
     },

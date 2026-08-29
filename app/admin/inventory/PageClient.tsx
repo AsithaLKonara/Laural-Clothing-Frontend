@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useBranches, useInventory, useTransfers, useAdjustStock, useCreateTransfer, useUpdateTransferStatus, useInventoryStats } from '@/hooks/useInventory';
 import { Button } from '@/components/ui/Button';
 import StatCard from '@/components/dashboard/StatCard';
+import InventoryAdjustmentModal from '@/components/admin/InventoryAdjustmentModal';
 
 export default function InventoryDashboard() {
   const [activeTab, setActiveTab] = useState<'STOCK' | 'TRANSFERS' | 'BRANCHES'>('STOCK');
@@ -12,6 +13,7 @@ export default function InventoryDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [adjustingVariant, setAdjustingVariant] = useState<{ item: any, type: 'receive' | 'deduct' } | null>(null);
 
   // Debounce search
   useEffect(() => {
@@ -140,18 +142,12 @@ export default function InventoryDashboard() {
                       </span>
                     </td>
                     <td className="p-4 text-right space-x-2">
-                      <Button variant="outline" size="sm" onClick={() => {
-                        const qty = prompt(`Adjust stock for ${item.name}? Enter quantity change (+ to add, - to deduct):`);
-                        if (qty && !isNaN(Number(qty))) {
-                          adjustStockMutation.mutate({
-                            variantId: item.variantId,
-                            branchId: item.branchId,
-                            type: Number(qty) >= 0 ? 'RECEIVE' : 'DEDUCT',
-                            quantity: Math.abs(Number(qty)),
-                            reason: 'Manual adjustment'
-                          });
-                        }
-                      }}>Adjust</Button>
+                      <Button variant="outline" size="sm" onClick={() => setAdjustingVariant({ item, type: 'receive' })}>
+                        Receive
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => setAdjustingVariant({ item, type: 'deduct' })}>
+                        Deduct
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -242,6 +238,17 @@ export default function InventoryDashboard() {
             ))}
           </ul>
         </div>
+      )}
+      
+      {adjustingVariant && (
+        <InventoryAdjustmentModal
+          type={adjustingVariant.type}
+          initialVariantId={adjustingVariant.item.variantId}
+          initialSkuSearch={adjustingVariant.item.sku || adjustingVariant.item.name}
+          initialVariantData={adjustingVariant.item}
+          onClose={() => setAdjustingVariant(null)}
+          onSuccess={() => setAdjustingVariant(null)}
+        />
       )}
     </div>
   );

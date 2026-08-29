@@ -104,3 +104,13 @@ export function useDeleteProduct() {
     },
   });
 }
+
+export function useBulkEditProducts() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ productIds, data }: { productIds: string[]; data: any }) => productsService.bulkEditProducts(productIds, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PRODUCT_QUERY_KEYS.lists() });
+    },
+  });
+}
