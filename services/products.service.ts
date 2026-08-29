@@ -45,4 +45,8 @@ export const productsService = {
   async deleteProduct(id: string): Promise<void> {
     await api.delete(`/products/${id}`);
   },
+
+  async bulkEditProducts(productIds: string[], data: any): Promise<void> {
+    await api.patch('/products/bulk-edit', { productIds, data });
+  },
 };
