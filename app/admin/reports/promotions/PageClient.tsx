@@ -4,6 +4,12 @@ import { useState } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";
 import { usePromotionsReport } from "@/hooks/useReports";
 import { Download, Tag } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const PromotionsChart = dynamic(() => import("./PromotionsChart"), { 
+  ssr: false, 
+  loading: () => <div className="h-[300px] w-full flex items-center justify-center bg-stone-50 rounded-lg animate-pulse text-stone-400">Loading chart...</div> 
+});
 
 export default function PromotionsReportPage() {
   const [dateRange, setDateRange] = useState("30");
@@ -33,6 +39,11 @@ export default function PromotionsReportPage() {
     window.URL.revokeObjectURL(url);
   };
 
+  const chartData = data ? [
+    { name: "Vouchers", Issued: data.vouchers.issued, Used: data.vouchers.used },
+    { name: "Coupons", Issued: data.coupons.issued, Used: data.coupons.totalUsages },
+  ] : [];
+
   if (isLoading) return <div className="p-10 font-poppins">Loading report...</div>;
   if (error || !data) return <div className="p-10 font-poppins text-red-500">Failed to load report.</div>;
 
@@ -58,6 +69,11 @@ export default function PromotionsReportPage() {
             Export CSV
           </button>
         </div>
+      </div>
+
+      <div className="bg-white border border-stone-200 rounded-xl p-6">
+        <h3 className="text-lg font-semibold text-primary font-poppins mb-6">Promotions Utilization</h3>
+        <PromotionsChart data={chartData} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

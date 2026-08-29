@@ -3,6 +3,12 @@
 import PageHeader from "@/components/dashboard/PageHeader";
 import { useInventoryValuationReport } from "@/hooks/useReports";
 import { Download, AlertTriangle } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const InventoryChart = dynamic(() => import("./InventoryChart"), { 
+  ssr: false, 
+  loading: () => <div className="h-[300px] w-full flex items-center justify-center bg-stone-50 rounded-lg animate-pulse text-stone-400">Loading chart...</div> 
+});
 
 export default function InventoryReportPage() {
   const { data, isLoading, error } = useInventoryValuationReport();
@@ -59,10 +65,16 @@ export default function InventoryReportPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Valuations Table */}
-        <div className="lg:col-span-2 bg-white border border-stone-200 rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-primary font-poppins mb-6">Valuation by Branch</h3>
-          <div className="overflow-x-auto">
+        {/* Valuations Table & Chart */}
+        <div className="lg:col-span-2 flex flex-col gap-8">
+          <div className="bg-white border border-stone-200 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-primary font-poppins mb-6">Valuation Distribution</h3>
+            <InventoryChart data={data.branchValuations} />
+          </div>
+
+          <div className="bg-white border border-stone-200 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-primary font-poppins mb-6">Valuation by Branch</h3>
+            <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-stone-200">
@@ -81,6 +93,7 @@ export default function InventoryReportPage() {
                 ))}
               </tbody>
             </table>
+          </div>
           </div>
         </div>
 
