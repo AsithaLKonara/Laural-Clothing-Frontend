@@ -139,9 +139,7 @@ export default function CheckoutPage() {
   const onSubmit = async (data: CheckoutFormData) => {
     if (!cart?.id) return;
 
-    // Only enforce phone OTP verification in production
-    const isDev = process.env.NODE_ENV !== 'production';
-    if (!isDev && !isAuthenticated && !isPhoneVerified) {
+    if (!isAuthenticated && !isPhoneVerified) {
       setPendingCheckoutData(data);
       setIsOtpModalOpen(true);
       return;
