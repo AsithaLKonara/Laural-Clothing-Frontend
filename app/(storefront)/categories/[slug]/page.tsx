@@ -9,7 +9,8 @@ import { serverFetch } from "@/lib/server-fetch";
 import { Product } from "@/types/product";
 import { PaginatedResponse } from "@/types/api";
 
-export const revalidate = 300;
+// Server-render on demand — prevents Railway build hanging on API calls during SSG
+export const dynamic = 'force-dynamic';
 
 // This function can eventually use prisma.category.findUnique() based on the slug.
 // For now, it returns mock metadata based on the slug.

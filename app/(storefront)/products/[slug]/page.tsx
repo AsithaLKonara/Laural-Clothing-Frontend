@@ -9,7 +9,8 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 
-export const revalidate = 3600; // ISR every hour
+// Server-render on demand — prevents Railway build hanging on API calls during SSG
+export const dynamic = 'force-dynamic';
 
 async function getProductData(slug: string) {
   try {
