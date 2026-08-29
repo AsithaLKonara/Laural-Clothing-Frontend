@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
-import { X, Search } from "lucide-react";
+import { X, Search, Loader2 } from "lucide-react";
+import { orderService } from "@/services/order.service";
 
 interface LoyaltyPointsModalProps {
   isOpen: boolean;
@@ -13,8 +14,11 @@ interface LoyaltyPointsModalProps {
 
 export default function LoyaltyPointsModal({ isOpen, onClose, onApplyPoints }: LoyaltyPointsModalProps) {
   const [phoneNumber, setPhoneNumber] = useState<string | undefined>();
+  const [availablePoints, setAvailablePoints] = useState<number>(0);
   const [pointsToApply, setPointsToApply] = useState<string>("");
   const [step, setStep] = useState<"search" | "found">("search");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string>("");
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -28,15 +32,26 @@ export default function LoyaltyPointsModal({ isOpen, onClose, onApplyPoints }: L
 
   if (!isOpen) return null;
 
-  const handleSearch = () => {
-    if (phoneNumber && phoneNumber.length > 5) {
+  const handleSearch = async () => {
+    if (!phoneNumber || phoneNumber.length < 6) return;
+    setIsLoading(true);
+    setErrorMsg("");
+    try {
+      const { data } = await orderService.getLoyaltyPoints(phoneNumber);
+      const points = data?.loyaltyPoints || 0;
+      setAvailablePoints(points);
       setStep("found");
+    } catch (err: any) {
+      console.error("Failed to load loyalty points:", err);
+      setErrorMsg("Failed to check points. Please verify phone number.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleApply = () => {
     const points = parseInt(pointsToApply);
-    if (!isNaN(points) && points > 0) {
+    if (!isNaN(points) && points > 0 && points <= availablePoints) {
       onApplyPoints(points);
       onClose();
     }
@@ -62,10 +77,13 @@ export default function LoyaltyPointsModal({ isOpen, onClose, onApplyPoints }: L
         </button>
 
         {/* Header */}
-        <div className="flex flex-col gap-6 mb-10 w-full border-b border-stone-300 pb-8">
+        <div className="flex flex-col gap-2 mb-10 w-full border-b border-stone-300 pb-8">
           <h2 className="font-poppins font-semibold text-2xl md:text-4xl text-[#0C0A09]">
-            {step === "search" ? "Loyalty Points" : "You have 257 points"}
+            {step === "search" ? "Loyalty Points" : `You have ${availablePoints.toLocaleString()} points`}
           </h2>
+          <p className="font-poppins text-xs md:text-sm text-stone-500">
+            Earn 1% in loyalty points on every order you place at Laural. 1 point = Rs. 1 discount.
+          </p>
         </div>
 
         {/* Step 1: Search by Phone */}
@@ -88,13 +106,17 @@ export default function LoyaltyPointsModal({ isOpen, onClose, onApplyPoints }: L
               />
             </div>
             
+            {errorMsg && (
+              <p className="text-red-500 text-xs font-poppins">{errorMsg}</p>
+            )}
+
             <button 
               onClick={handleSearch}
-              disabled={!phoneNumber}
+              disabled={!phoneNumber || isLoading}
               className="h-[52px] w-full md:w-[160px] flex justify-center items-center gap-2 bg-primary hover:bg-stone-800 disabled:bg-stone-400 transition-colors rounded-full font-poppins font-semibold text-sm text-white uppercase tracking-widest mt-2"
             >
-              <Search size={18} />
-              Check
+              {isLoading ? <Loader2 className="animate-spin" size={18} /> : <Search size={18} />}
+              {isLoading ? "Checking..." : "Check"}
             </button>
           </div>
         )}
@@ -104,40 +126,59 @@ export default function LoyaltyPointsModal({ isOpen, onClose, onApplyPoints }: L
           <div className="flex flex-col gap-8 w-full animate-in slide-in-from-bottom-4 fade-in duration-300">
             <div className="flex flex-col gap-3 w-full max-w-[500px]">
               <label className="font-poppins font-medium text-sm text-[#0C0A09]">
-                Add Points
+                {availablePoints > 0 ? "Enter points to redeem as discount" : "No points available for this number yet"}
               </label>
-              <div className="flex flex-col md:flex-row items-center gap-4 w-full">
-                <input 
-                  type="number"
-                  placeholder="Enter Value"
-                  value={pointsToApply}
-                  onChange={(e) => setPointsToApply(e.target.value)}
-                  className="w-full md:flex-1 h-[52px] px-[20px] border border-[#44403B] rounded-full bg-white font-poppins text-sm text-primary outline-none focus:ring-1 focus:ring-primary transition-all placeholder:text-stone-400"
-                />
-                <button 
-                  onClick={handleApply}
-                  disabled={!pointsToApply || parseInt(pointsToApply) <= 0 || parseInt(pointsToApply) > 257}
-                  className="w-full md:w-[120px] h-[52px] flex justify-center items-center bg-primary hover:bg-stone-800 disabled:bg-stone-400 transition-colors rounded-full font-poppins font-semibold text-sm text-white uppercase tracking-widest"
-                >
-                  Add
-                </button>
-              </div>
+              {availablePoints > 0 ? (
+                <div className="flex flex-col md:flex-row items-center gap-4 w-full">
+                  <input 
+                    type="number"
+                    placeholder={`Max ${availablePoints}`}
+                    value={pointsToApply}
+                    max={availablePoints}
+                    min={1}
+                    onChange={(e) => setPointsToApply(e.target.value)}
+                    className="w-full md:flex-1 h-[52px] px-[20px] border border-[#44403B] rounded-full bg-white font-poppins text-sm text-primary outline-none focus:ring-1 focus:ring-primary transition-all placeholder:text-stone-400"
+                  />
+                  <button 
+                    onClick={handleApply}
+                    disabled={!pointsToApply || parseInt(pointsToApply) <= 0 || parseInt(pointsToApply) > availablePoints}
+                    className="w-full md:w-[120px] h-[52px] flex justify-center items-center bg-primary hover:bg-stone-800 disabled:bg-stone-400 transition-colors rounded-full font-poppins font-semibold text-sm text-white uppercase tracking-widest"
+                  >
+                    Add
+                  </button>
+                </div>
+              ) : (
+                <p className="font-poppins text-sm text-stone-500">
+                  Place an order now to earn 1% in points for your next purchase!
+                </p>
+              )}
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-end gap-4 w-full pt-8 mt-4 border-t border-stone-200">
               <button 
+                onClick={() => {
+                  setStep("search");
+                  setPointsToApply("");
+                }}
+                className="w-full sm:w-auto h-[52px] px-8 flex justify-center items-center border border-stone-300 hover:bg-stone-100 transition-colors rounded-full font-poppins font-semibold text-sm text-primary uppercase tracking-widest"
+              >
+                Change Phone
+              </button>
+              <button 
                 onClick={onClose}
-                className="w-full sm:w-auto h-[52px] px-10 flex justify-center items-center border border-[#44403B] hover:bg-stone-100 transition-colors rounded-full font-poppins font-semibold text-sm text-primary uppercase tracking-widest"
+                className="w-full sm:w-auto h-[52px] px-8 flex justify-center items-center border border-[#44403B] hover:bg-stone-100 transition-colors rounded-full font-poppins font-semibold text-sm text-primary uppercase tracking-widest"
               >
                 Cancel
               </button>
-              <button 
-                onClick={handleApply}
-                disabled={!pointsToApply || parseInt(pointsToApply) <= 0 || parseInt(pointsToApply) > 257}
-                className="w-full sm:w-auto h-[52px] px-10 flex justify-center items-center bg-primary hover:bg-stone-800 disabled:bg-stone-400 transition-colors rounded-full font-poppins font-semibold text-sm text-white uppercase tracking-widest"
-              >
-                Apply
-              </button>
+              {availablePoints > 0 && (
+                <button 
+                  onClick={handleApply}
+                  disabled={!pointsToApply || parseInt(pointsToApply) <= 0 || parseInt(pointsToApply) > availablePoints}
+                  className="w-full sm:w-auto h-[52px] px-10 flex justify-center items-center bg-primary hover:bg-stone-800 disabled:bg-stone-400 transition-colors rounded-full font-poppins font-semibold text-sm text-white uppercase tracking-widest"
+                >
+                  Apply
+                </button>
+              )}
             </div>
           </div>
         )}
