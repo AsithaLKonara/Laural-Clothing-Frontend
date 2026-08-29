@@ -64,6 +64,8 @@ export const useInventory = (branchId?: string, search?: string, status?: string
       const res = await api.get(`/inventory?${params.toString()}`);
       return res.data;
     },
+    staleTime: 30000,
+    refetchOnWindowFocus: true,
   });
 };
 
@@ -76,6 +78,8 @@ export const useInventoryStats = (branchId?: string) => {
       const res = await api.get(`/inventory/stats?${params.toString()}`);
       return res.data;
     },
+    staleTime: 30000,
+    refetchOnWindowFocus: true,
   });
 };
 
@@ -104,6 +108,8 @@ export const useInventoryTransactions = (branchId?: string) => {
       const res = await api.get(`/inventory/transactions?${params.toString()}`);
       return res.data;
     },
+    staleTime: 30000,
+    refetchOnWindowFocus: true,
   });
 };
 

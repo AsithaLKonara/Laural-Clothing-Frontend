@@ -35,6 +35,7 @@ export default function CartItem({
           src={image} 
           alt={name} 
           fill 
+          sizes="100px"
           className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
         />
       </div>

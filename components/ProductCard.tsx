@@ -11,12 +11,14 @@ import { useAddToCart } from "@/hooks/useCart";
 interface ProductCardProps {
   product?: Product;
   imageUrl?: string;
+  priority?: boolean;
 }
 
-export default function ProductCard({ product, imageUrl = "/products/default.jpg" }: ProductCardProps) {
+export default function ProductCard({ product, imageUrl = "/products/default.jpg", priority = false }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const router = useRouter();
-  const { sessionId, openDrawer } = useCartStore();
+  const sessionId = useCartStore((state) => state.sessionId);
+  const openDrawer = useCartStore((state) => state.openDrawer);
   const addToCart = useAddToCart(sessionId);
 
   const defaultVariant = product?.variants?.[0];
@@ -91,15 +93,20 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
             src={displayImage}
             alt={title}
             fill
-            className={`object-cover transition-opacity duration-300 ${isHovered ? 'opacity-0' : 'opacity-100'}`}
+            priority={priority}
+            sizes="(max-width: 768px) 50vw, 250px"
+            className={`object-cover transition-opacity duration-300 ${isHovered && allImages.length > 1 ? 'opacity-0' : 'opacity-100'}`}
           />
           {/* Hover Image */}
-          <Image
-            src={hoverImage}
-            alt={`${title} - Back View`}
-            fill
-            className={`object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
-          />
+          {allImages.length > 1 && (
+            <Image
+              src={hoverImage}
+              alt={`${title} - Back View`}
+              fill
+              sizes="(max-width: 768px) 50vw, 250px"
+              className={`object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+            />
+          )}
         </Link>
         
         {/* Discount Tag */}
@@ -189,13 +196,13 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
             </span>
             <div className="flex items-center gap-1">
               <div className="flex items-center justify-center w-[28px] h-[10px] relative">
-                <Image src="/payment-methods/koko.png" alt="koko" fill className="object-contain" />
+                <Image src="/payment-methods/koko.png" alt="koko" fill sizes="28px" className="object-contain" />
               </div>
               <div className="flex items-center justify-center w-[28px] h-[10px] relative">
-                <Image src="/payment-methods/mintpay-pill.png" alt="mintpay" fill className="object-contain" />
+                <Image src="/payment-methods/mintpay-pill.png" alt="mintpay" fill sizes="28px" className="object-contain" />
               </div>
               <div className="flex items-center justify-center w-[28px] h-[10px] relative">
-                <Image src="/payment-methods/payzy.png" alt="payzy" fill className="object-contain" />
+                <Image src="/payment-methods/payzy.png" alt="payzy" fill sizes="28px" className="object-contain" />
               </div>
             </div>
           </div>

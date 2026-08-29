@@ -47,6 +47,7 @@ export default function ProductGallery({ images, productName = "Product" }: Prod
               src={img} 
               alt={`${productName} - Thumbnail ${idx + 1}`} 
               fill 
+              sizes="100px"
               className="object-cover"
             />
           </button>
@@ -63,6 +64,7 @@ export default function ProductGallery({ images, productName = "Product" }: Prod
           src={activeImage}
           alt={`${productName} - Main Image`}
           fill
+          sizes="(max-width: 768px) 100vw, 50vw"
           className="object-cover transition-opacity duration-300 group-hover:opacity-0"
           priority
         />

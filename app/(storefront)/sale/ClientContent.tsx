@@ -6,13 +6,14 @@ import ProductCard from "@/components/ProductCard";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { useProducts } from "@/hooks/useProducts";
 import { Product } from "@/types/product";
+import { PaginatedResponse } from "@/types/api";
 
-export default function ClientContent() {
+export default function ClientContent({ initialData }: { initialData?: PaginatedResponse<Product> }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [skip, setSkip] = useState(0);
   const take = 12;
 
-  const { data: response, isLoading } = useProducts({ skip, take });
+  const { data: response, isLoading } = useProducts({ skip, take }, skip === 0 ? initialData : undefined);
   const products = response?.data || [];
   const total = response?.meta.total || 0;
 

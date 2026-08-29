@@ -10,15 +10,8 @@ interface UserModalProps {
   onSuccess?: () => void;
   initialData?: SystemUserItem | null;
   availableRoles?: RoleItem[];
+  availableBranches?: any[];
 }
-
-const DEFAULT_BRANCHES = [
-  "Global (All Branches)",
-  "Colombo Main",
-  "Kandy City Centre",
-  "Gampaha Branch",
-  "Online Store",
-];
 
 export default function UserModal({
   isOpen,
@@ -26,13 +19,14 @@ export default function UserModal({
   onSuccess,
   initialData,
   availableRoles = [],
+  availableBranches = [],
 }: UserModalProps) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [selectedRoleId, setSelectedRoleId] = useState("");
-  const [branch, setBranch] = useState(DEFAULT_BRANCHES[1]);
+  const [selectedBranchId, setSelectedBranchId] = useState("");
   const [status, setStatus] = useState("ACTIVE");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +39,7 @@ export default function UserModal({
       setEmail(initialData.email);
       setPhone(initialData.phone || "");
       setSelectedRoleId(initialData.roleIds?.[0] || availableRoles[0]?.id || "");
-      setBranch(initialData.branch || DEFAULT_BRANCHES[1]);
+      setSelectedBranchId(initialData.branchId || "");
       setStatus(initialData.status || "ACTIVE");
     } else {
       setFirstName("");
@@ -53,7 +47,7 @@ export default function UserModal({
       setEmail("");
       setPhone("");
       setSelectedRoleId(availableRoles[0]?.id || "");
-      setBranch(DEFAULT_BRANCHES[1]);
+      setSelectedBranchId("");
       setStatus("ACTIVE");
     }
     setError(null);
@@ -75,22 +69,19 @@ export default function UserModal({
     setError(null);
 
     try {
+      const payload = {
+        name: fullName,
+        email: email.trim(),
+        phone: phone.trim() || undefined,
+        status,
+        roleIds: selectedRoleId ? [selectedRoleId] : undefined,
+        branchId: isSuperAdmin ? null : (selectedBranchId || null),
+      };
+
       if (initialData?.id) {
-        await roleService.updateUser(initialData.id, {
-          name: fullName,
-          email: email.trim(),
-          phone: phone.trim() || undefined,
-          status,
-          roleIds: selectedRoleId ? [selectedRoleId] : undefined,
-        });
+        await roleService.updateUser(initialData.id, payload);
       } else {
-        await roleService.createUser({
-          name: fullName,
-          email: email.trim(),
-          phone: phone.trim() || undefined,
-          status,
-          roleIds: selectedRoleId ? [selectedRoleId] : undefined,
-        });
+        await roleService.createUser({ ...payload, password: "Password123!" }); // Set a default secure password for new users
       }
 
       onSuccess?.();
@@ -193,14 +184,15 @@ export default function UserModal({
           <div className="flex flex-col gap-1.5">
             <label className="font-inter text-xs font-semibold text-stone-700">Branch Scope</label>
             <select
-              value={branch}
-              onChange={(e) => setBranch(e.target.value)}
+              value={selectedBranchId}
+              onChange={(e) => setSelectedBranchId(e.target.value)}
               disabled={isSuperAdmin}
               className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-stone-900 bg-white font-inter disabled:bg-stone-100 disabled:text-stone-500"
             >
-              {DEFAULT_BRANCHES.map((b) => (
-                <option key={b} value={b}>
-                  {b}
+              <option value="">Global (All Branches)</option>
+              {availableBranches.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
                 </option>
               ))}
             </select>

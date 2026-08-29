@@ -25,10 +25,17 @@ export function usePendingReviews(customerId: string) {
   });
 }
 
-export function useAllReviews(status?: string) {
+export function useAllReviews(status?: string, page: number = 1, limit: number = 20, search?: string) {
   return useQuery({
-    queryKey: ['reviews', 'all', status],
-    queryFn: () => reviewService.getAllReviews(status),
+    queryKey: ['reviews', 'all', status, page, limit, search],
+    queryFn: () => reviewService.getAllReviews(status, page, limit, search),
+  });
+}
+
+export function useReviewStats() {
+  return useQuery({
+    queryKey: ['reviews', 'stats'],
+    queryFn: () => reviewService.getReviewStats(),
   });
 }
 
@@ -47,8 +54,18 @@ export function useCreateReview() {
 export function useUpdateReviewStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: 'PENDING' | 'APPROVED' | 'REJECTED' }) =>
+    mutationFn: ({ id, status }: { id: string; status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SPAM' }) =>
       reviewService.updateReviewStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reviews'] });
+    },
+  });
+}
+
+export function useAddReviewReply() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reply }: { id: string; reply: string }) => reviewService.addAdminReply(id, reply),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reviews'] });
     },

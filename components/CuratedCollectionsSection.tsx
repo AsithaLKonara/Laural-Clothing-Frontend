@@ -12,8 +12,8 @@ export default function CuratedCollectionsSection() {
 
   // Fallback images if collection doesn't have an image field yet
   const fallbacks = [
-    "/hero-image/hero-3.jpg",
-    "/hero-image/hero-2.jpg",
+    "/hero-image/hero-3.jpeg",
+    "/hero-image/hero-2.jpeg",
   ];
 
   if (isLoading) {
@@ -46,9 +46,10 @@ export default function CuratedCollectionsSection() {
             className="group relative w-full md:w-1/2 aspect-[4/5] md:aspect-square lg:aspect-[4/3] overflow-hidden rounded-sm"
           >
             <Image 
-              src={img}
+              src={img?.replace(/\.jpg$/, '.jpeg')}
               alt={collection.title}
               fill
+              sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover transition-transform duration-1000 group-hover:scale-105"
             />
             

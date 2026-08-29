@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { mediaService, MediaFile } from '../services/media.service';
 
-export function useMedia(folder?: string) {
+export function useMedia(folder?: string, page: number = 1, limit: number = 20) {
   return useQuery({
-    queryKey: ['media', folder],
-    queryFn: () => mediaService.getMediaFiles(folder),
+    queryKey: ['media', folder, page, limit],
+    queryFn: () => mediaService.getMediaFiles(folder, page, limit),
   });
 }
 

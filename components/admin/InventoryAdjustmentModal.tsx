@@ -8,11 +8,14 @@ interface InventoryAdjustmentModalProps {
   type: "receive" | "deduct";
   onClose: () => void;
   onSuccess: () => void;
+  initialVariantId?: string;
+  initialSkuSearch?: string;
+  initialVariantData?: any;
 }
 
-export default function InventoryAdjustmentModal({ type, onClose, onSuccess }: InventoryAdjustmentModalProps) {
-  const [variantId, setVariantId] = useState("");
-  const [skuSearch, setSkuSearch] = useState("");
+export default function InventoryAdjustmentModal({ type, onClose, onSuccess, initialVariantId, initialSkuSearch, initialVariantData }: InventoryAdjustmentModalProps) {
+  const [variantId, setVariantId] = useState(initialVariantId || "");
+  const [skuSearch, setSkuSearch] = useState(initialSkuSearch || "");
   const [qty, setQty] = useState(1);
   const [reason, setReason] = useState("");
   const [supplierPo, setSupplierPo] = useState("");
@@ -24,7 +27,7 @@ export default function InventoryAdjustmentModal({ type, onClose, onSuccess }: I
   // Live search inventory for SKU picker
   const { data: searchResults } = useInventory(undefined, skuSearch, undefined, 1);
 
-  const selectedVariant = searchResults?.data?.find((v: any) => v.variantId === variantId);
+  const selectedVariant = searchResults?.data?.find((v: any) => v.variantId === variantId) || initialVariantData;
 
   const handleSelectVariant = (v: any) => {
     setVariantId(v.variantId);
@@ -36,7 +39,7 @@ export default function InventoryAdjustmentModal({ type, onClose, onSuccess }: I
     if (!variantId) return;
     await adjustMutation.mutateAsync({
       variantId,
-      branchId: "BR-001",
+      branchId: selectedVariant?.branchId || "BR-001",
       type: isReceive ? "RECEIVE" : "DEDUCT",
       quantity: qty,
       reason: isReceive ? supplierPo : reason,

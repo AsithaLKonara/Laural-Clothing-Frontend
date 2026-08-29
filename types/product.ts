@@ -20,6 +20,8 @@ export interface Product {
   description: string | null;
   excerpt: string | null;
   categoryId: string | null;
+  category?: { id: string; name: string; slug: string; };
+  status?: string;
   createdAt: string;
   updatedAt: string;
   variants?: ProductVariant[];

@@ -143,7 +143,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
             </div>
             
             <div className="w-full flex justify-center mt-2">
-              <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!} onSuccess={(token) => setTurnstileToken(token)} />
+              <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'} onSuccess={(token) => setTurnstileToken(token)} />
             </div>
           </div>
         </form>

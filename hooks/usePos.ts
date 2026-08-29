@@ -1,14 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '@/services/api';
+import { posService } from '@/services/pos.service';
 
 // --- POS Sessions ---
 export const useOpenSession = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { branchId: string; terminalId: string; userId: string; openingFloat: number }) => {
-      const res = await api.post('/pos/sessions/open', data);
-      return res.data;
-    },
+    mutationFn: posService.openSession,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pos-session'] });
     },
@@ -18,10 +15,7 @@ export const useOpenSession = () => {
 export const useCloseSession = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { sessionId: string; actualClosing: number }) => {
-      const res = await api.post('/pos/sessions/close', data);
-      return res.data;
-    },
+    mutationFn: posService.closeSession,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pos-session'] });
     },
@@ -33,29 +27,48 @@ export const useCurrentSession = (terminalId?: string) => {
     queryKey: ['pos-session', terminalId],
     queryFn: async () => {
       if (!terminalId) return null;
-      const res = await api.get(`/pos/sessions/current?terminalId=${terminalId}`);
-      return res.data;
+      return await posService.getCurrentSession(terminalId);
     },
-    enabled: !!terminalId
+    enabled: !!terminalId,
+    staleTime: 10000,
+    refetchOnWindowFocus: true,
+  });
+};
+
+export const useExpectedClosing = (sessionId?: string) => {
+  return useQuery({
+    queryKey: ['pos-expected-closing', sessionId],
+    queryFn: async () => {
+      if (!sessionId) return null;
+      return await posService.getExpectedClosing(sessionId);
+    },
+    enabled: !!sessionId,
+    refetchOnMount: 'always'
+  });
+};
+
+export const useSessionSummary = (sessionId?: string) => {
+  return useQuery({
+    queryKey: ['pos-session-summary', sessionId],
+    queryFn: async () => {
+      if (!sessionId) return null;
+      return await posService.getSessionSummary(sessionId);
+    },
+    enabled: !!sessionId,
+    refetchOnMount: 'always'
   });
 };
 
 // --- Exchange Vouchers ---
 export const useGenerateVoucher = () => {
   return useMutation({
-    mutationFn: async (data: { branchId: string; returnedItems: any[]; value: number }) => {
-      const res = await api.post('/pos/vouchers/generate', data);
-      return res.data;
-    }
+    mutationFn: posService.generateVoucher
   });
 };
 
 export const useValidateVoucher = () => {
   return useMutation({
-    mutationFn: async (code: string) => {
-      const res = await api.get(`/pos/vouchers/${code}`);
-      return res.data;
-    }
+    mutationFn: posService.validateVoucher
   });
 };
 
@@ -63,20 +76,7 @@ export const useValidateVoucher = () => {
 export const useProcessPosOrder = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: {
-      branchId: string;
-      sessionId: string;
-      customerId?: string;
-      items: any[];
-      paymentMethod: string;
-      appliedVouchers: string[];
-      subtotal: number;
-      total: number;
-      tax: number;
-    }) => {
-      const res = await api.post('/pos/orders', data);
-      return res.data;
-    },
+    mutationFn: posService.processPosOrder,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
     }

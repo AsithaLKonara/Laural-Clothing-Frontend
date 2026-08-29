@@ -3,15 +3,18 @@ import Link from "next/link";
 import CategoryCard from "./CategoryCard";
 import { useCategories } from "@/hooks/useCategories";
 
-export default function CollectionsSection() {
+import { PaginatedResponse } from "@/types/api";
+import { Category } from "@/types/category";
+
+export default function CollectionsSection({ initialData }: { initialData?: PaginatedResponse<Category> }) {
   const { data: response } = useCategories();
-  const categories = response?.data || [];
+  const categories = response?.data || initialData?.data || [];
   
   // Use a mix of aesthetic placeholder images for categories
   const placeholderImages = [
-    "/hero-image/hero-1.jpg",
-    "/hero-image/hero-2.jpg",
-    "/hero-image/hero-3.jpg",
+    "/hero-image/hero-1.jpeg",
+    "/hero-image/hero-2.jpeg",
+    "/hero-image/hero-3.jpeg",
   ];
 
   return (
@@ -43,7 +46,7 @@ export default function CollectionsSection() {
 
       {/* Cards Row */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-[20px] w-full mt-4 md:mt-8">
-          {categories.slice(0, 6).map((category, idx) => {
+          {categories.slice(0, 6).map((category: Category, idx: number) => {
             const imageUrl = category.imageUrl || placeholderImages[idx % placeholderImages.length];
             return (
               <CategoryCard
@@ -51,6 +54,7 @@ export default function CollectionsSection() {
                 title={category.name}
                 imageUrl={imageUrl}
                 href={`/categories/${category.slug}`}
+                priority={idx < 6}
               />
             );
           })}

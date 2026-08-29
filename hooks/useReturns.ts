@@ -62,3 +62,17 @@ export const useCreateReturn = () => {
     }
   });
 };
+
+export const useBulkUpdateReturns = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (resolutions: Record<string, { condition: string, action: string }>) => {
+      const res = await api.post('/returns/bulk-update', { resolutions });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['returns'] });
+    }
+  });
+};

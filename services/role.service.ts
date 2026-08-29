@@ -81,10 +81,11 @@ export const roleService = {
     return res.data.data;
   },
 
-  async getUsers(search?: string, role?: string): Promise<SystemUserItem[]> {
+  async getUsers(search?: string, role?: string, branchId?: string): Promise<SystemUserItem[]> {
     const params: any = {};
     if (search) params.search = search;
     if (role) params.role = role;
+    if (branchId) params.branchId = branchId;
     const res = await api.get("/users", { params });
     return res.data.data;
   },

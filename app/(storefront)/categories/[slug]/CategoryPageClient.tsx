@@ -8,8 +8,9 @@ import CategoryBar from "@/components/CategoryBar";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { useProducts } from "@/hooks/useProducts";
 import { Product } from "@/types/product";
+import { PaginatedResponse } from "@/types/api";
 
-export default function CategoryPageClient() {
+export default function CategoryPageClient({ initialData }: { initialData?: PaginatedResponse<Product> }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const params = useParams();
   const slug = params.slug as string;
@@ -19,7 +20,7 @@ export default function CategoryPageClient() {
   // Format slug to readable name: "womens-tops" -> "Womens Tops"
   const categoryName = slug ? slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : 'Category';
 
-  const { data: response, isLoading } = useProducts({ skip, take, category: slug });
+  const { data: response, isLoading } = useProducts({ skip, take, category: slug }, skip === 0 ? initialData : undefined);
   const products = response?.data || [];
   const total = response?.meta.total || 0;
 

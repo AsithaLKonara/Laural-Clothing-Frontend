@@ -18,6 +18,8 @@ import { useAddToCart } from "@/hooks/useCart";
 import { useCart } from "@/components/CartProvider";
 import { useAddToWishlist } from "@/hooks/useWishlist";
 
+import { PaginatedResponse } from "@/types/api";
+
 const colorMap: Record<string, string> = {
   white: '#FFFFFF',
   black: '#000000',
@@ -31,15 +33,24 @@ const colorMap: Record<string, string> = {
   ash: '#B2BEB5'
 };
 
-export default function ProductPageClient({ params }: { params: Promise<{ slug: string }> }) {
+export default function ProductPageClient({ 
+  params,
+  initialProduct,
+  initialRelatedProducts,
+}: { 
+  params: Promise<{ slug: string }>;
+  initialProduct?: Product;
+  initialRelatedProducts?: PaginatedResponse<Product>;
+}) {
   const resolvedParams = use(params);
   const slug = resolvedParams.slug;
   
-  const { data: product, isLoading } = useProductBySlug(slug);
-  const { data: relatedResponse } = useProducts({ skip: 0, take: 8 });
+  const { data: product, isLoading } = useProductBySlug(slug, initialProduct);
+  const { data: relatedResponse } = useProducts({ skip: 0, take: 8 }, initialRelatedProducts);
   const relatedProducts = relatedResponse?.data || [];
   
-  const { sessionId, openDrawer } = useCartStore();
+  const sessionId = useCartStore((state) => state.sessionId);
+  const openDrawer = useCartStore((state) => state.openDrawer);
   const addToCart = useAddToCart(sessionId);
   const addToWishlist = useAddToWishlist(sessionId);
   const { openWishlist } = useCart();
@@ -191,13 +202,13 @@ export default function ProductPageClient({ params }: { params: Promise<{ slug: 
               <span>3 X Rs. {installment} with</span>
               <div className="flex items-center gap-2">
                 <div className="w-[45px] h-[15px] relative">
-                  <Image src="/payment-methods/koko.png" alt="koko" fill className="object-contain" />
+                  <Image src="/payment-methods/koko.png" alt="koko" fill sizes="45px" className="object-contain" />
                 </div>
                 <div className="w-[45px] h-[15px] relative">
-                  <Image src="/payment-methods/mintpay-pill.png" alt="mintpay" fill className="object-contain" />
+                  <Image src="/payment-methods/mintpay-pill.png" alt="mintpay" fill sizes="45px" className="object-contain" />
                 </div>
                 <div className="w-[45px] h-[15px] relative">
-                  <Image src="/payment-methods/payzy.png" alt="payzy" fill className="object-contain" />
+                  <Image src="/payment-methods/payzy.png" alt="payzy" fill sizes="45px" className="object-contain" />
                 </div>
               </div>
               <Info size={16} className="text-primary" fill="currentColor" color="white" />
@@ -350,16 +361,18 @@ export default function ProductPageClient({ params }: { params: Promise<{ slug: 
       <div className="flex flex-col items-center w-full max-w-[1280px] mx-auto px-4 md:px-[120px] py-16 md:py-[80px]">
         <h2 className="font-poppins text-2xl md:text-4xl text-primary mb-8">Related Products</h2>
         <div className="w-full max-w-[1040px] overflow-hidden" ref={emblaRef}>
-          <div className="flex gap-[20px]">
+          <div className="flex -ml-[20px]">
             {relatedProducts.length > 0 ? (
               relatedProducts.map((rp: Product) => (
-                <div key={rp.id} className="flex-[0_0_245px] min-w-[245px]">
+                <div key={rp.id} className="flex-[0_0_265px] min-w-0 pl-[20px]">
                   <ProductCard product={rp} />
                 </div>
               ))
             ) : (
               [1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
-                <div key={item} className="flex-[0_0_245px] min-w-[245px] h-[380px] bg-stone-100 animate-pulse rounded-lg"></div>
+                <div key={item} className="flex-[0_0_265px] min-w-0 pl-[20px]">
+                  <div className="w-full h-[380px] bg-stone-100 animate-pulse rounded-lg"></div>
+                </div>
               ))
             )}
           </div>

@@ -35,8 +35,8 @@ export interface FlashSale {
 
 export const promotionService = {
   // Coupons
-  getCoupons: async (): Promise<Coupon[]> => {
-    const { data } = await api.get('/promotions/coupons');
+  getCoupons: async (params?: { search?: string; status?: string; type?: string }): Promise<Coupon[]> => {
+    const { data } = await api.get('/promotions/coupons', { params });
     return data;
   },
   
@@ -55,8 +55,8 @@ export const promotionService = {
   },
 
   // Flash Sales
-  getFlashSales: async (): Promise<FlashSale[]> => {
-    const { data } = await api.get('/promotions/flash-sales');
+  getFlashSales: async (params?: { search?: string; status?: string }): Promise<FlashSale[]> => {
+    const { data } = await api.get('/promotions/flash-sales', { params });
     return data;
   },
   

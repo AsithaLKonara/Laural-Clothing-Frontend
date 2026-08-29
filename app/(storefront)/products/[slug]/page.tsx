@@ -1,6 +1,9 @@
 import { Metadata } from 'next';
 import ProductPageClient from './ProductPageClient';
 import ProductSchema from '@/components/seo/ProductSchema';
+import { serverFetch } from '@/lib/server-fetch';
+import { Product } from '@/types/product';
+import { PaginatedResponse } from '@/types/api';
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -10,10 +13,15 @@ export const revalidate = 3600; // ISR every hour
 
 async function getProductData(slug: string) {
   try {
-    let apiUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1").replace(/\/$/, "");
-    const res = await fetch(`${apiUrl}/products/slug/${slug}`, { next: { revalidate: 3600 } });
-    if (!res.ok) return null;
-    return await res.json();
+    return await serverFetch<Product>(`/products/slug/${slug}`, { next: { revalidate: 3600, tags: ['products'] } });
+  } catch (error) {
+    return null;
+  }
+}
+
+async function getRelatedProducts() {
+  try {
+    return await serverFetch<PaginatedResponse<Product>>(`/products?skip=0&take=8`, { next: { revalidate: 3600, tags: ['products'] } });
   } catch (error) {
     return null;
   }
@@ -63,7 +71,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 
   allImages = deduplicateImages(allImages);
-  const ogImage = allImages[0] || '/hero-image/hero-1.jpg';
+  const ogImage = allImages[0] || '/hero-image/hero-1.jpeg';
     
   return {
     title: product.name,
@@ -89,7 +97,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductPage({ params }: Props) {
   const { slug } = await params;
-  const product = await getProductData(slug);
+  const [product, relatedProductsRes] = await Promise.all([
+    getProductData(slug),
+    getRelatedProducts(),
+  ]);
+  
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://laural.lk';
 
   let allImages: string[] = [];
@@ -126,7 +138,7 @@ export default async function ProductPage({ params }: Props) {
   };
 
   allImages = deduplicateImages(allImages);
-  const schemaImage = allImages[0] || `${baseUrl}/hero-image/hero-1.jpg`;
+  const schemaImage = allImages[0] || `${baseUrl}/hero-image/hero-1.jpeg`;
 
   return (
     <>
@@ -140,7 +152,11 @@ export default async function ProductPage({ params }: Props) {
           sku={product.variants?.[0]?.sku || `SKU-${slug.toUpperCase()}`}
         />
       )}
-      <ProductPageClient params={params} />
+      <ProductPageClient 
+        params={params} 
+        initialProduct={product || undefined} 
+        initialRelatedProducts={relatedProductsRes || undefined} 
+      />
     </>
   );
 }

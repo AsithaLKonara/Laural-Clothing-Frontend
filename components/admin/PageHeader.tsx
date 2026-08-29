@@ -1,28 +1,38 @@
 "use client";
 
 import React from "react";
+import { Plus } from "lucide-react";
+import Link from "next/link";
 
 interface PageHeaderProps {
   title: string;
   subtitle?: string;
   actionLabel?: string;
-  onActionClick?: () => void;
+  actionHref?: string;
+  onAction?: () => void;
 }
 
-export default function PageHeader({ title, subtitle, actionLabel, onActionClick }: PageHeaderProps) {
+export default function PageHeader({ title, subtitle, actionLabel, actionHref, onAction }: PageHeaderProps) {
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-stone-200 pb-6">
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
       <div>
-        <h1 className="font-inria text-2xl md:text-3xl text-stone-900 mb-1">{title}</h1>
-        {subtitle && <p className="font-inter text-sm text-stone-500">{subtitle}</p>}
+        <h1 className="text-2xl font-bold font-inter text-stone-900 tracking-tight">{title}</h1>
+        {subtitle && (
+          <p className="text-sm font-inter text-stone-500 mt-1">{subtitle}</p>
+        )}
       </div>
       {actionLabel && (
-        <button 
-          onClick={onActionClick}
-          className="px-4 py-2 bg-stone-900 text-white font-inter font-medium text-sm rounded-lg hover:bg-stone-800 transition-colors shadow-sm whitespace-nowrap"
-        >
-          {actionLabel}
-        </button>
+        actionHref ? (
+          <Link href={actionHref} className="bg-stone-900 text-white px-5 py-2.5 rounded-lg font-inter text-sm font-medium hover:bg-stone-800 transition-all shadow-sm flex items-center gap-2">
+            <Plus size={18} />
+            {actionLabel}
+          </Link>
+        ) : (
+          <button onClick={onAction} className="bg-stone-900 text-white px-5 py-2.5 rounded-lg font-inter text-sm font-medium hover:bg-stone-800 transition-all shadow-sm flex items-center gap-2">
+            <Plus size={18} />
+            {actionLabel}
+          </button>
+        )
       )}
     </div>
   );

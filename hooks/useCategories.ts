@@ -4,22 +4,26 @@ import { Category } from "../types/category";
 
 export const CATEGORY_QUERY_KEYS = {
   all: ['categories'] as const,
-  lists: () => [...CATEGORY_QUERY_KEYS.all, 'list'] as const,
+  lists: (params?: any) => params ? [...CATEGORY_QUERY_KEYS.all, 'list', params] as const : [...CATEGORY_QUERY_KEYS.all, 'list'] as const,
   detail: (id: string) => [...CATEGORY_QUERY_KEYS.all, 'detail', id] as const,
 };
 
-export function useCategories() {
+export function useCategories(params?: { search?: string }, initialData?: any) {
   return useQuery({
-    queryKey: CATEGORY_QUERY_KEYS.lists(),
-    queryFn: () => categoriesService.getCategories(),
+    queryKey: CATEGORY_QUERY_KEYS.lists(params),
+    queryFn: () => categoriesService.getCategories(params),
+    staleTime: 1000 * 60 * 60, // 1 hour
+    initialData,
   });
 }
 
-export function useCategory(id: string) {
+export function useCategory(id: string, initialData?: Category) {
   return useQuery({
     queryKey: CATEGORY_QUERY_KEYS.detail(id),
     queryFn: () => categoriesService.getCategoryById(id),
     enabled: !!id,
+    staleTime: 1000 * 60 * 60, // 1 hour
+    initialData,
   });
 }
 

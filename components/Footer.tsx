@@ -5,8 +5,12 @@ import Link from "next/link";
 import { MapPin, Phone, Mail } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useCategories } from "@/hooks/useCategories";
+import { useState, useEffect } from "react";
 
 export default function Footer() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const pathname = usePathname();
   const { data: response } = useCategories();
   const categories = response?.data?.slice(0, 5) || []; // Show up to 5 categories
@@ -21,9 +25,10 @@ export default function Footer() {
         {/* Background Layer */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/footer/bg.jpg"
+            src="/footer/bg.jpeg"
             alt="Footer Background"
             fill
+            sizes="100vw"
             className="object-cover"
           />
           <div className="absolute inset-0 bg-black/80" />
@@ -36,7 +41,7 @@ export default function Footer() {
           <div className="flex flex-col items-start gap-[20px] w-[320px]">
             {/* Logo */}
             <div className="relative w-[180px] h-[40px]">
-               <Image src="/logo-white.png" alt="Laural Clothing" fill className="object-contain object-left" />
+               <Image src="/logo-white.png" alt="Laural Clothing" fill sizes="200px" className="object-contain object-left" />
             </div>
             
             {/* Contact Items */}
@@ -77,11 +82,10 @@ export default function Footer() {
               </div>
             </div>
             
-            {/* Categories Col */}
             <div className="flex flex-col gap-[16px]">
               <h4 className="font-inter font-bold text-sm tracking-[0.02em] uppercase text-background">Categories</h4>
               <div className="flex flex-col gap-[10px]">
-                {categories.map(cat => (
+                {mounted && categories.map((cat: any) => (
                   <Link href={`/categories/${cat.slug}`} key={cat.id} className="font-inter text-sm text-background/85 hover:text-white transition-colors">{cat.name}</Link>
                 ))}
               </div>
@@ -145,7 +149,7 @@ export default function Footer() {
           © 2026 Laural Clothing. All Rights Reserved. Developed by ScriptLK Digital
         </p>
         <div className="relative w-[309px] h-[24px]">
-          <Image src="/footer/payments.webp" alt="Payment Methods" fill className="object-contain md:object-right" />
+          <Image src="/footer/payments.webp" alt="Payment Methods" fill sizes="400px" className="object-contain md:object-right" />
         </div>
       </div>
     </footer>

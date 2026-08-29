@@ -8,7 +8,9 @@ export interface Review {
   title?: string;
   comment?: string;
   images: string[];
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SPAM';
+  adminReply?: string;
+  adminReplyAt?: string;
   isVerifiedPurchase: boolean;
   createdAt: string;
   updatedAt: string;
@@ -53,14 +55,26 @@ export const reviewService = {
     return response.data;
   },
 
-  getAllReviews: async (status?: string): Promise<Review[]> => {
-    const params = status && status !== 'ALL' ? { status } : {};
+  getAllReviews: async (status?: string, page: number = 1, limit: number = 20, search?: string): Promise<{ data: Review[], total: number, page: number, totalPages: number }> => {
+    const params: any = { page, limit };
+    if (status && status !== 'ALL') params.status = status;
+    if (search) params.search = search;
     const response = await api.get('/reviews', { params });
     return response.data;
   },
 
-  updateReviewStatus: async (id: string, status: 'PENDING' | 'APPROVED' | 'REJECTED'): Promise<Review> => {
+  getReviewStats: async (): Promise<{ pending: number; approved: number; rejected: number; spam: number; averageRating: number }> => {
+    const response = await api.get('/reviews/stats');
+    return response.data;
+  },
+
+  updateReviewStatus: async (id: string, status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SPAM'): Promise<Review> => {
     const response = await api.patch(`/reviews/${id}/status`, { status });
+    return response.data;
+  },
+
+  addAdminReply: async (id: string, reply: string): Promise<Review> => {
+    const response = await api.post(`/reviews/${id}/reply`, { reply });
     return response.data;
   },
 

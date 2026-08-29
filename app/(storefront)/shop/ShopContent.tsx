@@ -1,17 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import FilterSidebar from "@/components/FilterSidebar";
 import ProductCard from "@/components/ProductCard";
 import CategoryBar from "@/components/CategoryBar";
 import { SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
 import { useProducts } from "@/hooks/useProducts";
 import { Product } from "@/types/product";
+import { PaginatedResponse } from "@/types/api";
 
-export default function ShopContent() {
+export default function ShopContent({ initialData }: { initialData?: PaginatedResponse<Product> }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (window.innerWidth >= 768) {
@@ -19,9 +25,21 @@ export default function ShopContent() {
     }
   }, []);
 
+  // Parse filters from URL
+  const search = searchParams?.get('search') || undefined;
+  const category = searchParams?.get('category') || undefined;
+  const sizes = searchParams?.get('sizes') || undefined;
+  const colors = searchParams?.get('colors') || undefined;
+  const minPrice = searchParams?.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined;
+  const maxPrice = searchParams?.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined;
+  const styles = searchParams?.get('styles') || undefined;
+  const sort = searchParams?.get('sort') || undefined;
+
   // Pagination logic
   const skip = (currentPage - 1) * itemsPerPage;
-  const { data: response, isLoading } = useProducts({ skip, take: itemsPerPage });
+  const { data: response, isLoading } = useProducts({ 
+    skip, take: itemsPerPage, search, category, sizes, colors, minPrice, maxPrice, styles, sort 
+  }, skip === 0 && !searchParams?.toString() ? initialData : undefined);
   
   const products = response?.data || [];
   const totalItems = response?.meta.total || 0;
@@ -33,6 +51,26 @@ export default function ShopContent() {
       setCurrentPage(page);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  };
+
+  const applyFilters = (filters: any) => {
+    const params = new URLSearchParams(searchParams?.toString() || "");
+    
+    // Clear existing
+    ["search", "category", "sizes", "colors", "minPrice", "maxPrice", "styles", "sort"].forEach(key => params.delete(key));
+
+    // Set new
+    if (filters.search) params.set("search", filters.search);
+    if (filters.category) params.set("category", filters.category);
+    if (filters.sizes?.length) params.set("sizes", filters.sizes.join(","));
+    if (filters.colors?.length) params.set("colors", filters.colors.join(","));
+    if (filters.minPrice) params.set("minPrice", filters.minPrice.toString());
+    if (filters.maxPrice) params.set("maxPrice", filters.maxPrice.toString());
+    if (filters.styles?.length) params.set("styles", filters.styles.join(","));
+    if (filters.sort) params.set("sort", filters.sort);
+
+    setCurrentPage(1);
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
   const getPageNumbers = () => {
@@ -99,7 +137,12 @@ export default function ShopContent() {
               : "w-[300px] md:w-[80px] -translate-x-full md:translate-x-0"
           }`}
         >
-          <FilterSidebar isOpen={isSidebarOpen} onToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
+          <FilterSidebar 
+            isOpen={isSidebarOpen} 
+            onToggle={() => setIsSidebarOpen(!isSidebarOpen)} 
+            initialFilters={{ search, category, sizes: sizes ? sizes.split(',') : [], colors: colors ? colors.split(',') : [], minPrice, maxPrice, styles: styles ? styles.split(',') : [] }}
+            onApplyFilters={applyFilters}
+          />
         </div>
 
         {/* Product Grid Area */}

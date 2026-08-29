@@ -17,8 +17,8 @@ export interface Collection {
 }
 
 export const collectionsService = {
-  async getCollections(): Promise<{ data: Collection[]; total: number }> {
-    const { data } = await api.get<{ data: Collection[]; total: number }>('/collections');
+  async getCollections(params?: { search?: string }): Promise<{ data: Collection[]; total: number }> {
+    const { data } = await api.get<{ data: Collection[]; total: number }>('/collections', { params });
     return data;
   },
 

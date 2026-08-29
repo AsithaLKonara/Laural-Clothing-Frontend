@@ -14,14 +14,17 @@ interface BulkReturnModalProps {
   onSuccess: () => void;
 }
 
+import { useBulkUpdateReturns } from "@/hooks/useReturns";
+
 export default function BulkReturnModal({ selectedRMAs, onClose, onSuccess }: BulkReturnModalProps) {
-  const [isProcessing, setIsProcessing] = useState(false);
   const [resolutions, setResolutions] = useState<Record<string, { condition: string, action: string }>>(
     selectedRMAs.reduce((acc, rma) => ({
       ...acc,
       [rma.id]: { condition: "RESTOCKABLE", action: "APPROVE_STORE_CREDIT" }
     }), {})
   );
+
+  const bulkUpdateMutation = useBulkUpdateReturns();
 
   const updateResolution = (id: string, field: "condition" | "action", value: string) => {
     setResolutions(prev => ({
@@ -30,13 +33,17 @@ export default function BulkReturnModal({ selectedRMAs, onClose, onSuccess }: Bu
     }));
   };
 
-  const handleProcess = () => {
-    setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
+  const handleProcess = async () => {
+    try {
+      await bulkUpdateMutation.mutateAsync(resolutions);
       onSuccess();
-    }, 1500);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to process bulk returns");
+    }
   };
+
+  const isProcessing = bulkUpdateMutation.isPending;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">

@@ -6,7 +6,7 @@ export default function BrandStorySection() {
       {/* Background Layer */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/about/bg.jpg"
+          src="/about/bg.jpeg"
           alt="Brand Story Background"
           fill
           className="object-cover opacity-30" // Adding slight opacity in case it acts as a subtle background pattern, adjust as needed
@@ -19,7 +19,7 @@ export default function BrandStorySection() {
         {/* Left Image Container */}
         <div className="relative flex-1 w-full max-w-[509px] h-[350px] md:h-[509px] overflow-hidden shadow-sm">
           <Image
-            src="/about/image1.jpg"
+            src="/about/image1.jpeg"
             alt="Brand Story Feature"
             fill
             className="object-cover"

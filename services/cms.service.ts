@@ -26,6 +26,8 @@ export interface HomepageSection {
   description?: string;
   visible: boolean;
   order: number;
+  type?: string;
+  config?: any;
 }
 
 export interface StaticPage {
@@ -34,6 +36,10 @@ export interface StaticPage {
   slug: string;
   content: string;
   lastEdited: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  metaKeywords?: string;
+  ogImage?: string;
 }
 
 export const cmsService = {

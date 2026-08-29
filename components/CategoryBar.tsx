@@ -3,6 +3,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCategories } from "@/hooks/useCategories";
 
+import { Category } from "@/types/category";
+
 export default function CategoryBar() {
   const pathname = usePathname();
   const { data: response } = useCategories();
@@ -12,7 +14,7 @@ export default function CategoryBar() {
     <div className="w-full bg-stone-500 hidden md:block">
       <div className="max-w-[1440px] mx-auto px-6 lg:px-8">
         <div className="flex items-center justify-center gap-8 overflow-x-auto custom-scrollbar py-3">
-          {categories.map((cat) => {
+          {categories.map((cat: Category) => {
             const isActive = pathname === `/categories/${cat.slug}`;
             return (
               <Link 

@@ -186,7 +186,7 @@ export default function ClientContent() {
                       />
                       <div className="relative w-16 h-20 bg-stone-100 rounded overflow-hidden shrink-0">
                         {item.variant.featuredImage ? (
-                           <Image src={item.variant.featuredImage} alt={item.variant.product.name} fill className="object-cover" />
+                           <Image src={item.variant.featuredImage} alt={item.variant.product.name} fill sizes="100px" className="object-cover" />
                         ) : (
                            <div className="w-full h-full flex justify-center items-center bg-stone-100"><Package className="text-stone-300"/></div>
                         )}
@@ -243,7 +243,7 @@ export default function ClientContent() {
                   <div key={selected.id} className="flex flex-col gap-4 p-5 border border-stone-200 rounded-2xl bg-stone-50">
                     <div className="flex items-center gap-3 border-b border-stone-200 pb-4">
                       <div className="relative w-12 h-16 bg-white rounded overflow-hidden shrink-0 border border-stone-100">
-                         {itemDetails?.variant.featuredImage && <Image src={itemDetails.variant.featuredImage} alt="Img" fill className="object-cover" />}
+                         {itemDetails?.variant.featuredImage && <Image src={itemDetails.variant.featuredImage} alt="Img" fill sizes="100px" className="object-cover" />}
                       </div>
                       <div className="flex flex-col">
                         <span className="font-poppins font-medium text-sm text-primary">{itemDetails?.variant.product.name}</span>

@@ -1,0 +1,97 @@
+"use client";
+
+import { useState } from "react";
+import PageHeader from "@/components/dashboard/PageHeader";
+import { useBranchReport } from "@/hooks/useReports";
+import { Download, Building2 } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const BranchesChart = dynamic(() => import("./BranchesChart"), { 
+  ssr: false, 
+  loading: () => <div className="h-[400px] w-full flex items-center justify-center bg-stone-50 rounded-lg animate-pulse text-stone-400">Loading chart...</div> 
+});
+
+export default function BranchReportPage() {
+  const [dateRange, setDateRange] = useState("30");
+  const endDate = new Date().toISOString();
+  const startDate = new Date(Date.now() - parseInt(dateRange) * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data, isLoading, error } = useBranchReport(startDate, endDate);
+
+  const handleDownloadCSV = () => {
+    if (!data) return;
+    const csvRows = ["Branch ID,Branch Name,Type,Total Revenue,Total Orders"];
+    data.forEach(row => {
+      csvRows.push(`${row.branchId},${row.branchName},${row.type},${row.revenue},${row.orders}`);
+    });
+
+    const csvString = csvRows.join("\n");
+    const blob = new Blob([csvString], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `branch_report_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  if (isLoading) return <div className="p-10 font-poppins">Loading report...</div>;
+  if (error || !data) return <div className="p-10 font-poppins text-red-500">Failed to load report.</div>;
+
+  const totalGlobalRevenue = data.reduce((sum, b) => sum + b.revenue, 0);
+
+  return (
+    <div className="flex flex-col p-4 md:p-10 max-w-[1280px] mx-auto w-full gap-8">
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <PageHeader 
+          title="Branch Performance Report" 
+          description="Revenue and order volume analysis across all physical and virtual locations."
+        />
+        <div className="flex items-center gap-3">
+          <select 
+            value={dateRange} 
+            onChange={(e) => setDateRange(e.target.value)}
+            className="h-10 px-4 border border-stone-200 rounded-lg bg-white text-sm font-inter text-stone-700 outline-none focus:border-primary"
+          >
+            <option value="7">Last 7 Days</option>
+            <option value="30">Last 30 Days</option>
+            <option value="90">Last 90 Days</option>
+          </select>
+          <button onClick={handleDownloadCSV} className="h-10 px-4 bg-primary text-white text-sm font-medium rounded-lg flex items-center gap-2 hover:bg-stone-800 transition-colors">
+            <Download size={16} />
+            Export CSV
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {data.map((branch) => (
+          <div key={branch.branchId} className="bg-white border border-stone-200 rounded-xl p-5 relative overflow-hidden">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-stone-100 flex items-center justify-center text-stone-600">
+                <Building2 size={20} />
+              </div>
+              <div>
+                <h4 className="font-semibold text-stone-900 font-poppins text-sm">{branch.branchName}</h4>
+                <span className="text-xs text-stone-500 font-inter px-2 py-0.5 bg-stone-100 rounded-full">{branch.type}</span>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <p className="text-2xl font-semibold text-primary font-poppins">Rs. {branch.revenue.toLocaleString()}</p>
+              <p className="text-xs text-stone-500 font-inter">{branch.orders} Total Orders</p>
+            </div>
+            <div 
+              className="absolute bottom-0 left-0 h-1 bg-accent" 
+              style={{ width: `${totalGlobalRevenue > 0 ? (branch.revenue / totalGlobalRevenue) * 100 : 0}%` }}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-white border border-stone-200 rounded-xl p-6">
+        <h3 className="text-lg font-semibold text-primary font-poppins mb-6">Revenue by Branch</h3>
+        <BranchesChart data={data} />
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,129 @@
+"use client";
+
+import { useState } from "react";
+import PageHeader from "@/components/dashboard/PageHeader";
+import { usePromotionsReport } from "@/hooks/useReports";
+import { Download, Tag } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const PromotionsChart = dynamic(() => import("./PromotionsChart"), { 
+  ssr: false, 
+  loading: () => <div className="h-[300px] w-full flex items-center justify-center bg-stone-50 rounded-lg animate-pulse text-stone-400">Loading chart...</div> 
+});
+
+export default function PromotionsReportPage() {
+  const [dateRange, setDateRange] = useState("30");
+  const endDate = new Date().toISOString();
+  const startDate = new Date(Date.now() - parseInt(dateRange) * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data, isLoading, error } = usePromotionsReport(startDate, endDate);
+
+  const handleDownloadCSV = () => {
+    if (!data) return;
+    const csvRows = [
+      "Category,Metric,Value",
+      `Vouchers,Issued,${data.vouchers.issued}`,
+      `Vouchers,Used,${data.vouchers.used}`,
+      `Vouchers,Outstanding Liability,${data.vouchers.outstandingLiability}`,
+      `Coupons,Issued,${data.coupons.issued}`,
+      `Coupons,Total Usages,${data.coupons.totalUsages}`
+    ];
+
+    const csvString = csvRows.join("\n");
+    const blob = new Blob([csvString], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `promotions_report_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const chartData = data ? [
+    { name: "Vouchers", Issued: data.vouchers.issued, Used: data.vouchers.used },
+    { name: "Coupons", Issued: data.coupons.issued, Used: data.coupons.totalUsages },
+  ] : [];
+
+  if (isLoading) return <div className="p-10 font-poppins">Loading report...</div>;
+  if (error || !data) return <div className="p-10 font-poppins text-red-500">Failed to load report.</div>;
+
+  return (
+    <div className="flex flex-col p-4 md:p-10 max-w-[1280px] mx-auto w-full gap-8">
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <PageHeader 
+          title="Promotions & Vouchers Report" 
+          description="Track the usage and liability of exchange vouchers and discount coupons."
+        />
+        <div className="flex items-center gap-3">
+          <select 
+            value={dateRange} 
+            onChange={(e) => setDateRange(e.target.value)}
+            className="h-10 px-4 border border-stone-200 rounded-lg bg-white text-sm font-inter text-stone-700 outline-none focus:border-primary"
+          >
+            <option value="7">Last 7 Days</option>
+            <option value="30">Last 30 Days</option>
+            <option value="90">Last 90 Days</option>
+          </select>
+          <button onClick={handleDownloadCSV} className="h-10 px-4 bg-primary text-white text-sm font-medium rounded-lg flex items-center gap-2 hover:bg-stone-800 transition-colors">
+            <Download size={16} />
+            Export CSV
+          </button>
+        </div>
+      </div>
+
+      <div className="bg-white border border-stone-200 rounded-xl p-6">
+        <h3 className="text-lg font-semibold text-primary font-poppins mb-6">Promotions Utilization</h3>
+        <PromotionsChart data={chartData} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Vouchers Block */}
+        <div className="bg-white border border-stone-200 rounded-xl p-6 relative overflow-hidden flex flex-col gap-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-stone-100 flex items-center justify-center text-stone-600">
+              <Tag size={20} />
+            </div>
+            <h3 className="text-lg font-semibold text-stone-900 font-poppins">Exchange Vouchers</h3>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-stone-50 p-4 rounded-lg">
+              <p className="text-sm font-medium text-stone-500 font-inter">Issued</p>
+              <p className="text-2xl font-semibold text-primary font-poppins mt-1">{data.vouchers.issued.toLocaleString()}</p>
+            </div>
+            <div className="bg-stone-50 p-4 rounded-lg">
+              <p className="text-sm font-medium text-stone-500 font-inter">Redeemed</p>
+              <p className="text-2xl font-semibold text-emerald-600 font-poppins mt-1">{data.vouchers.used.toLocaleString()}</p>
+            </div>
+          </div>
+          
+          <div className="bg-stone-900 text-white p-5 rounded-lg">
+             <p className="text-sm font-medium font-inter text-stone-300">Outstanding Financial Liability</p>
+             <p className="text-3xl font-semibold font-poppins mt-2">Rs. {data.vouchers.outstandingLiability.toLocaleString()}</p>
+          </div>
+        </div>
+
+        {/* Coupons Block */}
+        <div className="bg-white border border-stone-200 rounded-xl p-6 relative overflow-hidden flex flex-col gap-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-stone-100 flex items-center justify-center text-stone-600">
+              <Tag size={20} />
+            </div>
+            <h3 className="text-lg font-semibold text-stone-900 font-poppins">Discount Coupons</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-4">
+            <div className="bg-stone-50 p-4 rounded-lg">
+              <p className="text-sm font-medium text-stone-500 font-inter">Total Coupons Created</p>
+              <p className="text-2xl font-semibold text-primary font-poppins mt-1">{data.coupons.issued.toLocaleString()}</p>
+            </div>
+            <div className="bg-stone-50 p-4 rounded-lg">
+              <p className="text-sm font-medium text-stone-500 font-inter">Total Redemptions</p>
+              <p className="text-2xl font-semibold text-primary font-poppins mt-1">{data.coupons.totalUsages.toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

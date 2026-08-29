@@ -2,12 +2,25 @@ import Hero from "@/components/Hero";
 import CollectionsSection from "@/components/CollectionsSection";
 import NewArrivalsSection from "@/components/NewArrivalsSection";
 import CuratedCollectionsSection from "@/components/CuratedCollectionsSection";
-import OfferCollectionSection from "@/components/OfferCollectionSection";
+import dynamic from "next/dynamic";
 import AdBannerSection from "@/components/AdBannerSection";
+
+const OfferCollectionSection = dynamic(() => import("@/components/OfferCollectionSection"));
 import BrandStorySection from "@/components/BrandStorySection";
 import TestimonialSection from "@/components/TestimonialSection";
+import { serverFetch } from "@/lib/server-fetch";
+import { PaginatedResponse } from "@/types/api";
+import { Product } from "@/types/product";
+import { Category } from "@/types/category";
 
-export default function Home() {
+export default async function Home() {
+  // Fetch SEO-critical data on the server in parallel
+  const [categoriesRes, newArrivalsRes, offersRes] = await Promise.all([
+    serverFetch<PaginatedResponse<Category>>("/categories", { tags: ["categories"], revalidate: 3600 }).catch(() => undefined),
+    serverFetch<PaginatedResponse<Product>>("/products", { tags: ["products"], revalidate: 3600 }).catch(() => undefined),
+    serverFetch<PaginatedResponse<Product>>("/products?skip=8&take=8", { tags: ["products"], revalidate: 3600 }).catch(() => undefined),
+  ]);
+
   return (
     <main className="min-h-screen bg-stone-50">
       <Hero />
@@ -44,10 +57,10 @@ export default function Home() {
           ))}
         </div>
       </div>
-      <CollectionsSection />
-      <NewArrivalsSection />
+      <CollectionsSection initialData={categoriesRes} />
+      <NewArrivalsSection initialData={newArrivalsRes} />
       <CuratedCollectionsSection />
-      <OfferCollectionSection />
+      <OfferCollectionSection initialData={offersRes} />
       <AdBannerSection />
       <BrandStorySection />
       <TestimonialSection />

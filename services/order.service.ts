@@ -35,7 +35,7 @@ export const orderService = {
   createQuickDispatch: (data: QuickDispatchPayload) => 
     api.post<any>('/orders/quick-dispatch', data),
 
-  getOrders: (params?: { page?: number; limit?: number; status?: string; branchId?: string; paymentGateway?: string; customerId?: string }) => 
+  getOrders: (params?: { search?: string; page?: number; limit?: number; status?: string; branchId?: string; paymentGateway?: string; customerId?: string }) => 
     api.get<any>('/orders', { params }),
 
   getOrderById: (id: string) => 
@@ -43,6 +43,12 @@ export const orderService = {
 
   updateOrderStatus: (id: string, status: string) => 
     api.patch<any>(`/orders/${id}/status`, { status }),
+
+  refundOrder: (id: string) => 
+    api.post<any>(`/orders/${id}/refund`),
+    
+  refundPartialOrder: (id: string, itemsToReturn: { variantId: string, qty: number }[], refundMethod?: string) => 
+    api.post<any>(`/orders/${id}/refund/partial`, { itemsToReturn, refundMethod }),
 
   getAllOrders: async () => {
     const { data } = await api.get('/orders');

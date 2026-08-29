@@ -1,6 +1,7 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsService, GetProductsParams } from '../services/products.service';
 import { Product } from '../types/product';
+import { PaginatedResponse } from '../types/api';
 
 export const PRODUCT_QUERY_KEYS = {
   all: ['products'] as const,
@@ -10,12 +11,23 @@ export const PRODUCT_QUERY_KEYS = {
   details: () => [...PRODUCT_QUERY_KEYS.all, 'detail'] as const,
   detail: (id: string) => [...PRODUCT_QUERY_KEYS.details(), id] as const,
   detailBySlug: (slug: string) => [...PRODUCT_QUERY_KEYS.details(), 'slug', slug] as const,
+  filtersMeta: () => [...PRODUCT_QUERY_KEYS.all, 'filters-meta'] as const,
 };
 
-export function useProducts(params?: GetProductsParams) {
+export function useProductFiltersMeta() {
+  return useQuery({
+    queryKey: PRODUCT_QUERY_KEYS.filtersMeta(),
+    queryFn: () => productsService.getFilterMetadata(),
+    staleTime: 1000 * 60 * 60, // 1 hour (metadata rarely changes)
+  });
+}
+
+export function useProducts(params?: GetProductsParams, initialData?: PaginatedResponse<Product>) {
   return useQuery({
     queryKey: PRODUCT_QUERY_KEYS.list(params),
     queryFn: () => productsService.getProducts(params),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    initialData,
   });
 }
 
@@ -27,23 +39,28 @@ export function useInfiniteProducts(params?: GetProductsParams) {
       const nextSkip = allPages.length * (params?.take || 12);
       return nextSkip < lastPage.meta.total ? nextSkip : undefined;
     },
+    staleTime: 1000 * 60 * 5, // 5 minutes
     initialPageParam: 0,
   });
 }
 
-export function useProduct(id: string) {
+export function useProduct(id: string, initialData?: Product) {
   return useQuery({
     queryKey: PRODUCT_QUERY_KEYS.detail(id),
     queryFn: () => productsService.getProductById(id),
     enabled: !!id,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    initialData,
   });
 }
 
-export function useProductBySlug(slug: string) {
+export function useProductBySlug(slug: string, initialData?: Product) {
   return useQuery({
     queryKey: PRODUCT_QUERY_KEYS.detailBySlug(slug),
     queryFn: () => productsService.getProductBySlug(slug),
     enabled: !!slug,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    initialData,
   });
 }
 
@@ -83,6 +100,16 @@ export function useDeleteProduct() {
     mutationFn: (id: string) => productsService.deleteProduct(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: PRODUCT_QUERY_KEYS.detail(id) });
+      queryClient.invalidateQueries({ queryKey: PRODUCT_QUERY_KEYS.lists() });
+    },
+  });
+}
+
+export function useBulkEditProducts() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ productIds, data }: { productIds: string[]; data: any }) => productsService.bulkEditProducts(productIds, data),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PRODUCT_QUERY_KEYS.lists() });
     },
   });

@@ -51,8 +51,6 @@ export default function CouponModal({ isOpen, onClose, initialData }: CouponModa
     }
   }, [initialData, isOpen]);
 
-  if (!isOpen) return null;
-
   function generateRandomCode() {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let res = "";
@@ -62,6 +60,8 @@ export default function CouponModal({ isOpen, onClose, initialData }: CouponModa
 
   const { mutateAsync: createCoupon, isPending: isCreating } = useCreateCoupon();
   const { mutateAsync: updateCoupon, isPending: isUpdating } = useUpdateCoupon();
+
+  if (!isOpen) return null;
 
   async function handleSave() {
     try {

@@ -2,20 +2,33 @@
 
 import React, { useState } from "react";
 import { X, Lock, Unlock, AlertCircle } from "lucide-react";
-import { useOpenSession, useCloseSession } from "@/hooks/usePos";
+import { useOpenSession, useCloseSession, useExpectedClosing, useSessionSummary } from "@/hooks/usePos";
+import ZReportSlip from "./ZReportSlip";
 
 interface PosShiftModalProps {
   mode: "OPEN" | "CLOSE";
+  activeSession: any;
+  branchId: string;
+  terminalId: string;
+  userId: string;
   onClose: () => void;
   onSuccess: (float: number) => void;
 }
 
-export default function PosShiftModal({ mode, onClose, onSuccess }: PosShiftModalProps) {
+export default function PosShiftModal({ mode, activeSession, branchId, terminalId, userId, onClose, onSuccess }: PosShiftModalProps) {
   const [floatAmount, setFloatAmount] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const expectedCash = 25000; // Mock expected cash for closing shift
+  const { data: expectedClosingData, isLoading: expectedClosingLoading } = useExpectedClosing(
+    mode === "CLOSE" ? activeSession?.id : undefined
+  );
+
+  const { data: sessionSummaryData } = useSessionSummary(
+    (mode === "CLOSE" && isSuccess) ? activeSession?.id : undefined
+  );
+
+  const expectedCash = expectedClosingData?.expectedClosing || 0;
   const actualCash = Number(floatAmount) || 0;
   const variance = actualCash - expectedCash;
   
@@ -26,16 +39,17 @@ export default function PosShiftModal({ mode, onClose, onSuccess }: PosShiftModa
     setIsProcessing(true);
     try {
       if (mode === "CLOSE") {
+        if (!activeSession) throw new Error("No active session to close.");
         await closeSessionMutation.mutateAsync({
-          sessionId: "mock-session-id", // Hardcoded for now until session fetching is fully integrated to modal
+          sessionId: activeSession.id,
           actualClosing: actualCash
         });
         setIsSuccess(true);
       } else {
         await openSessionMutation.mutateAsync({
-          branchId: "BR-001",
-          terminalId: "TERM-001",
-          userId: "mock-user-id",
+          branchId,
+          terminalId,
+          userId,
           openingFloat: actualCash
         });
         onSuccess(actualCash);
@@ -58,16 +72,22 @@ export default function PosShiftModal({ mode, onClose, onSuccess }: PosShiftModa
           <p className="text-stone-500 font-inter text-sm mb-6">Drawer balanced and sales recorded for the day.</p>
           
           <div className="w-full bg-stone-50 border border-stone-200 rounded-lg p-4 mb-6 flex flex-col gap-2 text-sm text-left font-inter">
-            <div className="flex justify-between"><span>Opening Cash</span><span>Rs. 5,000</span></div>
-            <div className="flex justify-between"><span>Total Sales</span><span>Rs. 20,000</span></div>
+            <div className="flex justify-between"><span>Opening Cash</span><span>Rs. {activeSession?.openingFloat?.toLocaleString() || '0'}</span></div>
             <div className="flex justify-between font-bold pt-2 border-t border-stone-200"><span>Variance</span><span className={variance < 0 ? "text-red-600" : "text-emerald-600"}>Rs. {variance.toLocaleString()}</span></div>
           </div>
+
+          {sessionSummaryData && (
+            <div className="hidden">
+              <ZReportSlip session={sessionSummaryData.session} summary={sessionSummaryData.summary} />
+            </div>
+          )}
 
           <button 
             onClick={() => {
               window.print();
             }}
-            className="w-full py-3 bg-stone-900 text-white font-inter font-bold rounded-xl hover:bg-stone-800 transition-colors mb-3"
+            disabled={!sessionSummaryData}
+            className="w-full py-3 bg-stone-900 text-white font-inter font-bold rounded-xl hover:bg-stone-800 transition-colors mb-3 disabled:opacity-50"
           >
             Print Day End Report
           </button>
@@ -109,17 +129,23 @@ export default function PosShiftModal({ mode, onClose, onSuccess }: PosShiftModa
               <div className="flex flex-col gap-2 p-4 bg-stone-50 border border-stone-200 rounded-lg">
                 <div className="flex justify-between text-sm font-inter">
                   <span className="text-stone-500">Opening Float</span>
-                  <span className="font-medium text-stone-900">Rs. 5,000</span>
+                  <span className="font-medium text-stone-900">Rs. {activeSession?.openingFloat?.toLocaleString() || '0'}</span>
                 </div>
-                <div className="flex justify-between text-sm font-inter">
-                  <span className="text-stone-500">Cash Sales</span>
-                  <span className="font-medium text-stone-900">Rs. 20,000</span>
-                </div>
-                <div className="w-full h-px bg-stone-200 my-1"></div>
-                <div className="flex justify-between font-inter">
-                  <span className="font-bold text-stone-700">Expected Cash</span>
-                  <span className="font-bold text-stone-900">Rs. {expectedCash.toLocaleString()}</span>
-                </div>
+                {expectedClosingLoading ? (
+                  <div className="text-sm text-muted animate-pulse">Calculating cash sales...</div>
+                ) : (
+                  <>
+                    <div className="flex justify-between text-sm font-inter">
+                      <span className="text-stone-500">Cash Sales</span>
+                      <span className="font-medium text-stone-900">Rs. {(expectedCash - (activeSession?.openingFloat || 0)).toLocaleString()}</span>
+                    </div>
+                    <div className="w-full h-px bg-stone-200 my-1"></div>
+                    <div className="flex justify-between font-inter">
+                      <span className="font-bold text-stone-700">Expected Cash</span>
+                      <span className="font-bold text-stone-900">Rs. {expectedCash.toLocaleString()}</span>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
@@ -137,7 +163,7 @@ export default function PosShiftModal({ mode, onClose, onSuccess }: PosShiftModa
               />
             </div>
 
-            {mode === "CLOSE" && floatAmount && (
+            {mode === "CLOSE" && floatAmount && !expectedClosingLoading && (
               <div className={`flex items-start gap-3 p-3 rounded-lg text-sm font-inter ${variance === 0 ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : 'bg-red-50 border border-red-200 text-red-800'}`}>
                 <AlertCircle size={16} className="mt-0.5 shrink-0" />
                 <div>
@@ -156,7 +182,7 @@ export default function PosShiftModal({ mode, onClose, onSuccess }: PosShiftModa
           </button>
           <button 
             onClick={handleProcess} 
-            disabled={isProcessing || !floatAmount} 
+            disabled={isProcessing || !floatAmount || (mode === "CLOSE" && expectedClosingLoading)} 
             className={`px-8 py-2.5 text-white font-inter font-medium text-sm rounded-lg transition-colors shadow-sm flex items-center gap-2 disabled:opacity-50 ${mode === 'OPEN' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'}`}
           >
             {isProcessing ? "Processing..." : mode === "OPEN" ? "Open Shift" : "Close Shift"}

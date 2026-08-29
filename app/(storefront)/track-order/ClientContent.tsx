@@ -195,7 +195,7 @@ export default function ClientContent() {
                     <div key={item.id} className="flex flex-row items-center w-full p-4 bg-white border border-stone-200 rounded-lg shadow-sm gap-4 relative">
                       <div className="w-[60px] h-[60px] relative bg-stone-100 rounded-md overflow-hidden shrink-0">
                         {item.variant?.product?.images?.[0] ? (
-                          <Image src={item.variant.product.images[0]} alt={item.variant.product.name} fill className="object-cover object-top" />
+                          <Image src={item.variant.product.images[0]} alt={item.variant.product.name} fill sizes="100px" className="object-cover object-top" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-stone-300">
                             <Package size={20} />

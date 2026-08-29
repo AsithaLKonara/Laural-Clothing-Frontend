@@ -1,15 +1,30 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronDown, ChevronUp, SlidersHorizontal, Check, Filter } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ChevronDown, ChevronUp, SlidersHorizontal, Check, Filter, X } from "lucide-react";
 import { useCategories } from "@/hooks/useCategories";
+import { useProductFiltersMeta } from "@/hooks/useProducts";
+import colorNames from "color-name";
+
+interface FilterState {
+  search?: string;
+  category?: string;
+  sizes: string[];
+  colors: string[];
+  minPrice?: number;
+  maxPrice?: number;
+  styles: string[];
+  sort?: string;
+}
 
 interface FilterSidebarProps {
   isOpen?: boolean;
   onToggle?: () => void;
+  initialFilters?: Partial<FilterState>;
+  onApplyFilters?: (filters: FilterState) => void;
 }
 
-export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebarProps) {
+export default function FilterSidebar({ isOpen = true, onToggle, initialFilters, onApplyFilters }: FilterSidebarProps) {
   const [openSections, setOpenSections] = useState({
     categories: true,
     price: true,
@@ -18,8 +33,31 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
     style: true,
   });
 
-  const [selectedColor, setSelectedColor] = useState<string>("blue");
-  const [selectedSize, setSelectedSize] = useState<string>("Large");
+  const [filters, setFilters] = useState<FilterState>({
+    search: initialFilters?.search || "",
+    category: initialFilters?.category || "",
+    sizes: initialFilters?.sizes || [],
+    colors: initialFilters?.colors || [],
+    minPrice: initialFilters?.minPrice,
+    maxPrice: initialFilters?.maxPrice,
+    styles: initialFilters?.styles || [],
+    sort: initialFilters?.sort || "",
+  });
+
+  useEffect(() => {
+    if (initialFilters) {
+      setFilters({
+        search: initialFilters.search || "",
+        category: initialFilters.category || "",
+        sizes: initialFilters.sizes || [],
+        colors: initialFilters.colors || [],
+        minPrice: initialFilters.minPrice,
+        maxPrice: initialFilters.maxPrice,
+        styles: initialFilters.styles || [],
+        sort: initialFilters.sort || "",
+      });
+    }
+  }, [initialFilters]);
 
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
@@ -27,17 +65,53 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
 
   const { data: response, isLoading } = useCategories();
   const categories = response?.data || [];
-  const styles = ["Casual", "Formal", "Party", "Gym"];
   
-  const colors = [
-    { id: "blue", hex: "#063AF5" },
-    { id: "purple", hex: "#7D06F5" },
-    { id: "pink", hex: "#F506A4" },
-    { id: "white", hex: "#FAFAF9", border: true },
-    { id: "black", hex: "#1C1917" }
-  ];
+  const { data: filtersMeta } = useProductFiltersMeta();
+  const sizesList = filtersMeta?.sizes || [];
+  const dynamicColors = filtersMeta?.colors || [];
+  
+  const stylesList = ["Casual", "Formal", "Party", "Gym", "Vintage", "Minimalist"];
+  
+  const getColorStyle = (colorName: string) => {
+    if (!colorName) return 'transparent';
+    const normalized = colorName.toLowerCase().replace(/[^a-z]/g, '');
+    
+    if (normalized in colorNames) {
+      const [r, g, b] = colorNames[normalized as keyof typeof colorNames];
+      return `rgb(${r}, ${g}, ${b})`;
+    }
 
-  const sizes = ["XX-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "XX-Large", "3X-Large", "4X-Large"];
+    let bestMatch = '';
+    for (const known of Object.keys(colorNames)) {
+      if (normalized.includes(known) && known.length > bestMatch.length) {
+        bestMatch = known;
+      }
+    }
+    
+    if (bestMatch) {
+      const [r, g, b] = colorNames[bestMatch as keyof typeof colorNames];
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    return colorName.toLowerCase().trim();
+  };
+
+  const toggleArrayItem = (key: 'sizes' | 'colors' | 'styles', value: string) => {
+    setFilters(prev => {
+      const array = prev[key];
+      if (array.includes(value)) {
+        return { ...prev, [key]: array.filter(i => i !== value) };
+      } else {
+        return { ...prev, [key]: [...array, value] };
+      }
+    });
+  };
+
+  const clearFilters = () => {
+    const empty = { search: "", category: "", sizes: [], colors: [], minPrice: undefined, maxPrice: undefined, styles: [], sort: "" };
+    setFilters(empty);
+    if (onApplyFilters) onApplyFilters(empty);
+  };
 
   if (!isOpen) {
     return (
@@ -61,13 +135,16 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
         <h2 className="font-poppins font-bold text-xl text-primary flex items-center gap-2">
           <Filter size={20} /> Filters
         </h2>
-        <button 
-          onClick={onToggle}
-          className="p-2 -mr-2 rounded-full hover:bg-stone-200 transition-colors"
-          title="Hide Filters"
-        >
-          <SlidersHorizontal size={24} className="text-primary" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={clearFilters} className="text-sm font-urbanist text-primary underline hover:text-[#5E3122]">Clear</button>
+          <button 
+            onClick={onToggle}
+            className="p-2 -mr-2 rounded-full hover:bg-stone-200 transition-colors"
+            title="Hide Filters"
+          >
+            <X size={20} className="text-primary" />
+          </button>
+        </div>
       </div>
 
       <div className="w-full h-[1px] bg-[#44403B]/20" />
@@ -79,7 +156,10 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
           <input 
             type="text" 
             placeholder="Search products..." 
+            value={filters.search}
+            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
             className="w-full h-[40px] px-[16px] bg-[#E7E5E4] rounded-full font-urbanist font-light text-sm text-primary placeholder:text-[#44403B] focus:outline-none focus:ring-2 focus:ring-primary"
+            onKeyDown={(e) => { if (e.key === 'Enter' && onApplyFilters) onApplyFilters(filters) }}
           />
         </div>
       </div>
@@ -88,10 +168,20 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
 
       {/* Categories */}
       <div className="flex flex-col w-full gap-[20px]">
-        {categories.map((cat) => (
-          <div key={cat.id} className="flex justify-between items-center cursor-pointer group">
-            <span className="font-poppins text-base text-[#44403B] group-hover:text-primary transition-colors">{cat.name}</span>
-            <ChevronDown size={16} className="text-[#44403B] -rotate-90 group-hover:text-primary transition-transform" />
+        {categories.map((cat: any) => (
+          <div 
+            key={cat.id} 
+            className={`flex justify-between items-center cursor-pointer group ${filters.category === cat.slug ? 'font-bold' : ''}`}
+            onClick={() => setFilters({ ...filters, category: filters.category === cat.slug ? "" : cat.slug })}
+          >
+            <span className={`font-poppins text-base group-hover:text-primary transition-colors ${filters.category === cat.slug ? 'text-primary' : 'text-[#44403B]'}`}>
+              {cat.name}
+            </span>
+            {filters.category === cat.slug ? (
+              <Check size={16} className="text-primary" />
+            ) : (
+              <ChevronDown size={16} className="text-[#44403B] -rotate-90 group-hover:text-primary transition-transform" />
+            )}
           </div>
         ))}
       </div>
@@ -109,16 +199,23 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
         </div>
         
         {openSections.price && (
-          <div className="flex flex-col gap-[16px] w-full px-2">
-            {/* Visual slider mock */}
-            <div className="relative w-full h-[6px] bg-[#44403B] rounded-full mt-2">
-              <div className="absolute left-[20%] right-[30%] h-full bg-primary rounded-full" />
-              <div className="absolute left-[20%] top-1/2 -translate-y-1/2 w-[20px] h-[20px] bg-primary rounded-full shadow-md cursor-grab" />
-              <div className="absolute right-[30%] top-1/2 -translate-y-1/2 w-[20px] h-[20px] bg-primary rounded-full shadow-md cursor-grab" />
-            </div>
-            <div className="flex justify-between items-center w-full mt-2">
-              <span className="font-poppins font-medium text-sm text-primary">Rs. 50</span>
-              <span className="font-poppins font-medium text-sm text-primary">Rs. 200</span>
+          <div className="flex flex-col gap-[16px] w-full px-1">
+            <div className="flex items-center gap-2 w-full">
+              <input 
+                type="number"
+                placeholder={`Min (e.g. ${filtersMeta?.minPrice ?? 0})`}
+                value={filters.minPrice || ""}
+                onChange={(e) => setFilters({ ...filters, minPrice: e.target.value ? Number(e.target.value) : undefined })}
+                className="w-full h-[40px] px-3 bg-stone-100 rounded-md font-urbanist text-sm border border-stone-200 focus:outline-none focus:border-primary"
+              />
+              <span className="text-stone-400">-</span>
+              <input 
+                type="number"
+                placeholder={`Max (e.g. ${filtersMeta?.maxPrice ?? 10000})`}
+                value={filters.maxPrice || ""}
+                onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value ? Number(e.target.value) : undefined })}
+                className="w-full h-[40px] px-3 bg-stone-100 rounded-md font-urbanist text-sm border border-stone-200 focus:outline-none focus:border-primary"
+              />
             </div>
           </div>
         )}
@@ -138,20 +235,27 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
         
         {openSections.colors && (
           <div className="flex flex-wrap gap-[16px] w-full">
-            {colors.map((color) => (
-              <button
-                key={color.id}
-                onClick={() => setSelectedColor(color.id)}
-                className={`relative w-[37px] h-[37px] rounded-full flex items-center justify-center transition-transform hover:scale-110 ${
-                  color.border ? "border border-[#79716B]" : ""
-                } ${selectedColor === color.id ? "ring-2 ring-offset-2 ring-[#79716B]" : ""}`}
-                style={{ backgroundColor: color.hex }}
-              >
-                {selectedColor === color.id && (
-                  <Check size={16} className={color.id === "white" ? "text-black" : "text-white"} />
-                )}
-              </button>
-            ))}
+            {dynamicColors.map((color: string) => {
+              const isSelected = filters.colors.includes(color);
+              const hexStyle = getColorStyle(color);
+              const isWhite = hexStyle.toLowerCase() === "#fafaf9" || hexStyle.toLowerCase() === "white";
+              
+              return (
+                <button
+                  key={color}
+                  onClick={() => toggleArrayItem('colors', color)}
+                  className={`relative w-[37px] h-[37px] rounded-full flex items-center justify-center transition-transform hover:scale-110 ${
+                    isWhite ? "border border-[#79716B]" : "border border-stone-200"
+                  } ${isSelected ? "ring-2 ring-offset-2 ring-[#79716B]" : ""}`}
+                  style={{ backgroundColor: hexStyle }}
+                  title={color}
+                >
+                  {isSelected && (
+                    <Check size={16} className={isWhite ? "text-black" : "text-white"} />
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -170,21 +274,24 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
         
         {openSections.size && (
           <div className="flex flex-wrap gap-[8px] w-full">
-            {sizes.map((size) => (
-              <button
-                key={size}
-                onClick={() => setSelectedSize(size)}
-                className={`flex justify-center items-center px-[20px] py-[10px] rounded-[62px] transition-colors ${
-                  selectedSize === size
-                    ? "bg-primary text-background"
-                    : "bg-[#D6D3D1] text-[#44403B] hover:bg-[#c9c5c3]"
-                }`}
-              >
-                <span className={`font-poppins text-sm ${selectedSize === size ? "font-medium" : "font-normal"}`}>
-                  {size}
-                </span>
-              </button>
-            ))}
+            {sizesList.map((size) => {
+              const isSelected = filters.sizes.includes(size);
+              return (
+                <button
+                  key={size}
+                  onClick={() => toggleArrayItem('sizes', size)}
+                  className={`flex justify-center items-center px-[20px] py-[10px] rounded-[62px] transition-colors ${
+                    isSelected
+                      ? "bg-primary text-background"
+                      : "bg-[#D6D3D1] text-[#44403B] hover:bg-[#c9c5c3]"
+                  }`}
+                >
+                  <span className={`font-poppins text-sm ${isSelected ? "font-medium" : "font-normal"}`}>
+                    {size}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -202,22 +309,36 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
         </div>
         
         {openSections.style && (
-          <div className="flex flex-col w-full gap-[20px]">
-            {styles.map((style) => (
-              <div key={style} className="flex justify-between items-center cursor-pointer group">
-                <span className="font-poppins text-base text-[#44403B] group-hover:text-primary transition-colors">{style}</span>
-                <ChevronDown size={16} className="text-[#44403B] -rotate-90 group-hover:text-primary transition-transform" />
-              </div>
-            ))}
+          <div className="flex flex-col w-full gap-[12px]">
+            {stylesList.map((style) => {
+              const isSelected = filters.styles.includes(style);
+              return (
+                <label key={style} className="flex items-center gap-3 cursor-pointer group">
+                  <input 
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => toggleArrayItem('styles', style)}
+                    className="w-[18px] h-[18px] rounded-sm text-primary accent-primary cursor-pointer border-stone-300"
+                  />
+                  <span className={`font-poppins text-base transition-colors ${isSelected ? "text-primary font-medium" : "text-[#44403B] group-hover:text-primary"}`}>
+                    {style}
+                  </span>
+                </label>
+              );
+            })}
           </div>
         )}
       </div>
 
       {/* Apply Filter Button */}
-      <button className="w-full h-[48px] bg-primary text-background rounded-[62px] font-poppins font-medium text-sm hover:bg-[#2c2824] transition-colors mt-[10px] mb-[20px]">
-        Apply Filter
-      </button>
-
+      <div className="sticky bottom-0 pb-4 pt-2 bg-background mt-4 w-full">
+        <button 
+          onClick={() => onApplyFilters && onApplyFilters(filters)}
+          className="w-full h-[48px] bg-primary text-background rounded-[62px] font-poppins font-medium text-sm hover:bg-[#2c2824] transition-colors"
+        >
+          Apply Filters
+        </button>
+      </div>
     </div>
   );
 }

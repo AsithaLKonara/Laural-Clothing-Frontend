@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { orderService } from "../services/order.service";
 
-export function useOrders(params?: { page?: number; limit?: number; status?: string; branchId?: string; paymentGateway?: string; customerId?: string }) {
+export function useOrders(params?: { search?: string; page?: number; limit?: number; status?: string; branchId?: string; paymentGateway?: string; customerId?: string }) {
   return useQuery({
     queryKey: ["orders", params],
     queryFn: async () => {

@@ -13,9 +13,19 @@ export interface MediaFile {
   updatedAt: string;
 }
 
+export interface MediaPaginatedResponse {
+  data: MediaFile[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
 export const mediaService = {
-  getMediaFiles: async (folder?: string): Promise<MediaFile[]> => {
-    const params = folder && folder !== 'All' ? { folder } : {};
+  getMediaFiles: async (folder?: string, page: number = 1, limit: number = 20): Promise<MediaPaginatedResponse> => {
+    const params: any = { page, limit };
+    if (folder && folder !== 'All') {
+      params.folder = folder;
+    }
     const { data } = await api.get('/media', { params });
     return data;
   },

@@ -3,8 +3,11 @@ import Link from "next/link";
 import ProductCard from "./ProductCard";
 import { useProducts } from "@/hooks/useProducts";
 
-export default function NewArrivalsSection() {
-  const { data: response, isLoading } = useProducts();
+import { PaginatedResponse } from "@/types/api";
+import { Product } from "@/types/product";
+
+export default function NewArrivalsSection({ initialData }: { initialData?: PaginatedResponse<Product> }) {
+  const { data: response, isLoading } = useProducts(undefined, initialData);
   const products = response?.data || [];
 
   return (
@@ -40,9 +43,9 @@ export default function NewArrivalsSection() {
               <div className="w-full max-w-[245px] h-[380px] bg-stone-100 animate-pulse rounded-lg"></div>
             </div>
           ))
-        ) : products.slice(0, 8).map((product) => (
+        ) : products.slice(0, 8).map((product: Product, idx: number) => (
           <div key={product.id} className="w-full flex justify-center">
-            <ProductCard product={product} />
+            <ProductCard product={product} priority={idx < 4} />
           </div>
         ))}
       </div>
