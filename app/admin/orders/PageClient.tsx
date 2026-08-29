@@ -152,14 +152,21 @@ export default function OrdersPage() {
 
       {showLabelModal && (
         <CourierLabelModal 
-          orders={orders.filter((o: any) => selectedOrders.includes(o.id)).map((o: any) => ({
-            id: o.id,
-            customer: o.customer,
-            address: "123 Sample St, Colombo 03, Sri Lanka", // Dummy data
-            phone: "+94 77 123 4567", // Dummy data
-            itemsCount: 2, // Dummy data
-            weight: "1.2 kg" // Dummy data
-          }))}
+          orders={orders.filter((o: any) => selectedOrders.includes(o.id)).map((o: any) => {
+            const customerName = o.customer ? `${o.customer.firstName} ${o.customer.lastName || ''}` : o.shippingAddress?.firstName ? `${o.shippingAddress.firstName} ${o.shippingAddress.lastName || ''}` : 'Guest';
+            const address = o.shippingAddress ? `${o.shippingAddress.addressLine1}, ${o.shippingAddress.city}, ${o.shippingAddress.postalCode || ''}` : 'No Address Provided';
+            const phone = o.shippingAddress?.phone || o.customer?.phone || 'No Phone';
+            const itemsCount = o._count?.items || 1;
+            
+            return {
+              id: o.orderNumber || o.id,
+              customer: customerName,
+              address: address,
+              phone: phone,
+              itemsCount: itemsCount,
+              weight: "Standard"
+            };
+          })}
           onClose={() => setShowLabelModal(false)}
         />
       )}

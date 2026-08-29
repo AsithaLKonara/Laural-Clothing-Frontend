@@ -49,7 +49,7 @@ export default function OrderDispatchButtons({ orderId, customerName, address, p
             customer: customerName,
             address: address,
             phone: phone,
-            itemsCount: 1,
+            itemsCount: 1, // Passed down from parent if needed, for now 1
             weight: "Standard"
           }]}
           onClose={() => setShowLabelModal(false)}

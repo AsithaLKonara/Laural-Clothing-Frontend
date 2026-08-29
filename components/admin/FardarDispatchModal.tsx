@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { X, Truck, CheckCircle2 } from "lucide-react";
+import { useUpdateOrderStatus } from "@/hooks/useOrders";
 
 interface FardarDispatchModalProps {
   orderIds: string[];
@@ -12,16 +13,26 @@ interface FardarDispatchModalProps {
 export default function FardarDispatchModal({ orderIds, onClose, onSuccess }: FardarDispatchModalProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
+  const updateStatusMutation = useUpdateOrderStatus();
 
-  const handleProcess = () => {
+  const handleProcess = async () => {
     setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
+    try {
+      await Promise.all(
+        orderIds.map((id) =>
+          updateStatusMutation.mutateAsync({ id, status: "DISPATCHED" })
+        )
+      );
       setSuccess(true);
       setTimeout(() => {
         onSuccess();
       }, 1500);
-    }, 1500);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to dispatch orders");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (success) {
