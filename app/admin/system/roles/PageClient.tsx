@@ -11,6 +11,7 @@ import UserModal from "@/components/dashboard/UserModal";
 import roleService, { RoleItem, SystemUserItem } from "@/services/role.service";
 import { globalDialog } from "@/store/dialog.store";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useBranches } from "@/hooks/useInventory";
 
 export default function AccessControlPage() {
   const [activeTab, setActiveTab] = useState<"roles" | "users">("roles");
@@ -25,6 +26,10 @@ export default function AccessControlPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [roleFilter, setRoleFilter] = useState("All");
+  const [branchFilter, setBranchFilter] = useState("All");
+
+  const { data: branchesResp } = useBranches();
+  const branches = branchesResp?.data || branchesResp || [];
 
   // Modals
   const [roleModalOpen, setRoleModalOpen] = useState(false);
@@ -39,7 +44,11 @@ export default function AccessControlPage() {
     try {
       const [fetchedRoles, fetchedUsers] = await Promise.all([
         roleService.getRoles(),
-        roleService.getUsers(debouncedSearchTerm || undefined, roleFilter !== "All" ? roleFilter : undefined),
+        roleService.getUsers(
+          debouncedSearchTerm || undefined, 
+          roleFilter !== "All" ? roleFilter : undefined,
+          branchFilter !== "All" ? branchFilter : undefined
+        ),
       ]);
       setRoles(fetchedRoles);
       setUsers(fetchedUsers);
@@ -49,7 +58,7 @@ export default function AccessControlPage() {
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearchTerm, roleFilter]);
+  }, [debouncedSearchTerm, roleFilter, branchFilter]);
 
   useEffect(() => {
     fetchData();
@@ -255,18 +264,32 @@ export default function AccessControlPage() {
         onSearchChange={setSearchTerm}
         filters={
           activeTab === "users" ? (
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400"
-            >
-              <option value="All">All Roles</option>
-              {roles.map((r) => (
-                <option key={r.id} value={r.name}>
-                  {r.name}
-                </option>
-              ))}
-            </select>
+            <>
+              <select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400"
+              >
+                <option value="All">All Roles</option>
+                {roles.map((r) => (
+                  <option key={r.id} value={r.name}>
+                    {r.name}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={branchFilter}
+                onChange={(e) => setBranchFilter(e.target.value)}
+                className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400"
+              >
+                <option value="All">All Branches</option>
+                {branches.map((b: any) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </>
           ) : <></>
         }
       />
@@ -315,6 +338,7 @@ export default function AccessControlPage() {
         onSuccess={fetchData}
         initialData={editingUser}
         availableRoles={roles}
+        availableBranches={branches}
       />
     </div>
   );

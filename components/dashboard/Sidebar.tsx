@@ -55,8 +55,7 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
   ];
 
   const systemItems = [
-    { name: "Users", icon: UserCog, href: "/admin/system/users" },
-    { name: "Roles", icon: Shield, href: "/admin/system/roles" },
+    { name: "Access Control", icon: Shield, href: "/admin/system/roles" },
     { name: "Settings", icon: Settings, href: "/admin/system/settings" },
     { name: "Audit Logs", icon: FileText, href: "/admin/system/audit" },
   ];
