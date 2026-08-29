@@ -9,7 +9,8 @@ export const metadata = {
   description: "Sale page for Laural Clothing."
 };
 
-export const revalidate = 300;
+// Server-render on demand — prevents Railway build hanging on API calls during SSG
+export const dynamic = 'force-dynamic';
 
 export default async function Page() {
   const productsRes = await serverFetch<PaginatedResponse<Product>>("/products?skip=0&take=12", {

@@ -2,20 +2,33 @@ export interface ServerFetchOptions extends Omit<RequestInit, 'body'> {
   tags?: string[];
   revalidate?: number;
   body?: any;
+  timeoutMs?: number;
 }
 
 export async function serverFetch<T>(endpoint: string, options?: ServerFetchOptions): Promise<T> {
-  let apiUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1").replace(/\/$/, "");
-  
+  // During static build, if no real API URL is configured, bail out immediately
+  // so the build doesn't hang waiting for a non-existent server.
+  const apiUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
+  if (!apiUrl) {
+    // Return null-ish so pages can gracefully skip SSG data
+    return undefined as unknown as T;
+  }
+
   // Ensure endpoint starts with a slash
   let url = endpoint.startsWith('/') ? `${apiUrl}${endpoint}` : `${apiUrl}/${endpoint}`;
-  
+
   // Append a hardcoded cache buster to completely bypass the stale Next.js fetch cache key
   const cacheBuster = "cb=20260824v3";
   url = url.includes('?') ? `${url}&${cacheBuster}` : `${url}?${cacheBuster}`;
 
+  // Build-safe timeout: 12 seconds. Prevents the build worker being killed after 60s.
+  const timeoutMs = options?.timeoutMs ?? 12_000;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
   const fetchOptions: RequestInit = {
     ...options,
+    signal: controller.signal,
     headers: {
       'Content-Type': 'application/json',
       ...options?.headers,
@@ -38,6 +51,7 @@ export async function serverFetch<T>(endpoint: string, options?: ServerFetchOpti
 
   try {
     const res = await fetch(url, fetchOptions);
+    clearTimeout(timer);
 
     if (!res.ok) {
       // Try to parse error message if possible
@@ -59,7 +73,12 @@ export async function serverFetch<T>(endpoint: string, options?: ServerFetchOpti
     }
 
     return await res.json();
-  } catch (error) {
+  } catch (error: any) {
+    clearTimeout(timer);
+    if (error?.name === 'AbortError') {
+      console.warn(`[serverFetch] Timed out after ${timeoutMs}ms: ${url}`);
+      return undefined as unknown as T;
+    }
     console.error(`[serverFetch] Failed to fetch ${url}:`, error);
     throw error;
   }
