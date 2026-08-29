@@ -9,9 +9,26 @@ export const api = axios.create({
   },
 });
 
-// Request interceptor (Optional - keeping if needed later, currently passthrough)
+// Helper to read a cookie value by name (browser-only)
+function getCookie(name: string): string | undefined {
+  if (typeof document === "undefined") return undefined;
+  const match = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(`${name}=`));
+  return match ? decodeURIComponent(match.split("=")[1]) : undefined;
+}
+
+// Request interceptor: attach CSRF token to all state-changing requests
 api.interceptors.request.use(
   (config) => {
+    const method = (config.method || "").toUpperCase();
+    const stateMutating = ["POST", "PUT", "PATCH", "DELETE"];
+    if (stateMutating.includes(method)) {
+      const csrfToken = getCookie("laural_csrf");
+      if (csrfToken) {
+        config.headers["x-csrf-token"] = csrfToken;
+      }
+    }
     return config;
   },
   (error) => {

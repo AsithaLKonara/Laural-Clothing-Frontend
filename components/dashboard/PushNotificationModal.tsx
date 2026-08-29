@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Bell, ImagePlus, Link, AlertCircle } from "lucide-react";
+import { X, Bell, ImagePlus, Link, AlertCircle, MessageSquare } from "lucide-react";
 import { notificationsService } from "../../services/notifications.service";
 import { useFlashSales } from "../../hooks/usePromotions";
 
@@ -17,6 +17,8 @@ export default function PushNotificationModal({ isOpen, onClose }: PushNotificat
   const [selectedFlashSale, setSelectedFlashSale] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [alsoSendSms, setAlsoSendSms] = useState(false);
+  const [smsNumbers, setSmsNumbers] = useState("");
 
   const { data: flashSalesData } = useFlashSales({ status: 'ACTIVE' });
   const activeFlashSales = flashSalesData || [];
@@ -32,16 +34,32 @@ export default function PushNotificationModal({ isOpen, onClose }: PushNotificat
 
     setIsSending(true);
     try {
+      // 1. Broadcast web push to all subscribed devices
       await notificationsService.broadcastPush({
         title,
         body,
         url: link || undefined,
         flashSaleId: selectedFlashSale || undefined
       });
+
+      // 2. Optionally also send SMS blast
+      if (alsoSendSms && smsNumbers.trim()) {
+        const numbers = smsNumbers.split(/[,\n]+/).map((n) => n.trim()).filter(Boolean);
+        if (numbers.length > 0) {
+          await notificationsService.sendBulkSms({
+            numbers,
+            message: `${title}\n${body}${link ? `\n${link}` : ""}`,
+            flashSaleId: selectedFlashSale || undefined,
+          });
+        }
+      }
+
       setTitle("");
       setBody("");
       setLink("");
       setSelectedFlashSale("");
+      setSmsNumbers("");
+      setAlsoSendSms(false);
       onClose();
     } catch (err: any) {
       setError(err?.response?.data?.error || "Failed to broadcast push notification");
@@ -148,12 +166,42 @@ export default function PushNotificationModal({ isOpen, onClose }: PushNotificat
                 <input type="file" accept="image/*" className="hidden" />
               </label>
             </div>
+
+            {/* SMS Also Send Toggle */}
+            <div className="flex flex-col gap-3 border border-dashed border-stone-200 rounded-xl p-4 bg-stone-50">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  id="alsoSendSms"
+                  type="checkbox"
+                  checked={alsoSendSms}
+                  onChange={e => setAlsoSendSms(e.target.checked)}
+                  className="w-4 h-4 rounded border-stone-300 text-stone-900 focus:ring-stone-900"
+                />
+                <span className="font-inter text-xs font-semibold text-stone-700 flex items-center gap-1.5">
+                  <MessageSquare size={12} /> Also send SMS blast
+                </span>
+              </label>
+              {alsoSendSms && (
+                <div className="flex flex-col gap-2">
+                  <label className="font-inter text-xs text-stone-500">Phone numbers (one per line or comma-separated)</label>
+                  <textarea
+                    value={smsNumbers}
+                    onChange={e => setSmsNumbers(e.target.value)}
+                    rows={3}
+                    placeholder={"+94771234567\n+94711234567"}
+                    className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-xs outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all font-inter resize-none font-mono"
+                  />
+                </div>
+              )}
+            </div>
+
             {error && (
               <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg flex items-center gap-2">
                 <AlertCircle size={16} />
                 {error}
               </div>
             )}
+
           </div>
 
           <div className="mt-auto border-t border-stone-200 px-6 py-4 bg-stone-50 shrink-0 flex items-center justify-end gap-3">
