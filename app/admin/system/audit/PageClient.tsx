@@ -5,6 +5,7 @@ import PageHeader from "@/components/dashboard/PageHeader";
 import FilterBar from "@/components/dashboard/FilterBar";
 import DataTable from "@/components/dashboard/DataTable";
 import { StatusBadge } from "@/components/dashboard/Badges";
+import AuditLogDetailModal from "@/components/admin/AuditLogDetailModal";
 
 import { useState } from "react";
 import { useAuditLogs } from "@/hooks/useAudit";
@@ -80,6 +81,8 @@ export default function AuditPage() {
     </>
   );
 
+  const [selectedLog, setSelectedLog] = useState<any>(null);
+
   return (
     <div className="flex flex-col p-4 md:p-10 max-w-[1280px] mx-auto w-full">
       <PageHeader 
@@ -98,13 +101,20 @@ export default function AuditPage() {
         data={formattedLogs}
         columns={columns}
         keyExtractor={(row) => row.id}
-        onRowClick={(row) => console.log("Navigate to", row.id)}
+        onRowClick={(row) => setSelectedLog(row)}
         pagination={{ 
           currentPage: meta.page, 
           totalPages: meta.totalPages || 1,
           onPageChange: (newPage) => setPage(newPage) 
         }}
       />
+
+      {selectedLog && (
+        <AuditLogDetailModal 
+          log={selectedLog} 
+          onClose={() => setSelectedLog(null)} 
+        />
+      )}
     </div>
   );
 }
