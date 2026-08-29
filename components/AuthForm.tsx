@@ -82,10 +82,7 @@ function LoginForm({ setView }: { setView: (v: AuthView) => void }) {
         router.push("/account");
       }
     } catch (err: any) {
-      let msg = err.response?.data?.message || err.response?.data?.error || err.message || "Failed to sign in. Please check your credentials.";
-      if (typeof msg !== 'string') {
-        msg = msg.message || JSON.stringify(msg);
-      }
+      const msg = err.response?.data?.message || err.message || "Failed to sign in. Please check your credentials.";
       setError(msg);
     } finally {
       setLoading(false);
@@ -156,7 +153,7 @@ function LoginForm({ setView }: { setView: (v: AuthView) => void }) {
         )}
 
         <div className="w-full flex justify-center mt-2">
-          <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'} onSuccess={(token) => setValue("turnstileToken", token)} />
+          <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!} onSuccess={(token) => setValue("turnstileToken", token)} />
         </div>
 
         <button type="submit" disabled={loading} className="group w-full h-[56px] bg-stone-50 flex justify-between items-center px-[24px] hover:bg-stone-200 transition-colors disabled:opacity-50">
@@ -239,10 +236,7 @@ function RegisterForm({ setView }: { setView: (v: AuthView) => void }) {
         }
       }, 1000);
     } catch (err: any) {
-      let msg = err.response?.data?.message || err.response?.data?.error || err.message || "Failed to create account. Please try again.";
-      if (typeof msg !== 'string') {
-        msg = msg.message || JSON.stringify(msg);
-      }
+      const msg = err.response?.data?.message || err.message || "Failed to create account. Please try again.";
       setError(msg);
     } finally {
       setLoading(false);
@@ -331,7 +325,7 @@ function RegisterForm({ setView }: { setView: (v: AuthView) => void }) {
           )}
 
           <div className="w-full flex justify-center mt-2">
-            <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'} onSuccess={(token) => setValue("turnstileToken", token)} />
+            <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!} onSuccess={(token) => setValue("turnstileToken", token)} />
           </div>
 
           <button type="submit" disabled={loading} className="group w-full h-[56px] bg-stone-50 flex justify-between items-center px-[24px] hover:bg-stone-200 transition-colors mt-[8px] disabled:opacity-50">
@@ -396,7 +390,7 @@ function ForgotPasswordForm({ setView }: { setView: (v: AuthView) => void }) {
         </div>
 
         <div className="w-full flex justify-center mt-2">
-          <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'} onSuccess={(token) => setValue("turnstileToken", token)} />
+          <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!} onSuccess={(token) => setValue("turnstileToken", token)} />
         </div>
 
         <button 
@@ -539,7 +533,7 @@ function ChangePasswordForm({ setView }: { setView: (v: AuthView) => void }) {
         </div>
         
         <div className="w-full flex justify-center mt-2">
-          <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'} onSuccess={(token) => setValue("turnstileToken", token)} />
+          <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!} onSuccess={(token) => setValue("turnstileToken", token)} />
         </div>
 
         <button 

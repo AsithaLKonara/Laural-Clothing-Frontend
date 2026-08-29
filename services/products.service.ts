@@ -7,19 +7,6 @@ export interface GetProductsParams {
   take?: number;
   search?: string;
   category?: string;
-  sizes?: string;
-  colors?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  styles?: string;
-  sort?: string;
-}
-
-export interface FilterMetadataResponse {
-  sizes: string[];
-  colors: string[];
-  maxPrice: number;
-  minPrice: number;
 }
 
 export const productsService = {
@@ -27,11 +14,6 @@ export const productsService = {
     const { data } = await api.get<PaginatedResponse<Product>>('/products', {
       params,
     });
-    return data;
-  },
-
-  async getFilterMetadata(): Promise<FilterMetadataResponse> {
-    const { data } = await api.get<FilterMetadataResponse>('/products/filters/meta');
     return data;
   },
 
@@ -62,10 +44,5 @@ export const productsService = {
 
   async deleteProduct(id: string): Promise<void> {
     await api.delete(`/products/${id}`);
-  },
-
-  async bulkEditProducts(productIds: string[], data: { status?: string; categoryId?: string; collectionId?: string }): Promise<any> {
-    const response = await api.post('/products/bulk-edit', { productIds, data });
-    return response.data;
   },
 };

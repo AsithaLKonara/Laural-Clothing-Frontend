@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import ClientContent from "./ClientContent";
 
 import { serverFetch } from "@/lib/server-fetch";
@@ -17,9 +16,5 @@ export default async function Page() {
     next: { tags: ["products"], revalidate: 300 }
   }).catch(() => undefined);
 
-  return (
-    <Suspense fallback={<div className="flex h-[50vh] w-full items-center justify-center">Loading sale...</div>}>
-      <ClientContent initialData={productsRes} />
-    </Suspense>
-  );
+  return <ClientContent initialData={productsRes} />;
 }

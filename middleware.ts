@@ -57,38 +57,12 @@ export function middleware(request: NextRequest) {
 
   // 2. Strict isolation: PUBLIC_USER attempting to access Admin, Branch Admin, or POS routes
   if (isStaffRoute && token && !isExpired) {
-    const upperRole = role.toUpperCase().replace(' ', '_');
-    const isPublicUser = upperRole === "PUBLIC_USER" || upperRole === "CUSTOMER";
-    
+    const isPublicUser = role === "PUBLIC_USER" || role === "Public User" || role.toUpperCase() === "CUSTOMER";
     if (isPublicUser) {
       // Forbidden: redirect to customer account area
       const forbiddenUrl = new URL("/account", request.url);
       forbiddenUrl.searchParams.set("error", "unauthorized_area");
       return NextResponse.redirect(forbiddenUrl);
-    }
-    
-    // Strict Role-Based Route Isolation
-    if (isAdminRoute) {
-      const allowedRoles = ["SUPER_ADMIN", "ADMIN", "ONLINE_SALES"];
-      if (!allowedRoles.includes(upperRole)) {
-        const redirectUrl = upperRole === "BRANCH_ADMIN" ? "/branch-admin" : "/pos";
-        return NextResponse.redirect(new URL(redirectUrl, request.url));
-      }
-    }
-    
-    if (isBranchAdminRoute) {
-      const allowedRoles = ["SUPER_ADMIN", "ADMIN", "BRANCH_ADMIN"];
-      if (!allowedRoles.includes(upperRole)) {
-        const redirectUrl = upperRole === "BRANCH_CASHIER" ? "/pos" : "/admin";
-        return NextResponse.redirect(new URL(redirectUrl, request.url));
-      }
-    }
-    
-    if (isPosRoute) {
-       const allowedRoles = ["SUPER_ADMIN", "ADMIN", "BRANCH_ADMIN", "BRANCH_CASHIER"];
-       if (!allowedRoles.includes(upperRole)) {
-          return NextResponse.redirect(new URL("/admin", request.url));
-       }
     }
   }
 

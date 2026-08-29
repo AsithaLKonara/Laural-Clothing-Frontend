@@ -11,16 +11,7 @@ export const PRODUCT_QUERY_KEYS = {
   details: () => [...PRODUCT_QUERY_KEYS.all, 'detail'] as const,
   detail: (id: string) => [...PRODUCT_QUERY_KEYS.details(), id] as const,
   detailBySlug: (slug: string) => [...PRODUCT_QUERY_KEYS.details(), 'slug', slug] as const,
-  filtersMeta: () => [...PRODUCT_QUERY_KEYS.all, 'filters-meta'] as const,
 };
-
-export function useProductFiltersMeta() {
-  return useQuery({
-    queryKey: PRODUCT_QUERY_KEYS.filtersMeta(),
-    queryFn: () => productsService.getFilterMetadata(),
-    staleTime: 1000 * 60 * 60, // 1 hour (metadata rarely changes)
-  });
-}
 
 export function useProducts(params?: GetProductsParams, initialData?: PaginatedResponse<Product>) {
   return useQuery({
@@ -100,16 +91,6 @@ export function useDeleteProduct() {
     mutationFn: (id: string) => productsService.deleteProduct(id),
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: PRODUCT_QUERY_KEYS.detail(id) });
-      queryClient.invalidateQueries({ queryKey: PRODUCT_QUERY_KEYS.lists() });
-    },
-  });
-}
-
-export function useBulkEditProducts() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ productIds, data }: { productIds: string[]; data: any }) => productsService.bulkEditProducts(productIds, data),
-    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PRODUCT_QUERY_KEYS.lists() });
     },
   });
