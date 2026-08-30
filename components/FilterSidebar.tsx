@@ -43,7 +43,8 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
       border: color.toLowerCase() === "white" || color.toLowerCase() === "off white"
     })) || [];
 
-  const sizes = ["S", "M", "L", "UK 08", "UK 10", "UK 12"];
+  const allowedSizes = ["S", "M", "L", "UK 08", "UK 10", "UK 12"];
+  const sizes = allowedSizes.filter(size => filters?.sizes?.includes(size)) || [];
 
   if (!isOpen) {
     return (
