@@ -1,11 +1,15 @@
 "use client";
 
-import { Search, Bell, ChevronDown, Menu, LogOut } from "lucide-react";
+import { Search, Bell, ChevronDown, Menu, LogOut, Check, ShoppingBag, Package, Info, AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth.store";
+import { useNotifications } from "@/hooks/useNotifications";
+import Link from "next/link";
+import { formatDistanceToNow } from 'date-fns';
 
 export default function Header({ onMenuClick, session }: { onMenuClick?: () => void, session?: any }) {
   const router = useRouter();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   
   const getInitials = (name?: string | null) => {
     if (!name) return "US";
@@ -48,10 +52,72 @@ export default function Header({ onMenuClick, session }: { onMenuClick?: () => v
         </button>
 
         {/* Notifications */}
-        <button className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-background transition-colors text-muted">
-          <Bell size={18} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full border-2 border-surface shadow-sm"></span>
-        </button>
+        <div className="relative group">
+          <button className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-background transition-colors text-muted">
+            <Bell size={18} />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 w-4 h-4 bg-error text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-surface shadow-sm">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+          
+          <div className="absolute right-0 top-full mt-2 w-80 bg-surface border border-border rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 flex flex-col overflow-hidden">
+            <div className="p-3 border-b border-border flex items-center justify-between bg-background">
+              <h3 className="font-semibold text-sm text-foreground">Notifications</h3>
+              {unreadCount > 0 && (
+                <button onClick={() => markAllAsRead()} className="text-[11px] text-primary hover:underline font-medium">
+                  Mark all as read
+                </button>
+              )}
+            </div>
+            
+            <div className="max-h-[350px] overflow-y-auto">
+              {notifications.length === 0 ? (
+                <div className="p-6 text-center text-muted flex flex-col items-center">
+                  <Bell size={24} className="opacity-20 mb-2" />
+                  <p className="text-sm">No new notifications</p>
+                </div>
+              ) : (
+                notifications.map((notif: any) => (
+                  <div 
+                    key={notif.id} 
+                    className={`p-3 border-b border-border last:border-0 hover:bg-background transition-colors flex gap-3 cursor-pointer ${!notif.isRead ? 'bg-primary/5' : ''}`}
+                    onClick={() => {
+                      if (!notif.isRead) markAsRead(notif.id);
+                      if (notif.link) router.push(notif.link);
+                    }}
+                  >
+                    <div className="mt-0.5 shrink-0">
+                      {notif.type === 'ORDER' ? <ShoppingBag size={16} className="text-primary" /> : 
+                       notif.type === 'INVENTORY' ? <Package size={16} className="text-warning" /> :
+                       notif.type === 'ALERT' ? <AlertTriangle size={16} className="text-error" /> :
+                       <Info size={16} className="text-info" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start gap-2 mb-1">
+                        <p className={`text-sm font-medium truncate ${notif.isRead ? 'text-foreground' : 'text-foreground'}`}>
+                          {notif.title}
+                        </p>
+                        <span className="text-[10px] text-muted shrink-0 whitespace-nowrap">
+                          {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true })}
+                        </span>
+                      </div>
+                      <p className="text-[12px] text-muted line-clamp-2 leading-relaxed">
+                        {notif.message}
+                      </p>
+                    </div>
+                    {!notif.isRead && (
+                      <div className="shrink-0 flex items-center mt-2">
+                        <span className="w-2 h-2 bg-primary rounded-full"></span>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
 
         {/* User Chip */}
         <div className="relative group">

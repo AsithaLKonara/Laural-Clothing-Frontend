@@ -41,5 +41,21 @@ export const notificationsService = {
   async subscribePush(payload: PushSubscriptionPayload) {
     const { data } = await api.post('/notifications/push/subscribe', payload);
     return data;
+  },
+
+  // --- INTERNAL DASHBOARD NOTIFICATIONS ---
+  async getInternalNotifications(limit: number = 20) {
+    const { data } = await api.get(`/notifications?limit=${limit}`);
+    return data; // { notifications: [], unreadCount: number }
+  },
+
+  async markAsRead(id: string) {
+    const { data } = await api.put(`/notifications/${id}/read`);
+    return data;
+  },
+
+  async markAllAsRead() {
+    const { data } = await api.put(`/notifications/read-all`);
+    return data;
   }
 };
