@@ -18,6 +18,10 @@ function getCookie(name: string): string | undefined {
   return match ? decodeURIComponent(match.split("=")[1]) : undefined;
 }
 
+// In cross-domain deployments, JS cannot read the API's cookies via document.cookie
+// We store the token in memory when it is returned by GET /auth/csrf
+let csrfTokenMemory: string | null = null;
+
 const STATE_MUTATING_METHODS = ["POST", "PUT", "PATCH", "DELETE"];
 
 // Request interceptor: attach CSRF token to all state-changing requests
@@ -26,7 +30,7 @@ api.interceptors.request.use(
     const method = (config.method || "").toUpperCase();
 
     if (STATE_MUTATING_METHODS.includes(method)) {
-      const csrfToken = getCookie("laural_csrf");
+      const csrfToken = csrfTokenMemory || getCookie("laural_csrf");
       if (csrfToken) {
         config.headers["x-csrf-token"] = csrfToken;
       }
@@ -45,7 +49,13 @@ api.interceptors.request.use(
 
 // Response interceptor: handle 401s and CSRF retry on 403
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Automatically capture the CSRF token from the payload when fetching /auth/csrf
+    if (response.config.url?.endsWith("/auth/csrf") && response.data?.data?.csrfToken) {
+      csrfTokenMemory = response.data.data.csrfToken;
+    }
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
 
@@ -60,7 +70,7 @@ api.interceptors.response.use(
         // This GET will cause the backend to set a fresh laural_csrf cookie
         await api.get("/auth/csrf");
         // Re-attach the new token and retry
-        const freshToken = getCookie("laural_csrf");
+        const freshToken = csrfTokenMemory || getCookie("laural_csrf");
         if (freshToken) {
           originalRequest.headers["x-csrf-token"] = freshToken;
         }
