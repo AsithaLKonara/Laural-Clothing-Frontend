@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, SlidersHorizontal, Check, Filter } from "lucide-react";
 import { useCategories } from "@/hooks/useCategories";
+import { useProductFilters } from "@/hooks/useProducts";
+import Link from 'next/link';
 
 interface FilterSidebarProps {
   isOpen?: boolean;
@@ -10,51 +12,52 @@ interface FilterSidebarProps {
 }
 
 export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebarProps) {
-  const [openSections, setOpenSections] = useState({
-    categories: true,
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     price: true,
     colors: true,
     size: true,
     style: true,
   });
 
-  const [selectedColor, setSelectedColor] = useState<string>("blue");
-  const [selectedSize, setSelectedSize] = useState<string>("Large");
+  const [selectedColor, setSelectedColor] = useState<string>("black");
+  const [selectedSize, setSelectedSize] = useState<string>("S");
 
-  const toggleSection = (section: keyof typeof openSections) => {
+  const toggleSection = (section: string) => {
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
   const { data: response, isLoading } = useCategories();
   const categories = response?.data || [];
+  
+  const { data: filters } = useProductFilters();
+  
   const styles = ["Casual", "Formal", "Party", "Gym"];
   
-  const colors = [
-    { id: "blue", hex: "#063AF5" },
-    { id: "purple", hex: "#7D06F5" },
-    { id: "pink", hex: "#F506A4" },
-    { id: "white", hex: "#FAFAF9", border: true },
-    { id: "black", hex: "#1C1917" }
-  ];
+  // Use dynamic colors if available, mapping strings to basic objects
+  const colors = filters?.colors?.map(color => ({
+    id: color,
+    hex: color.toLowerCase(), // basic fallback to CSS color names
+    border: color.toLowerCase() === "white"
+  })) || [];
 
-  const sizes = ["XX-Small", "X-Small", "Small", "Medium", "Large", "X-Large", "XX-Large", "3X-Large", "4X-Large"];
+  const sizes = filters?.sizes || [];
 
   if (!isOpen) {
     return (
-      <div className="flex flex-col items-center w-full h-full bg-background border-r border-[#44403B]/20 py-[20px]">
+      <div className="flex flex-col items-center w-full h-full bg-[#FAFAF9] border-r border-stone-200 py-[20px] shadow-sm">
         <button 
           onClick={onToggle}
           className="p-3 rounded-full hover:bg-stone-200 transition-colors"
           title="Show Filters"
         >
-          <SlidersHorizontal size={24} className="text-primary" />
+          <SlidersHorizontal size={20} className="text-[#1C1917]" />
         </button>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col w-full h-full bg-background border-r border-[#44403B]/20 py-[20px] px-[20px] md:pl-[60px] md:pr-[20px] gap-[24px]">
+    <div className="flex flex-col w-full h-full bg-[#FAFAF9] border-r border-stone-200 py-[20px] px-[20px] md:pl-[40px] md:pr-[20px] gap-[24px] overflow-y-auto no-scrollbar shadow-sm">
       
       {/* Header */}
       <div className="flex justify-between items-center w-full">
@@ -66,7 +69,7 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
           className="p-2 -mr-2 rounded-full hover:bg-stone-200 transition-colors"
           title="Hide Filters"
         >
-          <SlidersHorizontal size={24} className="text-primary" />
+          <SlidersHorizontal size={20} className="text-[#1C1917]" />
         </button>
       </div>
 
@@ -74,7 +77,7 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
 
       {/* Search */}
       <div className="flex flex-col w-full gap-[12px]">
-        <h3 className="font-poppins font-bold text-base text-primary">Search</h3>
+        <h3 className="font-poppins font-bold text-xl text-primary">Search</h3>
         <div className="relative w-full">
           <input 
             type="text" 
@@ -89,10 +92,10 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
       {/* Categories */}
       <div className="flex flex-col w-full gap-[20px]">
         {categories.map((cat: any) => (
-          <div key={cat.id} className="flex justify-between items-center cursor-pointer group">
+          <Link key={cat.id} href={`/categories/${cat.slug}`} className="flex justify-between items-center cursor-pointer group">
             <span className="font-poppins text-base text-[#44403B] group-hover:text-primary transition-colors">{cat.name}</span>
             <ChevronDown size={16} className="text-[#44403B] -rotate-90 group-hover:text-primary transition-transform" />
-          </div>
+          </Link>
         ))}
       </div>
 

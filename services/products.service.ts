@@ -17,6 +17,11 @@ export const productsService = {
     return data;
   },
 
+  async getFilters(): Promise<{ colors: string[]; sizes: string[] }> {
+    const { data } = await api.get<{ colors: string[]; sizes: string[] }>('/products/filters');
+    return data;
+  },
+
   async getProductById(id: string): Promise<Product> {
     const { data } = await api.get<Product>(`/products/${id}`);
     return data;

@@ -22,6 +22,14 @@ export function useProducts(params?: GetProductsParams, initialData?: PaginatedR
   });
 }
 
+export function useProductFilters() {
+  return useQuery({
+    queryKey: [...PRODUCT_QUERY_KEYS.all, 'filters'],
+    queryFn: () => productsService.getFilters(),
+    staleTime: 1000 * 60 * 60, // 1 hour
+  });
+}
+
 export function useInfiniteProducts(params?: GetProductsParams) {
   return useInfiniteQuery({
     queryKey: PRODUCT_QUERY_KEYS.infinite(params),
