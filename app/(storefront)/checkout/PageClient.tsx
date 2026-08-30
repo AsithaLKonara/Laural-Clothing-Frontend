@@ -122,9 +122,15 @@ export default function CheckoutPage() {
         deviceFingerprint: data.deviceFingerprint,
       },
       {
-        onSuccess: (order) => {
-          // In a real app, if payment method is not COD, redirect to payment gateway here
-          router.push(`/checkout/success?orderNumber=${order.orderNumber}`);
+        onSuccess: (data) => {
+          setPendingCheckoutData(null);
+          const { order, payment } = data;
+          
+          if (data.paymentMethod !== 'cod' && payment?.redirectUrl) {
+            window.location.href = payment.redirectUrl;
+          } else {
+            router.push(`/checkout/success?orderNumber=${order.orderNumber}`);
+          }
         },
         onError: (error) => {
           console.error("Checkout failed:", error);
