@@ -420,8 +420,10 @@ export default function CheckoutPage() {
             )}
 
             {/* Turnstile CAPTCHA */}
-            <div className="flex w-full justify-center pt-4">
-              <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!} onSuccess={(token) => setValue("turnstileToken", token)} />
+            <div className="flex justify-center w-full my-4">
+              {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+                <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} onSuccess={(token) => setValue("turnstileToken", token)} />
+              )}
             </div>
 
             {/* Mobile Place Order Button (Shows above cart on mobile) */}

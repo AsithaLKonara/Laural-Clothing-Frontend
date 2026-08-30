@@ -160,7 +160,9 @@ function LoginForm({ setView }: { setView: (v: AuthView) => void }) {
         )}
 
         <div className="w-full flex justify-center mt-2">
-          <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!} onSuccess={(token) => setValue("turnstileToken", token)} />
+          {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+            <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} onSuccess={(token) => setValue("turnstileToken", token)} />
+          )}
         </div>
 
         <button type="submit" disabled={loading} className="group w-full h-[56px] bg-stone-50 flex justify-between items-center px-[24px] hover:bg-stone-200 transition-colors disabled:opacity-50">
@@ -337,7 +339,9 @@ function RegisterForm({ setView }: { setView: (v: AuthView) => void }) {
           )}
 
           <div className="w-full flex justify-center mt-2">
-            <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!} onSuccess={(token) => setValue("turnstileToken", token)} />
+            {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+              <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} onSuccess={(token) => setValue("turnstileToken", token)} />
+            )}
           </div>
 
           <button type="submit" disabled={loading} className="group w-full h-[56px] bg-stone-50 flex justify-between items-center px-[24px] hover:bg-stone-200 transition-colors mt-[8px] disabled:opacity-50">
@@ -402,7 +406,9 @@ function ForgotPasswordForm({ setView }: { setView: (v: AuthView) => void }) {
         </div>
 
         <div className="w-full flex justify-center mt-2">
-          <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!} onSuccess={(token) => setValue("turnstileToken", token)} />
+          {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+            <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} onSuccess={(token) => setValue("turnstileToken", token)} />
+          )}
         </div>
 
         <button 
@@ -545,7 +551,9 @@ function ChangePasswordForm({ setView }: { setView: (v: AuthView) => void }) {
         </div>
         
         <div className="w-full flex justify-center mt-2">
-          <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!} onSuccess={(token) => setValue("turnstileToken", token)} />
+          {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+            <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} onSuccess={(token) => setValue("turnstileToken", token)} />
+          )}
         </div>
 
         <button 

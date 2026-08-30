@@ -136,15 +136,18 @@ export default function ProductReviews({ productId }: { productId: string }) {
               <button 
                 type="submit" 
                 disabled={isPending || !turnstileToken}
+                disabled={isPending || (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !turnstileToken)}
                 className="flex-1 py-3 px-4 bg-primary text-white rounded-full font-poppins font-semibold text-sm hover:bg-stone-800 transition-colors disabled:opacity-50 flex justify-center items-center"
               >
                 {isPending ? "Submitting..." : "Submit Review"}
               </button>
             </div>
             
-            <div className="w-full flex justify-center mt-2">
-              <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!} onSuccess={(token) => setTurnstileToken(token)} />
-            </div>
+            {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+              <div className="w-full flex justify-center mt-2">
+                <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} onSuccess={(token) => setTurnstileToken(token)} />
+              </div>
+            )}
           </div>
         </form>
       )}
