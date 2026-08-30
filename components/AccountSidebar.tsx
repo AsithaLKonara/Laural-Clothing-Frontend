@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { User, ShoppingBag, MapPin, Heart, Award, LogOut, RotateCcw, Star } from "lucide-react";
+import { useAuthStore } from "@/store/auth.store";
 
 export default function AccountSidebar() {
   const pathname = usePathname();
@@ -49,7 +50,14 @@ export default function AccountSidebar() {
         
         <div className="hidden md:block h-px bg-stone-200 my-2"></div>
         
-        <button className="flex items-center gap-2 md:gap-3 px-4 py-2.5 md:py-3 text-red-600 hover:bg-red-50 font-inter font-medium text-sm rounded-lg transition-colors text-left whitespace-nowrap">
+        <button 
+          onClick={async () => {
+            const { logout } = useAuthStore.getState();
+            await logout();
+            window.location.href = "/login";
+          }}
+          className="flex items-center gap-2 md:gap-3 px-4 py-2.5 md:py-3 text-red-600 hover:bg-red-50 font-inter font-medium text-sm rounded-lg transition-colors text-left whitespace-nowrap"
+        >
           <LogOut size={18} /> Sign Out
         </button>
       </nav>

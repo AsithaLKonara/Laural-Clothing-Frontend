@@ -2,6 +2,7 @@
 
 import { Search, Bell, ChevronDown, Menu, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/auth.store";
 
 export default function Header({ onMenuClick, session }: { onMenuClick?: () => void, session?: any }) {
   const router = useRouter();
@@ -67,7 +68,11 @@ export default function Header({ onMenuClick, session }: { onMenuClick?: () => v
           
           <div className="absolute right-0 top-full mt-2 w-48 bg-surface border border-border rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 py-1 z-50 flex flex-col">
             <button 
-              onClick={() => router.push("/login")}
+              onClick={async () => {
+                const { logout } = useAuthStore.getState();
+                await logout();
+                router.push("/login");
+              }}
               className="flex items-center gap-2 px-4 py-2 text-sm text-error hover:bg-error/10 transition-colors text-left w-full font-inter"
             >
               <LogOut size={16} />
