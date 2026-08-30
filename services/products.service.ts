@@ -7,6 +7,10 @@ export interface GetProductsParams {
   take?: number;
   search?: string;
   category?: string;
+  color?: string;
+  size?: string;
+  minPrice?: number;
+  maxPrice?: number;
 }
 
 export const productsService = {

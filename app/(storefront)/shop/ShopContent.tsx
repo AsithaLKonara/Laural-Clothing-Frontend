@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import FilterSidebar from "@/components/FilterSidebar";
 import ProductCard from "@/components/ProductCard";
 import CategoryBar from "@/components/CategoryBar";
@@ -20,9 +21,18 @@ export default function ShopContent({ initialData }: { initialData?: PaginatedRe
     }
   }, []);
 
+  const searchParams = useSearchParams();
+  const color = searchParams.get("color") || undefined;
+  const size = searchParams.get("size") || undefined;
+  const minPrice = searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined;
+  const maxPrice = searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined;
+
   // Pagination logic
   const skip = (currentPage - 1) * itemsPerPage;
-  const { data: response, isLoading } = useProducts({ skip, take: itemsPerPage }, skip === 0 ? initialData : undefined);
+  const filters = { skip, take: itemsPerPage, color, size, minPrice, maxPrice };
+  const hasFilters = color || size || minPrice !== undefined || maxPrice !== undefined;
+  
+  const { data: response, isLoading } = useProducts(filters, (skip === 0 && !hasFilters) ? initialData : undefined);
   
   const products = response?.data || [];
   const totalItems = response?.meta.total || 0;

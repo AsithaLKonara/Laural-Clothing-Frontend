@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown, ChevronUp, SlidersHorizontal, Check, Filter } from "lucide-react";
 import { useCategories } from "@/hooks/useCategories";
 import { useProductFilters } from "@/hooks/useProducts";
 import Link from 'next/link';
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import * as Slider from "@radix-ui/react-slider";
 
 interface FilterSidebarProps {
   isOpen?: boolean;
@@ -12,6 +14,10 @@ interface FilterSidebarProps {
 }
 
 export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebarProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     price: true,
     colors: true,
@@ -19,12 +25,48 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
     style: true,
   });
 
-  const [selectedColor, setSelectedColor] = useState<string>("black");
-  const [selectedSize, setSelectedSize] = useState<string>("S");
+  const selectedColor = searchParams.get("color") || "";
+  const selectedSize = searchParams.get("size") || "";
+  
+  const minPriceParam = searchParams.get("minPrice");
+  const maxPriceParam = searchParams.get("maxPrice");
+  
+  const [priceRange, setPriceRange] = useState([
+    minPriceParam ? parseInt(minPriceParam) : 0, 
+    maxPriceParam ? parseInt(maxPriceParam) : 10000
+  ]);
+
+  useEffect(() => {
+    setPriceRange([
+      minPriceParam ? parseInt(minPriceParam) : 0, 
+      maxPriceParam ? parseInt(maxPriceParam) : 10000
+    ]);
+  }, [minPriceParam, maxPriceParam]);
 
   const toggleSection = (section: string) => {
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
+
+  const updateParam = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (params.get(key) === value) {
+      params.delete(key);
+    } else {
+      params.set(key, value);
+    }
+    // Reset to page 1 on filter change
+    params.delete('page');
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
+  const commitPriceRange = (values: number[]) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("minPrice", values[0].toString());
+    params.set("maxPrice", values[1].toString());
+    params.delete('page');
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
 
   const { data: response, isLoading } = useCategories();
   const categories = response?.data || [];
@@ -117,15 +159,29 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
         
         {openSections.price && (
           <div className="flex flex-col gap-[16px] w-full px-2">
-            {/* Visual slider mock */}
-            <div className="relative w-full h-[6px] bg-[#44403B] rounded-full mt-2">
-              <div className="absolute left-[20%] right-[30%] h-full bg-primary rounded-full" />
-              <div className="absolute left-[20%] top-1/2 -translate-y-1/2 w-[20px] h-[20px] bg-primary rounded-full shadow-md cursor-grab" />
-              <div className="absolute right-[30%] top-1/2 -translate-y-1/2 w-[20px] h-[20px] bg-primary rounded-full shadow-md cursor-grab" />
-            </div>
+            <Slider.Root
+              className="relative flex items-center select-none touch-none w-full h-5 mt-2"
+              value={priceRange}
+              max={15000}
+              step={500}
+              onValueChange={setPriceRange}
+              onValueCommit={commitPriceRange}
+            >
+              <Slider.Track className="bg-[#44403B] relative grow rounded-full h-[6px]">
+                <Slider.Range className="absolute bg-primary rounded-full h-full" />
+              </Slider.Track>
+              <Slider.Thumb
+                className="block w-5 h-5 bg-primary shadow-md rounded-full hover:bg-stone-800 focus:outline-none focus:ring-2 focus:ring-black cursor-grab active:cursor-grabbing"
+                aria-label="Min Price"
+              />
+              <Slider.Thumb
+                className="block w-5 h-5 bg-primary shadow-md rounded-full hover:bg-stone-800 focus:outline-none focus:ring-2 focus:ring-black cursor-grab active:cursor-grabbing"
+                aria-label="Max Price"
+              />
+            </Slider.Root>
             <div className="flex justify-between items-center w-full mt-2">
-              <span className="font-poppins font-medium text-sm text-primary">Rs. 50</span>
-              <span className="font-poppins font-medium text-sm text-primary">Rs. 200</span>
+              <span className="font-poppins font-medium text-sm text-primary">Rs. {priceRange[0]}</span>
+              <span className="font-poppins font-medium text-sm text-primary">Rs. {priceRange[1]}</span>
             </div>
           </div>
         )}
@@ -148,7 +204,7 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
             {colors.map((color) => (
               <button
                 key={color.id}
-                onClick={() => setSelectedColor(color.id)}
+                onClick={() => updateParam("color", color.id)}
                 className={`relative w-[37px] h-[37px] rounded-full flex items-center justify-center transition-transform hover:scale-110 ${
                   color.border ? "border border-[#79716B]" : ""
                 } ${selectedColor === color.id ? "ring-2 ring-offset-2 ring-[#79716B]" : ""}`}
@@ -180,7 +236,7 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
             {sizes.map((size) => (
               <button
                 key={size}
-                onClick={() => setSelectedSize(size)}
+                onClick={() => updateParam("size", size)}
                 className={`flex justify-center items-center px-[20px] py-[10px] rounded-[62px] transition-colors ${
                   selectedSize === size
                     ? "bg-primary text-background"
@@ -220,11 +276,7 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
         )}
       </div>
 
-      {/* Apply Filter Button */}
-      <button className="w-full h-[48px] bg-primary text-background rounded-[62px] font-poppins font-medium text-sm hover:bg-[#2c2824] transition-colors mt-[10px] mb-[20px]">
-        Apply Filter
-      </button>
-
+      {/* Apply Filter Button - Removed for instant filtering */}
     </div>
   );
 }
