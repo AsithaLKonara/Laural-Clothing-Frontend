@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { TicketPercent, CreditCard, Banknote, ShieldCheck, Award, ChevronDown } from "lucide-react";
@@ -42,6 +42,11 @@ export default function CheckoutPage() {
 
   const [discountCode, setDiscountCode] = useState("");
   const [isLoyaltyModalOpen, setIsLoyaltyModalOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [appliedLoyaltyPoints, setAppliedLoyaltyPoints] = useState<number>(0);
   
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -421,7 +426,7 @@ export default function CheckoutPage() {
 
             {/* Turnstile CAPTCHA */}
             <div className="flex justify-center w-full my-4">
-              {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+              {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
                 <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} onSuccess={(token) => setValue("turnstileToken", token)} />
               )}
             </div>

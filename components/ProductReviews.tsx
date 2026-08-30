@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Star, MessageSquare } from "lucide-react";
 import { Turnstile } from "@marsidev/react-turnstile";
 import { useProductReviews, useCreateReview } from "@/hooks/useReviews";
@@ -16,6 +16,11 @@ export default function ProductReviews({ productId }: { productId: string }) {
   const [_honeypot, setHoneypot] = useState("");
   const [turnstileToken, setTurnstileToken] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,8 +147,8 @@ export default function ProductReviews({ productId }: { productId: string }) {
               </button>
             </div>
             
-            {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
-              <div className="w-full flex justify-center mt-2">
+            {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+              <div className="flex justify-start py-2">
                 <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} onSuccess={(token) => setTurnstileToken(token)} />
               </div>
             )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Eye, EyeOff, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Turnstile } from "@marsidev/react-turnstile";
 import { useForm } from "react-hook-form";
@@ -23,19 +23,24 @@ type AuthView = "login" | "register" | "forgot-password" | "otp" | "change-passw
 
 export default function AuthForm() {
   const [view, setView] = useState<AuthView>("login");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const renderView = () => {
     switch (view) {
       case "login":
-        return <LoginForm setView={setView} />;
+        return <LoginForm setView={setView} mounted={mounted} />;
       case "register":
-        return <RegisterForm setView={setView} />;
+        return <RegisterForm setView={setView} mounted={mounted} />;
       case "forgot-password":
-        return <ForgotPasswordForm setView={setView} />;
+        return <ForgotPasswordForm setView={setView} mounted={mounted} />;
       case "otp":
         return <OTPForm setView={setView} />;
       case "change-password":
-        return <ChangePasswordForm setView={setView} />;
+        return <ChangePasswordForm setView={setView} mounted={mounted} />;
       default:
         return null;
     }
@@ -50,7 +55,7 @@ export default function AuthForm() {
 
 // Subcomponents
 
-function LoginForm({ setView }: { setView: (v: AuthView) => void }) {
+function LoginForm({ setView, mounted }: { setView: (v: AuthView) => void, mounted?: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams?.get("redirect");
@@ -160,7 +165,7 @@ function LoginForm({ setView }: { setView: (v: AuthView) => void }) {
         )}
 
         <div className="w-full flex justify-center mt-2">
-          {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+          {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
             <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} onSuccess={(token) => setValue("turnstileToken", token)} />
           )}
         </div>
@@ -208,7 +213,7 @@ function LoginForm({ setView }: { setView: (v: AuthView) => void }) {
   );
 }
 
-function RegisterForm({ setView }: { setView: (v: AuthView) => void }) {
+function RegisterForm({ setView, mounted }: { setView: (v: AuthView) => void, mounted?: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams?.get("redirect");
@@ -339,7 +344,7 @@ function RegisterForm({ setView }: { setView: (v: AuthView) => void }) {
           )}
 
           <div className="w-full flex justify-center mt-2">
-            {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+            {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
               <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} onSuccess={(token) => setValue("turnstileToken", token)} />
             )}
           </div>
@@ -369,7 +374,7 @@ function RegisterForm({ setView }: { setView: (v: AuthView) => void }) {
   );
 }
 
-function ForgotPasswordForm({ setView }: { setView: (v: AuthView) => void }) {
+function ForgotPasswordForm({ setView, mounted }: { setView: (v: AuthView) => void, mounted?: boolean }) {
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(forgotPasswordSchema),
   });
@@ -406,7 +411,7 @@ function ForgotPasswordForm({ setView }: { setView: (v: AuthView) => void }) {
         </div>
 
         <div className="w-full flex justify-center mt-2">
-          {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+          {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
             <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} onSuccess={(token) => setValue("turnstileToken", token)} />
           )}
         </div>
@@ -483,7 +488,7 @@ function OTPForm({ setView }: { setView: (v: AuthView) => void }) {
   );
 }
 
-function ChangePasswordForm({ setView }: { setView: (v: AuthView) => void }) {
+function ChangePasswordForm({ setView, mounted }: { setView: (v: AuthView) => void, mounted?: boolean }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
@@ -551,7 +556,7 @@ function ChangePasswordForm({ setView }: { setView: (v: AuthView) => void }) {
         </div>
         
         <div className="w-full flex justify-center mt-2">
-          {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+          {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
             <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} onSuccess={(token) => setValue("turnstileToken", token)} />
           )}
         </div>
