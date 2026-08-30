@@ -135,8 +135,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
               </button>
               <button 
                 type="submit" 
-                disabled={isPending || !turnstileToken}
-                disabled={isPending || (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !turnstileToken)}
+                disabled={isPending || (Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY) && !turnstileToken)}
                 className="flex-1 py-3 px-4 bg-primary text-white rounded-full font-poppins font-semibold text-sm hover:bg-stone-800 transition-colors disabled:opacity-50 flex justify-center items-center"
               >
                 {isPending ? "Submitting..." : "Submit Review"}
