@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationsService } from '../services/notifications.service';
-import toast from 'react-hot-toast';
 
 export const useNotifications = () => {
   const queryClient = useQueryClient();
@@ -16,8 +15,8 @@ export const useNotifications = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-notifications'] });
     },
-    onError: () => {
-      toast.error('Failed to mark notification as read');
+    onError: (err) => {
+      console.error('Failed to mark notification as read:', err);
     }
   });
 
@@ -25,10 +24,9 @@ export const useNotifications = () => {
     mutationFn: () => notificationsService.markAllAsRead(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-notifications'] });
-      toast.success('All notifications marked as read');
     },
-    onError: () => {
-      toast.error('Failed to mark notifications as read');
+    onError: (err) => {
+      console.error('Failed to mark notifications as read:', err);
     }
   });
 
