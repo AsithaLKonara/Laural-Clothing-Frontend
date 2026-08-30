@@ -1,5 +1,4 @@
 "use client";
-"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -8,17 +7,19 @@ import FilterBar from "@/components/dashboard/FilterBar";
 import DataTable from "@/components/dashboard/DataTable";
 import { StatusBadge } from "@/components/dashboard/Badges";
 import { useCustomers } from "@/hooks/useCustomers";
+import { useDebounce } from "use-debounce";
 
 export default function CustomersPage() {
   const router = useRouter();
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch] = useDebounce(searchQuery, 500);
   const [typeFilter, setTypeFilter] = useState("");
   const [sortFilter, setSortFilter] = useState("Sort By: Newest");
   const [page, setPage] = useState(1);
 
   const { data: customerData, isLoading } = useCustomers({
-    search: searchQuery || undefined,
+    search: debouncedSearch || undefined,
     type: typeFilter === "All Types" ? undefined : (typeFilter || undefined),
     sort: sortFilter || undefined,
     page: page

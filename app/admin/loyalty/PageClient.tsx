@@ -4,15 +4,31 @@ import PageHeader from "@/components/dashboard/PageHeader";
 import StatCard from "@/components/dashboard/StatCard";
 import DataTable from "@/components/dashboard/DataTable";
 import { StatusBadge } from "@/components/dashboard/Badges";
+import { useLoyaltyMembers, useLoyaltyKpis } from "@/hooks/useLoyalty";
+import { useState } from "react";
+import { useDebounce } from "use-debounce";
 
 export default function LoyaltyPage() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch] = useDebounce(searchTerm, 500);
+  const [page, setPage] = useState(1);
 
-  const members = [
-    { customer: "Kasun Perera", phone: "0771234567", points: "2,450", tier: "Gold", lastActivity: "2 days ago" },
-    { customer: "Nethmi", phone: "0719876543", points: "820", tier: "Silver", lastActivity: "1 week ago" },
-    { customer: "Dilshan", phone: "0763456789", points: "150", tier: "Bronze", lastActivity: "Today" },
-    { customer: "Guest User", phone: "0725551234", points: "0", tier: "Bronze", lastActivity: "1 month ago" },
-  ];
+  const { data: membersResponse, isLoading: isMembersLoading } = useLoyaltyMembers({
+    search: debouncedSearch,
+    page,
+    limit: 10
+  });
+
+  const { data: kpisResponse, isLoading: isKpisLoading } = useLoyaltyKpis();
+
+  const members = membersResponse?.data || [];
+  const meta = membersResponse?.meta || { currentPage: 1, totalPages: 1 };
+  const kpis = kpisResponse?.data || {
+    totalMembers: "0",
+    pointsIssued: "0",
+    pointsRedeemed: "0",
+    outstandingLiability: "Rs. 0"
+  };
 
   const columns = [
     { header: "Customer", accessor: "customer" as const, className: "font-semibold text-stone-900" },
@@ -22,7 +38,7 @@ export default function LoyaltyPage() {
       header: "Tier", 
       accessor: (row: any) => {
         let variant: 'success' | 'warning' | 'neutral' = 'neutral';
-        if (row.tier === 'Gold') variant = 'warning'; // Amber for Gold
+        if (row.tier === 'Gold' || row.tier === 'Platinum') variant = 'warning'; // Amber for Gold
         if (row.tier === 'Silver') variant = 'neutral';
         return <StatusBadge label={row.tier} variant={variant} />;
       }
@@ -40,10 +56,10 @@ export default function LoyaltyPage() {
 
       {/* KPI Row */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatCard label="Total Members" value="12,450" trend="↑ 182 this week" trendType="positive" />
-        <StatCard label="Points Issued" value="482,500" trend="All time" trendType="neutral" />
-        <StatCard label="Points Redeemed" value="310,200" trend="64% Redemption rate" trendType="positive" />
-        <StatCard label="Outstanding Liability" value="Rs. 172K" trend="Estimated cost" trendType="neutral" />
+        <StatCard label="Total Members" value={kpis.totalMembers} trend="All time" trendType="positive" />
+        <StatCard label="Points Issued" value={kpis.pointsIssued} trend="All time" trendType="neutral" />
+        <StatCard label="Points Redeemed" value={kpis.pointsRedeemed} trend="Estimated" trendType="positive" />
+        <StatCard label="Outstanding Liability" value={kpis.outstandingLiability} trend="Estimated cost" trendType="neutral" />
       </div>
 
       <div className="bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden mt-2">
@@ -52,14 +68,20 @@ export default function LoyaltyPage() {
           <input 
             type="text" 
             placeholder="Search by name or phone..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="border border-stone-200 rounded-md px-3 py-1.5 text-xs font-inter w-64" 
           />
         </div>
         <DataTable 
           data={members}
           columns={columns}
-          keyExtractor={(row) => row.phone}
-          pagination={{ currentPage: 1, totalPages: 24 }}
+          keyExtractor={(row) => row.phone + row.customer}
+          pagination={{ 
+            currentPage: meta.page, 
+            totalPages: meta.totalPages || 1,
+            onPageChange: (newPage) => setPage(newPage)
+          }}
         />
       </div>
 
