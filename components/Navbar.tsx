@@ -22,8 +22,13 @@ export default function Navbar() {
   const sessionId = useCartStore((state) => state.sessionId);
   const openDrawer = useCartStore((state) => state.openDrawer);
   const { data: cart } = useCart(sessionId);
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  const cartItems = cart?.items || [];
+  const cartItems = mounted ? cart?.items || [] : [];
   const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cartItems.reduce((sum, item) => sum + (item.quantity * (item.variant.salePrice ?? item.variant.price)), 0);
   const navLinks = [
