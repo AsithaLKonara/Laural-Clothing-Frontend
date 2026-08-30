@@ -20,6 +20,7 @@ import { useAddresses, useAddAddress, MOCK_CUSTOMER_ID } from "@/hooks/useAddres
 import { globalDialog } from "@/store/dialog.store";
 import { generateDeviceFingerprint, isLikelyBot } from "@/lib/fingerprint";
 import { Turnstile } from "@marsidev/react-turnstile";
+import { paymentService } from "@/services/payment.service";
 
 export default function CheckoutPage() {
   const {
@@ -43,9 +44,13 @@ export default function CheckoutPage() {
   const [discountCode, setDiscountCode] = useState("");
   const [isLoyaltyModalOpen, setIsLoyaltyModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [availablePaymentMethods, setAvailablePaymentMethods] = useState<any[]>([]);
 
   useEffect(() => {
     setMounted(true);
+    paymentService.getPaymentMethods()
+      .then(methods => setAvailablePaymentMethods(methods))
+      .catch(err => console.error("Failed to fetch payment methods", err));
   }, []);
   const [appliedLoyaltyPoints, setAppliedLoyaltyPoints] = useState<number>(0);
   
@@ -557,82 +562,39 @@ export default function CheckoutPage() {
             
             <div className="flex flex-col border border-stone-200 rounded-[24px] overflow-hidden bg-white shadow-sm">
               
-              {/* Cash on Delivery */}
-              <label className={`flex flex-col p-4 cursor-pointer hover:bg-stone-50 transition-colors border-b border-stone-200 ${paymentMethod === 'cod' ? 'bg-stone-50/50' : ''}`}>
-                <div className="flex items-center gap-4">
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === 'cod' ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
-                    {paymentMethod === 'cod' && <div className="w-2 h-2 rounded-full bg-white" />}
-                  </div>
-                  <input type="radio" value="cod" {...register("paymentMethod")} className="hidden" />
-                  <div className="flex items-center gap-2">
-                    <Banknote size={18} className="text-stone-500" />
-                    <span className="font-poppins text-sm text-primary font-medium">Cash on delivery</span>
-                  </div>
-                </div>
-              </label>
-
-              {/* Mintpay */}
-              <label className={`flex flex-col p-4 cursor-pointer hover:bg-stone-50 transition-colors border-b border-stone-200 ${paymentMethod === 'mintpay' ? 'bg-stone-50/50' : ''}`}>
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === 'mintpay' ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
-                      {paymentMethod === 'mintpay' && <div className="w-2 h-2 rounded-full bg-white" />}
+              {availablePaymentMethods.length === 0 ? (
+                <div className="p-8 text-center text-stone-500">Loading payment methods...</div>
+              ) : (
+                availablePaymentMethods.map((method, index) => (
+                  <label key={method.id} className={`flex flex-col p-4 cursor-pointer hover:bg-stone-50 transition-colors ${index !== availablePaymentMethods.length - 1 ? 'border-b border-stone-200' : ''} ${paymentMethod === method.id ? 'bg-stone-50/50' : ''}`}>
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === method.id ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
+                          {paymentMethod === method.id && <div className="w-2 h-2 rounded-full bg-white" />}
+                        </div>
+                        <input type="radio" value={method.id} {...register("paymentMethod")} className="hidden" />
+                        <div className="flex items-center gap-2">
+                          {method.id === 'cod' && <Banknote size={18} className="text-stone-500" />}
+                          {method.id === 'onepay' && <CreditCard size={18} className="text-stone-500" />}
+                          <span className="font-poppins text-sm text-primary font-medium">{method.name}</span>
+                        </div>
+                      </div>
+                      {method.badge && (
+                        <span className="font-poppins text-[11px] font-semibold tracking-wider uppercase text-emerald-600 bg-emerald-50 px-2 py-1 rounded-sm">{method.badge}</span>
+                      )}
                     </div>
-                    <input type="radio" value="mintpay" {...register("paymentMethod")} className="hidden" />
-                    <span className="font-poppins text-sm text-primary font-medium">Mintpay</span>
-                  </div>
-                  <span className="font-poppins text-[11px] font-semibold tracking-wider uppercase text-emerald-600 bg-emerald-50 px-2 py-1 rounded-sm">Pay Later</span>
-                </div>
-              </label>
-
-              {/* Koko */}
-              <label className={`flex flex-col p-4 cursor-pointer hover:bg-stone-50 transition-colors border-b border-stone-200 ${paymentMethod === 'koko' ? 'bg-stone-50/50' : ''}`}>
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === 'koko' ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
-                      {paymentMethod === 'koko' && <div className="w-2 h-2 rounded-full bg-white" />}
-                    </div>
-                    <input type="radio" value="koko" {...register("paymentMethod")} className="hidden" />
-                    <span className="font-poppins text-sm text-primary font-medium">Koko: BNPL</span>
-                  </div>
-                  <span className="font-poppins text-[11px] font-semibold tracking-wider uppercase text-emerald-600 bg-emerald-50 px-2 py-1 rounded-sm">Pay Later</span>
-                </div>
-              </label>
-
-              {/* Payzy */}
-              <label className={`flex flex-col p-4 cursor-pointer hover:bg-stone-50 transition-colors border-b border-stone-200 ${paymentMethod === 'payzy' ? 'bg-stone-50/50' : ''}`}>
-                <div className="flex items-center gap-4">
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === 'payzy' ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
-                    {paymentMethod === 'payzy' && <div className="w-2 h-2 rounded-full bg-white" />}
-                  </div>
-                  <input type="radio" value="payzy" {...register("paymentMethod")} className="hidden" />
-                  <span className="font-poppins text-sm text-primary font-medium">Payzy</span>
-                </div>
-              </label>
-
-              {/* Credit Card / Bank Account */}
-              <label className={`flex flex-col p-4 cursor-pointer hover:bg-stone-50 transition-colors ${paymentMethod === 'onepay' ? 'bg-stone-50/50' : ''}`}>
-                <div className="flex items-center gap-4">
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === 'onepay' ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
-                    {paymentMethod === 'onepay' && <div className="w-2 h-2 rounded-full bg-white" />}
-                  </div>
-                  <input type="radio" value="onepay" {...register("paymentMethod")} className="hidden" />
-                  <div className="flex items-center gap-2">
-                    <CreditCard size={18} className="text-stone-500" />
-                    <span className="font-poppins text-sm text-primary font-medium">Bank Card / Bank Account</span>
-                  </div>
-                </div>
-                
-                {/* Expanded Card Details (OnePay) */}
-                {paymentMethod === 'onepay' && (
-                  <div className="ml-9 mt-4 flex flex-col gap-3 animate-in slide-in-from-top-2 duration-300">
-                    <div className="flex items-center gap-2 text-stone-500 bg-white p-3 rounded-lg border border-stone-200 shadow-sm text-sm font-poppins">
-                      <ShieldCheck size={18} className="text-emerald-600" />
-                      Secure checkout powered by OnePay
-                    </div>
-                  </div>
-                )}
-              </label>
+                    
+                    {method.id === 'onepay' && paymentMethod === 'onepay' && (
+                      <div className="ml-9 mt-4 flex flex-col gap-3 animate-in slide-in-from-top-2 duration-300">
+                        <div className="flex items-center gap-2 text-stone-500 bg-white p-3 rounded-lg border border-stone-200 shadow-sm text-sm font-poppins">
+                          <ShieldCheck size={18} className="text-emerald-600" />
+                          Secure checkout powered by OnePay
+                        </div>
+                      </div>
+                    )}
+                  </label>
+                ))
+              )}
             </div>
 
             {/* Desktop Place Order Button */}

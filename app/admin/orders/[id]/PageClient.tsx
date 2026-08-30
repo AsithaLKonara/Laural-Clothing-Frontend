@@ -5,7 +5,7 @@ import { OrderStatusBadge, PaymentGatewayBadge } from "@/components/dashboard/Ba
 import Link from "next/link";
 import { ArrowLeft, User, CreditCard, Truck, RefreshCw } from "lucide-react";
 import OrderDispatchButtons from "@/components/admin/OrderDispatchButtons";
-import { useOrderById, useUpdateOrderStatus } from "@/hooks/useOrders";
+import { useOrderById, useUpdateOrderStatus, useRefundOrder } from "@/hooks/useOrders";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 
@@ -15,6 +15,7 @@ export default function OrderDetailPage() {
 
   const { data: order, isLoading } = useOrderById(id);
   const { mutate: updateStatus, isPending: isUpdating } = useUpdateOrderStatus();
+  const { mutate: refundOrder, isPending: isRefunding } = useRefundOrder();
 
   if (isLoading) {
     return <div className="p-10 text-stone-500 font-inter">Loading order details...</div>;
@@ -50,6 +51,20 @@ export default function OrderDetailPage() {
         title={`Order #${order.orderNumber || order.id.substring(0, 8)}`}
         action={
           <div className="flex gap-4 items-center">
+            {order.status !== 'CANCELLED' && order.paymentStatus !== 'REFUNDED' && (
+              <button 
+                onClick={() => {
+                  if (confirm("Are you sure you want to refund and cancel this order? This action cannot be undone and will restore stock.")) {
+                    refundOrder(id);
+                  }
+                }}
+                disabled={isRefunding}
+                className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold font-inter rounded-lg transition-colors border border-red-200 disabled:opacity-50"
+              >
+                {isRefunding ? <RefreshCw size={14} className="animate-spin" /> : null}
+                Refund Order
+              </button>
+            )}
             {nextStatus && (
               <button 
                 onClick={() => updateStatus({ id, status: nextStatus })}

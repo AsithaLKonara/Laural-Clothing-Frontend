@@ -18,5 +18,10 @@ export const paymentService = {
       throw new Error('Webhook proxy failed');
     }
     return response.json();
+  },
+
+  async getPaymentMethods(): Promise<any[]> {
+    const { data } = await api.get('/payment/methods');
+    return data.data; // our API returns { success: true, data: [...] }
   }
 };

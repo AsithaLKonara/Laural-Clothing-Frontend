@@ -77,3 +77,18 @@ export function useOrderConfirmation(orderNumber: string, simulated?: boolean) {
   });
 }
 
+export function useRefundOrder() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await orderService.refundOrder(id);
+      return response.data;
+    },
+    onSuccess: (data, id) => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["orders", id] });
+    },
+  });
+}
+
