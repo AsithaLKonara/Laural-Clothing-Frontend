@@ -34,13 +34,16 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
   const styles = ["Casual", "Formal", "Party", "Gym"];
   
   // Use dynamic colors if available, mapping strings to basic objects
-  const colors = filters?.colors?.map(color => ({
-    id: color,
-    hex: color.toLowerCase(), // basic fallback to CSS color names
-    border: color.toLowerCase() === "white"
-  })) || [];
+  const colors = filters?.colors
+    ?.filter((color: string) => !color.includes(',') && isNaN(Number(color)))
+    ?.slice(0, 10)
+    ?.map((color: string) => ({
+      id: color,
+      hex: color.toLowerCase().replace(' ', ''), // basic fallback to CSS color names
+      border: color.toLowerCase() === "white" || color.toLowerCase() === "off white"
+    })) || [];
 
-  const sizes = filters?.sizes || [];
+  const sizes = ["S", "M", "L", "UK 08", "UK 10", "UK 12"];
 
   if (!isOpen) {
     return (
