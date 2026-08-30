@@ -75,15 +75,38 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
   
   const styles = ["Casual", "Formal", "Party", "Gym"];
   
+  const COLOR_MAP: Record<string, string> = {
+    black: '#000000', white: '#FFFFFF', red: '#EF4444', blue: '#3B82F6', green: '#22C55E',
+    yellow: '#EAB308', purple: '#A855F7', pink: '#EC4899', orange: '#F97316', gray: '#6B7280',
+    grey: '#6B7280', brown: '#8B4513', navy: '#1E3A8A', teal: '#14B8A6', maroon: '#7F1D1D',
+    olive: '#4D7C0F', silver: '#D1D5DB', gold: '#F59E0B', beige: '#F5F5DC', mustard: '#EAB308',
+    burgundy: '#800020', ash: '#B2BEB5'
+  };
+
+  const getHexColor = (colorName: string) => {
+    const normalized = colorName.toLowerCase().replace(/ /g, '');
+    if (COLOR_MAP[normalized]) return COLOR_MAP[normalized];
+    for (const [key, hex] of Object.entries(COLOR_MAP)) {
+      if (normalized.includes(key)) return hex;
+    }
+    return null;
+  };
+  
   // Use dynamic colors if available, mapping strings to basic objects
-  const colors = filters?.colors
-    ?.filter((color: string) => !color.includes(',') && isNaN(Number(color)))
-    ?.slice(0, 10)
-    ?.map((color: string) => ({
-      id: color,
-      hex: color.toLowerCase().replace(' ', ''), // basic fallback to CSS color names
-      border: color.toLowerCase() === "white" || color.toLowerCase() === "off white"
-    })) || [];
+  const rawColors = filters?.colors?.filter((color: string) => !color.includes(',') && isNaN(Number(color))) || [];
+  
+  const colors = rawColors
+    .map((color: string) => {
+      const hex = getHexColor(color);
+      if (!hex) return null;
+      return {
+        id: color,
+        hex,
+        border: hex === '#FFFFFF' || hex.toLowerCase() === '#f5f5dc'
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 12) as { id: string; hex: string; border: boolean }[];
 
   const allowedSizes = ["S", "M", "L", "UK 08", "UK 10", "UK 12"];
   const sizes = allowedSizes.filter(size => filters?.sizes?.includes(size)) || [];

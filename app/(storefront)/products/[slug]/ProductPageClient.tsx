@@ -20,17 +20,22 @@ import { useAddToWishlist } from "@/hooks/useWishlist";
 
 import { PaginatedResponse } from "@/types/api";
 
-const colorMap: Record<string, string> = {
-  white: '#FFFFFF',
-  black: '#000000',
-  pink: '#FFD1DC',
-  blue: '#AEC6CF',
-  yellow: '#FDFD96',
-  red: '#FF6961',
-  green: '#77DD77',
-  'serene green': '#98FB98',
-  'hot pink': '#FF69B4',
-  ash: '#B2BEB5'
+const COLOR_MAP: Record<string, string> = {
+  black: '#000000', white: '#FFFFFF', red: '#EF4444', blue: '#3B82F6', green: '#22C55E',
+  yellow: '#EAB308', purple: '#A855F7', pink: '#EC4899', orange: '#F97316', gray: '#6B7280',
+  grey: '#6B7280', brown: '#8B4513', navy: '#1E3A8A', teal: '#14B8A6', maroon: '#7F1D1D',
+  olive: '#4D7C0F', silver: '#D1D5DB', gold: '#F59E0B', beige: '#F5F5DC', mustard: '#EAB308',
+  burgundy: '#800020', ash: '#B2BEB5', 'serene green': '#98FB98', 'hot pink': '#FF69B4'
+};
+
+const getHexColor = (colorName: string) => {
+  if (!colorName) return '#CCCCCC';
+  const normalized = colorName.toLowerCase().replace(/ /g, '');
+  if (COLOR_MAP[normalized]) return COLOR_MAP[normalized];
+  for (const [key, hex] of Object.entries(COLOR_MAP)) {
+    if (normalized.includes(key)) return hex;
+  }
+  return '#CCCCCC'; // fallback
 };
 
 export default function ProductPageClient({ 
@@ -88,17 +93,24 @@ export default function ProductPageClient({
   
   // Extract unique colors and sizes
   const uniqueColors = Array.from(new Set(variants.map(v => v.color).filter(Boolean))) as string[];
-  const uniqueSizes = Array.from(new Set(variants.map(v => v.size).filter(Boolean))) as string[];
+  const uniqueSizes = Array.from(new Set(
+    variants.map(v => {
+      if (!v.size) return null;
+      if (v.size.includes(',')) return v.size.split(',').pop()?.trim();
+      return v.size;
+    }).filter(Boolean)
+  )) as string[];
 
   // Auto-select first available if none selected
   if (!selectedColor && uniqueColors.length > 0) setSelectedColor(uniqueColors[0].toLowerCase());
   if (!selectedSize && uniqueSizes.length > 0) setSelectedSize(uniqueSizes[0]);
 
   // Find the selected variant
-  const selectedVariant = variants.find(v => 
-    (uniqueColors.length === 0 || v.color?.toLowerCase() === selectedColor?.toLowerCase()) &&
-    (uniqueSizes.length === 0 || v.size === selectedSize)
-  ) || variants[0];
+  const selectedVariant = variants.find(v => {
+    const vSizeSanitized = v.size?.includes(',') ? v.size.split(',').pop()?.trim() : v.size;
+    return (uniqueColors.length === 0 || v.color?.toLowerCase() === selectedColor?.toLowerCase()) &&
+           (uniqueSizes.length === 0 || vSizeSanitized === selectedSize);
+  }) || variants[0];
 
   const currentPriceObj = selectedVariant?.price || 0;
   const currentPrice = currentPriceObj.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -233,7 +245,7 @@ export default function ProductPageClient({
                           ? 'border-primary scale-110' 
                           : 'border-stone-200 hover:scale-105'
                       }`}
-                      style={{ backgroundColor: colorMap[color.toLowerCase()] || '#CCCCCC' }}
+                      style={{ backgroundColor: getHexColor(color) }}
                     />
                   ))}
                 </div>
@@ -246,10 +258,12 @@ export default function ProductPageClient({
                 <span className="font-poppins font-bold text-base text-primary w-[50px]">Size:</span>
                 <div className="flex gap-3 flex-wrap">
                   {uniqueSizes.map((size) => {
-                    const variantForSize = variants.find(v => 
-                      v.size === size && 
-                      (uniqueColors.length === 0 || v.color?.toLowerCase() === selectedColor?.toLowerCase())
-                    );
+                    const variantForSize = variants.find(v => {
+                      const vSizeSanitized = v.size?.includes(',') ? v.size.split(',').pop()?.trim() : v.size;
+                      return vSizeSanitized === size && 
+                             v.color?.toLowerCase() === selectedColor?.toLowerCase();
+                    });
+                    
                     const isSizeInStock = variantForSize ? variantForSize.stockStatus === 'instock' : false;
 
                     return (
