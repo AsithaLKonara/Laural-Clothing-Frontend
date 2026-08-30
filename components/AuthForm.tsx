@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Eye, EyeOff, ArrowRight, CheckCircle2 } from "lucide-react";
-import { Turnstile } from "@marsidev/react-turnstile";
+import { Turnstile, TurnstileInstance } from "@marsidev/react-turnstile";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod" ;
 import {
@@ -64,6 +64,7 @@ function LoginForm({ setView, mounted }: { setView: (v: AuthView) => void, mount
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const turnstileRef = useRef<TurnstileInstance>(null);
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -96,6 +97,7 @@ function LoginForm({ setView, mounted }: { setView: (v: AuthView) => void, mount
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message || "Failed to sign in. Please check your credentials.";
       setError(msg);
+      turnstileRef.current?.reset();
     } finally {
       setLoading(false);
     }
@@ -166,7 +168,11 @@ function LoginForm({ setView, mounted }: { setView: (v: AuthView) => void, mount
 
         <div className="w-full flex justify-center mt-2">
           {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
-            <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} onSuccess={(token) => setValue("turnstileToken", token)} />
+            <Turnstile 
+              ref={turnstileRef}
+              siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} 
+              onSuccess={(token) => setValue("turnstileToken", token)} 
+            />
           )}
         </div>
 
