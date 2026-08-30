@@ -28,7 +28,7 @@ export interface InitiateCheckoutPayload {
   };
   paymentMethod?: string;
   deviceFingerprint?: string;
-  appliedLoyaltyPoints?: number;
+  pointsToRedeem?: number;
 }
 
 const getHeaders = (sessionId: string) => ({

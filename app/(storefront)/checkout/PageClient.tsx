@@ -125,6 +125,7 @@ export default function CheckoutPage() {
         },
         paymentMethod: data.paymentMethod,
         deviceFingerprint: data.deviceFingerprint,
+        pointsToRedeem: appliedLoyaltyPoints,
       },
       {
         onSuccess: (data) => {

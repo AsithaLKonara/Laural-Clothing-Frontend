@@ -54,3 +54,13 @@ export function useLoyaltyKpis() {
     queryFn: fetchLoyaltyKpis,
   });
 }
+
+export function useLoyaltyProfile() {
+  return useQuery({
+    queryKey: ["loyaltyProfile"],
+    queryFn: async () => {
+      const response = await api.get('/loyalty/me');
+      return response.data;
+    }
+  });
+}
