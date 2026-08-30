@@ -1,5 +1,12 @@
 /** @type {import('next').NextConfig} */
 
+let apiOrigin = 'http://localhost:5000';
+try {
+  apiOrigin = new URL(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000').origin;
+} catch (e) {
+  // fallback if URL is invalid
+}
+
 const securityHeaders = [
   // Prevent clickjacking
   { key: 'X-Frame-Options', value: 'DENY' },
@@ -27,7 +34,7 @@ const securityHeaders = [
       // Images: self + Cloudinary + S3 + data URIs + blob
       "img-src 'self' data: blob: https://res.cloudinary.com https://t3.storageapi.dev https://images.unsplash.com",
       // XHR/fetch: self + backend API + Cloudflare Turnstile verify
-      "connect-src 'self' " + (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000') + " https://challenges.cloudflare.com",
+      "connect-src 'self' " + apiOrigin + " https://challenges.cloudflare.com",
       // iFrames: only Turnstile uses iframes
       "frame-src https://challenges.cloudflare.com",
       // Block object/embed tags
