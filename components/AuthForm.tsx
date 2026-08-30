@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, EyeOff, ArrowRight, Calendar, CheckCircle2 } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Turnstile } from "@marsidev/react-turnstile";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@hookform/resolvers/zod" ;
 import {
   loginSchema,
   registerSchema,
@@ -17,6 +17,7 @@ import {
 } from "@/lib/validations";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/auth.store";
+import { generateDeviceFingerprint } from "@/lib/fingerprint";
 
 type AuthView = "login" | "register" | "forgot-password" | "otp" | "change-password";
 
@@ -68,7 +69,13 @@ function LoginForm({ setView }: { setView: (v: AuthView) => void }) {
     setLoading(true);
 
     try {
-      const result = await loginAction(data);
+      // Generate device fingerprint for anti-bot velocity checks
+      const deviceFingerprint = await generateDeviceFingerprint();
+
+      const result = await loginAction({
+        ...data,
+        deviceFingerprint,
+      });
       const userRoles = result.user.roles || [];
       const isStaffOrAdmin = userRoles.some(
         (r) => r.toUpperCase() !== "PUBLIC_USER" && r.toLowerCase() !== "public user"
@@ -219,12 +226,17 @@ function RegisterForm({ setView }: { setView: (v: AuthView) => void }) {
     setLoading(true);
 
     try {
+      // Generate device fingerprint for anti-bot velocity checks
+      const deviceFingerprint = await generateDeviceFingerprint();
+
       await registerAction({
         email: data.email,
         password: data.password,
         fullName: data.fullName,
         birthday: data.birthday || null,
         phone: data.phone || null,
+        turnstileToken: data.turnstileToken,
+        deviceFingerprint,
       });
 
       setSuccess(true);

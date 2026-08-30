@@ -25,11 +25,19 @@ export interface RegisterPayload {
   name?: string;
   birthday?: string | null;
   phone?: string | null;
+  /** Cloudflare Turnstile CAPTCHA token — required in production */
+  turnstileToken?: string;
+  /** Device fingerprint for velocity/fraud detection */
+  deviceFingerprint?: string;
 }
 
 export interface LoginPayload {
   email: string;
   password: string;
+  /** Cloudflare Turnstile CAPTCHA token — required in production */
+  turnstileToken?: string;
+  /** Device fingerprint for velocity/fraud detection */
+  deviceFingerprint?: string;
 }
 
 export const authService = {

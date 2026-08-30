@@ -18,7 +18,7 @@ import { useInitiateCheckout } from "@/hooks/useCheckout";
 import { useRouter } from "next/navigation";
 import { useAddresses, useAddAddress, MOCK_CUSTOMER_ID } from "@/hooks/useAddress";
 import { globalDialog } from "@/store/dialog.store";
-import { generateDeviceFingerprint } from "@/lib/fingerprint";
+import { generateDeviceFingerprint, isLikelyBot } from "@/lib/fingerprint";
 import { Turnstile } from "@marsidev/react-turnstile";
 
 export default function CheckoutPage() {
@@ -131,6 +131,15 @@ export default function CheckoutPage() {
 
   const onSubmit = async (data: CheckoutFormData) => {
     if (!cart?.id) return;
+
+    // Pre-flight bot check — reject obvious automation before any API call
+    if (isLikelyBot()) {
+      globalDialog.alert(
+        "Automated checkout is not permitted. Please complete the checkout manually.",
+        "Checkout Unavailable"
+      );
+      return;
+    }
 
     if (!isAuthenticated && !isPhoneVerified) {
       setPendingCheckoutData(data);
