@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState, use, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, LayoutGrid, Info, ArrowLeftRight, Heart, Ruler, Send, MessageCircle } from "lucide-react";
@@ -68,6 +68,18 @@ export default function ProductPageClient({
   const [qty, setQty] = useState(1);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (product && typeof window !== 'undefined' && window.fbq) {
+      window.fbq('track', 'ViewContent', {
+        content_name: product.name,
+        content_ids: [product.id],
+        content_type: 'product',
+        value: product.variants?.[0]?.price || 0,
+        currency: 'LKR',
+      });
+    }
+  }, [product]);
 
   if (isLoading) {
     return (
@@ -305,6 +317,15 @@ export default function ProductPageClient({
                     { variantId: selectedVariant.id, quantity: qty },
                     {
                       onSuccess: () => {
+                        if (typeof window !== 'undefined' && window.fbq) {
+                          window.fbq('track', 'AddToCart', {
+                            content_name: product.name,
+                            content_ids: [product.id],
+                            content_type: 'product',
+                            value: currentPriceObj * qty,
+                            currency: 'LKR',
+                          });
+                        }
                         openDrawer();
                       }
                     }

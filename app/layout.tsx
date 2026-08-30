@@ -55,6 +55,8 @@ export const metadata: Metadata = {
 import Providers from "./providers";
 import OrganizationSchema from "@/components/seo/OrganizationSchema";
 import GlobalDialog from "@/components/ui/GlobalDialog";
+import { MetaPixel } from "@/components/MetaPixel";
+import { Suspense } from "react";
 
 export default function RootLayout({
   children,
@@ -66,6 +68,9 @@ export default function RootLayout({
       <body
         className={`${poppins.variable} ${orangeAvenue.variable} ${inriaSerif.variable} ${urbanist.variable} antialiased`}
       >
+        <Suspense fallback={null}>
+          <MetaPixel />
+        </Suspense>
         <Providers>
           <OrganizationSchema />
           {children}

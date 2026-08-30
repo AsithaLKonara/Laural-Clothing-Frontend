@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { TicketPercent, CreditCard, Banknote, ShieldCheck, Award, ChevronDown } from "lucide-react";
@@ -73,6 +73,22 @@ export default function CheckoutPage() {
   const subtotal = cartItems.reduce((sum, item) => sum + (item.quantity * (item.variant.salePrice ?? item.variant.price)), 0);
   const shippingFee = 400; // Flat fee for now
   const total = subtotal + shippingFee - appliedLoyaltyPoints;
+
+  const hasFiredPixel = useRef(false);
+  useEffect(() => {
+    if (!isCartLoading && cartItems.length > 0 && !hasFiredPixel.current) {
+      if (typeof window !== 'undefined' && window.fbq) {
+        window.fbq('track', 'InitiateCheckout', {
+          content_ids: cartItems.map(item => item.variant.product.id),
+          content_type: 'product',
+          num_items: cartItems.length,
+          value: total,
+          currency: 'LKR'
+        });
+      }
+      hasFiredPixel.current = true;
+    }
+  }, [isCartLoading, cartItems, total]);
 
   const handleSelectAddress = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = e.target.value;

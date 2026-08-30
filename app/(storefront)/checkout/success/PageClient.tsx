@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle2, ChevronRight, Package, Loader2 } from "lucide-react";
@@ -11,6 +11,21 @@ function CheckoutSuccessContent() {
   const orderId = searchParams.get("orderId");
 
   const { data: order, isLoading, isError } = useOrderById(orderId || "");
+
+  const hasFiredPixel = useRef(false);
+  useEffect(() => {
+    if (order && !hasFiredPixel.current) {
+      if (typeof window !== 'undefined' && window.fbq) {
+        window.fbq('track', 'Purchase', {
+          value: order.total,
+          currency: 'LKR',
+          content_ids: order.items?.map((item: any) => item.productVariant?.product?.id) || [],
+          content_type: 'product',
+        });
+      }
+      hasFiredPixel.current = true;
+    }
+  }, [order]);
 
   if (isLoading) {
     return (
