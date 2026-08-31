@@ -28,7 +28,6 @@ import { useAuthStore } from "@/store/auth.store";
 export default function POSPage() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const branchId = user?.branchId || user?.branch?.id || "BR-001";
   
   const [terminalId, setTerminalId] = useState("TERM-001");
   useEffect(() => {
@@ -44,6 +43,9 @@ export default function POSPage() {
   const { data: activeSession } = useCurrentSession(terminalId);
   const { data: branchesResponse } = useBranches();
   const branches = Array.isArray(branchesResponse) ? branchesResponse : (branchesResponse as any)?.data || [];
+
+  // Priority: active session branch (guaranteed real) > user branch > first available branch
+  const branchId = activeSession?.branchId || user?.branchId || user?.branch?.id || branches?.[0]?.id || "";
   
   const processOrderMutation = useProcessPosOrder();
   const scanBarcodeMutation = useScanBarcode();
@@ -564,8 +566,14 @@ export default function POSPage() {
 
                 <div className="mt-4">
                   <button 
-                    disabled={shiftState === "CLOSED"}
-                    onClick={() => setIsPaymentModalOpen(true)}
+                    disabled={shiftState === "CLOSED" || cart.length === 0}
+                    onClick={() => {
+                      if (!branchId) {
+                        globalDialog.alert("No branch assigned to your account. Please contact your administrator to assign you to a branch before processing sales.");
+                        return;
+                      }
+                      setIsPaymentModalOpen(true);
+                    }}
                     className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover disabled:bg-stone-300 disabled:cursor-not-allowed rounded-xl py-4 transition-colors shadow-lg shadow-primary/20"
                   >
                     <span className="font-inter font-bold text-lg text-white">
