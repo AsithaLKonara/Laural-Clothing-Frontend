@@ -77,7 +77,7 @@ export default function PosShiftModal({ mode, activeSession, branchId, terminalI
           </div>
 
           {sessionSummaryData && (
-            <div className="hidden">
+            <div className="print-only">
               <ZReportSlip session={sessionSummaryData.session} summary={sessionSummaryData.summary} />
             </div>
           )}

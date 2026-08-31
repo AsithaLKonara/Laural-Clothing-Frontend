@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Search, Loader2, Store, Calendar, FileText, Download } from "lucide-react";
 import { useBranches } from "@/hooks/useInventory";
 import { useOrders } from "@/hooks/useOrders";
+import { useBranchReport } from "@/hooks/useReports";
 import { format } from "date-fns";
 import Link from "next/link";
 
@@ -42,6 +43,9 @@ export default function POSSalesClient() {
       default: return 'bg-stone-50 text-stone-700 border-stone-200';
     }
   };
+
+  const { data: branchReportData, isLoading: isLoadingReport } = useBranchReport();
+  const currentBranchMetrics = branchReportData?.find((b: any) => b.branchId === activeBranchId);
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -93,6 +97,40 @@ export default function POSSalesClient() {
       </div>
 
       <div className="p-6 flex-1 overflow-y-auto">
+        
+        {/* Metrics Cards */}
+        {activeBranchId && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-surface border border-border rounded-xl p-5 shadow-sm">
+              <p className="text-muted text-sm font-semibold font-inter mb-1">Total Revenue</p>
+              {isLoadingReport ? (
+                <div className="h-8 w-24 bg-stone-100 animate-pulse rounded"></div>
+              ) : (
+                <p className="text-2xl font-bold text-foreground font-inter">
+                  {formatPrice(currentBranchMetrics?.revenue || 0)}
+                </p>
+              )}
+            </div>
+            <div className="bg-surface border border-border rounded-xl p-5 shadow-sm">
+              <p className="text-muted text-sm font-semibold font-inter mb-1">Total Orders</p>
+              {isLoadingReport ? (
+                <div className="h-8 w-16 bg-stone-100 animate-pulse rounded"></div>
+              ) : (
+                <p className="text-2xl font-bold text-foreground font-inter">
+                  {currentBranchMetrics?.orders || 0}
+                </p>
+              )}
+            </div>
+            <div className="bg-surface border border-border rounded-xl p-5 shadow-sm">
+              <p className="text-muted text-sm font-semibold font-inter mb-1">Active Status</p>
+              <div className="flex items-center gap-2 mt-1">
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                <span className="text-sm font-semibold text-foreground">Online</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="mb-6 max-w-md">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted h-4 w-4" />

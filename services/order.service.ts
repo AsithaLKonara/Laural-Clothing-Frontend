@@ -56,7 +56,7 @@ export const orderService = {
   },
   
   dispatchOrder: async (orderId: string) => {
-    const { data } = await api.post(`/orders/${orderId}/dispatch`);
+    const { data } = await api.patch(`/orders/${orderId}/status`, { status: 'DISPATCHED' });
     return data;
   },
 

@@ -70,8 +70,8 @@ export default function ShippingDashboard() {
                         </Button>
                       ) : (
                         <>
-                          {order.trackingUrl && (
-                            <a href={order.trackingUrl} target="_blank" rel="noreferrer" className="text-sm text-blue-600 hover:underline inline-block">View Label</a>
+                          {order.labelUrl && (
+                            <a href={order.labelUrl} target="_blank" rel="noreferrer" className="text-sm text-blue-600 hover:underline inline-block">View Label</a>
                           )}
                         </>
                       )}

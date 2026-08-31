@@ -17,6 +17,7 @@ import Link from "next/link";
 import { useInfiniteProducts, useScanBarcode } from "@/hooks/useProducts";
 import { useIntersection } from "@/hooks/useIntersection";
 import { useCategories } from "@/hooks/useCategories";
+import { useBranches } from "@/hooks/useInventory";
 import { useRouter } from "next/navigation";
 import { useProcessPosOrder, useCurrentSession, useValidateVoucher } from "@/hooks/usePos";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -41,6 +42,9 @@ export default function POSPage() {
   const [posMode, setPosMode] = useState<"SALES" | "RETURNS" | "DISPATCH" | "EXCHANGE">("SALES");
   
   const { data: activeSession } = useCurrentSession(terminalId);
+  const { data: branchesResponse } = useBranches();
+  const branches = branchesResponse?.data || [];
+  
   const processOrderMutation = useProcessPosOrder();
   const scanBarcodeMutation = useScanBarcode();
   
@@ -251,7 +255,13 @@ export default function POSPage() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="text-stone-400">Branch:</span>
-            <span className="text-white">{activeSession?.branch?.name || user?.branch?.name || branchId || "Branch"}</span>
+            <span className="text-white">
+              {activeSession?.branch?.name || 
+               user?.branch?.name || 
+               (branches?.find((b: any) => b.id === branchId)?.name) || 
+               branchId || 
+               "Branch"}
+            </span>
           </div>
           <div className="w-px h-3 bg-stone-700"></div>
           <div className="flex items-center gap-2">
@@ -386,9 +396,9 @@ export default function POSPage() {
               {categories.map((cat: any) => (
                 <button 
                   key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
+                  onClick={() => setSelectedCategory(cat.slug)}
                   className={`px-6 py-3 rounded-lg font-inter font-semibold text-sm whitespace-nowrap transition-colors border ${
-                    selectedCategory === cat.id ? "bg-primary-soft text-primary border-primary shadow-sm" : "bg-surface text-muted border-border hover:bg-background"
+                    selectedCategory === cat.slug ? "bg-primary-soft text-primary border-primary shadow-sm" : "bg-surface text-muted border-border hover:bg-background"
                   }`}
                 >
                   {cat.name}
@@ -638,10 +648,10 @@ export default function POSPage() {
           const voucherAmount = cartVouchers.reduce((sum, v) => sum + v.amount, 0);
           const total = Math.max(0, subtotal - voucherAmount);
           const orderRes = await processOrderMutation.mutateAsync({
-            branchId: "BR-001",
+            branchId,
             sessionId: activeSession?.id || "mock-session-id",
             customerId: selectedCustomer?.id,
-            items: cart,
+            items: cart.map(item => ({ variantId: item.id, qty: item.qty })),
             paymentMethod: method,
             appliedVouchers: cartVouchers.map(v => v.code),
             subtotal,

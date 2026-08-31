@@ -25,23 +25,14 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      // Scripts: self + Cloudflare Turnstile widget
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com",
-      // Styles: self + inline (Tailwind)
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      // Fonts
-      "font-src 'self' https://fonts.gstatic.com",
-      // Images: self + Cloudinary + S3 + data URIs + blob + country flags + Unsplash
-      "img-src 'self' data: blob: https://res.cloudinary.com https://t3.storageapi.dev https://images.unsplash.com https://purecatamphetamine.github.io https://encrypted-tbn0.gstatic.com",
-      // XHR/fetch: self + backend API + Cloudflare Turnstile verify + S3 Uploads
-      "connect-src 'self' " + apiOrigin + " https://challenges.cloudflare.com https://t3.storageapi.dev",
-      // iFrames: only Turnstile uses iframes
+      "font-src 'self' https://fonts.gstatic.com data:",
+      "img-src * data: blob: 'unsafe-inline'",
+      "connect-src * data: blob: 'unsafe-inline'",
       "frame-src https://challenges.cloudflare.com",
-      // Block object/embed tags
       "object-src 'none'",
-      // Prevent base tag hijacking
       "base-uri 'self'",
-      // Only allow forms to submit to self
       "form-action 'self'",
     ].join('; '),
   },
@@ -65,6 +56,7 @@ const nextConfig = {
     },
   ],
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'http',
