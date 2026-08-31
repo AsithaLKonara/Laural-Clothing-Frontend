@@ -3,8 +3,9 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import PrintButton from "./PrintButton";
 
-export default async function LabelPage({ params }: { params: { orderId: string } }) {
-  const orderRes = await serverFetch<any>(`/orders/${params.orderId}`, {
+export default async function LabelPage({ params }: { params: Promise<{ orderId: string }> }) {
+  const resolvedParams = await params;
+  const orderRes = await serverFetch<any>(`/orders/${resolvedParams.orderId}`, {
     next: { revalidate: 0 },
   }).catch(() => null);
 
