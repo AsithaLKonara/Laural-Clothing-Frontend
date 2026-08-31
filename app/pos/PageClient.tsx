@@ -106,7 +106,25 @@ export default function POSPage() {
     }
   };
 
+  const resolveProductImage = (product: any, variant?: any): string => {
+    // Prefer the specific variant's image
+    if (variant?.featuredImage) return variant.featuredImage;
+    if (variant?.gallery?.length > 0) return variant.gallery[0];
+    // Fall back to first variant with an image
+    if (product?.variants?.length > 0) {
+      for (const v of product.variants) {
+        if (v.featuredImage) return v.featuredImage;
+        if (v.gallery?.length > 0) return v.gallery[0];
+      }
+    }
+    // Fall back to product-level image fields
+    if (product?.images?.length > 0) return product.images[0];
+    if (product?.featuredImage) return product.featuredImage;
+    return "/placeholder.png";
+  };
+
   const addToCart = (product: any, variant?: any, selectedQty = 1) => {
+    const image = resolveProductImage(product, variant);
     const itemToAdd = variant ? {
       ...product,
       id: variant.id, 
@@ -115,10 +133,12 @@ export default function POSPage() {
       price: variant.price || 0,
       color: variant.color,
       size: variant.size,
+      image,
     } : {
       ...product,
       id: product.variants?.[0]?.id || product.id,
       price: product.variants?.[0]?.price || 0,
+      image,
     };
 
     setCart(prev => {

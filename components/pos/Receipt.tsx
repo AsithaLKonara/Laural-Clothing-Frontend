@@ -16,133 +16,124 @@ export interface ReceiptProps {
 }
 
 const Receipt = forwardRef<HTMLDivElement, ReceiptProps>((props, ref) => {
+  const { orderId, cashierName, date, items, subtotal, discount, total, paymentMethod, tendered, change } = props;
+
+  const fmt = (n: number) => n.toFixed(2);
+  const truncate = (str: string, max = 28) => str.length > max ? str.slice(0, max - 1) + "\u2026" : str;
+
+  const containerStyle: React.CSSProperties = {
+    width: "72mm",
+    maxWidth: "72mm",
+    fontFamily: "monospace",
+    fontSize: "11px",
+    lineHeight: "1.35",
+    color: "#000",
+    background: "#fff",
+    padding: "3mm 2mm",
+    margin: "0 auto",
+    boxSizing: "border-box",
+    overflowX: "hidden",
+    wordBreak: "break-word",
+  };
+
+  const divider = (
+    <div style={{ borderTop: "1px dashed #000", margin: "4px 0" }} />
+  );
+
+  const solidDivider = (
+    <div style={{ borderTop: "1px solid #000", margin: "4px 0" }} />
+  );
+
+  const row = (label: string, value: string, bold = false): React.ReactNode => (
+    <div style={{ display: "flex", justifyContent: "space-between", fontWeight: bold ? "bold" : "normal" }}>
+      <span>{label}</span>
+      <span>{value}</span>
+    </div>
+  );
+
   return (
-    <div ref={ref} className="print-receipt w-[300px] bg-white text-black p-4 font-mono text-sm leading-snug mx-auto shadow-md">
-      {/* Header */}
-      <div className="text-center flex flex-col items-center gap-1 mb-4">
-        <h2 className="font-bold text-xl tracking-widest">LAURAL</h2>
-        <span className="text-xs">Kandy Branch, 123 Main Street</span>
-        <span className="text-xs">Tel: +94 77 123 4567</span>
+    <div ref={ref} className="print-receipt" style={containerStyle}>
+      {/* Store Header */}
+      <div style={{ textAlign: "center", marginBottom: "4px" }}>
+        <div style={{ fontWeight: "bold", fontSize: "16px", letterSpacing: "3px" }}>LAURAL</div>
+        <div style={{ fontSize: "10px" }}>Point of Sale Receipt</div>
+        <div style={{ fontSize: "10px", marginTop: "2px" }}>Tel: +94 77 123 4567</div>
       </div>
 
-      <div className="border-t border-dashed border-black my-2"></div>
-      
+      {divider}
+
       {/* Order Info */}
-      <div className="flex flex-col gap-1 text-xs mb-2">
-        <div className="flex justify-between">
-          <span>Date: {props.date.toLocaleString()}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>Receipt: #{props.orderId}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>Cashier: {props.cashierName}</span>
-        </div>
+      <div style={{ fontSize: "10px", marginBottom: "3px" }}>
+        <div>Date: {date.toLocaleDateString()} {date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+        <div>Receipt: #{orderId}</div>
+        <div>Cashier: {cashierName}</div>
       </div>
 
-      <div className="border-t border-dashed border-black my-2"></div>
+      {divider}
 
       {/* Items Header */}
-      <div className="flex justify-between text-xs font-bold mb-1">
-        <span className="w-[50%]">Item</span>
-        <span className="w-[15%] text-center">Qty</span>
-        <span className="w-[35%] text-right">Amount</span>
+      <div style={{ display: "flex", fontWeight: "bold", fontSize: "10px", marginBottom: "2px" }}>
+        <span style={{ flex: 1 }}>Item</span>
+        <span style={{ width: "22px", textAlign: "center" }}>Qty</span>
+        <span style={{ width: "52px", textAlign: "right" }}>Rs.</span>
       </div>
-      
-      <div className="border-t border-dashed border-black my-2"></div>
+
+      {divider}
 
       {/* Items */}
-      <div className="flex flex-col gap-2 text-xs">
-        {props.items.map((item, idx) => (
-          <div key={idx} className="flex justify-between">
-            <div className="w-[50%] flex flex-col pr-1">
-              <span className="truncate">{item.name}</span>
+      <div style={{ marginBottom: "3px" }}>
+        {items.map((item, idx) => (
+          <div key={idx} style={{ marginBottom: "4px" }}>
+            <div style={{ fontSize: "10px" }}>{truncate(item.name)}</div>
+            <div style={{ display: "flex", fontSize: "10px" }}>
+              <span style={{ flex: 1, color: "#555", fontSize: "9px" }}>
+                {[item.color, item.size].filter(Boolean).join(" / ")}
+              </span>
+              <span style={{ width: "22px", textAlign: "center" }}>x{item.qty}</span>
+              <span style={{ width: "52px", textAlign: "right" }}>{fmt(item.price * item.qty)}</span>
             </div>
-            <span className="w-[15%] text-center">{item.qty}</span>
-            <span className="w-[35%] text-right">{(item.price * item.qty).toFixed(2)}</span>
           </div>
         ))}
       </div>
 
-      <div className="border-t border-dashed border-black my-2"></div>
+      {divider}
 
       {/* Totals */}
-      <div className="flex flex-col gap-1 text-xs">
-        <div className="flex justify-between">
-          <span>Subtotal</span>
-          <span>{props.subtotal.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>Discount</span>
-          <span>- {props.discount.toFixed(2)}</span>
-        </div>
+      <div style={{ fontSize: "10px", marginBottom: "3px" }}>
+        {row("Subtotal", fmt(subtotal))}
+        {discount > 0 && row("Discount", `- ${fmt(discount)}`)}
       </div>
 
-      <div className="border-t border-dashed border-black my-2"></div>
+      {solidDivider}
 
-      <div className="flex justify-between text-sm font-bold my-1">
+      {/* Grand Total */}
+      <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "bold", fontSize: "13px", margin: "2px 0" }}>
         <span>TOTAL</span>
-        <span>Rs. {props.total.toFixed(2)}</span>
+        <span>Rs. {fmt(total)}</span>
       </div>
 
-      <div className="border-t border-dashed border-black my-2"></div>
+      {divider}
 
       {/* Payment */}
-      <div className="flex flex-col gap-1 text-xs mb-4">
-        <div className="flex justify-between">
-          <span>Method:</span>
-          <span>{props.paymentMethod}</span>
-        </div>
-        {props.tendered !== undefined && (
-          <div className="flex justify-between">
-            <span>Tendered:</span>
-            <span>{props.tendered.toFixed(2)}</span>
-          </div>
-        )}
-        {props.change !== undefined && (
-          <div className="flex justify-between">
-            <span>Change:</span>
-            <span>{props.change.toFixed(2)}</span>
-          </div>
-        )}
+      <div style={{ fontSize: "10px", marginBottom: "4px" }}>
+        {row("Method:", paymentMethod)}
+        {tendered !== undefined && tendered > 0 && row("Tendered:", `Rs. ${fmt(tendered)}`)}
+        {change !== undefined && change >= 0 && row("Change:", `Rs. ${fmt(change)}`, true)}
       </div>
+
+      {divider}
 
       {/* Footer */}
-      <div className="text-center flex flex-col items-center gap-2 text-xs">
-        <span className="font-bold">Thank you for shopping!</span>
-        <span className="text-[10px] px-2 text-center text-stone-600">
-          Returns accepted within 14 days with original tags and receipt.
-        </span>
-        
-        <div className="mt-2 flex flex-col items-center">
-          <div className="flex h-10 w-48 bg-black items-center justify-center relative overflow-hidden">
-             {/* Simple visual barcode representation since we don't have react-barcode installed by default */}
-             <div className="absolute inset-0 flex justify-between px-1">
-                <div className="w-1 h-full bg-white"></div>
-                <div className="w-2 h-full bg-white"></div>
-                <div className="w-1 h-full bg-white"></div>
-                <div className="w-3 h-full bg-white"></div>
-                <div className="w-1 h-full bg-white"></div>
-                <div className="w-2 h-full bg-white"></div>
-                <div className="w-1 h-full bg-white"></div>
-                <div className="w-1 h-full bg-white"></div>
-                <div className="w-3 h-full bg-white"></div>
-                <div className="w-2 h-full bg-white"></div>
-                <div className="w-1 h-full bg-white"></div>
-                <div className="w-2 h-full bg-white"></div>
-                <div className="w-1 h-full bg-white"></div>
-                <div className="w-1 h-full bg-white"></div>
-                <div className="w-3 h-full bg-white"></div>
-                <div className="w-2 h-full bg-white"></div>
-                <div className="w-1 h-full bg-white"></div>
-             </div>
-          </div>
-          <span className="text-[10px] mt-1 tracking-widest">{props.orderId}</span>
+      <div style={{ textAlign: "center", fontSize: "10px", marginTop: "4px" }}>
+        <div style={{ fontWeight: "bold" }}>Thank you for shopping!</div>
+        <div style={{ fontSize: "9px", marginTop: "2px", lineHeight: "1.3" }}>
+          Returns within 14 days with<br />original tags and receipt.
         </div>
-
-        <span className="text-[8px] mt-4 text-stone-400">Powered by Laural POS</span>
+        <div style={{ marginTop: "6px", fontFamily: "monospace", fontSize: "9px", letterSpacing: "2px", wordBreak: "break-all" }}>
+          {orderId}
+        </div>
+        <div style={{ fontSize: "8px", color: "#888", marginTop: "6px" }}>Powered by Laural POS</div>
       </div>
-
     </div>
   );
 });
