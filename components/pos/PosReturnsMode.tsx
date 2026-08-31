@@ -29,7 +29,7 @@ export default function PosReturnsMode() {
       if (searchQuery.toUpperCase().startsWith("LC-") || searchQuery.toUpperCase().startsWith("POS-")) {
         try {
           // Search for the exact order number
-          const res = await orderService.getOrders({ search: searchQuery });
+          const res = await orderService.getOrders({ search: searchQuery, type: 'POS' });
           if (res.data && res.data.data && res.data.data.length > 0) {
             setLoadedOrder(res.data.data[0]);
             setOrderFound(true);

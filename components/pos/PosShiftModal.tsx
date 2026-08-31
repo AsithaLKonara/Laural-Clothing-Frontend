@@ -20,12 +20,14 @@ export default function PosShiftModal({ mode, activeSession, branchId, terminalI
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  const [closedSessionId, setClosedSessionId] = useState<string | null>(null);
+
   const { data: expectedClosingData, isLoading: expectedClosingLoading } = useExpectedClosing(
     mode === "CLOSE" ? activeSession?.id : undefined
   );
 
   const { data: sessionSummaryData } = useSessionSummary(
-    (mode === "CLOSE" && isSuccess) ? activeSession?.id : undefined
+    (mode === "CLOSE" && isSuccess && closedSessionId) ? closedSessionId : undefined
   );
 
   const expectedCash = expectedClosingData?.expectedClosing || 0;
@@ -40,10 +42,12 @@ export default function PosShiftModal({ mode, activeSession, branchId, terminalI
     try {
       if (mode === "CLOSE") {
         if (!activeSession) throw new Error("No active session to close.");
+        const sessionId = activeSession.id;
         await closeSessionMutation.mutateAsync({
-          sessionId: activeSession.id,
+          sessionId,
           actualClosing: actualCash
         });
+        setClosedSessionId(sessionId);
         setIsSuccess(true);
       } else {
         await openSessionMutation.mutateAsync({

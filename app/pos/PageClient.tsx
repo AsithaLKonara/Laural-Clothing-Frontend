@@ -260,8 +260,7 @@ export default function POSPage() {
               {activeSession?.branch?.name || 
                user?.branch?.name || 
                (branches?.find((b: any) => b.id === branchId)?.name) || 
-               branchId || 
-               "Branch"}
+               (branchesResponse === undefined ? "Loading..." : "Unknown Branch")}
             </span>
           </div>
           <div className="w-px h-3 bg-stone-700"></div>
@@ -648,33 +647,38 @@ export default function POSPage() {
           const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
           const voucherAmount = cartVouchers.reduce((sum, v) => sum + v.amount, 0);
           const total = Math.max(0, subtotal - voucherAmount);
-          const orderRes = await processOrderMutation.mutateAsync({
-            branchId,
-            sessionId: activeSession?.id || undefined,
-            customerId: selectedCustomer?.id,
-            items: cart.map(item => ({ variantId: item.id, qty: item.qty })),
-            paymentMethod: method,
-            appliedVouchers: cartVouchers.map(v => v.code),
-            subtotal,
-            total,
-            tax: 0
-          });
-          
-          setLastOrderData({
-            orderId: orderRes?.orderNumber || `POS-${Date.now()}`,
-            cashierName: user?.name || "User",
-            items: cart,
-            subtotal,
-            discount: voucherAmount,
-            total,
-            paymentMethod: method,
-            tendered: total, // we don't have tendered from PaymentModal yet, assume exact change for now
-            change: 0
-          });
+          try {
+            const orderRes = await processOrderMutation.mutateAsync({
+              branchId,
+              sessionId: activeSession?.id || undefined,
+              customerId: selectedCustomer?.id,
+              items: cart.map(item => ({ variantId: item.id, qty: item.qty })),
+              paymentMethod: method,
+              appliedVouchers: cartVouchers.map(v => v.code),
+              subtotal,
+              total,
+              tax: 0
+            });
+            
+            setLastOrderData({
+              orderId: orderRes?.orderNumber || `POS-${Date.now()}`,
+              cashierName: user?.name || "User",
+              items: cart,
+              subtotal,
+              discount: voucherAmount,
+              total,
+              paymentMethod: method,
+              tendered: total, // we don't have tendered from PaymentModal yet, assume exact change for now
+              change: 0
+            });
 
-          clearCart();
-          setSelectedCustomer(null);
-          setIsSuccessModalOpen(true); 
+            clearCart();
+            setSelectedCustomer(null);
+            setIsSuccessModalOpen(true);
+          } catch (err: any) {
+            console.error(err);
+            globalDialog.alert(err?.response?.data?.error || err.message || "Failed to process payment. Please try again.");
+          }
         }}  
         total={Math.max(0, cart.reduce((sum, item) => sum + (item.price * item.qty), 0) - cartVouchers.reduce((sum, v) => sum + v.amount, 0)).toFixed(2)} 
       />}

@@ -64,32 +64,33 @@ export default function Footer() {
           </div>
 
           {/* Links Cols */}
-          <div className="flex flex-col sm:flex-row gap-8 lg:gap-[48px] flex-1">
+          <div className="flex flex-col sm:flex-row gap-8 lg:gap-[48px] flex-1 justify-between md:justify-end">
             {/* Shop Col */}
-            <div className="flex flex-col gap-[25px]">
-              <div className="flex flex-col gap-[16px]">
-                <h4 className="font-inter font-bold text-sm tracking-[0.02em] uppercase text-background">Shop</h4>
-                <div className="flex flex-col gap-[10px]">
-                  {["Collared Top", "Core Crop Tank Top", "Raglan Top", "Shirt"].map(link => (
-                    <Link href="#" key={link} className="font-inter text-sm text-background/85 hover:text-white transition-colors">{link}</Link>
-                  ))}
-                </div>
-              </div>
-              <div className="flex flex-col gap-[16px]">
-                <h4 className="font-inter font-bold text-sm tracking-[0.02em] uppercase text-background">Information</h4>
-                <div className="flex flex-col gap-[10px]">
-                  <Link href="/track-order" className="font-inter text-sm text-background/85 hover:text-white transition-colors">Track Order</Link>
-                  <Link href="/returns" className="font-inter text-sm text-background/85 hover:text-white transition-colors">Returns</Link>
-                  <Link href="/faq" className="font-inter text-sm text-background/85 hover:text-white transition-colors">FAQ</Link>
-                  <Link href="/contact" className="font-inter text-sm text-background/85 hover:text-white transition-colors">Contact Us</Link>
-                  {mounted && pages?.map((page: any) => (
-                    <Link href={`/pages/${page.slug}`} key={page.id} className="font-inter text-sm text-background/85 hover:text-white transition-colors">{page.title}</Link>
-                  ))}
-                </div>
+            <div className="flex flex-col gap-[16px] min-w-[120px]">
+              <h4 className="font-inter font-bold text-sm tracking-[0.02em] uppercase text-background">Shop</h4>
+              <div className="flex flex-col gap-[10px]">
+                {["Collared Top", "Core Crop Tank Top", "Raglan Top", "Shirt"].map(link => (
+                  <Link href="#" key={link} className="font-inter text-sm text-background/85 hover:text-white transition-colors">{link}</Link>
+                ))}
               </div>
             </div>
             
-            <div className="flex flex-col gap-[16px]">
+            {/* Information Col */}
+            <div className="flex flex-col gap-[16px] min-w-[120px]">
+              <h4 className="font-inter font-bold text-sm tracking-[0.02em] uppercase text-background">Information</h4>
+              <div className="flex flex-col gap-[10px]">
+                <Link href="/track-order" className="font-inter text-sm text-background/85 hover:text-white transition-colors">Track Order</Link>
+                <Link href="/returns" className="font-inter text-sm text-background/85 hover:text-white transition-colors">Returns</Link>
+                <Link href="/faq" className="font-inter text-sm text-background/85 hover:text-white transition-colors">FAQ</Link>
+                <Link href="/contact" className="font-inter text-sm text-background/85 hover:text-white transition-colors">Contact Us</Link>
+                {mounted && pages?.map((page: any) => (
+                  <Link href={`/pages/${page.slug}`} key={page.id} className="font-inter text-sm text-background/85 hover:text-white transition-colors">{page.title}</Link>
+                ))}
+              </div>
+            </div>
+            
+            {/* Categories Col */}
+            <div className="flex flex-col gap-[16px] min-w-[120px]">
               <h4 className="font-inter font-bold text-sm tracking-[0.02em] uppercase text-background">Categories</h4>
               <div className="flex flex-col gap-[10px]">
                 {mounted && categories.map((cat: any) => (

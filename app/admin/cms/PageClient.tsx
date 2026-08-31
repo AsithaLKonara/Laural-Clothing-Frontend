@@ -383,7 +383,7 @@ function BannersTab() {
 }
 
 function HomepageTab() {
-  const { sections, isLoadingSections, updateHomepageSection, createHomepageSection } = useCms();
+  const { sections, isLoadingSections, updateHomepageSection, createHomepageSection, deleteHomepageSection } = useCms();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<HomepageSection>>({});
   const [showMediaPicker, setShowMediaPicker] = useState(false);
@@ -500,11 +500,12 @@ function HomepageTab() {
                   {sec.visible ? "Visible" : "Hidden"}
                 </button>
                 <button onClick={() => startEdit(sec)} className="p-2 text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded-lg transition-colors"><Edit3 size={15}/></button>
+                <button onClick={() => deleteHomepageSection.mutateAsync(sec.id)} className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={15}/></button>
               </div>
             )}
           </div>
         ))}
-        {editingId?.startsWith('new-') && (
+        {editingId?.startsWith('new-') && !sections.some((s: HomepageSection) => s.id === editingId) && (
           <div className="bg-white border rounded-xl shadow-sm overflow-hidden border-stone-200 p-4 flex flex-col gap-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
