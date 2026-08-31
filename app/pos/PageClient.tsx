@@ -251,7 +251,7 @@ export default function POSPage() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="text-stone-400">Branch:</span>
-            <span className="text-white">{activeSession?.branch?.name || user?.branch?.name || "Branch"}</span>
+            <span className="text-white">{activeSession?.branch?.name || user?.branch?.name || branchId || "Branch"}</span>
           </div>
           <div className="w-px h-3 bg-stone-700"></div>
           <div className="flex items-center gap-2">

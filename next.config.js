@@ -31,10 +31,10 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       // Fonts
       "font-src 'self' https://fonts.gstatic.com",
-      // Images: self + Cloudinary + S3 + data URIs + blob
-      "img-src 'self' data: blob: https://res.cloudinary.com https://t3.storageapi.dev https://images.unsplash.com",
-      // XHR/fetch: self + backend API + Cloudflare Turnstile verify
-      "connect-src 'self' " + apiOrigin + " https://challenges.cloudflare.com",
+      // Images: self + Cloudinary + S3 + data URIs + blob + country flags + Unsplash
+      "img-src 'self' data: blob: https://res.cloudinary.com https://t3.storageapi.dev https://images.unsplash.com https://purecatamphetamine.github.io https://encrypted-tbn0.gstatic.com",
+      // XHR/fetch: self + backend API + Cloudflare Turnstile verify + S3 Uploads
+      "connect-src 'self' " + apiOrigin + " https://challenges.cloudflare.com https://t3.storageapi.dev",
       // iFrames: only Turnstile uses iframes
       "frame-src https://challenges.cloudflare.com",
       // Block object/embed tags

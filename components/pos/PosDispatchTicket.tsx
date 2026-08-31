@@ -25,6 +25,8 @@ export default function PosDispatchTicket({ isMobileCartOpen, setIsMobileCartOpe
   
   const [isDispatching, setIsDispatching] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [labelUrl, setLabelUrl] = useState<string | null>(null);
+  const [trackingNum, setTrackingNum] = useState<string | null>(null);
 
   const handlePhoneSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -65,7 +67,7 @@ export default function PosDispatchTicket({ isMobileCartOpen, setIsMobileCartOpe
 
       // 2. Forward to 3PL if applicable
       if (deliveryMethod === "Fardar") {
-        await createShipmentMutation.mutateAsync({
+        const shipmentRes = await createShipmentMutation.mutateAsync({
           orderReference: orderRes.orderNumber || "POS-DISPATCH-" + Math.floor(Math.random() * 100000),
           customerName: customerName || "Guest",
           customerPhone: phone,
@@ -74,6 +76,8 @@ export default function PosDispatchTicket({ isMobileCartOpen, setIsMobileCartOpe
           amountToCollect: paymentMethod === "COD" ? total : 0,
           pieces: cart.length
         });
+        setLabelUrl(shipmentRes.labelUrl);
+        setTrackingNum(shipmentRes.trackingNumber);
       }
       setSuccess(true);
     } catch (error) {
@@ -97,8 +101,16 @@ export default function PosDispatchTicket({ isMobileCartOpen, setIsMobileCartOpe
               ? `Payment link sent to ${phone}. Order will be dispatched via ${deliveryMethod} once paid.`
               : `Order has been routed to the warehouse for ${deliveryMethod} delivery.`}
           </p>
+          {labelUrl && (
+            <button 
+              onClick={() => window.open(labelUrl, '_blank')}
+              className="w-full py-3 mb-3 bg-foreground text-background rounded-xl font-inter font-bold hover:bg-stone-800 transition-colors shadow-lg"
+            >
+              Print Shipping Label
+            </button>
+          )}
           <button 
-            onClick={() => { setSuccess(false); clearCart(); setPhone(""); setCustomerName(""); setAddress(""); setCustomerFound(false); setIsMobileCartOpen(false); }}
+            onClick={() => { setSuccess(false); clearCart(); setPhone(""); setCustomerName(""); setAddress(""); setCustomerFound(false); setIsMobileCartOpen(false); setLabelUrl(null); setTrackingNum(null); }}
             className="w-full py-4 bg-primary text-white rounded-xl font-inter font-bold hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20"
           >
             New Phone Order
