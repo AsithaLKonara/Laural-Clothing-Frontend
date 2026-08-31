@@ -22,6 +22,7 @@ export default function ShopContent({ initialData }: { initialData?: PaginatedRe
   }, []);
 
   const searchParams = useSearchParams();
+  const search = searchParams.get("search") || undefined;
   const color = searchParams.get("color") || undefined;
   const size = searchParams.get("size") || undefined;
   const minPrice = searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined;
@@ -29,8 +30,8 @@ export default function ShopContent({ initialData }: { initialData?: PaginatedRe
 
   // Pagination logic
   const skip = (currentPage - 1) * itemsPerPage;
-  const filters = { skip, take: itemsPerPage, color, size, minPrice, maxPrice };
-  const hasFilters = color || size || minPrice !== undefined || maxPrice !== undefined;
+  const filters = { skip, take: itemsPerPage, search, color, size, minPrice, maxPrice };
+  const hasFilters = search || color || size || minPrice !== undefined || maxPrice !== undefined;
   
   const { data: response, isLoading } = useProducts(filters, (skip === 0 && !hasFilters) ? initialData : undefined);
   

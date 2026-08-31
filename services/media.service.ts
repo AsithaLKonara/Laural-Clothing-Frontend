@@ -60,4 +60,9 @@ export const mediaService = {
   deleteMediaFile: async (id: string): Promise<void> => {
     await api.delete(`/media/${id}`);
   },
+
+  syncS3: async (): Promise<{ added: number }> => {
+    const { data } = await api.post('/media/sync-s3');
+    return data;
+  }
 };

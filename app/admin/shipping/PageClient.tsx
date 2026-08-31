@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useOrders, useDispatchOrder } from '@/hooks/useOrders';
 import { Button } from '@/components/ui/Button';
 
@@ -70,8 +71,8 @@ export default function ShippingDashboard() {
                         </Button>
                       ) : (
                         <>
-                          {order.labelUrl && (
-                            <a href={order.labelUrl} target="_blank" rel="noreferrer" className="text-sm text-blue-600 hover:underline inline-block">View Label</a>
+                          {order.trackingNumber && (
+                            <Link href={`/admin/shipping/label/${order.id}`} target="_blank" className="text-sm text-blue-600 hover:underline inline-block">View Label</Link>
                           )}
                         </>
                       )}

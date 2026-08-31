@@ -59,34 +59,12 @@ const nextConfig = {
     unoptimized: true,
     remotePatterns: [
       {
+        protocol: 'https',
+        hostname: '**',
+      },
+      {
         protocol: 'http',
-        hostname: 'localhost',
-        port: '5000',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'laural-api.up.railway.app', // Adding standard railway domains just in case
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 't3.storageapi.dev',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'res.cloudinary.com',
-        port: '',
-        pathname: '/**',
+        hostname: '**',
       },
     ],
   },

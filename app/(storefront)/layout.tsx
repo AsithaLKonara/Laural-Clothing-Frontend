@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { CartProvider } from "@/components/CartProvider";
+import PromoBanner from "@/components/PromoBanner";
 
 export const metadata: Metadata = {
   title: "Laural Clothing",
@@ -14,9 +15,12 @@ export default function StorefrontLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="bg-stone-50 text-stone-900 min-h-screen flex flex-col">
+    <div className="bg-stone-50 text-stone-900 min-h-screen flex flex-col pt-[34px]">
       <CartProvider>
-        <Navbar />
+        <div className="fixed top-0 left-0 right-0 z-50">
+          <PromoBanner />
+          <Navbar />
+        </div>
         <main className="flex-1">
           {children}
         </main>

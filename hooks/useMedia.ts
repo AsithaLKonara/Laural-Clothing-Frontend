@@ -47,3 +47,13 @@ export function useUploadMedia() {
     },
   });
 }
+
+export function useSyncS3() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: mediaService.syncS3,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['media'] });
+    },
+  });
+}

@@ -18,11 +18,25 @@ export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   // Fetch SEO-critical data on the server in parallel
-  const [categoriesRes, newArrivalsRes, offersRes] = await Promise.all([
-    serverFetch<PaginatedResponse<Category>>("/categories", { tags: ["categories"], revalidate: 3600 }).catch(() => undefined),
-    serverFetch<PaginatedResponse<Product>>("/products", { tags: ["products"], revalidate: 3600 }).catch(() => undefined),
-    serverFetch<PaginatedResponse<Product>>("/products?skip=8&take=8", { tags: ["products"], revalidate: 3600 }).catch(() => undefined),
+  const [categoriesRes, newArrivalsRes, offersRes, sectionsRes] = await Promise.all([
+    serverFetch<PaginatedResponse<Category>>("/categories", { tags: ["categories"], revalidate: 60 }).catch(() => undefined),
+    serverFetch<PaginatedResponse<Product>>("/products", { tags: ["products"], revalidate: 60 }).catch(() => undefined),
+    serverFetch<PaginatedResponse<Product>>("/products?skip=8&take=8", { tags: ["products"], revalidate: 60 }).catch(() => undefined),
+    serverFetch<any>("/cms/sections", { revalidate: 60 }).catch(() => undefined),
   ]);
+
+  const sections = sectionsRes?.data || [];
+  
+  // Create mapping of section name to React components
+  const sectionComponents: Record<string, React.ReactNode> = {
+    "CollectionsSection": <CollectionsSection key="CollectionsSection" initialData={categoriesRes} />,
+    "NewArrivalsSection": <NewArrivalsSection key="NewArrivalsSection" initialData={newArrivalsRes} />,
+    "CuratedCollectionsSection": <CuratedCollectionsSection key="CuratedCollectionsSection" />,
+    "OfferCollectionSection": <OfferCollectionSection key="OfferCollectionSection" initialData={offersRes} />,
+    "AdBannerSection": <AdBannerSection key="AdBannerSection" />,
+    "BrandStorySection": <BrandStorySection key="BrandStorySection" />,
+    "TestimonialSection": <TestimonialSection key="TestimonialSection" />,
+  };
 
   return (
     <main className="min-h-screen bg-stone-50">
@@ -60,13 +74,25 @@ export default async function Home() {
           ))}
         </div>
       </div>
-      <CollectionsSection initialData={categoriesRes} />
-      <NewArrivalsSection initialData={newArrivalsRes} />
-      <CuratedCollectionsSection />
-      <OfferCollectionSection initialData={offersRes} />
-      <AdBannerSection />
-      <BrandStorySection />
-      <TestimonialSection />
+      
+      {/* Dynamic Sections from CMS */}
+      {sections.length > 0 ? (
+        sections
+          .filter((s: any) => s.visible)
+          .sort((a: any, b: any) => a.order - b.order)
+          .map((s: any) => sectionComponents[s.name])
+      ) : (
+        // Fallback if CMS is uninitialized
+        <>
+          <CollectionsSection initialData={categoriesRes} />
+          <NewArrivalsSection initialData={newArrivalsRes} />
+          <CuratedCollectionsSection />
+          <OfferCollectionSection initialData={offersRes} />
+          <AdBannerSection />
+          <BrandStorySection />
+          <TestimonialSection />
+        </>
+      )}
     </main>
   );
 }

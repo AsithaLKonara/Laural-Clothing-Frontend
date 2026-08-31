@@ -43,7 +43,7 @@ export default function POSPage() {
   
   const { data: activeSession } = useCurrentSession(terminalId);
   const { data: branchesResponse } = useBranches();
-  const branches = branchesResponse?.data || [];
+  const branches = Array.isArray(branchesResponse) ? branchesResponse : (branchesResponse as any)?.data || [];
   
   const processOrderMutation = useProcessPosOrder();
   const scanBarcodeMutation = useScanBarcode();
@@ -649,7 +649,7 @@ export default function POSPage() {
           const total = Math.max(0, subtotal - voucherAmount);
           const orderRes = await processOrderMutation.mutateAsync({
             branchId,
-            sessionId: activeSession?.id || "mock-session-id",
+            sessionId: activeSession?.id || undefined,
             customerId: selectedCustomer?.id,
             items: cart.map(item => ({ variantId: item.id, qty: item.qty })),
             paymentMethod: method,

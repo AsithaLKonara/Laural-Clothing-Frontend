@@ -30,6 +30,7 @@ export default function POSSalesClient() {
   const { data: ordersData, isLoading: isLoadingOrders } = useOrders({ 
     branchId: activeBranchId || undefined,
     search: searchTerm || undefined,
+    type: "POS",
   });
 
   const orders = ordersData?.data || [];

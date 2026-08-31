@@ -69,7 +69,7 @@ export default function Navbar() {
     : "/logo.webp";
 
   return (
-    <nav className={`fixed top-0 w-full z-50 transition-colors duration-300 ${navBgClass}`}>
+    <nav className={`w-full z-[50] transition-colors duration-300 ${navBgClass}`}>
       <div className="w-full px-4 md:px-8 lg:px-[120px] h-[83px] flex md:grid md:grid-cols-3 justify-between items-center relative">
         
         {/* Mobile Hamburger (Left) */}

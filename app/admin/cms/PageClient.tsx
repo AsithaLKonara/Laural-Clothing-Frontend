@@ -605,15 +605,21 @@ function PagesTab() {
   const startEdit = (page: StaticPage) => { setEditingId(page.id); setEditData({...page}); };
   const cancelEdit = () => { setEditingId(null); setEditData({}); };
   const saveEdit = async () => {
-    if (editingId && !editingId.startsWith('new-')) {
-      await updateStaticPage.mutateAsync({ id: editingId, data: editData });
-    } else {
-      await createStaticPage.mutateAsync(editData);
+    try {
+      const { id, lastEdited, ...payload } = editData as any;
+      if (editingId && !editingId.startsWith('new-')) {
+        await updateStaticPage.mutateAsync({ id: editingId, data: payload });
+      } else {
+        await createStaticPage.mutateAsync(payload);
+      }
+      setEditingId(null);
+      setEditData({});
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      console.error("Failed to save page", err);
+      alert("Failed to save page. Please try again.");
     }
-    setEditingId(null);
-    setEditData({});
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
   };
 
   if (isLoadingPages) return <div className="p-8 text-center text-stone-500 font-inter">Loading pages...</div>;
@@ -774,6 +780,7 @@ export default function AdminCMSPage() {
         title="Content Management"
         subtitle="Manage homepage sections, promotional banners, hero slides, and static pages."
         actionLabel="View Storefront"
+        actionHref="/"
       />
 
       {/* Tab Navigation */}
