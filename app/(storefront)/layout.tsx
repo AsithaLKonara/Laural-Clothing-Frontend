@@ -15,7 +15,7 @@ export default function StorefrontLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="bg-stone-50 text-stone-900 min-h-screen flex flex-col pt-[34px]">
+    <div id="storefront-layout" className="bg-stone-50 text-stone-900 min-h-screen flex flex-col pt-[34px] transition-[padding] duration-500">
       <CartProvider>
         <div className="fixed top-0 left-0 right-0 z-50">
           <PromoBanner />

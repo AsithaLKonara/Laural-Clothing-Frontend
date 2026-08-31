@@ -16,6 +16,10 @@ export default function PromoBanner() {
       .then(res => {
         const activeBanners = (res.data.data || res.data).filter((b: any) => b.active);
         setBanners(activeBanners);
+        if (activeBanners.length === 0) {
+          const layout = document.getElementById("storefront-layout");
+          if (layout) layout.style.paddingTop = "0px";
+        }
       })
       .catch(console.error);
   }, []);
@@ -28,6 +32,12 @@ export default function PromoBanner() {
       return () => clearInterval(interval);
     }
   }, [banners.length]);
+
+  const handleClose = () => {
+    setVisible(false);
+    const layout = document.getElementById("storefront-layout");
+    if (layout) layout.style.paddingTop = "0px";
+  };
 
   if (!visible || banners.length === 0) return null;
 
@@ -52,7 +62,7 @@ export default function PromoBanner() {
         ) : content}
       </div>
       <button 
-        onClick={() => setVisible(false)} 
+        onClick={handleClose} 
         className="absolute right-2 top-1/2 -translate-y-1/2 p-1 opacity-70 hover:opacity-100 transition-opacity"
       >
         <X size={14} />

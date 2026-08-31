@@ -31,10 +31,11 @@ function HeroTab() {
   const cancelEdit = () => { setEditingId(null); setEditData({}); };
 
   const saveEdit = async () => {
+    const { id, createdAt, updatedAt, lastEdited, ...updateData } = editData as any;
     if (editingId && !editingId.startsWith('new-')) {
-      await updateHeroSlide.mutateAsync({ id: editingId, data: editData });
+      await updateHeroSlide.mutateAsync({ id: editingId, data: updateData });
     } else {
-      await createHeroSlide.mutateAsync(editData);
+      await createHeroSlide.mutateAsync(updateData);
     }
     setEditingId(null);
     setEditData({});
@@ -248,10 +249,11 @@ function BannersTab() {
   const startEdit = (b: Banner) => { setEditingId(b.id); setEditData({...b}); };
   const cancelEdit = () => { setEditingId(null); setEditData({}); };
   const saveEdit = async () => {
+    const { id, createdAt, updatedAt, lastEdited, ...updateData } = editData as any;
     if (editingId && !editingId.startsWith('new-')) {
-      await updateBanner.mutateAsync({ id: editingId, data: editData });
+      await updateBanner.mutateAsync({ id: editingId, data: updateData });
     } else {
-      await createBanner.mutateAsync(editData);
+      await createBanner.mutateAsync(updateData);
     }
     setEditingId(null);
     setEditData({});
@@ -409,10 +411,11 @@ function HomepageTab() {
   const startEdit = (sec: HomepageSection) => { setEditingId(sec.id); setEditData({...sec}); };
   const cancelEdit = () => { setEditingId(null); setEditData({}); };
   const saveEdit = async () => {
+    const { id, createdAt, updatedAt, lastEdited, ...updateData } = editData as any;
     if (editingId && !editingId.startsWith('new-')) {
-      await updateHomepageSection.mutateAsync({ id: editingId, data: editData });
+      await updateHomepageSection.mutateAsync({ id: editingId, data: updateData });
     } else {
-      await createHomepageSection.mutateAsync(editData);
+      await createHomepageSection.mutateAsync(updateData);
     }
     setEditingId(null);
     setEditData({});
@@ -606,7 +609,7 @@ function PagesTab() {
   const cancelEdit = () => { setEditingId(null); setEditData({}); };
   const saveEdit = async () => {
     try {
-      const { id, lastEdited, ...payload } = editData as any;
+      const { id, createdAt, updatedAt, lastEdited, ...payload } = editData as any;
       if (editingId && !editingId.startsWith('new-')) {
         await updateStaticPage.mutateAsync({ id: editingId, data: payload });
       } else {

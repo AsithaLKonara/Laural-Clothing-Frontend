@@ -5,6 +5,7 @@ import Link from "next/link";
 import { MapPin, Phone, Mail } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useCategories } from "@/hooks/useCategories";
+import { useCms } from "@/hooks/useCms";
 import { useState, useEffect } from "react";
 
 export default function Footer() {
@@ -14,6 +15,7 @@ export default function Footer() {
   const pathname = usePathname();
   const { data: response } = useCategories();
   const categories = response?.data?.slice(0, 5) || []; // Show up to 5 categories
+  const { pages } = useCms();
   
   if (pathname === "/login") return null;
 
@@ -74,10 +76,15 @@ export default function Footer() {
                 </div>
               </div>
               <div className="flex flex-col gap-[16px]">
-                <h4 className="font-inter font-bold text-sm tracking-[0.02em] uppercase text-background">Support</h4>
+                <h4 className="font-inter font-bold text-sm tracking-[0.02em] uppercase text-background">Information</h4>
                 <div className="flex flex-col gap-[10px]">
                   <Link href="/track-order" className="font-inter text-sm text-background/85 hover:text-white transition-colors">Track Order</Link>
                   <Link href="/returns" className="font-inter text-sm text-background/85 hover:text-white transition-colors">Returns</Link>
+                  <Link href="/faq" className="font-inter text-sm text-background/85 hover:text-white transition-colors">FAQ</Link>
+                  <Link href="/contact" className="font-inter text-sm text-background/85 hover:text-white transition-colors">Contact Us</Link>
+                  {mounted && pages?.map((page: any) => (
+                    <Link href={`/pages/${page.slug}`} key={page.id} className="font-inter text-sm text-background/85 hover:text-white transition-colors">{page.title}</Link>
+                  ))}
                 </div>
               </div>
             </div>

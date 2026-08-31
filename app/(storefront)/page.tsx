@@ -19,7 +19,7 @@ export const dynamic = 'force-dynamic';
 export default async function Home() {
   // Fetch SEO-critical data on the server in parallel
   const [categoriesRes, newArrivalsRes, offersRes, sectionsRes] = await Promise.all([
-    serverFetch<PaginatedResponse<Category>>("/categories", { tags: ["categories"], revalidate: 60 }).catch(() => undefined),
+    serverFetch<PaginatedResponse<Category>>("/categories", { tags: ["categories"], revalidate: 0 }).catch(() => undefined),
     serverFetch<PaginatedResponse<Product>>("/products", { tags: ["products"], revalidate: 60 }).catch(() => undefined),
     serverFetch<PaginatedResponse<Product>>("/products?skip=8&take=8", { tags: ["products"], revalidate: 60 }).catch(() => undefined),
     serverFetch<any>("/cms/sections", { revalidate: 60 }).catch(() => undefined),

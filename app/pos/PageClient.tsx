@@ -115,6 +115,7 @@ export default function POSPage() {
       size: variant.size,
     } : {
       ...product,
+      id: product.variants?.[0]?.id || product.id,
       price: product.variants?.[0]?.price || 0,
     };
 
