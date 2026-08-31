@@ -73,7 +73,13 @@ export default function PromotionsReportPage() {
 
       <div className="bg-white border border-stone-200 rounded-xl p-6">
         <h3 className="text-lg font-semibold text-primary font-poppins mb-6">Promotions Utilization</h3>
-        <PromotionsChart data={chartData} />
+        {chartData.some(d => d.Issued > 0 || d.Used > 0) ? (
+          <PromotionsChart data={chartData} />
+        ) : (
+          <div className="h-[300px] w-full flex items-center justify-center bg-stone-50 rounded-lg border border-dashed border-stone-200">
+            <p className="text-stone-500 font-inter font-medium">0 Data Available</p>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

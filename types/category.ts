@@ -3,6 +3,7 @@ export interface Category {
   name: string;
   slug: string;
   description: string | null;
+  status: string;
   createdAt: string;
   updatedAt: string;
   _count?: {

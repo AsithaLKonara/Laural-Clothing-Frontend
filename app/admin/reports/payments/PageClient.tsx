@@ -64,9 +64,15 @@ export default function PaymentReportPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white border border-stone-200 rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-primary font-poppins mb-6">Revenue Distribution</h3>
+        <h3 className="text-lg font-semibold text-primary font-poppins mb-6">Revenue by Payment Method</h3>
+        {data && data.length > 0 ? (
           <PaymentsChart data={data} />
-        </div>
+        ) : (
+          <div className="h-[300px] w-full flex items-center justify-center bg-stone-50 rounded-lg border border-dashed border-stone-200">
+            <p className="text-stone-500 font-inter font-medium">0 Data Available</p>
+          </div>
+        )}
+      </div>
 
         <div className="bg-white border border-stone-200 rounded-xl p-6">
           <h3 className="text-lg font-semibold text-primary font-poppins mb-6">Gateway Statistics</h3>

@@ -55,7 +55,10 @@ export default function CategoriesPage() {
     {
       header: "Status",
       accessor: (row: any) => (
-        <StatusBadge label="Active" variant="success" />
+        <StatusBadge 
+          label={row.status || "Active"} 
+          variant={row.status === 'Inactive' ? 'neutral' : 'success'} 
+        />
       ),
     },
     {

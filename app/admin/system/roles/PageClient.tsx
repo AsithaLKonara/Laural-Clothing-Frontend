@@ -88,6 +88,7 @@ export default function AccessControlPage() {
   const columns = [
     {
       header: "Role Name",
+      className: "whitespace-nowrap",
       accessor: (row: RoleItem) => (
         <div className="flex items-center gap-2">
           <span className="font-semibold text-stone-900">{row.name}</span>
@@ -99,15 +100,17 @@ export default function AccessControlPage() {
         </div>
       ),
     },
-    { header: "Description", accessor: "description" as const },
+    { header: "Description", accessor: "description" as const, className: "whitespace-nowrap" },
     {
       header: "Assigned Users",
+      className: "whitespace-nowrap",
       accessor: (row: RoleItem) => (
         <span className="font-medium text-stone-700">{row.users || 0} user(s)</span>
       ),
     },
     {
       header: "Permissions Level",
+      className: "whitespace-nowrap",
       accessor: (row: RoleItem) => (
         <StatusBadge
           label={row.level}
@@ -117,6 +120,7 @@ export default function AccessControlPage() {
     },
     {
       header: "Status",
+      className: "whitespace-nowrap",
       accessor: (row: RoleItem) => (
         <StatusBadge
           label={row.status}
@@ -127,6 +131,7 @@ export default function AccessControlPage() {
     },
     {
       header: "Actions",
+      className: "whitespace-nowrap",
       accessor: (row: RoleItem) => (
         <div className="flex items-center gap-3">
           <button
@@ -159,20 +164,23 @@ export default function AccessControlPage() {
   const userColumns = [
     {
       header: "Name",
+      className: "whitespace-nowrap",
       accessor: (row: SystemUserItem) => (
         <span className="font-semibold text-stone-900">{row.name}</span>
       ),
     },
-    { header: "Email", accessor: "email" as const },
+    { header: "Email", accessor: "email" as const, className: "whitespace-nowrap" },
     {
       header: "Role",
+      className: "whitespace-nowrap",
       accessor: (row: SystemUserItem) => (
         <span className="font-semibold text-stone-700">{row.role}</span>
       ),
     },
-    { header: "Branch", accessor: "branch" as const },
+    { header: "Branch", accessor: "branch" as const, className: "whitespace-nowrap" },
     {
       header: "Status",
+      className: "whitespace-nowrap",
       accessor: (row: SystemUserItem) => (
         <StatusBadge
           label={row.status}
@@ -183,6 +191,7 @@ export default function AccessControlPage() {
     },
     {
       header: "Actions",
+      className: "whitespace-nowrap",
       accessor: (row: SystemUserItem) => (
         <div className="flex items-center gap-2">
           <button

@@ -22,6 +22,9 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createProductSchema, CreateProductFormData } from "@/lib/validations";
 import { useCreateProduct, useUpdateProduct } from "@/hooks/useProducts";
+import { useCategories } from "@/hooks/useCategories";
+import { useAdminCollections } from "@/hooks/useAdminCollections";
+import { useBranches } from "@/hooks/useInventory";
 import MediaPickerModal from "@/components/admin/MediaPickerModal";
 import Image from "next/image";
 
@@ -44,7 +47,6 @@ interface ProductFormModalProps {
 
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL", "28", "30", "32", "34", "36", "38"];
 const COLORS = ["Black", "White", "Navy", "Grey", "Brown", "Beige", "Olive", "Burgundy", "Sky Blue", "Pink"];
-const BRANCHES = ["Online", "Colombo", "Kandy", "Gampaha"];
 const PAYMENT_GATEWAYS = ["Koko", "Mintpay", "OnePay", "Payzy", "COD"];
 
 const SECTION_TABS = [
@@ -92,6 +94,13 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
 
   const createProductMutation = useCreateProduct();
   const updateProductMutation = useUpdateProduct();
+  const { data: categoriesData } = useCategories();
+  const { data: collectionsData } = useAdminCollections();
+  const { data: branchesData } = useBranches();
+  
+  const categories = categoriesData?.data || [];
+  const collections = collectionsData?.data || [];
+  const branchCodes = (branchesData || []).map((b: any) => b.code);
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<CreateProductFormData>({
     resolver: zodResolver(createProductSchema),
@@ -145,7 +154,11 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
           color: v.color || "",
           sku: v.sku || "",
           barcode: "",
-          stock: { "Online": v.quantity || 0, "Colombo": 0, "Kandy": 0, "Gampaha": 0 },
+          stock: branchCodes.reduce((acc: any, code: string) => {
+            const branchInventory = v.inventoryItems?.find((inv: any) => inv.branch?.code === code);
+            acc[code] = branchInventory?.quantity || 0;
+            return acc;
+          }, {}),
           price: v.price.toString(),
           compareAtPrice: v.salePrice ? v.salePrice.toString() : "",
         }));
@@ -220,7 +233,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
             color,
             sku: generateSKU(productName || "PROD", size, color),
             barcode: "",
-            stock: Object.fromEntries(BRANCHES.map(b => [b, 0])),
+            stock: Object.fromEntries(branchCodes.map((b: string) => [b, 0])),
             price: basePrice || "",
             compareAtPrice: compareAtPrice || "",
           });
@@ -252,22 +265,36 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
 
   const onSubmit = async (data: CreateProductFormData) => {
     try {
-      const variantPayloads = variants.map(v => ({
-        size: v.size,
-        color: v.color,
-        sku: v.sku || null,
-        price: parseFloat(v.price || "0"),
-        salePrice: v.compareAtPrice ? parseFloat(v.compareAtPrice) : null,
-        quantity: Object.values(v.stock).reduce((sum, qty) => sum + qty, 0),
-        stockStatus: "instock",
-        featuredImage: images[0] || null,
-        gallery: images.slice(1).filter(url => url !== ""),
-      }));
+      const variantPayloads = variants.map(v => {
+        const branchCodeToId = Object.fromEntries(
+          (branchesData || []).map((b: any) => [b.code, b.id])
+        );
+
+        return {
+          size: v.size,
+          color: v.color,
+          sku: v.sku || null,
+          price: parseFloat(v.price || "0"),
+          salePrice: v.compareAtPrice ? parseFloat(v.compareAtPrice) : null,
+          quantity: Object.values(v.stock).reduce((sum, qty) => sum + qty, 0),
+          stockStatus: "instock",
+          featuredImage: images[0] || null,
+          gallery: images.slice(1).filter(url => url !== ""),
+          inventoryItems: {
+            create: Object.entries(v.stock).map(([code, qty]) => ({
+              branchId: branchCodeToId[code],
+              quantity: qty
+            })).filter(inv => inv.branchId) // ensure branchId is valid
+          }
+        };
+      });
 
       const payload = {
         name: data.name,
         slug: data.slug || undefined,
         description: data.description,
+        categoryId: data.category || undefined,
+        collectionId: data.collection || undefined,
         variants: productToEdit ? {
           deleteMany: {}, // Clean replace
           create: variantPayloads,
@@ -286,6 +313,8 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
       console.error("Failed to save product", error);
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[200] flex">
@@ -371,31 +400,28 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
                   {errors.description && <span className="text-red-500 text-xs">{errors.description.message}</span>}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-2">
-                    <label className="label">Category</label>
-                    <select {...register("category")} className={`input ${errors.category ? 'border-red-500' : ''}`}>
-                      <option value="">Select Category</option>
-                      <option>T-Shirts</option>
-                      <option>Shirts</option>
-                      <option>Dresses</option>
-                      <option>Pants</option>
-                      <option>Accessories</option>
-                    </select>
-                    {errors.category && <span className="text-red-500 text-xs">{errors.category.message}</span>}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-2">
+                      <label className="label">Category</label>
+                      <select {...register("category")} className={`input ${errors.category ? 'border-red-500' : ''}`}>
+                        <option value="">Select Category</option>
+                        {categories.map((c: any) => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                      {errors.category && <span className="text-red-500 text-xs">{errors.category.message}</span>}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="label">Collection</label>
+                      <select {...register("collection")} className={`input ${errors.collection ? 'border-red-500' : ''}`}>
+                        <option value="">Select Collection</option>
+                        {collections.map((c: any) => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                      {errors.collection && <span className="text-red-500 text-xs">{errors.collection.message}</span>}
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="label">Collection</label>
-                    <select {...register("collection")} className={`input ${errors.collection ? 'border-red-500' : ''}`}>
-                      <option value="">Select Collection</option>
-                      <option>Summer 2026</option>
-                      <option>Basics</option>
-                      <option>New Arrivals</option>
-                      <option>Sale</option>
-                    </select>
-                    {errors.collection && <span className="text-red-500 text-xs">{errors.collection.message}</span>}
-                  </div>
-                </div>
 
                 <div className="flex flex-col gap-2">
                   <label className="label">Tags</label>
@@ -559,7 +585,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
                           <th className="px-4 py-3 font-semibold text-xs text-stone-500 uppercase tracking-wide">SKU</th>
                           <th className="px-4 py-3 font-semibold text-xs text-stone-500 uppercase tracking-wide">Barcode</th>
                           <th className="px-4 py-3 font-semibold text-xs text-stone-500 uppercase tracking-wide">Price (Rs.)</th>
-                          {BRANCHES.map(b => (
+                          {branchCodes.map((b: string) => (
                             <th key={b} className="px-4 py-3 font-semibold text-xs text-stone-500 uppercase tracking-wide">{b}</th>
                           ))}
                           <th className="px-4 py-3"></th>
@@ -591,7 +617,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
                                 onChange={e => updateVariantField(v.id, "price", e.target.value)}
                               />
                             </td>
-                            {BRANCHES.map(b => (
+                            {branchCodes.map((b: string) => (
                               <td key={b} className="px-4 py-3">
                                 <input
                                   type="number"
@@ -707,7 +733,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
                 <div className="bg-white border border-stone-200 rounded-xl p-5">
                   <h3 className="font-inter font-bold text-stone-900 mb-4">Branch Availability</h3>
                   <div className="flex flex-col gap-3">
-                    {BRANCHES.map(branch => (
+                    {branchCodes.map((branch: string) => (
                       <label key={branch} className="flex items-center gap-3 cursor-pointer">
                         <input type="checkbox" defaultChecked className="w-4 h-4 accent-stone-900" />
                         <span className="font-inter text-sm text-stone-700 font-medium">{branch}</span>

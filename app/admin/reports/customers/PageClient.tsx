@@ -82,7 +82,13 @@ export default function CustomersReportPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="bg-white border border-stone-200 rounded-xl p-6 lg:col-span-2">
           <h3 className="text-lg font-semibold text-primary font-poppins mb-6">Top Buyers by LTV</h3>
-          <CustomersChart data={data.topCustomers} />
+          {data.topCustomers && data.topCustomers.length > 0 ? (
+            <CustomersChart data={data.topCustomers} />
+          ) : (
+            <div className="h-[400px] w-full flex items-center justify-center bg-stone-50 rounded-lg border border-dashed border-stone-200">
+              <p className="text-stone-500 font-inter font-medium">0 Data Available</p>
+            </div>
+          )}
         </div>
         
         <div className="bg-white border border-stone-200 rounded-xl p-6">

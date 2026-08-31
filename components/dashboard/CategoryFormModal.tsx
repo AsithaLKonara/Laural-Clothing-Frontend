@@ -25,7 +25,7 @@ export default function CategoryFormModal({ isOpen, onClose, categoryToEdit }: C
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
-  // status is not used in DB for categories right now
+  const [status, setStatus] = useState("Active");
 
   const createCategoryMutation = useCreateCategory();
   const updateCategoryMutation = useUpdateCategory();
@@ -36,12 +36,14 @@ export default function CategoryFormModal({ isOpen, onClose, categoryToEdit }: C
       setSlug(categoryToEdit.slug || "");
       setDescription(categoryToEdit.description || "");
       setImageUrl(categoryToEdit.imageUrl || "");
+      setStatus(categoryToEdit.status || "Active");
       setSlugEdited(true);
     } else if (!categoryToEdit && isOpen) {
       setName("");
       setSlug("");
       setDescription("");
       setImageUrl("");
+      setStatus("Active");
       setSlugEdited(false);
     }
   }, [categoryToEdit, isOpen]);
@@ -59,6 +61,7 @@ export default function CategoryFormModal({ isOpen, onClose, categoryToEdit }: C
         name,
         slug: slug || undefined,
         description,
+        status,
         imageUrl: imageUrl || undefined,
       };
 
@@ -159,6 +162,17 @@ export default function CategoryFormModal({ isOpen, onClose, categoryToEdit }: C
               placeholder="Brief description for internal use and SEO..."
               className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all font-inter resize-none"
             />
+          </div>
+
+          <div className="flex items-center justify-between p-4 bg-stone-50 border border-stone-200 rounded-xl">
+            <div>
+              <h3 className="font-inter font-bold text-sm text-stone-900">Category Status</h3>
+              <p className="font-inter text-xs text-stone-500 mt-0.5">Control visibility across the platform.</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" className="sr-only peer" checked={status === "Active"} onChange={e => setStatus(e.target.checked ? "Active" : "Inactive")} />
+              <div className="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-stone-900"></div>
+            </label>
           </div>
 
         </div>

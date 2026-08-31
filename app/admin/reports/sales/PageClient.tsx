@@ -84,7 +84,13 @@ export default function SalesReportPage() {
       {/* Charts */}
       <div className="bg-white border border-stone-200 rounded-xl p-6">
         <h3 className="text-lg font-semibold text-primary font-poppins mb-6">Revenue Trend</h3>
-        <SalesChart data={data.dailyTrend} />
+        {data.dailyTrend && data.dailyTrend.length > 0 ? (
+          <SalesChart data={data.dailyTrend} />
+        ) : (
+          <div className="h-[400px] w-full flex items-center justify-center bg-stone-50 rounded-lg border border-dashed border-stone-200">
+            <p className="text-stone-500 font-inter font-medium">0 Data Available</p>
+          </div>
+        )}
       </div>
     </div>
   );

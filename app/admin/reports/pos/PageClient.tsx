@@ -86,7 +86,13 @@ export default function PosReportPage() {
 
       <div className="bg-white border border-stone-200 rounded-xl p-6">
         <h3 className="text-lg font-semibold text-primary font-poppins mb-6">Revenue by Terminal</h3>
-        <PosChart data={data.terminals} />
+        {data.terminals && data.terminals.length > 0 ? (
+          <PosChart data={data.terminals} />
+        ) : (
+          <div className="h-[300px] w-full flex items-center justify-center bg-stone-50 rounded-lg border border-dashed border-stone-200">
+            <p className="text-stone-500 font-inter font-medium">0 Data Available</p>
+          </div>
+        )}
       </div>
     </div>
   );

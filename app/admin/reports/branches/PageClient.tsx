@@ -90,7 +90,13 @@ export default function BranchReportPage() {
 
       <div className="bg-white border border-stone-200 rounded-xl p-6">
         <h3 className="text-lg font-semibold text-primary font-poppins mb-6">Revenue by Branch</h3>
-        <BranchesChart data={data} />
+        {data && data.length > 0 ? (
+          <BranchesChart data={data} />
+        ) : (
+          <div className="h-[300px] w-full flex items-center justify-center bg-stone-50 rounded-lg border border-dashed border-stone-200">
+            <p className="text-stone-500 font-inter font-medium">0 Data Available</p>
+          </div>
+        )}
       </div>
     </div>
   );

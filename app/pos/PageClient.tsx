@@ -141,7 +141,7 @@ export default function POSPage() {
       try {
         const product = await scanBarcodeMutation.mutateAsync(barcode);
         if (product && product.variants) {
-          const matchingVariant = product.variants.find((v: any) => v.sku === barcode);
+          const matchingVariant = product.variants.find((v: any) => v.sku?.toLowerCase() === barcode.toLowerCase());
           if (matchingVariant) {
             // If in SALES mode, don't allow scanning out-of-stock items
             if (posMode === 'SALES' && matchingVariant.stockStatus !== 'instock' && matchingVariant.quantity <= 0) {
@@ -228,7 +228,7 @@ export default function POSPage() {
         try {
           const product = await scanBarcodeMutation.mutateAsync(searchTerm);
           if (product && product.variants) {
-            const matchingVariant = product.variants.find((v: any) => v.sku === searchTerm);
+            const matchingVariant = product.variants.find((v: any) => v.sku?.toLowerCase() === searchTerm.toLowerCase());
             if (matchingVariant) {
               addToCart(product, matchingVariant, 1);
               setSearchTerm("");
@@ -246,6 +246,34 @@ export default function POSPage() {
   return (
     <div className="flex flex-col w-full h-full bg-background">
       
+      {/* POS Top Ribbon */}
+      <div className="h-[28px] bg-stone-900 text-stone-300 flex items-center justify-between px-6 shrink-0 z-20 text-xs font-inter font-medium tracking-wide">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-stone-400">Branch:</span>
+            <span className="text-white">{activeSession?.branch?.name || user?.branch?.name || "Branch"}</span>
+          </div>
+          <div className="w-px h-3 bg-stone-700"></div>
+          <div className="flex items-center gap-2">
+            <span className="text-stone-400">Terminal:</span>
+            <span className="text-white">{activeSession?.terminal?.name || terminalId}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-stone-400">Cashier:</span>
+            <span className="text-white">{activeSession?.user?.firstName ? `${activeSession.user.firstName} ${activeSession.user.lastName}` : (user?.name || "User")}</span>
+          </div>
+          <div className="w-px h-3 bg-stone-700"></div>
+          <button 
+            onClick={() => router.push("/login")}
+            className="hover:text-white transition-colors flex items-center gap-1"
+          >
+            Sign Out
+          </button>
+        </div>
+      </div>
+
       {/* POS Header */}
       <div className="h-[60px] bg-surface text-foreground flex items-center justify-between px-6 shrink-0 shadow-sm border-b border-border z-10">
         <div className="flex items-center gap-6">
@@ -285,12 +313,6 @@ export default function POSPage() {
               <Zap size={14} /> DISPATCH
             </button>
           </div>
-
-          <div className="hidden lg:flex items-center gap-4 text-sm font-inter text-muted ml-4">
-            <span>{activeSession?.branch?.name || user?.branch?.name || "Branch"}</span>
-            <span className="w-1 h-1 rounded-full bg-muted"></span>
-            <span>{activeSession?.terminal?.name || terminalId}</span>
-          </div>
         </div>
         
         <div className="flex items-center gap-4 md:gap-6">
@@ -315,15 +337,6 @@ export default function POSPage() {
                 {heldCarts.length}
               </span>
             )}
-          </button>
-          <div className="hidden md:flex items-center gap-2 text-sm font-inter text-muted border-l border-border pl-6 pr-4">
-            <span>Cashier: {activeSession?.user?.firstName ? `${activeSession.user.firstName} ${activeSession.user.lastName}` : (user?.name || "User")}</span>
-          </div>
-          <button 
-            onClick={() => router.push("/login")}
-            className="text-error hover:bg-error/10 border border-transparent px-3 py-1.5 rounded transition-colors text-sm font-inter font-medium flex items-center gap-2"
-          >
-            Sign Out
           </button>
           <button 
             onClick={toggleFullscreen}

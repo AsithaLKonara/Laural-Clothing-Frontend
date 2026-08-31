@@ -148,7 +148,7 @@ export default function BranchesPage() {
 
             <div className="flex items-center justify-between pt-2 border-t border-stone-100">
               <span className="font-inter text-xs text-stone-500">Manager: <span className="text-stone-700 font-medium">{branch.manager}</span></span>
-              <button className="text-xs font-medium text-blue-600 hover:underline">View Details →</button>
+              <button onClick={() => handleEdit(branch)} className="text-xs font-medium text-blue-600 hover:underline">View Details →</button>
             </div>
           </div>
         ))}

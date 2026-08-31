@@ -67,10 +67,16 @@ export default function InventoryReportPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Valuations Table & Chart */}
         <div className="lg:col-span-2 flex flex-col gap-8">
-          <div className="bg-white border border-stone-200 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-primary font-poppins mb-6">Valuation Distribution</h3>
+          <div className="bg-white border border-stone-200 rounded-xl p-6 lg:col-span-1">
+          <h3 className="text-lg font-semibold text-primary font-poppins mb-6">Valuation Distribution</h3>
+          {data.branchValuations && data.branchValuations.length > 0 ? (
             <InventoryChart data={data.branchValuations} />
-          </div>
+          ) : (
+            <div className="h-[300px] w-full flex items-center justify-center bg-stone-50 rounded-lg border border-dashed border-stone-200">
+              <p className="text-stone-500 font-inter font-medium">0 Data Available</p>
+            </div>
+          )}
+        </div>
 
           <div className="bg-white border border-stone-200 rounded-xl p-6">
             <h3 className="text-lg font-semibold text-primary font-poppins mb-6">Valuation by Branch</h3>

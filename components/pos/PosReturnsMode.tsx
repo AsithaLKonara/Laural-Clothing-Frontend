@@ -5,6 +5,7 @@ import { Search, Package, RotateCcw, CheckCircle2, ChevronRight, X, AlertCircle 
 import Image from "next/image";
 import { orderService } from "@/services/order.service";
 import { useGenerateVoucher } from "@/hooks/usePos";
+import { useScanBarcode } from "@/hooks/useProducts";
 
 export default function PosReturnsMode() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -19,6 +20,7 @@ export default function PosReturnsMode() {
   const [errorMsg, setErrorMsg] = useState("");
 
   const generateVoucherMutation = useGenerateVoucher();
+  const scanBarcodeMutation = useScanBarcode();
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,16 +45,39 @@ export default function PosReturnsMode() {
         }
       } else {
         // Direct barcode scan fallback logic for unreceipted returns
-        setOrderFound(true);
-        const newItem = {
-          id: `SCAN-${Math.floor(Math.random() * 1000)}`,
-          name: "Scanned Item",
-          price: 3500, // Hardcoded fallback for untracked items
-          qty: 1,
-          isScanned: true
-        };
-        setSelectedItems(prev => [...prev, newItem]);
-        setSearchQuery("");
+        try {
+          const product = await scanBarcodeMutation.mutateAsync(searchQuery);
+          if (product && product.variants) {
+            const matchingVariant = product.variants.find((v: any) => v.sku?.toLowerCase() === searchQuery.toLowerCase());
+            if (matchingVariant) {
+              setOrderFound(true);
+              const newItem = {
+                id: `SCAN-${matchingVariant.id}`,
+                variantId: matchingVariant.id,
+                name: `${product.name} - ${matchingVariant.name || matchingVariant.sku}`,
+                price: matchingVariant.salePrice || matchingVariant.price || 0,
+                qty: 1,
+                isScanned: true
+              };
+              // Add to selected items or increment if exists
+              setSelectedItems(prev => {
+                const exists = prev.find(i => i.variantId === matchingVariant.id);
+                if (exists) {
+                  return prev.map(i => i.variantId === matchingVariant.id ? { ...i, qty: i.qty + 1 } : i);
+                }
+                return [...prev, newItem];
+              });
+              setSearchQuery("");
+            } else {
+              setErrorMsg("Scanned product variant not found.");
+            }
+          } else {
+             setErrorMsg("Product not found for this barcode.");
+          }
+        } catch (err) {
+          console.error("Barcode scan failed", err);
+          setErrorMsg("Invalid barcode or product not found.");
+        }
       }
       setIsSuccess(false);
     }
