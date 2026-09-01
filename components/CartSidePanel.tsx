@@ -17,7 +17,7 @@ export default function CartSidePanel() {
     initSession();
   }, [initSession]);
 
-  const { data: cart, isLoading } = useCart(sessionId);
+  const { data: cart, isPending } = useCart(sessionId);
   const updateItem = useUpdateCartItem(sessionId);
   const removeItem = useRemoveCartItem(sessionId);
 
@@ -78,7 +78,7 @@ export default function CartSidePanel() {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-5">
-          {isLoading ? (
+          {isPending ? (
             <div className="flex-1 flex items-center justify-center text-stone-400 text-sm font-inter">
               Loading cart...
             </div>
