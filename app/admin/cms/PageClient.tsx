@@ -266,8 +266,8 @@ function BannersTab() {
     }
   };
 
-  const activate = async (id: string) => {
-    await updateBanner.mutateAsync({ id, data: { active: true } });
+  const toggleActive = async (banner: Banner) => {
+    await updateBanner.mutateAsync({ id: banner.id, data: { active: !banner.active } });
   };
 
   if (isLoadingBanners) return <div className="p-8 text-center text-stone-500 font-inter">Loading banners...</div>;
@@ -342,7 +342,7 @@ function BannersTab() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-between items-center">
-        <p className="font-inter text-sm text-stone-500">Manage the promotional banners. The active banner appears in the topbar (text only) and on the homepage (with image).</p>
+        <p className="font-inter text-sm text-stone-500">Manage promotional banners. Multiple banners can be live at the same time — ANNOUNCEMENT banners show in the topbar, PROMO banners appear on the homepage.</p>
         <button onClick={() => { const nb: any = { id: `new-${Date.now()}`, text: "New announcement", link: "/", bgColor: "#1c1c1c", active: false, type: "PROMO", showOverlay: true}; startEdit(nb); }} className="flex items-center gap-2 bg-stone-900 text-white px-4 py-2 rounded-lg font-inter font-medium text-sm hover:bg-stone-800 transition-colors shadow-sm">
           <Plus size={16}/> Add Banner
         </button>
@@ -367,11 +367,13 @@ function BannersTab() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  {banner.active ? (
-                    <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">LIVE</span>
-                  ) : (
-                    <button onClick={() => activate(banner.id)} className="px-3 py-1 bg-stone-100 text-stone-600 text-xs font-bold rounded-full hover:bg-stone-200 transition-colors">Set Live</button>
-                  )}
+                  <button
+                    onClick={() => toggleActive(banner)}
+                    className={`flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full transition-colors ${banner.active ? 'bg-emerald-100 text-emerald-700 hover:bg-red-50 hover:text-red-600' : 'bg-stone-100 text-stone-600 hover:bg-emerald-50 hover:text-emerald-700'}`}
+                    title={banner.active ? 'Click to deactivate' : 'Click to set live'}
+                  >
+                    {banner.active ? 'LIVE' : 'Set Live'}
+                  </button>
                   <button onClick={() => startEdit(banner)} className="p-2 text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded-lg transition-colors"><Edit3 size={15}/></button>
                   <button onClick={() => deleteBanner.mutateAsync(banner.id)} className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={15}/></button>
                 </div>

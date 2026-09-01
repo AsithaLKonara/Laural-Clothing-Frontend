@@ -25,7 +25,8 @@ export default async function Home() {
     serverFetch<any>("/cms/sections", { revalidate: 60 }).catch(() => undefined),
   ]);
 
-  const sections = sectionsRes?.data || [];
+  // /cms/sections returns a plain array (not paginated)
+  const sections: any[] = Array.isArray(sectionsRes) ? sectionsRes : (sectionsRes as any)?.data || [];
   
   // Create mapping of section name to React components
   const sectionComponents: Record<string, React.ReactNode> = {
