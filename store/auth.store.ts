@@ -19,6 +19,7 @@ interface AuthState {
   hasPermission: (permissionCode: string) => boolean;
   hasRole: (roleName: string) => boolean;
   isAdmin: () => boolean;
+  isSuperAdmin: () => boolean;
   isPublicUser: () => boolean;
 }
 
@@ -125,7 +126,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       }
     } catch {
-      set({ user: null, isAuthenticated: false, isLoading: false });
+      set({ user: null, isAuthenticated: false });
+    } finally {
+      set({ isLoading: false });
     }
   },
 
@@ -133,10 +136,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const { user } = get();
     if (!user) return false;
 
-    // Super Admin has all permissions
-    const isSuper = user.roles?.some(
-      (r) => r.toUpperCase() === "SUPER_ADMIN" || r.toLowerCase() === "super admin"
-    );
+    // Super Admin / Admin has all permissions
+    const isSuper = user.roles?.some((r) => {
+      const norm = r.toUpperCase().replace(/[\s_]/g, "");
+      return norm === "SUPERADMIN" || norm === "ADMIN" || norm === "SYSTEMOWNER";
+    });
     if (isSuper) return true;
 
     return user.permissions?.includes(permissionCode) ?? false;
@@ -146,7 +150,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const { user } = get();
     if (!user || !user.roles) return false;
 
-    return user.roles.some((r) => r.toLowerCase() === roleName.toLowerCase());
+    const targetNorm = roleName.toUpperCase().replace(/[\s_]/g, "");
+    return user.roles.some((r) => r.toUpperCase().replace(/[\s_]/g, "") === targetNorm);
   },
 
   isAdmin: () => {
@@ -155,6 +160,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     const nonAdminRoles = new Set(["PUBLIC_USER", "public user", "CUSTOMER", "customer"]);
     return user.roles.some((r) => !nonAdminRoles.has(r));
+  },
+
+  isSuperAdmin: () => {
+    const { user } = get();
+    if (!user || !user.roles) return false;
+
+    return user.roles.some((r) => {
+      const norm = r.toUpperCase().replace(/[\s_]/g, "");
+      return norm === "SUPERADMIN" || norm === "SYSTEMOWNER";
+    });
   },
 
   isPublicUser: () => {
