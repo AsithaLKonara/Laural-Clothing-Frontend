@@ -62,7 +62,7 @@ export default function CheckoutPage() {
 
   const router = useRouter();
   const sessionId = useCartStore((state) => state.sessionId);
-  const { data: cart, isLoading: isCartLoading } = useCart(sessionId);
+  const { data: cart, isPending: isCartPending } = useCart(sessionId);
   const initiateCheckout = useInitiateCheckout(sessionId);
   const { data: addresses } = useAddresses(MOCK_CUSTOMER_ID);
   const addAddress = useAddAddress(MOCK_CUSTOMER_ID);
@@ -76,7 +76,7 @@ export default function CheckoutPage() {
 
   const hasFiredPixel = useRef(false);
   useEffect(() => {
-    if (!isCartLoading && cartItems.length > 0 && !hasFiredPixel.current) {
+    if (!isCartPending && cartItems.length > 0 && !hasFiredPixel.current) {
       if (typeof window !== 'undefined' && window.fbq) {
         window.fbq('track', 'InitiateCheckout', {
           content_ids: cartItems.map(item => item.variant.product.id),
@@ -88,7 +88,7 @@ export default function CheckoutPage() {
       }
       hasFiredPixel.current = true;
     }
-  }, [isCartLoading, cartItems, total]);
+  }, [isCartPending, cartItems, total]);
 
   const handleSelectAddress = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = e.target.value;
@@ -142,6 +142,7 @@ export default function CheckoutPage() {
         paymentMethod: data.paymentMethod,
         deviceFingerprint: data.deviceFingerprint,
         pointsToRedeem: appliedLoyaltyPoints,
+        turnstileToken: data.turnstileToken,
       },
       {
         onSuccess: (data) => {
@@ -482,7 +483,7 @@ export default function CheckoutPage() {
 
           {/* Cart Items */}
           <div className="flex flex-col w-full gap-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-            {isCartLoading ? (
+            {isCartPending ? (
               <p className="text-stone-500 font-poppins text-sm">Loading cart...</p>
             ) : cartItems.length === 0 ? (
               <p className="text-stone-500 font-poppins text-sm">Your cart is empty.</p>
