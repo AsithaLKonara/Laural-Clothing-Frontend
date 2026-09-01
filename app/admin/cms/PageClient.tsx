@@ -445,9 +445,6 @@ function HomepageTab() {
     <div className="flex flex-col gap-4">
       <div className="flex justify-between items-center">
         <p className="font-inter text-sm text-stone-500">Drag to reorder or toggle visibility of each homepage section.</p>
-        <button onClick={() => { const ns: any = { id: `new-${Date.now()}`, name: "New Section", description: "", visible: false, order: sections.length + 1}; startEdit(ns); }} className="flex items-center gap-2 bg-stone-900 text-white px-4 py-2 rounded-lg font-inter font-medium text-sm hover:bg-stone-800 transition-colors shadow-sm">
-          <Plus size={16}/> Add Section
-        </button>
       </div>
       <div className="flex flex-col gap-3">
         {[...sections].sort((a: HomepageSection, b: HomepageSection) => a.order - b.order).map((sec: HomepageSection, idx: number) => (
@@ -457,7 +454,7 @@ function HomepageTab() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
                     <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Section Name</label>
-                    <input value={editData.name||""} onChange={e=>setEditData(p=>({...p,name:e.target.value}))} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900"/>
+                    <input readOnly value={editData.name||""} className="border border-stone-200 bg-stone-50 rounded-lg px-3 py-2 text-sm font-inter outline-none text-stone-500 cursor-not-allowed"/>
                   </div>
                   <div className="flex flex-col gap-1.5 md:col-span-2">
                     <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Description</label>
@@ -518,56 +515,10 @@ function HomepageTab() {
                   {sec.visible ? "Visible" : "Hidden"}
                 </button>
                 <button onClick={() => startEdit(sec)} className="p-2 text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded-lg transition-colors"><Edit3 size={15}/></button>
-                <button onClick={() => deleteHomepageSection.mutateAsync(sec.id)} className="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={15}/></button>
               </div>
             )}
           </div>
         ))}
-        {editingId?.startsWith('new-') && !sections.some((s: HomepageSection) => s.id === editingId) && (
-          <div className="bg-white border rounded-xl shadow-sm overflow-hidden border-stone-200 p-4 flex flex-col gap-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Section Name</label>
-                <input value={editData.name||""} onChange={e=>setEditData(p=>({...p,name:e.target.value}))} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900"/>
-              </div>
-              <div className="flex flex-col gap-1.5 md:col-span-2">
-                <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Description</label>
-                <input value={editData.description||""} onChange={e=>setEditData(p=>({...p,description:e.target.value}))} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900"/>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Section Type</label>
-                <select value={editData.type||"STATIC"} onChange={e=>setEditData(p=>({...p,type:e.target.value}))} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900">
-                  <option value="STATIC">Static / Custom</option>
-                  <option value="FEATURED_PRODUCTS">Featured Products</option>
-                  <option value="CATEGORY_GRID">Category Grid</option>
-                  <option value="NEW_ARRIVALS">New Arrivals</option>
-                </select>
-              </div>
-              <div className="flex flex-col gap-1.5 md:col-span-2">
-                <div className="flex justify-between items-center mb-1">
-                  <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Config JSON</label>
-                  <button type="button" onClick={() => setShowMediaPicker(true)} className="text-xs font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 px-2 py-1 rounded flex items-center gap-1 border border-stone-200">
-                    <ImageIcon size={12}/> Pick Image for Config
-                  </button>
-                </div>
-                <textarea 
-                  value={typeof editData.config === 'string' ? editData.config : JSON.stringify(editData.config||{}, null, 2)} 
-                  onChange={e=>{
-                    try { setEditData(p=>({...p,config:JSON.parse(e.target.value)})); } 
-                    catch(err) { setEditData(p=>({...p,config:e.target.value as any})); }
-                  }} 
-                  rows={4} 
-                  className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-mono outline-none focus:ring-1 focus:ring-stone-900" 
-                  placeholder='{"count": 8, "categoryId": "..."}' 
-                />
-              </div>
-            </div>
-            <div className="flex gap-3 justify-end border-t border-stone-100 pt-4">
-              <button onClick={cancelEdit} className="px-4 py-2 border border-stone-200 text-stone-700 rounded-lg font-inter text-sm hover:bg-stone-50">Cancel</button>
-              <button onClick={saveEdit} className="px-4 py-2 bg-stone-900 text-white rounded-lg font-inter text-sm hover:bg-stone-800 flex items-center gap-2"><Save size={14}/>Save</button>
-            </div>
-          </div>
-        )}
       </div>
 
       {showMediaPicker && (
