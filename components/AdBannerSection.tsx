@@ -18,11 +18,17 @@ export default function AdBannerSection() {
 
   const content = (
     <>
-      {/* Background Color/Image - we use bgColor or a default image */}
-      <div className="absolute inset-0 z-0" style={{ backgroundColor: activeBanner.bgColor || '#000' }} />
+      {/* Background Color/Image */}
+      <div className="absolute inset-0 z-0" style={{ backgroundColor: activeBanner.bgColor || '#000' }}>
+        {activeBanner.imageUrl && (
+          <Image src={activeBanner.imageUrl} alt="Banner Background" fill className="object-cover" />
+        )}
+      </div>
       
-      {/* Dark Overlay (60% Opacity Black) - only if we have an image, but let's keep it for contrast if needed */}
-      <div className="absolute inset-0 bg-black/40 z-10 pointer-events-none" />
+      {/* Dark Overlay */}
+      {(activeBanner.showOverlay ?? true) && (
+        <div className="absolute inset-0 bg-black/40 z-10 pointer-events-none" />
+      )}
 
       {/* Text Content */}
       <div className="absolute inset-0 z-20 flex justify-center items-center pointer-events-none w-full h-full px-4">

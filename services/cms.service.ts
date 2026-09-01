@@ -18,6 +18,8 @@ export interface Banner {
   bgColor: string;
   active: boolean;
   type: "PROMO" | "ANNOUNCEMENT" | "SALE";
+  imageUrl?: string;
+  showOverlay?: boolean;
 }
 
 export interface HomepageSection {

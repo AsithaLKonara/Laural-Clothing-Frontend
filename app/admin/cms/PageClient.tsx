@@ -239,6 +239,8 @@ function BannersTab() {
   const { banners, isLoadingBanners, createBanner, updateBanner, deleteBanner } = useCms();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<Banner>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
 
   const TYPE_COLORS: Record<string, string> = {
     PROMO: "bg-purple-100 text-purple-700",
@@ -249,14 +251,19 @@ function BannersTab() {
   const startEdit = (b: Banner) => { setEditingId(b.id); setEditData({...b}); };
   const cancelEdit = () => { setEditingId(null); setEditData({}); };
   const saveEdit = async () => {
-    const { id, createdAt, updatedAt, lastEdited, ...updateData } = editData as any;
-    if (editingId && !editingId.startsWith('new-')) {
-      await updateBanner.mutateAsync({ id: editingId, data: updateData });
-    } else {
-      await createBanner.mutateAsync(updateData);
+    try {
+      setIsSaving(true);
+      const { id, createdAt, updatedAt, lastEdited, ...updateData } = editData as any;
+      if (editingId && !editingId.startsWith('new-')) {
+        await updateBanner.mutateAsync({ id: editingId, data: updateData });
+      } else {
+        await createBanner.mutateAsync(updateData);
+      }
+      setEditingId(null);
+      setEditData({});
+    } finally {
+      setIsSaving(false);
     }
-    setEditingId(null);
-    setEditData({});
   };
 
   const activate = async (id: string) => {
@@ -265,11 +272,78 @@ function BannersTab() {
 
   if (isLoadingBanners) return <div className="p-8 text-center text-stone-500 font-inter">Loading banners...</div>;
 
+  const renderEditForm = () => (
+    <div className="p-5 flex flex-col gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1.5 md:col-span-2">
+          <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Banner Text</label>
+          <input value={editData.text||""} onChange={e=>setEditData(p=>({...p,text:e.target.value}))} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900"/>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Link URL</label>
+          <input value={editData.link||""} onChange={e=>setEditData(p=>({...p,link:e.target.value}))} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900"/>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Background Color</label>
+          <div className="flex gap-2">
+            <input type="color" value={editData.bgColor||"#1c1c1c"} onChange={e=>setEditData(p=>({...p,bgColor:e.target.value}))} className="w-10 h-10 rounded border border-stone-200 p-0.5 cursor-pointer"/>
+            <input value={editData.bgColor||""} onChange={e=>setEditData(p=>({...p,bgColor:e.target.value}))} className="flex-1 border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900 font-mono"/>
+          </div>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Banner Type</label>
+          <select value={editData.type||"PROMO"} onChange={e=>setEditData(p=>({...p,type:e.target.value as any}))} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900">
+            <option value="PROMO">Promo</option>
+            <option value="SALE">Sale</option>
+            <option value="ANNOUNCEMENT">Announcement</option>
+          </select>
+        </div>
+        
+        {/* New Image and Overlay Fields */}
+        <div className="flex flex-col gap-1.5 md:col-span-2">
+          <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Main Page Background Image (Optional)</label>
+          <div className="flex gap-3 items-center">
+            {editData.imageUrl && (
+              <div className="relative w-16 h-10 bg-stone-100 rounded-md overflow-hidden shrink-0 border border-stone-200">
+                <Image src={editData.imageUrl} alt="preview" fill sizes="100px" className="object-cover" />
+              </div>
+            )}
+            <div className="flex flex-col gap-2 flex-1">
+              <input value={editData.imageUrl || ""} onChange={e => setEditData(p => ({...p, imageUrl: e.target.value}))} placeholder="/path/to/image.jpg" className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900 font-mono text-xs"/>
+              <div className="flex justify-between items-center">
+                <button type="button" onClick={() => setShowMediaPicker(true)} className="flex items-center gap-2 px-3 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-200 rounded-lg font-inter font-semibold text-xs transition-colors w-fit">
+                  <ImageIcon size={13}/> Pick Image
+                </button>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={editData.showOverlay ?? true} onChange={e => setEditData(p => ({...p, showOverlay: e.target.checked}))} className="rounded border-stone-300 text-stone-900 focus:ring-stone-900" />
+                  <span className="font-inter text-xs font-semibold text-stone-600">Show Dark Overlay</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      {editData.text && (
+        <div className="p-3 rounded-lg text-center text-sm font-inter font-medium text-white relative overflow-hidden" style={{backgroundColor: editData.bgColor||"#1c1c1c"}}>
+          {editData.imageUrl && (
+             <Image src={editData.imageUrl} alt="bg" fill className="object-cover opacity-50 z-0" />
+          )}
+          <span className="relative z-10">Preview: {editData.text}</span>
+        </div>
+      )}
+      <div className="flex gap-3 justify-end border-t border-stone-100 pt-4">
+        <button onClick={cancelEdit} disabled={isSaving} className="px-4 py-2 border border-stone-200 text-stone-700 rounded-lg font-inter text-sm hover:bg-stone-50 disabled:opacity-50">Cancel</button>
+        <button onClick={saveEdit} disabled={isSaving} className="px-4 py-2 bg-stone-900 text-white rounded-lg font-inter text-sm hover:bg-stone-800 flex items-center gap-2 disabled:opacity-50"><Save size={14}/>{isSaving ? "Saving..." : "Save"}</button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-between items-center">
-        <p className="font-inter text-sm text-stone-500">Manage the top promotional announcement bar. Only one banner can be active at a time.</p>
-        <button onClick={() => { const nb: any = { id: `new-${Date.now()}`, text: "New announcement", link: "/", bgColor: "#1c1c1c", active: false, type: "PROMO"}; startEdit(nb); }} className="flex items-center gap-2 bg-stone-900 text-white px-4 py-2 rounded-lg font-inter font-medium text-sm hover:bg-stone-800 transition-colors shadow-sm">
+        <p className="font-inter text-sm text-stone-500">Manage the promotional banners. The active banner appears in the topbar (text only) and on the homepage (with image).</p>
+        <button onClick={() => { const nb: any = { id: `new-${Date.now()}`, text: "New announcement", link: "/", bgColor: "#1c1c1c", active: false, type: "PROMO", showOverlay: true}; startEdit(nb); }} className="flex items-center gap-2 bg-stone-900 text-white px-4 py-2 rounded-lg font-inter font-medium text-sm hover:bg-stone-800 transition-colors shadow-sm">
           <Plus size={16}/> Add Banner
         </button>
       </div>
@@ -278,45 +352,13 @@ function BannersTab() {
         {banners.map((banner: Banner) => (
           <div key={banner.id} className={`bg-white border rounded-xl shadow-sm overflow-hidden ${banner.active ? 'border-stone-900 ring-1 ring-stone-900/10' : 'border-stone-200'}`}>
             {editingId === banner.id ? (
-              <div className="p-5 flex flex-col gap-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5 md:col-span-2">
-                    <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Banner Text</label>
-                    <input value={editData.text||""} onChange={e=>setEditData(p=>({...p,text:e.target.value}))} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900"/>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Link URL</label>
-                    <input value={editData.link||""} onChange={e=>setEditData(p=>({...p,link:e.target.value}))} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900"/>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Background Color</label>
-                    <div className="flex gap-2">
-                      <input type="color" value={editData.bgColor||"#1c1c1c"} onChange={e=>setEditData(p=>({...p,bgColor:e.target.value}))} className="w-10 h-10 rounded border border-stone-200 p-0.5 cursor-pointer"/>
-                      <input value={editData.bgColor||""} onChange={e=>setEditData(p=>({...p,bgColor:e.target.value}))} className="flex-1 border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900 font-mono"/>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Banner Type</label>
-                    <select value={editData.type||"PROMO"} onChange={e=>setEditData(p=>({...p,type:e.target.value as any}))} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900">
-                      <option value="PROMO">Promo</option>
-                      <option value="SALE">Sale</option>
-                      <option value="ANNOUNCEMENT">Announcement</option>
-                    </select>
-                  </div>
-                </div>
-                {editData.text && (
-                  <div className="p-3 rounded-lg text-center text-sm font-inter font-medium text-white" style={{backgroundColor: editData.bgColor||"#1c1c1c"}}>
-                    Preview: {editData.text}
-                  </div>
-                )}
-                <div className="flex gap-3 justify-end border-t border-stone-100 pt-4">
-                  <button onClick={cancelEdit} className="px-4 py-2 border border-stone-200 text-stone-700 rounded-lg font-inter text-sm hover:bg-stone-50">Cancel</button>
-                  <button onClick={saveEdit} className="px-4 py-2 bg-stone-900 text-white rounded-lg font-inter text-sm hover:bg-stone-800 flex items-center gap-2"><Save size={14}/>Save</button>
-                </div>
-              </div>
+              renderEditForm()
             ) : (
               <div className="flex items-center gap-4 p-4">
-                <div className="w-3 h-8 rounded shrink-0" style={{backgroundColor: banner.bgColor}}/>
+                <div className="w-8 h-8 rounded shrink-0 relative overflow-hidden" style={{backgroundColor: banner.bgColor}}>
+                   {/* @ts-ignore - banner will have imageUrl after DB update */}
+                   {banner.imageUrl && <Image src={banner.imageUrl} alt="" fill className="object-cover opacity-60" />}
+                </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-inter font-bold text-sm text-stone-900 truncate">{banner.text}</p>
                   <div className="flex items-center gap-2 mt-1">
@@ -337,47 +379,23 @@ function BannersTab() {
             )}
           </div>
         ))}
-        {editingId?.startsWith('new-') && (
+        {editingId?.startsWith('new-') && !banners.some(b => b.id === editingId) && (
            <div className={`bg-white border rounded-xl shadow-sm overflow-hidden border-stone-200`}>
-              <div className="p-5 flex flex-col gap-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5 md:col-span-2">
-                    <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Banner Text</label>
-                    <input value={editData.text||""} onChange={e=>setEditData(p=>({...p,text:e.target.value}))} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900"/>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Link URL</label>
-                    <input value={editData.link||""} onChange={e=>setEditData(p=>({...p,link:e.target.value}))} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900"/>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Background Color</label>
-                    <div className="flex gap-2">
-                      <input type="color" value={editData.bgColor||"#1c1c1c"} onChange={e=>setEditData(p=>({...p,bgColor:e.target.value}))} className="w-10 h-10 rounded border border-stone-200 p-0.5 cursor-pointer"/>
-                      <input value={editData.bgColor||""} onChange={e=>setEditData(p=>({...p,bgColor:e.target.value}))} className="flex-1 border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900 font-mono"/>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="font-inter text-xs font-semibold text-stone-500 uppercase tracking-wider">Banner Type</label>
-                    <select value={editData.type||"PROMO"} onChange={e=>setEditData(p=>({...p,type:e.target.value as any}))} className="border border-stone-200 rounded-lg px-3 py-2 text-sm font-inter outline-none focus:ring-1 focus:ring-stone-900">
-                      <option value="PROMO">Promo</option>
-                      <option value="SALE">Sale</option>
-                      <option value="ANNOUNCEMENT">Announcement</option>
-                    </select>
-                  </div>
-                </div>
-                {editData.text && (
-                  <div className="p-3 rounded-lg text-center text-sm font-inter font-medium text-white" style={{backgroundColor: editData.bgColor||"#1c1c1c"}}>
-                    Preview: {editData.text}
-                  </div>
-                )}
-                <div className="flex gap-3 justify-end border-t border-stone-100 pt-4">
-                  <button onClick={cancelEdit} className="px-4 py-2 border border-stone-200 text-stone-700 rounded-lg font-inter text-sm hover:bg-stone-50">Cancel</button>
-                  <button onClick={saveEdit} className="px-4 py-2 bg-stone-900 text-white rounded-lg font-inter text-sm hover:bg-stone-800 flex items-center gap-2"><Save size={14}/>Save</button>
-                </div>
-              </div>
+              {renderEditForm()}
            </div>
         )}
       </div>
+
+      {showMediaPicker && (
+        <MediaPickerModal
+          title="Select Banner Image"
+          onClose={() => setShowMediaPicker(false)}
+          onSelect={(url) => {
+            setEditData(p => ({ ...p, imageUrl: url }));
+            setShowMediaPicker(false);
+          }}
+        />
+      )}
     </div>
   );
 }

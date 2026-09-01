@@ -37,7 +37,7 @@ export default function CollectionsSection({ initialData }: { initialData?: Pagi
       {/* Explore More */}
       <div className="flex justify-end w-full mb-6">
         <Link 
-          href="/categories" 
+          href="/shop" 
           className="text-sm md:text-base font-signature text-stone-900 hover:text-stone-500 transition-colors tracking-wider border-b border-stone-900 pb-0.5"
         >
           Explore more

@@ -14,7 +14,7 @@ export default function PromoBanner() {
     // Fetch active banners on mount
     api.get("/cms/banners")
       .then(res => {
-        const activeBanners = (res.data.data || res.data).filter((b: any) => b.active);
+        const activeBanners = (res.data.data || res.data).filter((b: any) => b.active && b.type !== 'PROMO');
         setBanners(activeBanners);
         if (activeBanners.length === 0) {
           const layout = document.getElementById("storefront-layout");
