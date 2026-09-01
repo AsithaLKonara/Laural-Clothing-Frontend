@@ -5,13 +5,14 @@ import StatCard from "@/components/dashboard/StatCard";
 import RevenueChart from "@/components/dashboard/RevenueChart";
 import RevenueOverviewTable from "@/components/dashboard/RevenueOverviewTable";
 import RecentTransactionsTable from "@/components/dashboard/RecentTransactionsTable";
-import { TrendingUp, ShoppingCart, Users, Receipt, Package, Wallet, Gift, RefreshCcw } from "lucide-react";
+import { TrendingUp, ShoppingCart, Users, Receipt, Package, Wallet, Gift, RefreshCcw, Shield } from "lucide-react";
 import { useBranches } from "@/hooks/useInventory";
 import { globalDialog } from "@/store/dialog.store";
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { useAuthStore } from "@/store/auth.store";
 
 const DashboardData = dynamic(() => import("@/components/dashboard/DashboardData"), { ssr: false });
 
@@ -40,12 +41,36 @@ export default function SuperAdminDashboard() {
   const [activeBranch, setActiveBranch] = useState("All");
   const [activePeriod, setActivePeriod] = useState("Today");
 
+  const { user, hasPermission, isAdmin, isSuperAdmin, isLoading } = useAuthStore();
+
   const { data: branchesData, error: branchesError } = useBranches();
   
   // Combine static options with dynamic branches from DB
   const dynamicBranches = branchesData ? (Array.isArray(branchesData) ? branchesData.map((b: any) => b.name) : []) : [];
   const displayBranches = ["All", "Online", ...dynamicBranches];
   const queryClient = useQueryClient();
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  const canAccessDashboard = isSuperAdmin() || isAdmin() || hasPermission("reports:view_dashboard") || hasPermission("reports:view_financial");
+
+  if (!canAccessDashboard) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-8 bg-white border border-stone-200 rounded-2xl shadow-sm my-8 max-w-xl mx-auto">
+        <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center text-stone-600 mb-4">
+          <Shield size={32} />
+        </div>
+        <h2 className="font-inter font-bold text-xl text-stone-900 mb-2">
+          Dashboard Restricted
+        </h2>
+        <p className="font-inter text-sm text-stone-500 leading-relaxed max-w-md">
+          You do not have permission to view the executive business overview dashboard. Please contact an administrator or use the sidebar navigation menu to access your authorized sections.
+        </p>
+      </div>
+    );
+  }
 
   const handleExport = () => {
     const analytics: any = queryClient.getQueryData(['analytics', 'overview', activePeriod, activeBranch]);
@@ -103,12 +128,14 @@ export default function SuperAdminDashboard() {
             <option>Last 30 Days</option>
             <option>This Month</option>
           </select>
-          <button 
-            onClick={handleExport}
-            className="flex items-center gap-2 bg-white border border-stone-200 text-stone-700 hover:bg-stone-50 px-4 py-2.5 rounded-xl font-inter text-sm font-medium transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Export
-          </button>
+          {(useAuthStore.getState().hasPermission("reports:export_data") || useAuthStore.getState().hasPermission("reports:view_dashboard")) && (
+            <button 
+              onClick={handleExport}
+              className="flex items-center gap-2 bg-white border border-stone-200 text-stone-700 hover:bg-stone-50 px-4 py-2.5 rounded-xl font-inter text-sm font-medium transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Export
+            </button>
+          )}
         </div>
       </div>
 

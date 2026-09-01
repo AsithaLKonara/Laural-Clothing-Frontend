@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import api from "@/services/api";
 
+import { useAuthStore } from "@/store/auth.store";
+
 /**
  * Prefetches the CSRF token from the backend on app mount.
  * This triggers the server to set the `laural_csrf` cookie, which the
@@ -19,6 +21,14 @@ function CsrfInitializer() {
     api.get("/auth/csrf").catch(() => {
       // Ignore errors — the cookie will be set on the next successful request
     });
+  }, []);
+
+  return null;
+}
+
+function AuthInitializer() {
+  useEffect(() => {
+    useAuthStore.getState().initAuth();
   }, []);
 
   return null;
@@ -42,6 +52,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <CsrfInitializer />
+      <AuthInitializer />
       {children}
     </QueryClientProvider>
   );

@@ -9,6 +9,7 @@ import { formatDistanceToNow } from 'date-fns';
 
 export default function Header({ onMenuClick, session }: { onMenuClick?: () => void, session?: any }) {
   const router = useRouter();
+  const { user } = useAuthStore();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   
   const getInitials = (name?: string | null) => {
@@ -123,11 +124,11 @@ export default function Header({ onMenuClick, session }: { onMenuClick?: () => v
         <div className="relative group">
           <button className="flex items-center gap-2.5 px-2 md:px-3 py-1.5 rounded-xl hover:bg-background transition-colors border border-border bg-surface">
             <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white font-inter font-bold text-[10px]">
-              {getInitials(session?.user?.name)}
+              {getInitials(user?.name || session?.user?.name)}
             </div>
             <div className="hidden sm:flex flex-col items-start text-left">
-              <span className="font-inter font-medium text-sm text-foreground leading-none">{session?.user?.name || "Super Admin"}</span>
-              <span className="font-inter text-[10px] text-muted leading-none mt-1">{session?.user?.role || "Admin"}</span>
+              <span className="font-inter font-medium text-sm text-foreground leading-none">{user?.name || session?.user?.name || "Staff User"}</span>
+              <span className="font-inter text-[10px] text-muted leading-none mt-1">{user?.roles?.[0] || session?.user?.role || "Staff"}</span>
             </div>
             <ChevronDown size={14} className="text-muted ml-1" />
           </button>
