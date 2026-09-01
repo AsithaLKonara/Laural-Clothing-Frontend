@@ -31,7 +31,7 @@ export default function CartPage() {
     initSession();
   }, [initSession]);
 
-  const { data: cart, isLoading } = useCart(sessionId);
+  const { data: cart, isPending } = useCart(sessionId);
   const updateItem = useUpdateCartItem(sessionId);
   const removeItem = useRemoveCartItem(sessionId);
   const clearCart = useClearCart(sessionId);
@@ -109,7 +109,7 @@ export default function CartPage() {
         )}
 
         {/* Cart Main Content */}
-        {isLoading ? (
+        {isPending ? (
           <div className="min-h-[400px] flex flex-col items-center justify-center gap-4 text-stone-400">
             <Loader2 size={32} className="animate-spin text-stone-800" />
             <p className="font-poppins text-sm">Loading your cart items...</p>
