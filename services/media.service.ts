@@ -1,4 +1,5 @@
 import { api } from './api';
+import axios from 'axios';
 
 export interface MediaFile {
   id: string;
@@ -34,8 +35,6 @@ export const mediaService = {
     const { data } = await api.post('/media/presigned-url', { filename, contentType, folder });
     return data;
   },
-
-import axios from 'axios';
 
   uploadToS3: async (presignedUrl: string, file: File, onProgress?: (progress: number) => void): Promise<void> => {
     await axios.put(presignedUrl, file, {
