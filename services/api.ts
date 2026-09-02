@@ -87,20 +87,21 @@ api.interceptors.response.use(
     }
 
     // 401 — session expired or token invalid
-    if (error.response?.status === 401 && typeof window !== "undefined") {
-      const currentPath = window.location.pathname;
-      const isProtectedRoute =
-        currentPath.startsWith("/admin") ||
-        currentPath.startsWith("/pos") ||
-        currentPath.startsWith("/branch-admin") ||
-        currentPath.startsWith("/account");
-
-      if (isProtectedRoute) {
-        // Clear all stored auth state
-        try { localStorage.removeItem("laural_user"); } catch { /* noop */ }
-        // Clear legacy cookies if any
-        document.cookie = "laural_token=; path=/; max-age=0; SameSite=Lax";
-        document.cookie = "laural_role=; path=/; max-age=0; SameSite=Lax";
+    if (error.response?.status === 401) {
+      if (typeof window !== "undefined") {
+        // Clear tokens from localStorage
+        localStorage.removeItem("laural_user");
+        
+        // Clear Next.js middleware cookies
+        document.cookie = "laural_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+        document.cookie = "laural_refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+        document.cookie = "laural_role=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+        
+        // Notify Zustand to update UI state
+        // We import dynamically to avoid circular dependencies if any
+        import("@/store/auth.store").then(({ useAuthStore }) => {
+          useAuthStore.getState().logout();
+        });
       }
     }
 
@@ -109,4 +110,3 @@ api.interceptors.response.use(
 );
 
 export default api;
-

@@ -172,7 +172,7 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
           </div>
         </div>
         <button 
-          onClick={() => useAuthStore.getState().logout('/admin/login')}
+          onClick={() => useAuthStore.getState().logout('/login')}
           className="p-2 text-muted hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors ml-1 shrink-0"
           title="Sign Out"
         >

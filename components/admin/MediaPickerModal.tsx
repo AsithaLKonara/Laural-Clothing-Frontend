@@ -63,39 +63,43 @@ export default function MediaPickerModal({ onSelect, onClose, title = "Pick from
   const handleUploadFiles = async (chosenFiles: File[]) => {
     if (!chosenFiles.length) return;
     setIsUploading(true);
+    setUploadProgress(0);
     
-    let toastId: string | null = null;
+    const fileProgresses = new Map<string, number>();
     
     try {
-      for (const file of chosenFiles) {
-        setUploadProgress(0);
-        toastId = toast.loading(`Uploading ${file.name}... (0%)`);
-        
-        await uploadMedia({ 
-          file, 
-          folder: folder !== "All" ? folder : "Uncategorized",
-          onProgress: (progress) => {
-            setUploadProgress(progress);
-            if (toastId) toast.update(toastId, `Uploading ${file.name}... (${progress}%)`, "info");
-          }
-        });
-        
-        if (toastId) toast.update(toastId, `${file.name} uploaded successfully!`, "success");
-      }
+      const uploadPromises = chosenFiles.map(async (file) => {
+        const toastId = toast.loading(`Uploading ${file.name}...`);
+        try {
+          await uploadMedia({ 
+            file, 
+            folder: folder !== "All" ? folder : "Uncategorized",
+            onProgress: (progress) => {
+              fileProgresses.set(file.name, progress);
+              const totalProgress = Array.from(fileProgresses.values()).reduce((a, b) => a + b, 0) / chosenFiles.length;
+              setUploadProgress(Math.round(totalProgress));
+              toast.update(toastId, `Uploading ${file.name}... (${progress}%)`, "info");
+            }
+          });
+          toast.update(toastId, `${file.name} uploaded successfully!`, "success");
+          setTimeout(() => toast.dismiss(toastId), 3000);
+        } catch (error) {
+          console.error(`Failed to upload ${file.name}`, error);
+          toast.update(toastId, `Failed to upload ${file.name}`, "error");
+        }
+      });
+      
+      await Promise.all(uploadPromises);
+      
       setUploadSuccess(true);
-      setUploadProgress(0);
+      setUploadProgress(100);
       setTimeout(() => setUploadSuccess(false), 3000);
       
-      if (toastId) {
-        setTimeout(() => {
-          if (toastId) toast.dismiss(toastId);
-        }, 3000);
-      }
     } catch (error) {
-      console.error("Upload failed", error);
-      if (toastId) toast.update(toastId, "Upload failed. Please try again.", "error");
+      console.error("Batch upload failed", error);
     } finally {
       setIsUploading(false);
+      setTimeout(() => setUploadProgress(0), 1000);
     }
   };
 

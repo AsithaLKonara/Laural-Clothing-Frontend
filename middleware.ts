@@ -43,6 +43,7 @@ export function middleware(request: NextRequest) {
   // 1. Unauthenticated or expired user trying to access protected routes
   if (isStaffRoute || isAccountRoute) {
     if (!token || isExpired) {
+      // All users log in through the same /login page
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("redirect", pathname);
       // Clear invalid cookies if expired

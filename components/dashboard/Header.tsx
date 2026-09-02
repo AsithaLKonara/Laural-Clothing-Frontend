@@ -137,7 +137,7 @@ export default function Header({ onMenuClick, session }: { onMenuClick?: () => v
             <button 
               onClick={async () => {
                 const { logout } = useAuthStore.getState();
-                await logout('/admin/login');
+                await logout('/login');
                 router.push("/login");
               }}
               className="flex items-center gap-2 px-4 py-2 text-sm text-error hover:bg-error/10 transition-colors text-left w-full font-inter"
