@@ -3,6 +3,7 @@ import api from './api';
 export interface AuditLog {
   id: string;
   userId: string | null;
+  userName?: string | null;
   action: string;
   entity: string;
   entityId: string | null;
@@ -15,7 +16,7 @@ export interface AuditLog {
 
 export const auditService = {
   getLogs: async (params?: { search?: string; action?: string; timeframe?: string; page?: number; limit?: number }) => {
-    const { data } = await api.get('/system/audit', { params });
+    const { data } = await api.get('/audit', { params });
     return data;
   }
 };
