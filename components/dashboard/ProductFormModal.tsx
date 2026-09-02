@@ -276,10 +276,22 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
 
   const onSubmit = async (data: CreateProductFormData) => {
     try {
-      const formatVariantPayload = (v: Variant) => {
+      const formatVariantPayload = (v: Variant, isUpdate: boolean = false) => {
         const branchCodeToId = Object.fromEntries(
           (branchesData || []).map((b: any) => [b.code, b.id])
         );
+        
+        const inventoryItems: any = {
+          create: Object.entries(v.stock).map(([code, qty]) => ({
+            branchId: branchCodeToId[code],
+            quantity: qty
+          })).filter(inv => inv.branchId)
+        };
+        
+        if (isUpdate) {
+          inventoryItems.deleteMany = {};
+        }
+
         return {
           size: v.size,
           color: v.color,
@@ -290,21 +302,13 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
           stockStatus: "instock",
           featuredImage: images[0] || null,
           gallery: images.slice(1).filter(url => url !== ""),
-          inventoryItems: {
-            // Note: Update for inventory items is complex, for now we recreate them inside the variant
-            // BUT Prisma doesn't allow easy nested recreation without deleteMany, which is safe for InventoryItems since they Cascade.
-            deleteMany: {},
-            create: Object.entries(v.stock).map(([code, qty]) => ({
-              branchId: branchCodeToId[code],
-              quantity: qty
-            })).filter(inv => inv.branchId)
-          }
+          inventoryItems
         };
       };
 
       const getVariantsPayload = () => {
         if (!productToEdit) {
-          return { create: variants.map(formatVariantPayload) };
+          return { create: variants.map(v => formatVariantPayload(v, false)) };
         }
 
         const variantsToUpdate = variants.filter(v => productToEdit.variants?.find((pv: any) => pv.id === v.id));
@@ -312,15 +316,13 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
         
         // Instead of hard-deleting variants (which crashes Prisma due to FK constraints on Orders/Transactions),
         // we "soft-delete" them by setting stock to 0 and marking them out of stock.
-        // Or simply omitting them from the update payload if we had an isArchived flag.
-        // For now, setting stock to 0 is the safest approach that prevents crashes.
         const variantsToDelete = productToEdit.variants?.filter((pv: any) => !variants.find(v => v.id === pv.id)) || [];
 
         return {
           update: [
             ...variantsToUpdate.map(v => ({
               where: { id: v.id },
-              data: formatVariantPayload(v)
+              data: formatVariantPayload(v, true)
             })),
             ...variantsToDelete.map((v: any) => ({
               where: { id: v.id },
@@ -333,7 +335,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
               }
             }))
           ],
-          create: variantsToCreate.map(formatVariantPayload)
+          create: variantsToCreate.map(v => formatVariantPayload(v, false))
         };
       };
 
