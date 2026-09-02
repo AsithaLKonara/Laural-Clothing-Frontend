@@ -133,15 +133,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   hasPermission: (permissionCode: string) => {
-    const { user } = get();
+    const { user, isSuperAdmin } = get();
     if (!user) return false;
 
-    // Super Admin / Admin has all permissions
-    const isSuper = user.roles?.some((r) => {
-      const norm = r.toUpperCase().replace(/[\s_]/g, "");
-      return norm === "SUPERADMIN" || norm === "ADMIN" || norm === "SYSTEMOWNER";
-    });
-    if (isSuper) return true;
+    // Super Admin / System Owner has all permissions
+    if (isSuperAdmin()) return true;
 
     return user.permissions?.includes(permissionCode) ?? false;
   },
