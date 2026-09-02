@@ -125,6 +125,9 @@ export const createProductSchema = z.object({
   tags: z.string().optional(),
   metaTitle: z.string().optional(),
   metaDesc: z.string().optional(),
+  sizeGuideEnabled: z.boolean().optional(),
+  sizeGuideContent: z.string().optional(),
+  sizeGuideImageUrl: z.string().optional(),
 }).strict();
 
 export type CreateProductFormData = z.infer<typeof createProductSchema>;

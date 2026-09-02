@@ -80,6 +80,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
   const [selectedPaymentMethods, setSelectedPaymentMethods] = useState<string[]>([...PAYMENT_GATEWAYS]);
   const [sizeGuideEnabled, setSizeGuideEnabled] = useState(false);
   const [sizeGuideContent, setSizeGuideContent] = useState("S — Chest: 36\", Waist: 30\"\nM — Chest: 38\", Waist: 32\"\nL — Chest: 40\", Waist: 34\"\nXL — Chest: 42\", Waist: 36\"");
+  const [sizeGuideImageUrl, setSizeGuideImageUrl] = useState("");
   
   const [customSizes, setCustomSizes] = useState<string[]>([]);
   const [customColors, setCustomColors] = useState<{name: string, hex: string}[]>([]);
@@ -115,7 +116,10 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
       costPrice: "",
       tags: "",
       metaTitle: "",
-      metaDesc: ""
+      metaDesc: "",
+      sizeGuideEnabled: false,
+      sizeGuideContent: "",
+      sizeGuideImageUrl: ""
     }
   });
 
@@ -142,6 +146,9 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
       setValue("description", productToEdit.description || "");
       setValue("category", productToEdit.categoryId || ""); // Note: might need ID to Name mapping depending on select
       setSlugEdited(true);
+      setSizeGuideEnabled(productToEdit.sizeGuideEnabled || false);
+      setSizeGuideContent(productToEdit.sizeGuideContent || "S — Chest: 36\", Waist: 30\"\nM — Chest: 38\", Waist: 32\"\nL — Chest: 40\", Waist: 34\"\nXL — Chest: 42\", Waist: 36\"");
+      setSizeGuideImageUrl(productToEdit.sizeGuideImageUrl || "");
       
       if (productToEdit.variants && productToEdit.variants.length > 0) {
         const firstVariant = productToEdit.variants[0];
@@ -183,6 +190,9 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
       setValue("basePrice", "");
       setValue("compareAtPrice", "");
       setSlugEdited(false);
+      setSizeGuideEnabled(false);
+      setSizeGuideContent("S — Chest: 36\", Waist: 30\"\nM — Chest: 38\", Waist: 32\"\nL — Chest: 40\", Waist: 34\"\nXL — Chest: 42\", Waist: 36\"");
+      setSizeGuideImageUrl("");
       setSelectedSizes([]);
       setSelectedColors([]);
       setVariants([]);
@@ -295,6 +305,9 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
         description: data.description,
         categoryId: data.category || undefined,
         collectionId: data.collection || undefined,
+        sizeGuideEnabled,
+        sizeGuideContent: sizeGuideEnabled ? sizeGuideContent : undefined,
+        sizeGuideImageUrl: sizeGuideEnabled ? sizeGuideImageUrl : undefined,
         variants: productToEdit ? {
           deleteMany: {}, // Clean replace
           create: variantPayloads,
@@ -761,7 +774,41 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
                 </label>
 
                 {sizeGuideEnabled && (
-                  <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-6">
+                    <div className="flex flex-col gap-2">
+                      <label className="label">Size Guide Image (Optional)</label>
+                      <div className="flex items-center gap-4">
+                        <div 
+                          onClick={() => { setActiveImageSlot(99); setIsMediaModalOpen(true); }}
+                          className="relative w-32 h-32 border-2 border-dashed border-stone-300 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-stone-50 hover:border-accent transition-all group overflow-hidden shrink-0"
+                        >
+                          {sizeGuideImageUrl ? (
+                            <>
+                              <Image src={sizeGuideImageUrl} alt="Size Guide" fill className="object-cover" />
+                              <div className="absolute inset-0 bg-stone-900/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                <p className="font-inter text-white text-xs font-medium">Change</p>
+                              </div>
+                              <button 
+                                onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  setSizeGuideImageUrl("");
+                                }}
+                                className="absolute top-2 right-2 bg-white/80 backdrop-blur-sm rounded-full p-1 text-stone-700 hover:bg-white transition-colors z-20"
+                              >
+                                <X size={14} />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <ImagePlus size={24} className="text-stone-300 group-hover:text-accent transition-colors" />
+                              <span className="font-inter text-xs text-stone-400 group-hover:text-accent text-center px-2">Upload visual guide</span>
+                            </>
+                          )}
+                        </div>
+                        <p className="text-xs text-stone-400 max-w-[250px] font-inter">Upload a visual guide showing how to measure the garment.</p>
+                      </div>
+                    </div>
+
                     <div className="flex flex-col gap-2">
                       <label className="label">Size Guide Content</label>
                       <textarea
@@ -931,7 +978,9 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
         <MediaPickerModal
           onClose={() => { setIsMediaModalOpen(false); setActiveImageSlot(null); }}
           onSelect={(url) => {
-            if (activeImageSlot !== null) {
+            if (activeImageSlot === 99) {
+              setSizeGuideImageUrl(url);
+            } else if (activeImageSlot !== null) {
               setImages(prev => { const n = [...prev]; n[activeImageSlot] = url; return n; });
             }
             setIsMediaModalOpen(false);
