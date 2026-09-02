@@ -281,16 +281,36 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
           (branchesData || []).map((b: any) => [b.code, b.id])
         );
         
-        const inventoryItems: any = {
-          create: Object.entries(v.stock).map(([code, qty]) => ({
-            branchId: branchCodeToId[code],
-            quantity: qty
-          })).filter(inv => inv.branchId)
-        };
+        // Find existing variant to know which inventory items already exist
+        const existingVariant = isUpdate && productToEdit 
+          ? productToEdit.variants?.find((pv: any) => pv.id === v.id) 
+          : null;
         
-        if (isUpdate) {
-          inventoryItems.deleteMany = {};
-        }
+        const inventoryUpdate: any[] = [];
+        const inventoryCreate: any[] = [];
+        
+        Object.entries(v.stock).forEach(([code, qty]) => {
+          const branchId = branchCodeToId[code];
+          if (!branchId) return;
+          
+          const existingItem = existingVariant?.inventoryItems?.find((inv: any) => inv.branchId === branchId);
+          
+          if (existingItem) {
+            inventoryUpdate.push({
+              where: { id: existingItem.id },
+              data: { quantity: qty }
+            });
+          } else {
+            inventoryCreate.push({
+              branchId,
+              quantity: qty
+            });
+          }
+        });
+        
+        const inventoryItems: any = {};
+        if (inventoryCreate.length > 0) inventoryItems.create = inventoryCreate;
+        if (inventoryUpdate.length > 0) inventoryItems.update = inventoryUpdate;
 
         return {
           size: v.size,
@@ -302,7 +322,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
           stockStatus: "instock",
           featuredImage: images[0] || null,
           gallery: images.slice(1).filter(url => url !== ""),
-          inventoryItems
+          inventoryItems: Object.keys(inventoryItems).length > 0 ? inventoryItems : undefined
         };
       };
 

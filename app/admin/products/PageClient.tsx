@@ -32,12 +32,14 @@ export default function ProductsPage() {
     skip: (page - 1) * take,
     take: take,
     search: searchQuery || undefined,
-    category: categoryFilter === "All Categories" ? undefined : (categoryFilter || undefined)
+    category: categoryFilter === "All Categories" ? undefined : (categoryFilter || undefined),
+    status: statusFilter === "All Status" ? undefined : (statusFilter || undefined)
   } as any);
   const products = response?.data || [];
   const meta = response?.meta || { total: 0, skip: 0, take: take };
   const totalPages = Math.ceil(meta.total / (meta.take || take)) || 1;
   const deleteProductMutation = useDeleteProduct();
+  const bulkEditProductsMutation = useBulkEditProducts();
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
@@ -52,8 +54,33 @@ export default function ProductsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (await globalDialog.confirm("Are you sure you want to archive/delete this product?")) {
+    if (await globalDialog.confirm("Are you sure you want to archive this product?")) {
       await deleteProductMutation.mutateAsync(id);
+      toast.success("Product archived successfully");
+    }
+  };
+
+  const handleBulkPublish = async () => {
+    if (selectedProducts.length === 0) return;
+    try {
+      await bulkEditProductsMutation.mutateAsync({ productIds: selectedProducts, data: { status: 'ACTIVE' } });
+      toast.success(`${selectedProducts.length} products published successfully.`);
+      setSelectedProducts([]);
+    } catch (e) {
+      toast.error('Failed to publish products');
+    }
+  };
+
+  const handleBulkArchive = async () => {
+    if (selectedProducts.length === 0) return;
+    if (await globalDialog.confirm(`Are you sure you want to archive ${selectedProducts.length} products?`)) {
+      try {
+        await bulkEditProductsMutation.mutateAsync({ productIds: selectedProducts, data: { status: 'ARCHIVED' } });
+        toast.success(`${selectedProducts.length} products archived successfully.`);
+        setSelectedProducts([]);
+      } catch (e) {
+        toast.error('Failed to archive products');
+      }
     }
   };
 
@@ -155,6 +182,7 @@ export default function ProductsPage() {
         <option value="LOW_STOCK">Low Stock</option>
         <option value="OUT_OF_STOCK">Out of Stock</option>
         <option value="DRAFT">Draft</option>
+        <option value="ARCHIVED">Archived</option>
       </select>
       <button
         onClick={handleAdd}
@@ -209,10 +237,10 @@ export default function ProductsPage() {
             <button onClick={() => setShowBulkEditModal(true)} className="font-inter font-semibold text-sm bg-stone-800 text-white px-4 py-2 rounded-full hover:bg-stone-700 transition-colors flex items-center gap-2">
               <Edit size={14} /> Bulk Edit
             </button>
-            <button onClick={() => setSelectedProducts([])} className="font-inter font-semibold text-sm bg-emerald-600 text-white px-4 py-2 rounded-full hover:bg-emerald-500 transition-colors flex items-center gap-2">
+            <button onClick={handleBulkPublish} disabled={bulkEditProductsMutation.isPending} className="font-inter font-semibold text-sm bg-emerald-600 text-white px-4 py-2 rounded-full hover:bg-emerald-500 transition-colors flex items-center gap-2 disabled:opacity-50">
               <CheckCircle2 size={14} /> Publish
             </button>
-            <button onClick={() => setSelectedProducts([])} className="font-inter font-semibold text-sm bg-stone-800 text-white px-4 py-2 rounded-full hover:bg-stone-700 transition-colors flex items-center gap-2">
+            <button onClick={handleBulkArchive} disabled={bulkEditProductsMutation.isPending} className="font-inter font-semibold text-sm bg-stone-800 text-white px-4 py-2 rounded-full hover:bg-stone-700 transition-colors flex items-center gap-2 disabled:opacity-50">
               <ArchiveRestore size={14} /> Archive
             </button>
           </div>

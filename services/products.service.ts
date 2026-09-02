@@ -11,6 +11,7 @@ export interface GetProductsParams {
   size?: string;
   minPrice?: number;
   maxPrice?: number;
+  status?: string;
 }
 
 export const productsService = {
