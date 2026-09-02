@@ -53,7 +53,7 @@ export default function AccountSidebar() {
         <button 
           onClick={async () => {
             const { logout } = useAuthStore.getState();
-            await logout();
+            await logout('/login');
             window.location.href = "/login";
           }}
           className="flex items-center gap-2 md:gap-3 px-4 py-2.5 md:py-3 text-red-600 hover:bg-red-50 font-inter font-medium text-sm rounded-lg transition-colors text-left whitespace-nowrap"

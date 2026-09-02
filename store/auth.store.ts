@@ -12,7 +12,7 @@ interface AuthState {
   setAuth: (user: UserProfile) => void;
   login: (payload: LoginPayload) => Promise<AuthResponse>;
   register: (payload: RegisterPayload) => Promise<AuthResponse>;
-  logout: () => Promise<void>;
+  logout: (redirectTo?: string) => Promise<void>;
   initAuth: () => Promise<void>;
 
   // RBAC Helpers
@@ -64,7 +64,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  logout: async () => {
+  logout: async (redirectTo?: string) => {
     try {
       await authService.logout();
     } catch {
@@ -80,8 +80,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isLoading: false,
       });
 
-      if (typeof window !== "undefined") {
-        window.location.href = "/admin/login";
+      if (redirectTo && typeof window !== "undefined") {
+        window.location.href = redirectTo;
       }
     }
   },
