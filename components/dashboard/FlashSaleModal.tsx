@@ -59,6 +59,19 @@ export default function FlashSaleModal({ isOpen, onClose, initialData }: FlashSa
     }
   }, [initialData, isOpen]);
 
+  // Recalculate sale prices when global discount changes
+  useEffect(() => {
+    if (!discount) return;
+    const discountVal = Number(discount);
+    if (isNaN(discountVal)) return;
+
+    setItems(prevItems => prevItems.map(item => {
+      const currentPrice = item.variant?.price || 0;
+      const computedSalePrice = currentPrice - (currentPrice * (discountVal / 100));
+      return { ...item, salePrice: computedSalePrice.toString() };
+    }));
+  }, [discount]);
+
   if (!isOpen) return null;
 
   async function handleSave() {

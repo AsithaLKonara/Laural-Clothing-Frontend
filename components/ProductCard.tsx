@@ -66,13 +66,35 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
   
   const basePrice = defaultVariant?.price || 0;
   
-  // Format numbers exactly without / 100
-  const currentPrice = basePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const oldPrice = basePrice > 0 ? (basePrice + 500).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"; 
-  const displaySalePrice = defaultVariant?.salePrice 
-    ? defaultVariant.salePrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    : null;
-  const installment = (basePrice / 3).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  let effectivePrice = defaultVariant?.salePrice || basePrice;
+
+  if (defaultVariant?.flashSaleItems && defaultVariant.flashSaleItems.length > 0) {
+    const now = new Date();
+    const activeFlashSaleItem = defaultVariant.flashSaleItems.find((item: any) => {
+      const fs = item.flashSale;
+      if (!fs || fs.status !== 'ACTIVE') return false;
+      const startDate = fs.startDate ? new Date(fs.startDate) : null;
+      const endDate = fs.endDate ? new Date(fs.endDate) : null;
+      if (startDate && now < startDate) return false;
+      if (endDate && now > endDate) return false;
+      return true;
+    });
+
+    if (activeFlashSaleItem) {
+      effectivePrice = activeFlashSaleItem.salePrice;
+    }
+  }
+
+  const currentPriceObj = effectivePrice;
+  const originalPriceObj = basePrice;
+  
+  const discountPercentage = basePrice > effectivePrice 
+    ? Math.round(((basePrice - effectivePrice) / basePrice) * 100)
+    : 0;
+
+  const currentPrice = currentPriceObj.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const oldPrice = basePrice > 0 ? originalPriceObj.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00";
+  const installment = (currentPriceObj / 3).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const uniqueSizes = product?.variants 
     ? Array.from(new Set(product.variants.map((v: any) => v.size).filter(Boolean))).slice(0, 4)
     : [];
@@ -110,13 +132,15 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
         </Link>
         
         {/* Discount Tag */}
-        <div className="absolute top-2 right-2 z-10">
-          <div className="flex justify-center items-center px-2 py-1 bg-white/95 backdrop-blur-sm shadow-sm rounded">
-            <span className="font-poppins font-medium text-[9px] tracking-[0.1em] text-stone-900 uppercase">
-              20% off
-            </span>
+        {discountPercentage > 0 && (
+          <div className="absolute top-2 right-2 z-10">
+            <div className="flex justify-center items-center px-2 py-1 bg-white/95 backdrop-blur-sm shadow-sm rounded">
+              <span className="font-poppins font-medium text-[9px] tracking-[0.1em] text-red-500 uppercase">
+                {discountPercentage}% off
+              </span>
+            </div>
           </div>
-        </div>
+        )}
         
         {/* Bottom Overlays */}
         <div className="absolute bottom-0 w-full flex flex-col z-20 pointer-events-none">
@@ -177,14 +201,22 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
           </Link>
           
           <div className="flex items-center gap-2.5">
-            {/* Old Price */}
-            <span className="font-inter font-medium text-[12px] line-through text-stone-400">
-              Rs. {oldPrice}
-            </span>
-            {/* New Price */}
-            <span className="font-inter font-black text-[14px] text-stone-900">
-              Rs. {currentPrice}
-            </span>
+            {discountPercentage > 0 ? (
+              <>
+                {/* Old Price */}
+                <span className="font-inter font-medium text-[12px] line-through text-stone-400">
+                  Rs. {oldPrice}
+                </span>
+                {/* New Price */}
+                <span className="font-inter font-black text-[14px] text-red-500">
+                  Rs. {currentPrice}
+                </span>
+              </>
+            ) : (
+              <span className="font-inter font-black text-[14px] text-stone-900">
+                Rs. {currentPrice}
+              </span>
+            )}
           </div>
         </div>
 
