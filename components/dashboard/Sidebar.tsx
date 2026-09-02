@@ -28,7 +28,8 @@ import {
   MessageSquare,
   PanelsTopLeft,
   HardDrive,
-  X
+  X,
+  LogOut
 } from "lucide-react";
 
 interface NavItem {
@@ -160,9 +161,9 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
       </div>
 
       {/* User Profile Footer */}
-      <div className="p-4 border-t border-border shrink-0 bg-surface">
-        <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-background transition-colors cursor-pointer border border-transparent hover:border-border">
-          <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center text-white font-poppins font-semibold text-sm shadow-sm">
+      <div className="p-4 border-t border-border shrink-0 bg-surface flex items-center justify-between">
+        <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-background transition-colors border border-transparent hover:border-border min-w-0 flex-1">
+          <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center text-white font-poppins font-semibold text-sm shadow-sm shrink-0">
             {getInitials(user?.name)}
           </div>
           <div className="flex flex-col min-w-0">
@@ -170,6 +171,13 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
             <span className="font-inter text-xs text-muted truncate">{primaryRole}</span>
           </div>
         </div>
+        <button 
+          onClick={() => useAuthStore.getState().logout()}
+          className="p-2 text-muted hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors ml-1 shrink-0"
+          title="Sign Out"
+        >
+          <LogOut size={18} />
+        </button>
       </div>
     </aside>
   );

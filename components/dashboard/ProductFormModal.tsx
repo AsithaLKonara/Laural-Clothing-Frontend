@@ -25,6 +25,7 @@ import { useCreateProduct, useUpdateProduct } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { useAdminCollections } from "@/hooks/useAdminCollections";
 import { useBranches } from "@/hooks/useInventory";
+import { toast } from "@/store/toast.store";
 import MediaPickerModal from "@/components/admin/MediaPickerModal";
 import Image from "next/image";
 
@@ -321,9 +322,11 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
       } else {
         await createProductMutation.mutateAsync(payload);
       }
+      toast.success(productToEdit ? "Product updated successfully!" : "Product created successfully!");
       onClose();
     } catch (error) {
       console.error("Failed to save product", error);
+      toast.error("Failed to save product. Please try again.");
     }
   };
 

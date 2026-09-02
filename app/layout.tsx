@@ -55,6 +55,7 @@ export const metadata: Metadata = {
 import Providers from "./providers";
 import OrganizationSchema from "@/components/seo/OrganizationSchema";
 import GlobalDialog from "@/components/ui/GlobalDialog";
+import GlobalToast from "@/components/ui/GlobalToast";
 import { MetaPixel } from "@/components/MetaPixel";
 import { Suspense } from "react";
 
@@ -75,6 +76,7 @@ export default function RootLayout({
           <OrganizationSchema />
           {children}
           <GlobalDialog />
+          <GlobalToast />
         </Providers>
       </body>
     </html>

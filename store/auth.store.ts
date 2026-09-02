@@ -79,6 +79,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isAuthenticated: false,
         isLoading: false,
       });
+
+      if (typeof window !== "undefined") {
+        window.location.href = "/admin/login";
+      }
     }
   },
 

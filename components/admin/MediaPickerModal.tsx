@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { Search, X, Check, Loader2, Upload, CheckCircle2 } from "lucide-react";
 import { useMedia, useUploadMedia } from "@/hooks/useMedia";
+import { toast } from "@/store/toast.store";
 import Image from "next/image";
 
 export interface MediaFile {
@@ -32,6 +33,7 @@ export default function MediaPickerModal({ onSelect, onClose, title = "Pick from
   const [page, setPage] = useState(1);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -59,17 +61,39 @@ export default function MediaPickerModal({ onSelect, onClose, title = "Pick from
   });
 
   const handleUploadFiles = async (chosenFiles: File[]) => {
-    if (chosenFiles.length === 0) return;
+    if (!chosenFiles.length) return;
     setIsUploading(true);
+    
+    let toastId: string | null = null;
     
     try {
       for (const file of chosenFiles) {
-        await uploadMedia({ file, folder: folder !== "All" ? folder : "Uncategorized" });
+        setUploadProgress(0);
+        toastId = toast.loading(`Uploading ${file.name}... (0%)`);
+        
+        await uploadMedia({ 
+          file, 
+          folder: folder !== "All" ? folder : "Uncategorized",
+          onProgress: (progress) => {
+            setUploadProgress(progress);
+            if (toastId) toast.update(toastId, `Uploading ${file.name}... (${progress}%)`, "info");
+          }
+        });
+        
+        if (toastId) toast.update(toastId, `${file.name} uploaded successfully!`, "success");
       }
       setUploadSuccess(true);
+      setUploadProgress(0);
       setTimeout(() => setUploadSuccess(false), 3000);
+      
+      if (toastId) {
+        setTimeout(() => {
+          if (toastId) toast.dismiss(toastId);
+        }, 3000);
+      }
     } catch (error) {
       console.error("Upload failed", error);
+      if (toastId) toast.update(toastId, "Upload failed. Please try again.", "error");
     } finally {
       setIsUploading(false);
     }
@@ -112,7 +136,12 @@ export default function MediaPickerModal({ onSelect, onClose, title = "Pick from
               {isUploading ? <Loader2 size={20} className="animate-spin text-stone-900" /> : <Upload size={20} />}
             </div>
             <div className="text-center sm:text-left flex-1">
-              <p className="font-inter font-bold text-stone-800 text-sm">{isUploading ? "Uploading..." : "Drag & drop files here to upload directly to this folder"}</p>
+              <p className="font-inter font-bold text-stone-800 text-sm">{isUploading ? `Uploading... ${uploadProgress}%` : "Drag & drop files here to upload directly to this folder"}</p>
+              {isUploading && (
+                <div className="w-full bg-stone-200 rounded-full h-2 mt-2">
+                  <div className="bg-stone-900 h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                </div>
+              )}
             </div>
             <button 
               className="bg-white border border-stone-200 text-stone-700 px-4 py-2 rounded-lg font-inter text-sm font-medium hover:bg-stone-50 transition-colors shadow-sm shrink-0 disabled:opacity-50"

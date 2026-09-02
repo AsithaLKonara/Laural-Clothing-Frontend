@@ -22,13 +22,13 @@ export function useUploadMedia() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ file, folder }: { file: File, folder: string }) => {
+    mutationFn: async ({ file, folder, onProgress }: { file: File, folder: string, onProgress?: (progress: number) => void }) => {
       // 1. Get presigned URL
       const type = file.type.startsWith('video/') ? 'video' : 'image';
       const { url, key, publicUrl } = await mediaService.generatePresignedUrl(file.name, file.type, folder);
       
       // 2. Upload to S3
-      await mediaService.uploadToS3(url, file);
+      await mediaService.uploadToS3(url, file, onProgress);
       
       // 3. Confirm with Backend
       const record = await mediaService.createMediaRecord({

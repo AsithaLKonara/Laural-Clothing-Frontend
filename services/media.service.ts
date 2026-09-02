@@ -35,13 +35,19 @@ export const mediaService = {
     return data;
   },
 
-  uploadToS3: async (presignedUrl: string, file: File): Promise<void> => {
-    await fetch(presignedUrl, {
-      method: 'PUT',
-      body: file,
+import axios from 'axios';
+
+  uploadToS3: async (presignedUrl: string, file: File, onProgress?: (progress: number) => void): Promise<void> => {
+    await axios.put(presignedUrl, file, {
       headers: {
         'Content-Type': file.type,
       },
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.total && onProgress) {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          onProgress(percentCompleted);
+        }
+      }
     });
   },
 
