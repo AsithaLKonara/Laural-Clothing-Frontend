@@ -22,6 +22,9 @@ export interface Product {
   categoryId: string | null;
   category?: { id: string; name: string; slug: string; };
   status?: string;
+  sizeGuideEnabled?: boolean;
+  sizeGuideContent?: string | null;
+  sizeGuideImageUrl?: string | null;
   createdAt: string;
   updatedAt: string;
   variants?: ProductVariant[];

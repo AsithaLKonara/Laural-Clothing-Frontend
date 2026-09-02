@@ -415,7 +415,7 @@ export default function ProductPageClient({
         </Link>
       </div>
 
-      <SizeGuideModal isOpen={isSizeGuideOpen} onClose={() => setIsSizeGuideOpen(false)} />
+      <SizeGuideModal isOpen={isSizeGuideOpen} onClose={() => setIsSizeGuideOpen(false)} sizeGuideContent={product.sizeGuideContent} sizeGuideImageUrl={product.sizeGuideImageUrl} />
 
       {/* Floating WhatsApp Widget */}
       <div className="fixed bottom-6 right-6 flex items-center gap-2 z-50">
