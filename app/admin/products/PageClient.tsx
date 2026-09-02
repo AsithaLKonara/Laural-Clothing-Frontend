@@ -10,9 +10,10 @@ import BarcodePrintModal from "@/components/admin/BarcodePrintModal";
 import BulkEditModal from "@/components/admin/BulkEditModal";
 import Link from "next/link";
 import { Barcode, Edit, ArchiveRestore, CheckCircle2 } from "lucide-react";
-import { useProducts, useDeleteProduct } from "@/hooks/useProducts";
+import { useProducts, useDeleteProduct, useBulkEditProducts } from "@/hooks/useProducts";
 import { Product } from "@/types/product";
 import { globalDialog } from "@/store/dialog.store";
+import { toast } from "@/store/toast.store";
 
 export default function ProductsPage() {
   const [modalOpen, setModalOpen] = useState(false);
