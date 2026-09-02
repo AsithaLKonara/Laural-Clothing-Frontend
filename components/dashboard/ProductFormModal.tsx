@@ -324,9 +324,9 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
       }
       toast.success(productToEdit ? "Product updated successfully!" : "Product created successfully!");
       onClose();
-    } catch (error) {
-      console.error("Failed to save product", error);
-      toast.error("Failed to save product. Please try again.");
+    } catch (error: any) {
+      console.error("Failed to save product", error.response?.data || error);
+      toast.error(error.response?.data?.error || "Failed to save product. Please try again.");
     }
   };
 
