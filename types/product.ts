@@ -11,6 +11,15 @@ export interface ProductVariant {
   size: string | null;
   featuredImage: string | null;
   gallery: string[];
+  flashSaleItems?: {
+    salePrice: number;
+    flashSale: {
+      name: string;
+      discount: number;
+      startDate: string | null;
+      endDate: string | null;
+    };
+  }[];
 }
 
 export interface Product {

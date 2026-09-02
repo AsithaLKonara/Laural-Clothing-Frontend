@@ -124,7 +124,35 @@ export default function ProductPageClient({
            (uniqueSizes.length === 0 || vSizeSanitized === selectedSize);
   }) || variants[0];
 
-  const currentPriceObj = selectedVariant?.price || 0;
+  const basePrice = selectedVariant?.price || 0;
+  
+  // Calculate effective price taking Flash Sales into account
+  let effectivePrice = selectedVariant?.salePrice || basePrice;
+
+  if (selectedVariant?.flashSaleItems && selectedVariant.flashSaleItems.length > 0) {
+    const now = new Date();
+    const activeFlashSaleItem = selectedVariant.flashSaleItems.find(item => {
+      const fs = item.flashSale;
+      if (!fs) return false;
+      const startDate = fs.startDate ? new Date(fs.startDate) : null;
+      const endDate = fs.endDate ? new Date(fs.endDate) : null;
+      if (startDate && now < startDate) return false;
+      if (endDate && now > endDate) return false;
+      return true;
+    });
+
+    if (activeFlashSaleItem) {
+      effectivePrice = activeFlashSaleItem.salePrice;
+    }
+  }
+
+  const currentPriceObj = effectivePrice;
+  const originalPriceObj = basePrice;
+  
+  const discountPercentage = basePrice > effectivePrice 
+    ? Math.round(((basePrice - effectivePrice) / basePrice) * 100)
+    : 0;
+
   const currentPrice = currentPriceObj.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const installment = (currentPriceObj / 3).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -203,7 +231,7 @@ export default function ProductPageClient({
         
         {/* Left: Gallery */}
         <div className="flex-shrink-0 flex justify-center lg:justify-start w-full lg:w-auto">
-          <ProductGallery images={images} />
+          <ProductGallery images={images} discountPercentage={discountPercentage} />
         </div>
 
         {/* Right: Product Info */}
@@ -215,7 +243,14 @@ export default function ProductPageClient({
               {product.name}
             </h1>
             <div className="flex items-center gap-4 mt-2">
-              <span className="font-poppins text-[22px] md:text-[26px] font-bold text-primary">Rs {currentPrice}</span>
+              {discountPercentage > 0 ? (
+                <div className="flex items-center gap-3">
+                  <span className="font-poppins text-lg text-[#79716B] line-through">Rs {originalPriceObj.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span className="font-poppins text-[22px] md:text-[26px] font-bold text-red-500">Rs {currentPrice}</span>
+                </div>
+              ) : (
+                <span className="font-poppins text-[22px] md:text-[26px] font-bold text-primary">Rs {currentPrice}</span>
+              )}
               {!inStock && <span className="font-poppins text-sm text-red-500 font-medium">Out of Stock</span>}
             </div>
           </div>
