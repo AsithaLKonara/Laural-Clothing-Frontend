@@ -16,6 +16,7 @@ export interface ProductVariant {
     flashSale: {
       name: string;
       discount: number;
+      status: string;
       startDate: string | null;
       endDate: string | null;
     };

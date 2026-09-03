@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 
 async function getProductData(slug: string) {
   try {
-    return await serverFetch<Product>(`/products/slug/${slug}`, { next: { revalidate: 3600, tags: ['products'] } });
+    return await serverFetch<Product>(`/products/slug/${slug}`, { next: { revalidate: 60, tags: ['products'] } });
   } catch (error) {
     return null;
   }
@@ -22,7 +22,7 @@ async function getProductData(slug: string) {
 
 async function getRelatedProducts() {
   try {
-    return await serverFetch<PaginatedResponse<Product>>(`/products?skip=0&take=8`, { next: { revalidate: 3600, tags: ['products'] } });
+    return await serverFetch<PaginatedResponse<Product>>(`/products?skip=0&take=8`, { next: { revalidate: 60, tags: ['products'] } });
   } catch (error) {
     return null;
   }

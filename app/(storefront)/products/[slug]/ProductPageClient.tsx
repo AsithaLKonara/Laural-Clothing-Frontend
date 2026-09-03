@@ -133,7 +133,7 @@ export default function ProductPageClient({
     const now = new Date();
     const activeFlashSaleItem = selectedVariant.flashSaleItems.find(item => {
       const fs = item.flashSale;
-      if (!fs) return false;
+      if (!fs || fs.status !== 'ACTIVE') return false;
       const startDate = fs.startDate ? new Date(fs.startDate) : null;
       const endDate = fs.endDate ? new Date(fs.endDate) : null;
       if (startDate && now < startDate) return false;
