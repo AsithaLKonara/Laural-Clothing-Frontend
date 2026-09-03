@@ -12,6 +12,8 @@ import { useAuthStore } from "@/store/auth.store";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { checkoutSchema, CheckoutFormData } from "@/lib/validations";
+import { useProducts } from "@/hooks/useProducts";
+import { getEffectivePrice } from "@/lib/pricing";
 import { useCartStore } from "@/store/useCartStore";
 import { useCart } from "@/hooks/useCart";
 import { useInitiateCheckout } from "@/hooks/useCheckout";
@@ -70,7 +72,7 @@ export default function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState("");
 
   const cartItems = cart?.items || [];
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.quantity * (item.variant.salePrice ?? item.variant.price)), 0);
+  const subtotal = cartItems.reduce((sum, item) => sum + (item.quantity * getEffectivePrice(item.variant)), 0);
   const shippingFee = 400; // Flat fee for now
   const total = subtotal + shippingFee - appliedLoyaltyPoints;
 
@@ -516,7 +518,7 @@ export default function CheckoutPage() {
                     </h4>
                     <div className="flex items-center justify-between mt-1">
                       <span className="font-poppins text-xs text-stone-500">{item.variant.name}</span>
-                      <span className="font-poppins font-medium text-xs text-primary">{item.quantity} × Rs: {(item.variant.salePrice ?? item.variant.price).toLocaleString()}</span>
+                      <span className="font-poppins font-medium text-xs text-primary">{item.quantity} × Rs: {getEffectivePrice(item.variant).toLocaleString()}</span>
                     </div>
                   </div>
                 </div>

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { getEffectivePrice } from "@/lib/pricing";
 import { useRouter } from "next/navigation";
 import { Product } from "@/types/product";
 import { useCartStore } from "@/store/useCartStore";
@@ -65,25 +66,7 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
   const productUrl = product?.slug ? `/products/${product.slug}` : "#";
   
   const basePrice = defaultVariant?.price || 0;
-  
-  let effectivePrice = defaultVariant?.salePrice || basePrice;
-
-  if (defaultVariant?.flashSaleItems && defaultVariant.flashSaleItems.length > 0) {
-    const now = new Date();
-    const activeFlashSaleItem = defaultVariant.flashSaleItems.find((item: any) => {
-      const fs = item.flashSale;
-      if (!fs || fs.status !== 'ACTIVE') return false;
-      const startDate = fs.startDate ? new Date(fs.startDate) : null;
-      const endDate = fs.endDate ? new Date(fs.endDate) : null;
-      if (startDate && now < startDate) return false;
-      if (endDate && now > endDate) return false;
-      return true;
-    });
-
-    if (activeFlashSaleItem) {
-      effectivePrice = activeFlashSaleItem.salePrice;
-    }
-  }
+  let effectivePrice = getEffectivePrice(defaultVariant);
 
   const currentPriceObj = effectivePrice;
   const originalPriceObj = basePrice;

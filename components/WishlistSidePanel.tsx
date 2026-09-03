@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { X, Heart } from "lucide-react";
 import CartItem from "./CartItem";
+import { getEffectivePrice } from "@/lib/pricing";
 import { useCartStore } from "@/store/useCartStore";
 import { useWishlist, useRemoveFromWishlist } from "@/hooks/useWishlist";
 import { useAddToCart } from "@/hooks/useCart";
@@ -74,7 +75,7 @@ export default function WishlistSidePanel({ isOpen, onClose }: { isOpen: boolean
                 if (variant?.featuredImage) imageUrl = variant.featuredImage;
                 else if (variant?.gallery?.[0]) imageUrl = variant.gallery[0];
                 
-                const price = variant?.salePrice || variant?.price || 0;
+                const price = getEffectivePrice(variant);
 
                 return (
                   <CartItem

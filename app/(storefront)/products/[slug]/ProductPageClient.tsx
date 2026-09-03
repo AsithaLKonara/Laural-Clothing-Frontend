@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, LayoutGrid, Info, ArrowLeftRight, Heart, Ruler, Send, MessageCircle } from "lucide-react";
 import CategoryBar from "@/components/CategoryBar";
 import ProductGallery from "@/components/ProductGallery";
+import { getEffectivePrice } from "@/lib/pricing";
 import ProductTabs from "@/components/ProductTabs";
 import SizeGuideModal from "@/components/SizeGuideModal";
 import ProductCard from "@/components/ProductCard";
@@ -125,26 +126,7 @@ export default function ProductPageClient({
   }) || variants[0];
 
   const basePrice = selectedVariant?.price || 0;
-  
-  // Calculate effective price taking Flash Sales into account
-  let effectivePrice = selectedVariant?.salePrice || basePrice;
-
-  if (selectedVariant?.flashSaleItems && selectedVariant.flashSaleItems.length > 0) {
-    const now = new Date();
-    const activeFlashSaleItem = selectedVariant.flashSaleItems.find(item => {
-      const fs = item.flashSale;
-      if (!fs || fs.status !== 'ACTIVE') return false;
-      const startDate = fs.startDate ? new Date(fs.startDate) : null;
-      const endDate = fs.endDate ? new Date(fs.endDate) : null;
-      if (startDate && now < startDate) return false;
-      if (endDate && now > endDate) return false;
-      return true;
-    });
-
-    if (activeFlashSaleItem) {
-      effectivePrice = activeFlashSaleItem.salePrice;
-    }
-  }
+  let effectivePrice = getEffectivePrice(selectedVariant);
 
   const currentPriceObj = effectivePrice;
   const originalPriceObj = basePrice;
