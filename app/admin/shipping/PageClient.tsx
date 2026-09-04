@@ -10,14 +10,46 @@ export default function ShippingDashboard() {
   const orders = ordersData?.data || [];
   const dispatchOrder = useDispatchOrder();
   
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+
   const handleCreateShipment = (orderId: string) => {
     dispatchOrder.mutate(orderId);
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      // Select all dispatched/tracked orders
+      const dispatchableIds = orders
+        .filter((o: any) => o.status === 'DISPATCHED' || !!o.trackingNumber)
+        .map((o: any) => o.id);
+      setSelectedOrderIds(dispatchableIds);
+    } else {
+      setSelectedOrderIds([]);
+    }
+  };
+
+  const handleSelectOrder = (orderId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedOrderIds(prev => [...prev, orderId]);
+    } else {
+      setSelectedOrderIds(prev => prev.filter(id => id !== orderId));
+    }
   };
 
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold">Fardar Shipping Dashboard</h1>
+        {selectedOrderIds.length > 0 && (
+          <Link 
+            href={`/admin/shipping/label/bulk?ids=${selectedOrderIds.join(',')}`} 
+            target="_blank"
+          >
+            <Button>
+              Print Selected Labels ({selectedOrderIds.length})
+            </Button>
+          </Link>
+        )}
       </div>
 
       <div className="bg-white rounded shadow overflow-hidden">
@@ -27,6 +59,13 @@ export default function ShippingDashboard() {
           <table className="w-full text-left">
             <thead className="bg-gray-50">
               <tr>
+                <th className="p-4 w-10">
+                  <input 
+                    type="checkbox" 
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 rounded border-gray-300"
+                  />
+                </th>
                 <th className="p-4">Order ID</th>
                 <th className="p-4">Customer</th>
                 <th className="p-4">Total</th>
@@ -39,7 +78,17 @@ export default function ShippingDashboard() {
                 const isDispatched = order.status === 'DISPATCHED' || !!order.trackingNumber;
 
                 return (
-                  <tr key={order.id} className="border-t">
+                  <tr key={order.id} className={`border-t ${selectedOrderIds.includes(order.id) ? 'bg-blue-50' : ''}`}>
+                    <td className="p-4">
+                      {isDispatched && (
+                        <input 
+                          type="checkbox" 
+                          checked={selectedOrderIds.includes(order.id)}
+                          onChange={(e) => handleSelectOrder(order.id, e.target.checked)}
+                          className="w-4 h-4 rounded border-gray-300"
+                        />
+                      )}
+                    </td>
                     <td className="p-4 font-medium">{order.orderNumber}</td>
                     <td className="p-4">
                       <div>
@@ -83,7 +132,7 @@ export default function ShippingDashboard() {
               
               {orders?.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="p-4 text-center text-gray-500">No orders found.</td>
+                  <td colSpan={6} className="p-4 text-center text-gray-500">No orders found.</td>
                 </tr>
               )}
             </tbody>

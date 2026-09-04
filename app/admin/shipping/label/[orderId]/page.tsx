@@ -3,9 +3,18 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import PrintButton from "./PrintButton";
 
+import { cookies } from "next/headers";
+
 export default async function LabelPage({ params }: { params: Promise<{ orderId: string }> }) {
   const resolvedParams = await params;
+  
+  const cookieStore = await cookies();
+  const token = cookieStore.get('accessToken')?.value;
+
   const orderRes = await serverFetch<any>(`/orders/${resolvedParams.orderId}`, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    },
     next: { revalidate: 0 },
   }).catch(() => null);
 
