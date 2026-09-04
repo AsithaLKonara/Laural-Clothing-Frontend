@@ -24,7 +24,7 @@ export default function BulkLabelPage({ searchParams }: { searchParams: Promise<
     Promise.all(fetchPromises).then(responses => {
       const validOrders = responses
         .filter(res => res && res.data && res.data.trackingNumber)
-        .map(res => res.data);
+        .map(res => res!.data);
       
       setOrders(validOrders);
       setLoading(false);
