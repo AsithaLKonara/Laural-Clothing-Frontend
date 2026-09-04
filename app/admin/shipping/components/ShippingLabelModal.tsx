@@ -106,7 +106,7 @@ export default function ShippingLabelModal({ orderIds, isOpen, onClose }: Shippi
       </div>
 
       {/* Actual Print View (Hidden in normal UI, takes over entire screen during print) */}
-      <div className="hidden print:block print-label-container fixed inset-0 bg-white z-[999999]">
+      <div className="hidden print:block print-label-container bg-white z-[999999]">
         {orders.map((order) => (
           <ShippingLabelTemplate key={`print-${order.id}`} order={order} />
         ))}
