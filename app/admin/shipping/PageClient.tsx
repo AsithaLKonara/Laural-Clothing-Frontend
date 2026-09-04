@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { useOrders, useDispatchOrder } from '@/hooks/useOrders';
 import { Button } from '@/components/ui/Button';
+import ShippingLabelModal from './components/ShippingLabelModal';
 
 export default function ShippingDashboard() {
   const { data: ordersData, isLoading } = useOrders();
@@ -11,6 +11,10 @@ export default function ShippingDashboard() {
   const dispatchOrder = useDispatchOrder();
   
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  
+  // Modal State
+  const [previewOrderIds, setPreviewOrderIds] = useState<string[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleCreateShipment = (orderId: string) => {
     dispatchOrder.mutate(orderId);
@@ -41,14 +45,12 @@ export default function ShippingDashboard() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold">Fardar Shipping Dashboard</h1>
         {selectedOrderIds.length > 0 && (
-          <Link 
-            href={`/admin/shipping/label/bulk?ids=${selectedOrderIds.join(',')}`} 
-            target="_blank"
-          >
-            <Button>
-              Print Selected Labels ({selectedOrderIds.length})
-            </Button>
-          </Link>
+          <Button onClick={() => {
+            setPreviewOrderIds(selectedOrderIds);
+            setIsModalOpen(true);
+          }}>
+            Print Selected Labels ({selectedOrderIds.length})
+          </Button>
         )}
       </div>
 
@@ -121,7 +123,15 @@ export default function ShippingDashboard() {
                       ) : (
                         <>
                           {order.trackingNumber && (
-                            <Link href={`/admin/shipping/label/${order.id}`} target="_blank" className="text-sm text-blue-600 hover:underline inline-block">View Label</Link>
+                            <button 
+                              onClick={() => {
+                                setPreviewOrderIds([order.id]);
+                                setIsModalOpen(true);
+                              }}
+                              className="text-sm text-blue-600 hover:underline inline-block font-medium"
+                            >
+                              View Label
+                            </button>
                           )}
                         </>
                       )}
@@ -139,6 +149,12 @@ export default function ShippingDashboard() {
           </table>
         )}
       </div>
+      
+      <ShippingLabelModal 
+        orderIds={previewOrderIds}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 }
