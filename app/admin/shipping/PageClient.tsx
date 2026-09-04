@@ -1,13 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useOrders, useDispatchOrder } from '@/hooks/useOrders';
 import { Button } from '@/components/ui/Button';
 import ShippingLabelModal from './components/ShippingLabelModal';
-import { X } from 'lucide-react';
+import TrackingSidePanel from './components/TrackingSidePanel';
+import { X, Search } from 'lucide-react';
 
 export default function ShippingDashboard() {
-  const { data: ordersData, isLoading } = useOrders();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+
+  // Debounce search query
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearchQuery(searchQuery), 500);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  const { data: ordersData, isLoading } = useOrders({ search: debouncedSearchQuery });
   const orders = ordersData?.data || [];
   const dispatchOrder = useDispatchOrder();
   
@@ -16,6 +26,16 @@ export default function ShippingDashboard() {
   // Modal State
   const [previewOrderIds, setPreviewOrderIds] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Tracking Panel State
+  const [isTrackingPanelOpen, setIsTrackingPanelOpen] = useState(false);
+  const [trackingOrder, setTrackingOrder] = useState<any>(null);
+
+  const openTrackingPanel = (order: any, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setTrackingOrder(order);
+    setIsTrackingPanelOpen(true);
+  };
 
   // Dispatch Weight Modal State
   const [dispatchModalOpen, setDispatchModalOpen] = useState(false);
@@ -60,14 +80,26 @@ export default function ShippingDashboard() {
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold">Fardar Shipping Dashboard</h1>
-        {selectedOrderIds.length > 0 && (
-          <Button onClick={() => {
-            setPreviewOrderIds(selectedOrderIds);
-            setIsModalOpen(true);
-          }}>
-            Print Selected Labels ({selectedOrderIds.length})
-          </Button>
-        )}
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
+            <input 
+              type="text" 
+              placeholder="Search by Order ID, Phone, Tracking #..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 py-2 w-80 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          {selectedOrderIds.length > 0 && (
+            <Button onClick={() => {
+              setPreviewOrderIds(selectedOrderIds);
+              setIsModalOpen(true);
+            }}>
+              Print Selected Labels ({selectedOrderIds.length})
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="bg-white rounded shadow overflow-hidden">
@@ -96,8 +128,12 @@ export default function ShippingDashboard() {
                 const isDispatched = order.status === 'DISPATCHED' || !!order.trackingNumber;
 
                 return (
-                  <tr key={order.id} className={`border-t ${selectedOrderIds.includes(order.id) ? 'bg-blue-50' : ''}`}>
-                    <td className="p-4">
+                  <tr 
+                    key={order.id} 
+                    className={`border-t cursor-pointer hover:bg-stone-50 transition-colors ${selectedOrderIds.includes(order.id) ? 'bg-blue-50' : ''}`}
+                    onClick={() => openTrackingPanel(order)}
+                  >
+                    <td className="p-4" onClick={(e) => e.stopPropagation()}>
                       {isDispatched && (
                         <input 
                           type="checkbox" 
@@ -131,13 +167,19 @@ export default function ShippingDashboard() {
                         <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs uppercase">{order.status}</span>
                       )}
                     </td>
-                    <td className="p-4 text-right space-x-2">
+                    <td className="p-4 text-right space-x-2" onClick={(e) => e.stopPropagation()}>
                       {!isDispatched ? (
                         <Button size="sm" onClick={() => openDispatchModal(order.id)} isLoading={dispatchOrder.isPending && dispatchOrderId === order.id}>
                           Dispatch & Create Label
                         </Button>
                       ) : (
-                        <>
+                        <div className="flex items-center justify-end gap-3">
+                          <button 
+                            onClick={(e) => openTrackingPanel(order, e)}
+                            className="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors"
+                          >
+                            Track
+                          </button>
                           {order.trackingNumber && (
                             <button 
                               onClick={() => {
@@ -149,7 +191,7 @@ export default function ShippingDashboard() {
                               View Label
                             </button>
                           )}
-                        </>
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -210,6 +252,12 @@ export default function ShippingDashboard() {
         orderIds={previewOrderIds}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+      />
+
+      <TrackingSidePanel
+        order={trackingOrder}
+        isOpen={isTrackingPanelOpen}
+        onClose={() => setIsTrackingPanelOpen(false)}
       />
     </div>
   );
