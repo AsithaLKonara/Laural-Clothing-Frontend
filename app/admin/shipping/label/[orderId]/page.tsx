@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import PrintButton from "./PrintButton";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 export default async function LabelPage({ params }: { params: Promise<{ orderId: string }> }) {
   const resolvedParams = await params;
@@ -11,9 +11,15 @@ export default async function LabelPage({ params }: { params: Promise<{ orderId:
   const cookieStore = await cookies();
   const token = cookieStore.get('laural_access_token')?.value;
 
+  const headersList = await headers();
+  const userAgent = headersList.get('user-agent') || '';
+  const forwardedFor = headersList.get('x-forwarded-for') || '';
+
   const orderRes = await serverFetch<any>(`/orders/${resolvedParams.orderId}`, {
     headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {})
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      'User-Agent': userAgent,
+      'X-Forwarded-For': forwardedFor
     },
     next: { revalidate: 0 },
   }).catch(() => null);

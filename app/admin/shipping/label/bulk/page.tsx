@@ -1,7 +1,7 @@
 import { serverFetch } from "@/lib/server-fetch";
 import { notFound } from "next/navigation";
 import PrintButton from "../[orderId]/PrintButton";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 export default async function BulkLabelPage({ searchParams }: { searchParams: Promise<{ ids?: string }> }) {
   const resolvedParams = await searchParams;
@@ -12,13 +12,19 @@ export default async function BulkLabelPage({ searchParams }: { searchParams: Pr
   const cookieStore = await cookies();
   const token = cookieStore.get('laural_access_token')?.value;
 
+  const headersList = await headers();
+  const userAgent = headersList.get('user-agent') || '';
+  const forwardedFor = headersList.get('x-forwarded-for') || '';
+
   const orderIds = resolvedParams.ids.split(',');
 
   // Fetch all orders concurrently
   const fetchPromises = orderIds.map(id => 
     serverFetch<any>(`/orders/${id}`, {
       headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {})
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        'User-Agent': userAgent,
+        'X-Forwarded-For': forwardedFor
       },
       next: { revalidate: 0 },
     }).catch(() => null)
