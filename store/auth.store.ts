@@ -120,13 +120,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           set({ user: freshUser, isAuthenticated: true, isLoading: false });
         }
       } catch (err: any) {
-        if (err.response?.status === 401) {
+        if (err.response?.status === 401 && cachedUser) {
           try {
             const refreshed = await authService.refresh();
             get().setAuth(refreshed.user);
           } catch {
             get().logout();
           }
+        } else if (!cachedUser) {
+          get().logout();
         }
       }
     } catch {

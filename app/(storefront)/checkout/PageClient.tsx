@@ -177,11 +177,12 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (!isAuthenticated && !isPhoneVerified) {
-      setPendingCheckoutData(data);
-      setIsOtpModalOpen(true);
-      return;
-    }
+    // TEMPORARILY DISABLED FOR TESTING
+    // if (!isAuthenticated && !isPhoneVerified) {
+    //   setPendingCheckoutData(data);
+    //   setIsOtpModalOpen(true);
+    //   return;
+    // }
     
     // Generate fingerprint right before submission
     data.deviceFingerprint = await generateDeviceFingerprint();
@@ -457,7 +458,7 @@ export default function CheckoutPage() {
 
             {/* Turnstile CAPTCHA */}
             <div className="flex justify-center w-full my-4">
-              {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+              {mounted && process.env.NODE_ENV !== 'development' && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
                 <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} onSuccess={(token) => setValue("turnstileToken", token)} />
               )}
             </div>

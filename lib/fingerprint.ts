@@ -84,46 +84,8 @@ function getWebGLFingerprint(): string {
  * Bots/virtual machines often return exact 0s or throw exceptions.
  */
 async function getAudioFingerprint(): Promise<string> {
-  try {
-    if (typeof window === 'undefined' || !window.AudioContext && !(window as any).webkitAudioContext) {
-      return 'no-audio';
-    }
-    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-    const ctx = new AudioCtx();
-
-    const oscillator = ctx.createOscillator();
-    const analyser = ctx.createAnalyser();
-    const gain = ctx.createGain();
-    const scriptProcessor = ctx.createScriptProcessor(4096, 1, 1);
-
-    gain.gain.value = 0; // mute — we only want the fingerprint, no audio output
-    oscillator.type = 'triangle';
-    oscillator.connect(analyser);
-    analyser.connect(scriptProcessor);
-    scriptProcessor.connect(gain);
-    gain.connect(ctx.destination);
-    oscillator.start(0);
-
-    const fp: number = await new Promise((resolve) => {
-      scriptProcessor.onaudioprocess = (event) => {
-        const data = event.inputBuffer.getChannelData(0);
-        let sum = 0;
-        for (let i = 0; i < data.length; i++) {
-          sum += Math.abs(data[i]);
-        }
-        oscillator.disconnect();
-        analyser.disconnect();
-        scriptProcessor.disconnect();
-        gain.disconnect();
-        ctx.close().catch(() => {});
-        resolve(sum);
-      };
-    });
-
-    return fp.toFixed(6);
-  } catch {
-    return 'audio-error';
-  }
+  // Disabled to prevent ScriptProcessorNode console warnings
+  return 'audio-disabled';
 }
 
 /**

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { addressService, AddressInput } from '@/services/address.service';
+import { useAuthStore } from '@/store/auth.store';
 
 export const ADDRESS_KEYS = {
   all: ['addresses'] as const,
@@ -11,10 +12,11 @@ export const ADDRESS_KEYS = {
 export const MOCK_CUSTOMER_ID = "mock-customer-123";
 
 export function useAddresses(customerId: string = MOCK_CUSTOMER_ID) {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   return useQuery({
     queryKey: ADDRESS_KEYS.customer(customerId),
     queryFn: () => addressService.getAddresses(customerId),
-    enabled: !!customerId,
+    enabled: !!customerId && isAuthenticated,
   });
 }
 
