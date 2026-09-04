@@ -10,7 +10,7 @@ export default async function BulkLabelPage({ searchParams }: { searchParams: Pr
   }
 
   const cookieStore = await cookies();
-  const token = cookieStore.get('accessToken')?.value;
+  const token = cookieStore.get('laural_access_token')?.value;
 
   const orderIds = resolvedParams.ids.split(',');
 

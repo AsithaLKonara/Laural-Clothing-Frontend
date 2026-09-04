@@ -9,7 +9,7 @@ export default async function LabelPage({ params }: { params: Promise<{ orderId:
   const resolvedParams = await params;
   
   const cookieStore = await cookies();
-  const token = cookieStore.get('accessToken')?.value;
+  const token = cookieStore.get('laural_access_token')?.value;
 
   const orderRes = await serverFetch<any>(`/orders/${resolvedParams.orderId}`, {
     headers: {
