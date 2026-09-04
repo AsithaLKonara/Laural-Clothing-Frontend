@@ -117,7 +117,9 @@
   /* Shipping Label Print Wrapper (Portaled to body) */
   .print-portal {
     visibility: visible !important;
-    position: static !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
     display: block !important;
     width: 100% !important;
     background: #fff !important;
