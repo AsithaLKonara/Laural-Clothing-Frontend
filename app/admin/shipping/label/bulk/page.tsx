@@ -1,39 +1,43 @@
-import { serverFetch } from "@/lib/server-fetch";
-import { notFound } from "next/navigation";
+'use client';
+
+import { useEffect, useState, use } from "react";
 import PrintButton from "../[orderId]/PrintButton";
-import { cookies, headers } from "next/headers";
+import { orderService } from "@/services/order.service";
 
-export default async function BulkLabelPage({ searchParams }: { searchParams: Promise<{ ids?: string }> }) {
-  const resolvedParams = await searchParams;
-  if (!resolvedParams.ids) {
-    return notFound();
+export default function BulkLabelPage({ searchParams }: { searchParams: Promise<{ ids?: string }> }) {
+  const resolvedParams = use(searchParams);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!resolvedParams.ids) {
+      setLoading(false);
+      return;
+    }
+
+    const orderIds = resolvedParams.ids.split(',');
+
+    const fetchPromises = orderIds.map(id => 
+      orderService.getOrderById(id).catch(() => null)
+    );
+
+    Promise.all(fetchPromises).then(responses => {
+      const validOrders = responses
+        .filter(res => res && res.data && res.data.trackingNumber)
+        .map(res => res.data);
+      
+      setOrders(validOrders);
+      setLoading(false);
+    });
+  }, [resolvedParams.ids]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-stone-200 font-inter">
+        <p className="text-stone-600 mt-2">Loading labels...</p>
+      </div>
+    );
   }
-
-  const cookieStore = await cookies();
-  const token = cookieStore.get('laural_access_token')?.value;
-
-  const headersList = await headers();
-  const userAgent = headersList.get('user-agent') || '';
-  const forwardedFor = headersList.get('x-forwarded-for') || '';
-
-  const orderIds = resolvedParams.ids.split(',');
-
-  // Fetch all orders concurrently
-  const fetchPromises = orderIds.map(id => 
-    serverFetch<any>(`/orders/${id}`, {
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        'User-Agent': userAgent,
-        'X-Forwarded-For': forwardedFor
-      },
-      next: { revalidate: 0 },
-    }).catch(() => null)
-  );
-
-  const responses = await Promise.all(fetchPromises);
-  const orders = responses
-    .filter(res => res && res.data && res.data.trackingNumber)
-    .map(res => res.data);
 
   if (orders.length === 0) {
     return (

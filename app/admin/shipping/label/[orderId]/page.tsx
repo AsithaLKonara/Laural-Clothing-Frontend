@@ -1,35 +1,44 @@
-import { serverFetch } from "@/lib/server-fetch";
-import { notFound } from "next/navigation";
-import Image from "next/image";
+'use client';
+
+import { useEffect, useState, use } from "react";
 import PrintButton from "./PrintButton";
+import { orderService } from "@/services/order.service";
 
-import { cookies, headers } from "next/headers";
+export default function LabelPage({ params }: { params: Promise<{ orderId: string }> }) {
+  const resolvedParams = use(params);
+  const [order, setOrder] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-export default async function LabelPage({ params }: { params: Promise<{ orderId: string }> }) {
-  const resolvedParams = await params;
-  
-  const cookieStore = await cookies();
-  const token = cookieStore.get('laural_access_token')?.value;
+  useEffect(() => {
+    orderService.getOrderById(resolvedParams.orderId)
+      .then(res => {
+        setOrder(res.data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError(true);
+        setLoading(false);
+      });
+  }, [resolvedParams.orderId]);
 
-  const headersList = await headers();
-  const userAgent = headersList.get('user-agent') || '';
-  const forwardedFor = headersList.get('x-forwarded-for') || '';
-
-  const orderRes = await serverFetch<any>(`/orders/${resolvedParams.orderId}`, {
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      'User-Agent': userAgent,
-      'X-Forwarded-For': forwardedFor
-    },
-    next: { revalidate: 0 },
-  }).catch(() => null);
-
-  if (!orderRes || !orderRes.data) {
-    return notFound();
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-stone-50 font-inter">
+        <p className="text-stone-500 mt-2">Loading label...</p>
+      </div>
+    );
   }
 
-  const order = orderRes.data;
-  
+  if (error || !order) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-stone-50 font-inter">
+        <h1 className="text-2xl font-bold text-stone-800">Label Not Found</h1>
+        <p className="text-stone-500 mt-2">The requested order could not be found or you are not authorized.</p>
+      </div>
+    );
+  }
+
   if (!order.trackingNumber) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-stone-50 font-inter">
