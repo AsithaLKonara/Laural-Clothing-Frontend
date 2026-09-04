@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Printer, Loader2 } from 'lucide-react';
 import { orderService } from '@/services/order.service';
 import ShippingLabelTemplate from './ShippingLabelTemplate';
@@ -15,6 +16,11 @@ export default function ShippingLabelModal({ orderIds, isOpen, onClose }: Shippi
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (isOpen && orderIds.length > 0) {
@@ -40,6 +46,14 @@ export default function ShippingLabelModal({ orderIds, isOpen, onClose }: Shippi
   }, [isOpen, orderIds]);
 
   if (!isOpen) return null;
+
+  const printContent = (
+    <div className="hidden print:block print-portal bg-white w-full">
+      {orders.map((order) => (
+        <ShippingLabelTemplate key={`print-${order.id}`} order={order} />
+      ))}
+    </div>
+  );
 
   return (
     <>
@@ -105,12 +119,8 @@ export default function ShippingLabelModal({ orderIds, isOpen, onClose }: Shippi
         </div>
       </div>
 
-      {/* Actual Print View (Hidden in normal UI, takes over entire screen during print) */}
-      <div className="hidden print:block print-label-container bg-white z-[999999]">
-        {orders.map((order) => (
-          <ShippingLabelTemplate key={`print-${order.id}`} order={order} />
-        ))}
-      </div>
+      {/* Actual Print View mounted directly to body to bypass any overflow:hidden wrappers */}
+      {mounted && createPortal(printContent, document.body)}
     </>
   );
 }

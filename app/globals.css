@@ -114,17 +114,16 @@
     display: none !important;
   }
 
-  /* Shipping Label Print Wrapper */
-  .print-label-container {
+  /* Shipping Label Print Wrapper (Portaled to body) */
+  .print-portal {
     visibility: visible !important;
-    position: absolute;
-    left: 0;
-    top: 0;
+    position: static !important;
+    display: block !important;
     width: 100% !important;
     background: #fff !important;
   }
 
-  .print-label-container * {
+  .print-portal * {
     visibility: visible !important;
   }
 }
