@@ -55,8 +55,9 @@ export const orderService = {
     return data;
   },
   
-  dispatchOrder: async (orderId: string) => {
-    const { data } = await api.patch(`/orders/${orderId}/status`, { status: 'DISPATCHED' });
+  dispatchOrder: async (orderId: string, weightKg?: number) => {
+    const payload = weightKg ? { status: 'DISPATCHED', weightKg } : { status: 'DISPATCHED' };
+    const { data } = await api.patch(`/orders/${orderId}/status`, payload);
     return data;
   },
 

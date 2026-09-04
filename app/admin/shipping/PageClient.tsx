@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useOrders, useDispatchOrder } from '@/hooks/useOrders';
 import { Button } from '@/components/ui/Button';
 import ShippingLabelModal from './components/ShippingLabelModal';
+import { X } from 'lucide-react';
 
 export default function ShippingDashboard() {
   const { data: ordersData, isLoading } = useOrders();
@@ -16,8 +17,23 @@ export default function ShippingDashboard() {
   const [previewOrderIds, setPreviewOrderIds] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleCreateShipment = (orderId: string) => {
-    dispatchOrder.mutate(orderId);
+  // Dispatch Weight Modal State
+  const [dispatchModalOpen, setDispatchModalOpen] = useState(false);
+  const [dispatchOrderId, setDispatchOrderId] = useState<string | null>(null);
+  const [dispatchWeight, setDispatchWeight] = useState<number>(1.0);
+
+  const openDispatchModal = (orderId: string) => {
+    setDispatchOrderId(orderId);
+    setDispatchWeight(1.0); // Reset to default base rate weight
+    setDispatchModalOpen(true);
+  };
+
+  const handleConfirmDispatch = () => {
+    if (dispatchOrderId) {
+      dispatchOrder.mutate({ orderId: dispatchOrderId, weightKg: dispatchWeight });
+      setDispatchModalOpen(false);
+      setDispatchOrderId(null);
+    }
   };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -117,7 +133,7 @@ export default function ShippingDashboard() {
                     </td>
                     <td className="p-4 text-right space-x-2">
                       {!isDispatched ? (
-                        <Button size="sm" onClick={() => handleCreateShipment(order.id)} isLoading={dispatchOrder.isPending}>
+                        <Button size="sm" onClick={() => openDispatchModal(order.id)} isLoading={dispatchOrder.isPending && dispatchOrderId === order.id}>
                           Dispatch & Create Label
                         </Button>
                       ) : (
@@ -149,6 +165,46 @@ export default function ShippingDashboard() {
           </table>
         )}
       </div>
+
+      {/* Dispatch Weight Modal */}
+      {dispatchModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-white rounded-xl shadow-xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200">
+              <h3 className="font-bold text-lg text-stone-900">Enter Actual Package Weight</h3>
+              <button onClick={() => setDispatchModalOpen(false)} className="text-stone-400 hover:text-stone-600">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-stone-500 mb-4">
+                Please enter the exact packed weight of this order (including the box). Fardar will use this to calculate your courier fee.
+              </p>
+              
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-stone-700 mb-2">Weight (KG)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0.1"
+                  value={dispatchWeight}
+                  onChange={(e) => setDispatchWeight(parseFloat(e.target.value))}
+                  className="w-full px-4 py-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <Button variant="outline" onClick={() => setDispatchModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleConfirmDispatch} isLoading={dispatchOrder.isPending}>
+                  Confirm Dispatch
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       <ShippingLabelModal 
         orderIds={previewOrderIds}

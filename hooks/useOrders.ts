@@ -40,7 +40,8 @@ export function useUpdateOrderStatus() {
 export const useDispatchOrder = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (orderId: string) => orderService.dispatchOrder(orderId),
+    mutationFn: ({ orderId, weightKg }: { orderId: string, weightKg?: number }) => 
+      orderService.dispatchOrder(orderId, weightKg),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
     },
