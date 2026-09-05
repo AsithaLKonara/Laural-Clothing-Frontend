@@ -9,6 +9,7 @@ import { useBranches } from "@/hooks/useInventory";
 import { useProducts } from "@/hooks/useProducts";
 import Image from "next/image";
 import { useDebounce } from "@/hooks/useDebounce";
+import { fardarDistrictCityMap, allFardarCities } from "@/lib/fardarCities";
 
 interface CartItem {
   variantId: string;
@@ -31,9 +32,13 @@ export default function QuickDispatchPage() {
     email: "",
     addressLine1: "",
     addressLine2: "",
+    addressLine3: "",
     city: "",
+    district: "",
     postalCode: "",
   });
+
+  const [discount, setDiscount] = useState<number>(0);
   
   const [branchId, setBranchId] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("COD");
@@ -60,6 +65,8 @@ export default function QuickDispatchPage() {
         email: existing.email || "",
         addressLine1: address.addressLine1 || "",
         addressLine2: address.addressLine2 || "",
+        addressLine3: address.addressLine3 || "",
+        district: address.district || "",
         city: address.city || "",
         postalCode: address.postalCode || "",
       });
@@ -99,7 +106,7 @@ export default function QuickDispatchPage() {
   };
 
   const subtotal = useMemo(() => cart.reduce((acc, item) => acc + (item.price * item.quantity), 0), [cart]);
-  const total = subtotal + shippingFee;
+  const total = subtotal + shippingFee - discount;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,6 +132,7 @@ export default function QuickDispatchPage() {
         branchId,
         items: cart.map(item => ({ variantId: item.variantId, quantity: item.quantity, price: item.price })),
         paymentMethod,
+        discount,
         subtotal,
         shippingFee,
         tax: 0,
@@ -202,9 +210,40 @@ export default function QuickDispatchPage() {
                 <input value={customer.addressLine2} onChange={e => setCustomer({...customer, addressLine2: e.target.value})} className="border border-stone-200 rounded-xl px-4 py-2.5 text-sm font-inter outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 transition-all"/>
               </div>
 
+              <div className="sm:col-span-2 flex flex-col gap-1.5">
+                <label className="font-inter text-xs font-semibold text-stone-500 uppercase">Address Line 3</label>
+                <input value={customer.addressLine3} onChange={e => setCustomer({...customer, addressLine3: e.target.value})} className="border border-stone-200 rounded-xl px-4 py-2.5 text-sm font-inter outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 transition-all"/>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="font-inter text-xs font-semibold text-stone-500 uppercase">District *</label>
+                <select 
+                  value={customer.district} 
+                  onChange={e => {
+                    const dist = e.target.value;
+                    setCustomer({...customer, district: dist, city: ""});
+                  }} 
+                  className="border border-stone-200 rounded-xl px-4 py-2.5 text-sm font-inter outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 transition-all bg-white"
+                >
+                  <option value="">Select District</option>
+                  {Object.keys(fardarDistrictCityMap).map(d => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="flex flex-col gap-1.5">
                 <label className="font-inter text-xs font-semibold text-stone-500 uppercase">City *</label>
-                <input value={customer.city} onChange={e => setCustomer({...customer, city: e.target.value})} className="border border-stone-200 rounded-xl px-4 py-2.5 text-sm font-inter outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 transition-all"/>
+                <select 
+                  value={customer.city} 
+                  onChange={e => setCustomer({...customer, city: e.target.value})} 
+                  className="border border-stone-200 rounded-xl px-4 py-2.5 text-sm font-inter outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 transition-all bg-white"
+                >
+                  <option value="">Select City</option>
+                  {(customer.district && fardarDistrictCityMap[customer.district] ? fardarDistrictCityMap[customer.district] : allFardarCities).map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="font-inter text-xs font-semibold text-stone-500 uppercase">Postal Code</label>
@@ -341,6 +380,15 @@ export default function QuickDispatchPage() {
                   value={shippingFee}
                   onChange={e => setShippingFee(Number(e.target.value) || 0)}
                   className="w-24 text-right bg-white border border-stone-200 rounded px-2 py-1 font-mono text-sm outline-none focus:border-stone-500"
+                />
+              </div>
+              <div className="flex justify-between items-center font-inter text-sm text-stone-600">
+                <span>Manual Discount</span>
+                <input 
+                  type="number" 
+                  value={discount}
+                  onChange={e => setDiscount(Number(e.target.value) || 0)}
+                  className="w-24 text-right bg-white border border-stone-200 rounded px-2 py-1 font-mono text-sm outline-none focus:border-stone-500 text-emerald-600"
                 />
               </div>
               <div className="h-px w-full bg-stone-200 my-1"></div>
