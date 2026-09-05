@@ -8,7 +8,9 @@ export interface CustomerData {
   lastName: string;
   addressLine1: string;
   addressLine2?: string;
+  addressLine3?: string;
   city: string;
+  district?: string;
   postalCode?: string;
   isGuest?: boolean;
 }
@@ -24,6 +26,7 @@ export interface QuickDispatchPayload {
   paymentMethod: string;
   subtotal: number;
   shippingFee: number;
+  discount?: number;
   tax: number;
   total: number;
 }
