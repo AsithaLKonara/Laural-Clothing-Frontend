@@ -12,12 +12,14 @@ import FardarDispatchModal from "@/components/admin/FardarDispatchModal";
 import { Printer, Truck, Plus } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
 import Link from "next/link";
+import OrderSidePanel from "@/components/admin/OrderSidePanel";
 
 export default function OrdersPage() {
   const router = useRouter();
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [showLabelModal, setShowLabelModal] = useState(false);
   const [showFardarModal, setShowFardarModal] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -128,7 +130,7 @@ export default function OrdersPage() {
         data={orders}
         columns={columns}
         keyExtractor={(row) => row.id}
-        onRowClick={(row) => router.push(`/admin/orders/${row.id}`)}
+        onRowClick={(row) => setSelectedOrderId(row.id)}
         pagination={{ 
           currentPage: meta.page, 
           totalPages: meta.totalPages || 1,
@@ -181,6 +183,12 @@ export default function OrdersPage() {
           }}
         />
       )}
+
+      <OrderSidePanel 
+        orderId={selectedOrderId} 
+        isOpen={!!selectedOrderId} 
+        onClose={() => setSelectedOrderId(null)} 
+      />
     </div>
   );
 }
