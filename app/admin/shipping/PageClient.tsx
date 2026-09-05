@@ -50,9 +50,20 @@ export default function ShippingDashboard() {
 
   const handleConfirmDispatch = () => {
     if (dispatchOrderId) {
-      dispatchOrder.mutate({ orderId: dispatchOrderId, weightKg: dispatchWeight });
-      setDispatchModalOpen(false);
-      setDispatchOrderId(null);
+      dispatchOrder.mutate(
+        { orderId: dispatchOrderId, weightKg: dispatchWeight },
+        {
+          onSuccess: () => {
+            setDispatchModalOpen(false);
+            setDispatchOrderId(null);
+          },
+          onError: (error: any) => {
+            alert(error.response?.data?.error || error.message || "Failed to dispatch order.");
+            setDispatchModalOpen(false);
+            setDispatchOrderId(null);
+          }
+        }
+      );
     }
   };
 

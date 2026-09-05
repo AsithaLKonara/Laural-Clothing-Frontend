@@ -120,7 +120,7 @@ export default function Navbar() {
 
         {/* Right Actions */}
         <div className="flex justify-end flex-1 items-center">
-          <div className="hidden lg:flex items-center gap-[4px] space-x-4 mr-4">
+          <div className="hidden md:flex items-center gap-[4px] space-x-4 mr-4">
             <Link href="/login" className={`font-poppins font-bold text-xs tracking-wide uppercase transition-colors hover:opacity-70 ${textColorClass}`}>
               LOGIN/REGISTER
             </Link>

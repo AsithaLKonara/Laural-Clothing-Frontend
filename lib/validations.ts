@@ -3,8 +3,10 @@ import * as z from "zod";
 // Checkout Form Schema
 export const checkoutSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
-  addressLine1: z.string().min(5, "Address is required"),
-  addressLine2: z.string().optional(),
+  addressLine1: z.string().min(2, "Address Line 1 is required"),
+  addressLine2: z.string().min(2, "Address Line 2 is required"),
+  addressLine3: z.string().min(2, "Address Line 3 is required"),
+  district: z.string().min(2, "District is required"),
   city: z.string().min(2, "City is required"),
   phone: z.string().min(10, "Valid phone number is required"),
   email: z.string().email("Please enter a valid email address"),

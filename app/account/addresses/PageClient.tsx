@@ -14,7 +14,9 @@ const addressSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
   addressLine1: z.string().min(1, "Address is required"),
   addressLine2: z.string().optional(),
+  addressLine3: z.string().optional(),
   city: z.string().min(1, "City is required"),
+  district: z.string().optional(),
   postalCode: z.string().optional(),
   phone: z.string().min(1, "Phone is required"),
   isDefault: z.boolean(),
@@ -51,6 +53,8 @@ export default function AddressesPage() {
       lastName: address.lastName,
       addressLine1: address.addressLine1,
       addressLine2: address.addressLine2 || "",
+      addressLine3: address.addressLine3 || "",
+      district: address.district || "",
       city: address.city,
       postalCode: address.postalCode || "",
       phone: address.phone,
@@ -65,6 +69,8 @@ export default function AddressesPage() {
     const payload = {
       ...data,
       addressLine2: data.addressLine2 || null,
+      addressLine3: data.addressLine3 || null,
+      district: data.district || null,
       postalCode: data.postalCode || null,
     };
 
@@ -135,6 +141,14 @@ export default function AddressesPage() {
             <div className="flex flex-col gap-1.5 md:col-span-2">
               <label className="font-inter font-medium text-xs text-stone-600">Address Line 2 (Optional)</label>
               <input type="text" {...register("addressLine2")} className="w-full h-10 px-3 bg-white border border-stone-300 rounded-md outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm font-inter" />
+            </div>
+            <div className="flex flex-col gap-1.5 md:col-span-2">
+              <label className="font-inter font-medium text-xs text-stone-600">Address Line 3 (Optional)</label>
+              <input type="text" {...register("addressLine3")} className="w-full h-10 px-3 bg-white border border-stone-300 rounded-md outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm font-inter" />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="font-inter font-medium text-xs text-stone-600">District (Optional)</label>
+              <input type="text" {...register("district")} className="w-full h-10 px-3 bg-white border border-stone-300 rounded-md outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 text-sm font-inter" />
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="font-inter font-medium text-xs text-stone-600">City</label>

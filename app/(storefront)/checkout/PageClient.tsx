@@ -23,6 +23,7 @@ import { globalDialog } from "@/store/dialog.store";
 import { generateDeviceFingerprint, isLikelyBot } from "@/lib/fingerprint";
 import { Turnstile } from "@marsidev/react-turnstile";
 import { paymentService } from "@/services/payment.service";
+import { fardarDistrictCityMap, allFardarCities } from "@/lib/fardarCities";
 
 export default function CheckoutPage() {
   const {
@@ -42,6 +43,17 @@ export default function CheckoutPage() {
 
   const billingSameAsShipping = watch("billingSameAsShipping");
   const paymentMethod = watch("paymentMethod");
+  const district = watch("district");
+
+  useEffect(() => {
+    const currentCity = watch("city");
+    if (district && currentCity) {
+      const validCities = fardarDistrictCityMap[district];
+      if (validCities && !validCities.includes(currentCity)) {
+        setValue("city", "");
+      }
+    }
+  }, [district, setValue, watch]);
 
   const [discountCode, setDiscountCode] = useState("");
   const [isLoyaltyModalOpen, setIsLoyaltyModalOpen] = useState(false);
@@ -101,6 +113,8 @@ export default function CheckoutPage() {
       setValue("fullName", `${addr.firstName} ${addr.lastName}`);
       setValue("addressLine1", addr.addressLine1);
       setValue("addressLine2", addr.addressLine2 || "");
+      setValue("addressLine3", addr.addressLine3 || "");
+      setValue("district", addr.district || "");
       setValue("city", addr.city);
       setValue("phone", addr.phone);
     }
@@ -114,7 +128,9 @@ export default function CheckoutPage() {
         firstName: data.fullName.split(' ')[0],
         lastName: data.fullName.split(' ').slice(1).join(' '),
         addressLine1: data.addressLine1,
-        addressLine2: data.addressLine2 || null,
+        addressLine2: data.addressLine2,
+        addressLine3: data.addressLine3,
+        district: data.district,
         city: data.city,
         postalCode: null,
         phone: data.phone,
@@ -138,6 +154,8 @@ export default function CheckoutPage() {
           lastName: data.fullName.split(' ').slice(1).join(' '),
           addressLine1: data.addressLine1,
           addressLine2: data.addressLine2,
+          addressLine3: data.addressLine3,
+          district: data.district,
           city: data.city,
           phone: data.phone,
         },
@@ -267,24 +285,62 @@ export default function CheckoutPage() {
                   
                   <input 
                     type="text" 
-                    placeholder="Address Line 2 (Optional)"
+                    placeholder="Address Line 2"
                     {...register("addressLine2")}
-                    className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400"
+                    className={`w-full h-[52px] px-[20px] border ${errors.addressLine2 ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400 mb-2`}
                   />
-                </div>
-
-                {/* City */}
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="font-poppins font-medium text-xs uppercase tracking-wider text-stone-500">
-                    City <span className="text-accent">*</span>
-                  </label>
+                  {errors.addressLine2 && <span className="text-red-500 text-xs mt-0 mb-2 pl-4">{errors.addressLine2.message}</span>}
+                  
                   <input 
                     type="text" 
-                    placeholder="Enter city"
-                    {...register("city")}
-                    className={`w-full h-[52px] px-[20px] border ${errors.city ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400`}
+                    placeholder="Address Line 3"
+                    {...register("addressLine3")}
+                    className={`w-full h-[52px] px-[20px] border ${errors.addressLine3 ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400`}
                   />
-                  {errors.city && <span className="text-red-500 text-xs mt-1 pl-4">{errors.city.message}</span>}
+                  {errors.addressLine3 && <span className="text-red-500 text-xs mt-0 pl-4">{errors.addressLine3.message}</span>}
+                </div>
+
+                {/* District and City */}
+                <div className="flex flex-col md:flex-row gap-5 w-full">
+                  {/* District */}
+                  <div className="flex flex-col gap-2 w-full flex-1">
+                    <label className="font-poppins font-medium text-xs uppercase tracking-wider text-stone-500">
+                      District <span className="text-accent">*</span>
+                    </label>
+                    <div className="relative">
+                      <select 
+                        {...register("district")}
+                        className={`w-full h-[52px] px-[20px] appearance-none border ${errors.district ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all`}
+                      >
+                        <option value="">Select district</option>
+                        {["Ampara","Anuradhapura","Badulla","Batticaloa","Colombo","Galle","Gampaha","Hambantota","Jaffna","Kalutara","Kandy","Kegalle","Kilinochchi","Kurunegala","Mannar","Matale","Matara","Monaragala","Mullaitivu","Nuwara Eliya","Polonnaruwa","Puttalam","Ratnapura","Trincomalee","Vavuniya"].map(d => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" size={18} />
+                    </div>
+                    {errors.district && <span className="text-red-500 text-xs mt-1 pl-4">{errors.district.message}</span>}
+                  </div>
+
+                  {/* City */}
+                  <div className="flex flex-col gap-2 w-full flex-1">
+                    <label className="font-poppins font-medium text-xs uppercase tracking-wider text-stone-500">
+                      City <span className="text-accent">*</span>
+                    </label>
+                    <div className="relative">
+                      <select 
+                        {...register("city")}
+                        className={`w-full h-[52px] px-[20px] appearance-none border ${errors.city ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all`}
+                      >
+                        <option value="">Select city</option>
+                        {(district && fardarDistrictCityMap[district] ? fardarDistrictCityMap[district] : allFardarCities).map(c => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" size={18} />
+                    </div>
+                    {errors.city && <span className="text-red-500 text-xs mt-1 pl-4">{errors.city.message}</span>}
+                  </div>
                 </div>
 
                 {/* Phone & Email (Row on Desktop) */}

@@ -21,7 +21,9 @@ export interface InitiateCheckoutPayload {
     firstName: string;
     lastName: string;
     addressLine1: string;
-    addressLine2?: string;
+    addressLine2: string;
+    addressLine3: string;
+    district: string;
     city: string;
     postalCode?: string;
     phone: string;
