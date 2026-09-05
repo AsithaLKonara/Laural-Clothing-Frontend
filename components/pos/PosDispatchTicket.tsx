@@ -5,6 +5,7 @@ import { X, Phone, MapPin, Truck, CheckCircle2, Trash2, Link as LinkIcon, User, 
 import { useCreateShipment } from "@/hooks/useShipping";
 import { useProcessPosOrder, useCurrentSession } from "@/hooks/usePos";
 import { globalDialog } from "@/store/dialog.store";
+import { fardarDistrictCityMap, allFardarCities } from "@/lib/fardarCities";
 
 interface PosDispatchTicketProps {
   isMobileCartOpen: boolean;
@@ -17,7 +18,11 @@ interface PosDispatchTicketProps {
 export default function PosDispatchTicket({ isMobileCartOpen, setIsMobileCartOpen, cart, updateQty, clearCart }: PosDispatchTicketProps) {
   const [phone, setPhone] = useState("");
   const [customerName, setCustomerName] = useState("");
-  const [address, setAddress] = useState("");
+  const [addressLine1, setAddressLine1] = useState("");
+  const [addressLine2, setAddressLine2] = useState("");
+  const [addressLine3, setAddressLine3] = useState("");
+  const [district, setDistrict] = useState("");
+  const [city, setCity] = useState("");
   const [customerFound, setCustomerFound] = useState(false);
   
   const [paymentMethod, setPaymentMethod] = useState<"COD" | "Transfer" | "Link">("COD");
@@ -34,7 +39,11 @@ export default function PosDispatchTicket({ isMobileCartOpen, setIsMobileCartOpe
     if (val === "0771234567") {
       setCustomerFound(true);
       setCustomerName("Kasun Perera");
-      setAddress("123 Sample St, Colombo 03, Sri Lanka");
+      setAddressLine1("123 Sample St");
+      setAddressLine2("Apartment 4B");
+      setAddressLine3("");
+      setDistrict("Colombo");
+      setCity("Colombo 03");
     } else {
       setCustomerFound(false);
     }
@@ -71,8 +80,11 @@ export default function PosDispatchTicket({ isMobileCartOpen, setIsMobileCartOpe
           orderReference: orderRes.orderNumber || "POS-DISPATCH-" + Math.floor(Math.random() * 100000),
           customerName: customerName || "Guest",
           customerPhone: phone,
-          customerAddress: address || "No address provided",
-          city: "Colombo", // Normally would be parsed from address or explicit dropdown
+          customerAddress1: addressLine1 || "No address provided",
+          customerAddress2: addressLine2 || "",
+          customerAddress3: addressLine3 || "",
+          district: district || "",
+          city: city || "",
           amountToCollect: paymentMethod === "COD" ? total : 0,
           pieces: cart.length
         });
@@ -110,7 +122,7 @@ export default function PosDispatchTicket({ isMobileCartOpen, setIsMobileCartOpe
             </button>
           )}
           <button 
-            onClick={() => { setSuccess(false); clearCart(); setPhone(""); setCustomerName(""); setAddress(""); setCustomerFound(false); setIsMobileCartOpen(false); setLabelUrl(null); setTrackingNum(null); }}
+            onClick={() => { setSuccess(false); clearCart(); setPhone(""); setCustomerName(""); setAddressLine1(""); setAddressLine2(""); setAddressLine3(""); setDistrict(""); setCity(""); setCustomerFound(false); setIsMobileCartOpen(false); setLabelUrl(null); setTrackingNum(null); }}
             className="w-full py-4 bg-primary text-white rounded-xl font-inter font-bold hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20"
           >
             New Phone Order
@@ -160,13 +172,54 @@ export default function PosDispatchTicket({ isMobileCartOpen, setIsMobileCartOpe
             </div>
             <div className="relative">
               <MapPin size={16} className="absolute left-3 top-3 text-muted" />
-              <textarea 
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="Shipping Address"
-                rows={2}
-                className="w-full bg-background border border-border rounded-lg pl-9 pr-3 py-2 text-sm font-inter text-foreground focus:outline-none focus:border-accent resize-none"
+              <input 
+                type="text"
+                value={addressLine1}
+                onChange={(e) => setAddressLine1(e.target.value)}
+                placeholder="Address Line 1"
+                className="w-full bg-background border border-border rounded-lg pl-9 pr-3 py-2 text-sm font-inter text-foreground focus:outline-none focus:border-accent"
               />
+            </div>
+            <div className="flex gap-2">
+              <input 
+                type="text"
+                value={addressLine2}
+                onChange={(e) => setAddressLine2(e.target.value)}
+                placeholder="Address Line 2"
+                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm font-inter text-foreground focus:outline-none focus:border-accent flex-1"
+              />
+              <input 
+                type="text"
+                value={addressLine3}
+                onChange={(e) => setAddressLine3(e.target.value)}
+                placeholder="Address Line 3"
+                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm font-inter text-foreground focus:outline-none focus:border-accent flex-1"
+              />
+            </div>
+            <div className="flex gap-2">
+              <select 
+                value={district} 
+                onChange={e => {
+                  setDistrict(e.target.value);
+                  setCity("");
+                }}
+                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm font-inter text-foreground focus:outline-none focus:border-accent flex-1"
+              >
+                <option value="">District</option>
+                {Object.keys(fardarDistrictCityMap).map(d => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+              <select 
+                value={city} 
+                onChange={e => setCity(e.target.value)}
+                className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm font-inter text-foreground focus:outline-none focus:border-accent flex-1"
+              >
+                <option value="">City</option>
+                {(district && fardarDistrictCityMap[district] ? fardarDistrictCityMap[district] : allFardarCities).map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
             </div>
           </div>
         )}
