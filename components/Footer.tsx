@@ -42,7 +42,7 @@ export default function Footer() {
           {/* Brand Col */}
           <div className="flex flex-col items-start gap-[20px] w-[320px]">
             {/* Logo */}
-            <div className="relative w-[180px] h-[40px]">
+            <div className="relative w-[280px] h-[60px] mb-4">
                <Image src="/logo-white.png" alt="SERAMAADUWEN.LK" fill sizes="200px" className="object-contain object-left" />
             </div>
             
