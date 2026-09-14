@@ -37,10 +37,10 @@ export default function Footer() {
         </div>
 
         {/* Content Row */}
-        <div className="relative z-10 flex flex-col md:flex-row flex-wrap items-start justify-between w-full px-4 md:px-8 lg:px-[120px] gap-10 md:gap-[64px]">
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 w-full px-4 md:px-8 lg:px-[120px]">
           
           {/* Brand Col */}
-          <div className="flex flex-col items-start gap-[20px] w-[320px]">
+          <div className="flex flex-col items-start gap-[20px] lg:col-span-3">
             {/* Logo */}
             <div className="relative w-[280px] h-[60px] mb-4">
                <Image src="/logo-white.png" alt="SERAMAADUWEN.LK" fill sizes="200px" className="object-contain object-left" />
@@ -64,7 +64,7 @@ export default function Footer() {
           </div>
 
           {/* Links Cols */}
-          <div className="flex flex-col sm:flex-row gap-8 lg:gap-[48px] flex-1 justify-between md:justify-end">
+          <div className="flex flex-col sm:flex-row gap-8 lg:gap-8 lg:col-span-6 justify-between lg:justify-center w-full">
             {/* Shop Col */}
             <div className="flex flex-col gap-[16px] min-w-[120px]">
               <h4 className="font-inter font-bold text-sm tracking-[0.02em] uppercase text-background">Shop</h4>
@@ -101,7 +101,7 @@ export default function Footer() {
           </div>
 
           {/* Newsletter Col */}
-          <div className="flex flex-col gap-[16px] w-full md:w-[360px]">
+          <div className="flex flex-col gap-[16px] lg:col-span-3 w-full">
             <h4 className="font-inter font-bold text-sm tracking-[0.02em] uppercase text-background">Newsletter</h4>
             <p className="font-inter text-sm leading-[21px] text-background/90">
               Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.
