@@ -37,7 +37,7 @@ export default function Footer() {
         </div>
 
         {/* Content Row */}
-        <div className="relative z-10 flex flex-col md:flex-row flex-wrap items-start justify-between w-full max-w-[1280px] px-4 md:px-8 lg:px-[120px] gap-10 md:gap-[64px]">
+        <div className="relative z-10 flex flex-col md:flex-row flex-wrap items-start justify-between w-full px-4 md:px-8 lg:px-[120px] gap-10 md:gap-[64px]">
           
           {/* Brand Col */}
           <div className="flex flex-col items-start gap-[20px] w-[320px]">
@@ -123,7 +123,7 @@ export default function Footer() {
         </div>
 
         {/* Legal & Social Pre-Bottom */}
-        <div className="relative z-10 flex flex-col items-center w-full max-w-[1280px] px-4 md:px-8 lg:px-[120px] mt-8 md:mt-[48px]">
+        <div className="relative z-10 flex flex-col items-center w-full px-4 md:px-8 lg:px-[120px] mt-8 md:mt-[48px]">
           <div className="w-full h-[1px] bg-background/20" />
           <div className="flex flex-col md:flex-row justify-between items-center w-full py-[20px] gap-6 md:gap-0">
             <div className="flex flex-wrap justify-center md:justify-start items-center gap-[16px]">
