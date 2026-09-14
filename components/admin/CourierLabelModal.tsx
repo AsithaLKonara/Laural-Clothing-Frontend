@@ -76,7 +76,7 @@ export default function CourierLabelModal({ orders, onClose }: CourierLabelModal
         {orders.map((order) => (
           <div key={order.id} className="flex flex-col w-[4in] h-[6in] p-[0.25in] border-2 border-black break-after-page bg-white text-black relative">
             <div className="border-b-4 border-black pb-4 mb-4 flex justify-between items-start">
-              <h1 className="font-sans font-black text-4xl">LAURAL</h1>
+              <h1 className="font-sans font-black text-4xl">SERAMAADUWEN.LK</h1>
               <div className="text-right">
                 <p className="font-mono font-bold text-xl">{order.id}</p>
                 <p className="font-sans text-sm font-bold uppercase mt-1">Standard Delivery</p>

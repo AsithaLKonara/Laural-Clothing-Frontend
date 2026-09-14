@@ -968,7 +968,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
                 <div className="bg-white border border-stone-200 rounded-xl p-5 flex flex-col gap-1.5">
                   <p className="text-[10px] text-stone-400 font-inter uppercase tracking-wider">Google Preview</p>
                   <a href="#" className="font-medium text-blue-700 text-base hover:underline truncate">
-                    {metaTitle || productName || "Product Name"} — Laural Clothing
+                    {metaTitle || productName || "Product Name"} — SERAMAADUWEN.LK
                   </a>
                   <p className="text-sm text-stone-600 font-inter line-clamp-2">
                     {metaDesc || "Product description will appear here in search results. Write a compelling summary to improve click-through rates."}

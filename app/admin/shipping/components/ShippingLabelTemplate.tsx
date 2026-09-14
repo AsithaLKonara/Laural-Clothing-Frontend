@@ -27,7 +27,7 @@ export default function ShippingLabelTemplate({ order, index, total }: { order: 
         {/* Sender (From) Section */}
         <div className="text-xs">
           <h2 className="font-bold border-b border-gray-300 mb-1 uppercase text-[10px] text-gray-600">From:</h2>
-          <p className="font-bold">Laural Clothing Ltd.</p>
+          <p className="font-bold">SERAMAADUWEN.LK Ltd.</p>
           <p>123 Fashion Avenue</p>
           <p>Colombo 07</p>
           <p>Tel: +94 11 234 5678</p>

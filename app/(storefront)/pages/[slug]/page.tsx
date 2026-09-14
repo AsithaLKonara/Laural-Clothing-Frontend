@@ -31,12 +31,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const page = await getPageData(slug);
   
   if (!page) {
-    return { title: "Page Not Found - Laural Clothing" };
+    return { title: "Page Not Found - SERAMAADUWEN.LK" };
   }
 
   return {
-    title: page.metaTitle || `${page.title} - Laural Clothing`,
-    description: page.metaDescription || `Read about ${page.title} at Laural Clothing.`,
+    title: page.metaTitle || `${page.title} - SERAMAADUWEN.LK`,
+    description: page.metaDescription || `Read about ${page.title} at SERAMAADUWEN.LK.`,
     keywords: page.metaKeywords || "",
     openGraph: {
       images: page.ogImage ? [page.ogImage] : [],

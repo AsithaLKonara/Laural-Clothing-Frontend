@@ -66,7 +66,7 @@ export default function Navbar() {
 
   const logoImage = isAuth
     ? "/logo-white.png"
-    : "/logo.webp";
+    : "/logo.png";
 
   return (
     <nav className={`w-full z-[50] transition-colors duration-300 ${navBgClass}`}>
@@ -105,10 +105,10 @@ export default function Navbar() {
         {/* Center Logo */}
         <div className="flex justify-center flex-1 md:flex-none">
           <Link href="/">
-            <div className="relative w-[140px] md:w-[180px] h-[22px] md:h-[26px]">
+            <div className="relative w-[180px] md:w-[240px] h-[30px] md:h-[36px]">
               <Image 
                 src={logoImage}
-                alt="Laural Clothing"
+                alt="SERAMAADUWEN.LK"
                 fill
                 sizes="200px"
                 className="object-contain"

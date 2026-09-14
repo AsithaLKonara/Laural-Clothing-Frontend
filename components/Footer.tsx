@@ -42,8 +42,8 @@ export default function Footer() {
           {/* Brand Col */}
           <div className="flex flex-col items-start gap-[20px] w-[320px]">
             {/* Logo */}
-            <div className="relative w-[180px] h-[40px]">
-               <Image src="/logo-white.png" alt="Laural Clothing" fill sizes="200px" className="object-contain object-left" />
+            <div className="relative w-[280px] h-[60px]">
+               <Image src="/logo-white.png" alt="SERAMAADUWEN.LK" fill sizes="300px" className="object-contain object-left" />
             </div>
             
             {/* Contact Items */}
@@ -58,7 +58,7 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-[10px]">
                 <Mail className="w-[20px] h-[20px] text-background" />
-                <span className="font-inter text-sm leading-[21px] text-background/90">info.lauralclothing.com</span>
+                <span className="font-inter text-sm leading-[21px] text-background/90">info@seramaaduwen.lk</span>
               </div>
             </div>
           </div>
@@ -132,20 +132,20 @@ export default function Footer() {
               <Link href="/terms-conditions" className="font-inter text-xs text-background/85 hover:text-white transition-colors">Terms & Conditions</Link>
             </div>
             <div className="flex items-center gap-[16px]">
-              <div className="flex justify-center items-center w-[40px] h-[40px] border border-background rounded-full hover:bg-background/10 transition-colors cursor-pointer">
+              <Link href="https://www.instagram.com/serama_aduwen?stkn=MWw4b2VudGo1dDU1aA==" target="_blank" rel="noopener noreferrer" className="flex justify-center items-center w-[40px] h-[40px] border border-background rounded-full hover:bg-background/10 transition-colors cursor-pointer">
                 {/* Facebook SVG */}
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-background">
                   <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
                 </svg>
-              </div>
-              <div className="flex justify-center items-center w-[40px] h-[40px] border border-background rounded-full hover:bg-background/10 transition-colors cursor-pointer">
+              </Link>
+              <Link href="https://www.instagram.com/serama_aduwen?stkn=MWw4b2VudGo1dDU1aA==" target="_blank" rel="noopener noreferrer" className="flex justify-center items-center w-[40px] h-[40px] border border-background rounded-full hover:bg-background/10 transition-colors cursor-pointer">
                 {/* Instagram SVG */}
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-background">
                   <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
                   <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
                   <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
                 </svg>
-              </div>
+              </Link>
             </div>
           </div>
         </div>
@@ -154,7 +154,7 @@ export default function Footer() {
       {/* True Bottom Bar */}
       <div className="flex flex-col md:flex-row justify-between items-center w-full py-4 md:py-0 min-h-[40px] px-4 md:px-8 lg:px-[120px] bg-background gap-4 md:gap-0">
         <p className="font-inter text-xs text-stone-500 text-center md:text-left">
-          © 2026 Laural Clothing. All Rights Reserved. Developed by ScriptLK Digital
+          © 2026 SERAMAADUWEN.LK. All Rights Reserved.
         </p>
         <div className="relative w-[309px] h-[24px]">
           <Image src="/footer/payments.webp" alt="Payment Methods" fill sizes="400px" className="object-contain md:object-right" />

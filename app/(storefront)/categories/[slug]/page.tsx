@@ -25,13 +25,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     
   return {
     title: mockTitle,
-    description: `Shop our ${mockTitle} category at Laural Clothing. Premium quality and sophisticated design for the modern wardrobe.`,
+    description: `Shop our ${mockTitle} category at SERAMAADUWEN.LK. Premium quality and sophisticated design for the modern wardrobe.`,
     alternates: {
       canonical: `/categories/${slug}`,
     },
     openGraph: {
-      title: `${mockTitle} | Laural Clothing`,
-      description: `Shop our ${mockTitle} category at Laural Clothing. Premium quality and sophisticated design.`,
+      title: `${mockTitle} | SERAMAADUWEN.LK`,
+      description: `Shop our ${mockTitle} category at SERAMAADUWEN.LK. Premium quality and sophisticated design.`,
       url: `/categories/${slug}`,
       images: [
         {

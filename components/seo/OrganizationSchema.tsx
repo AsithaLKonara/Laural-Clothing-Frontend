@@ -1,15 +1,15 @@
 export default function OrganizationSchema() {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://laural.lk';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://seramaaduwen.lk';
 
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'Laural Clothing',
+    name: 'SERAMAADUWEN.LK',
     url: baseUrl,
     logo: `${baseUrl}/logo.png`, // Assuming a logo exists at the root
     sameAs: [
-      'https://www.facebook.com/lauralclothing',
-      'https://www.instagram.com/lauralclothing',
+      'https://www.facebook.com/seramaaduwen',
+      'https://www.instagram.com/seramaaduwen',
       // Add other social media URLs
     ],
     contactPoint: {
@@ -24,7 +24,7 @@ export default function OrganizationSchema() {
   const webSiteSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'Laural Clothing',
+    name: 'SERAMAADUWEN.LK',
     url: baseUrl,
     potentialAction: {
       '@type': 'SearchAction',

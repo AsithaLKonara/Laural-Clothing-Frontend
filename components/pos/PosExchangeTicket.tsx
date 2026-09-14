@@ -147,7 +147,7 @@ export default function PosExchangeTicket({ isMobileCartOpen, setIsMobileCartOpe
         {/* Hidden Printable Receipt */}
         <div className="print-receipt print-only bg-white text-black p-4 font-mono text-sm leading-snug mx-auto">
           <div className="text-center flex flex-col items-center gap-1 mb-4">
-            <h2 className="font-bold text-xl tracking-widest">LAURAL</h2>
+            <h2 className="font-bold text-xl tracking-widest">SERAMAADUWEN.LK</h2>
             <span className="text-xs">EXCHANGE VOUCHER</span>
           </div>
           <div className="flex justify-between mb-1">

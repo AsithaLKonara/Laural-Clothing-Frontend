@@ -205,7 +205,7 @@ function LoginForm({ setView, mounted }: { setView: (v: AuthView) => void, mount
 
       <div className="flex flex-row justify-center items-center gap-[8px] w-full mt-4">
         <span className="font-poppins font-light text-sm text-stone-400">
-          New to Laural?
+          New to SERAMAADUWEN.LK?
         </span>
         <button 
           type="button"
@@ -272,7 +272,7 @@ function RegisterForm({ setView, mounted }: { setView: (v: AuthView) => void, mo
     <div className="flex flex-col items-center w-full gap-[32px] animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col items-center gap-[8px]">
         <h2 className="font-inria text-4xl md:text-5xl leading-[1.2] text-center text-stone-50 tracking-wide">
-          Join Laural
+          Join SERAMAADUWEN.LK
         </h2>
         <p className="font-poppins font-light text-sm text-stone-400 text-center">
           Discover pieces edited for quiet luxury.
@@ -282,7 +282,7 @@ function RegisterForm({ setView, mounted }: { setView: (v: AuthView) => void, mo
       {success ? (
         <div className="flex flex-col items-center gap-4 py-8 text-center animate-in fade-in">
           <CheckCircle2 className="w-12 h-12 text-emerald-400" />
-          <h3 className="font-inria text-2xl text-stone-50">Welcome to Laural</h3>
+          <h3 className="font-inria text-2xl text-stone-50">Welcome to SERAMAADUWEN.LK</h3>
           <p className="font-urbanist text-stone-400 text-sm">Your account has been created. Redirecting you...</p>
         </div>
       ) : (

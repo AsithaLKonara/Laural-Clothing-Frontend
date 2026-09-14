@@ -55,7 +55,7 @@ const Receipt = forwardRef<HTMLDivElement, ReceiptProps>((props, ref) => {
     <div ref={ref} className="print-receipt" style={containerStyle}>
       {/* Store Header */}
       <div style={{ textAlign: "center", marginBottom: "4px" }}>
-        <div style={{ fontWeight: "bold", fontSize: "16px", letterSpacing: "3px" }}>LAURAL</div>
+        <div style={{ fontWeight: "bold", fontSize: "16px", letterSpacing: "3px" }}>SERAMAADUWEN.LK</div>
         <div style={{ fontSize: "10px" }}>Point of Sale Receipt</div>
         <div style={{ fontSize: "10px", marginTop: "2px" }}>Tel: +94 77 123 4567</div>
       </div>
@@ -132,7 +132,7 @@ const Receipt = forwardRef<HTMLDivElement, ReceiptProps>((props, ref) => {
         <div style={{ marginTop: "6px", fontFamily: "monospace", fontSize: "9px", letterSpacing: "2px", wordBreak: "break-all" }}>
           {orderId}
         </div>
-        <div style={{ fontSize: "8px", color: "#888", marginTop: "6px" }}>Powered by Laural POS</div>
+        <div style={{ fontSize: "8px", color: "#888", marginTop: "6px" }}>Powered by SERAMAADUWEN.LK POS</div>
       </div>
     </div>
   );

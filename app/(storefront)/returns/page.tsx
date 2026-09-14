@@ -1,8 +1,8 @@
 import ClientContent from "./ClientContent";
 
 export const metadata = {
-  title: "Returns - Laural Clothing",
-  description: "Returns page for Laural Clothing."
+  title: "Returns - SERAMAADUWEN.LK",
+  description: "Returns page for SERAMAADUWEN.LK."
 };
 
 export default function Page() {

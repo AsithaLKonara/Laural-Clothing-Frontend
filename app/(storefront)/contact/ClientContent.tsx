@@ -122,8 +122,8 @@ export default function ClientContent() {
             {/* Logo */}
             <div className="w-[180px] h-[34px] relative">
               <Image 
-                src="/logo.webp" 
-                alt="Laural Clothing" 
+                src="/logo.png" 
+                alt="SERAMAADUWEN.LK" 
                 fill 
                 sizes="200px"
                 className="object-contain object-left" 
@@ -164,7 +164,7 @@ export default function ClientContent() {
                   <Mail size={16} strokeWidth={1.5} className="text-primary group-hover:text-white transition-colors" />
                 </div>
                 <span className="font-poppins font-light text-sm text-primary">
-                  info@lauralclothing.com
+                  info@seramaaduwen.lk
                 </span>
               </div>
 

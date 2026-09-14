@@ -2,8 +2,8 @@ import DashboardLayoutClient from "@/components/dashboard/DashboardLayoutClient"
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Laural Admin Dashboard",
-  description: "Admin dashboard for Laural Clothing",
+  title: "Seramaaduwen Admin Dashboard",
+  description: "Admin dashboard for SERAMAADUWEN.LK",
 };
 
 export default async function AdminLayout({

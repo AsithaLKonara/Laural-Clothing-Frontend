@@ -76,7 +76,7 @@ export default function PushNotificationModal({ isOpen, onClose }: PushNotificat
       const fs = activeFlashSales.find((s: any) => s.id === fsId);
       if (fs) {
         if (!title) setTitle(`Flash Sale: ${fs.name}!`);
-        if (!link) setLink(`https://laural.lk/sale`);
+        if (!link) setLink(`https://seramaaduwen.lk/sale`);
       }
     }
   }
@@ -151,7 +151,7 @@ export default function PushNotificationModal({ isOpen, onClose }: PushNotificat
                 type="text"
                 value={link}
                 onChange={e => setLink(e.target.value)}
-                placeholder="https://laural.lk/sale"
+                placeholder="https://seramaaduwen.lk/sale"
                 className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 transition-all font-inter"
               />
             </div>
@@ -245,7 +245,7 @@ export default function PushNotificationModal({ isOpen, onClose }: PushNotificat
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-start">
-                    <span className="font-inter text-xs font-bold text-stone-900">Laural Clothing</span>
+                    <span className="font-inter text-xs font-bold text-stone-900">SERAMAADUWEN.LK</span>
                     <span className="font-inter text-[10px] text-stone-500">now</span>
                   </div>
                   <p className="font-inter text-sm font-semibold text-stone-900 mt-0.5 truncate">{title || "Notification Title"}</p>

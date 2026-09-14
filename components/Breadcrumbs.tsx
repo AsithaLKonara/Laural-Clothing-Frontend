@@ -13,7 +13,7 @@ interface BreadcrumbsProps {
 }
 
 export default function Breadcrumbs({ items }: BreadcrumbsProps) {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://laural.lk';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://seramaaduwen.lk';
   
   const schemaItems = items.map((item) => ({
     name: item.label,
