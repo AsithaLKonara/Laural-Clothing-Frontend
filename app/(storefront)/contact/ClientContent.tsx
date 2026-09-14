@@ -164,7 +164,7 @@ export default function ClientContent() {
                   <Mail size={16} strokeWidth={1.5} className="text-primary group-hover:text-white transition-colors" />
                 </div>
                 <span className="font-poppins font-light text-sm text-primary">
-                  info@seramaaduwen.lk
+                  info@seramaaduwenclothing.com
                 </span>
               </div>
 

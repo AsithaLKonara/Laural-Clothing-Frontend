@@ -94,7 +94,7 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
       {/* Logo Area */}
       <div className="h-[67px] flex items-center justify-between px-6 border-b border-border shrink-0 bg-surface">
         <Link href="/" className="flex items-center gap-2">
-          <span className="font-inter font-bold tracking-widest text-foreground text-sm uppercase">SERAMAADUWEN.LK</span>
+          <span className="font-inter font-bold tracking-widest text-foreground text-sm uppercase">Seramaaduwen</span>
         </Link>
         {setIsOpen && (
           <button className="md:hidden text-muted hover:text-foreground" onClick={() => setIsOpen(false)}>

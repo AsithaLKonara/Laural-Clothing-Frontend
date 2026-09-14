@@ -105,7 +105,7 @@ export default function Navbar() {
         {/* Center Logo */}
         <div className="flex justify-center flex-1 md:flex-none">
           <Link href="/">
-            <div className="relative w-[180px] md:w-[240px] h-[30px] md:h-[36px]">
+            <div className="relative w-[140px] md:w-[180px] h-[22px] md:h-[26px]">
               <Image 
                 src={logoImage}
                 alt="SERAMAADUWEN.LK"

@@ -315,7 +315,7 @@ export default function POSPage() {
             </div>
           </Link>
           <h1 className="font-bold text-lg tracking-widest uppercase flex items-center gap-2">
-            <LayoutGrid size={18} /> SERAMAADUWEN.LK POS
+            <LayoutGrid size={18} /> LAURAL POS
           </h1>
           
           {/* Mode Switcher */}
