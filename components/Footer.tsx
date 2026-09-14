@@ -132,20 +132,20 @@ export default function Footer() {
               <Link href="/terms-conditions" className="font-inter text-xs text-background/85 hover:text-white transition-colors">Terms & Conditions</Link>
             </div>
             <div className="flex items-center gap-[16px]">
-              <div className="flex justify-center items-center w-[40px] h-[40px] border border-background rounded-full hover:bg-background/10 transition-colors cursor-pointer">
+              <Link href="https://www.instagram.com/serama_aduwen?stkn=MWw4b2VudGo1dDU1aA==" target="_blank" rel="noopener noreferrer" className="flex justify-center items-center w-[40px] h-[40px] border border-background rounded-full hover:bg-background/10 transition-colors cursor-pointer">
                 {/* Facebook SVG */}
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-background">
                   <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
                 </svg>
-              </div>
-              <div className="flex justify-center items-center w-[40px] h-[40px] border border-background rounded-full hover:bg-background/10 transition-colors cursor-pointer">
+              </Link>
+              <Link href="https://www.instagram.com/serama_aduwen?stkn=MWw4b2VudGo1dDU1aA==" target="_blank" rel="noopener noreferrer" className="flex justify-center items-center w-[40px] h-[40px] border border-background rounded-full hover:bg-background/10 transition-colors cursor-pointer">
                 {/* Instagram SVG */}
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-background">
                   <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
                   <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
                   <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
                 </svg>
-              </div>
+              </Link>
             </div>
           </div>
         </div>
