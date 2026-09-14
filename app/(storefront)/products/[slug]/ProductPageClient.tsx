@@ -413,18 +413,18 @@ export default function ProductPageClient({
       <div className="flex flex-col items-center w-full max-w-[1280px] mx-auto px-4 md:px-[120px] py-16 md:py-[80px]">
         <h2 className="font-poppins text-2xl md:text-4xl text-primary mb-8">Related Products</h2>
         <div className="w-full max-w-[1040px] overflow-hidden" ref={emblaRef}>
-          <div className="flex gap-[20px]">
-            {relatedProducts.length > 0 ? (
-              relatedProducts.map((rp: Product) => (
-                <div key={rp.id} className="flex-[0_0_245px] min-w-[245px]">
-                  <ProductCard product={rp} />
+          <div className="flex -ml-[20px]">
+            {relatedProducts.length === 0 ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex-[0_0_265px] min-w-[265px] pl-[20px]">
+                  <div className="w-full h-[380px] bg-stone-100 animate-pulse rounded-lg"></div>
                 </div>
               ))
-            ) : (
-              [1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
-                <div key={item} className="flex-[0_0_245px] min-w-[245px] h-[380px] bg-stone-100 animate-pulse rounded-lg"></div>
-              ))
-            )}
+            ) : relatedProducts.slice(0, 8).map((product: Product) => (
+              <div key={product.id} className="flex-[0_0_265px] min-w-[265px] pl-[20px]">
+                <ProductCard product={product} />
+              </div>
+            ))}
           </div>
         </div>
         <Link href="/shop" className="font-poppins text-base text-primary border-b border-primary mt-8 pb-1">
