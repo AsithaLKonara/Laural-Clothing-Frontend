@@ -57,6 +57,32 @@ export default function POSPage() {
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   
+  const [pollingOrder, setPollingOrder] = useState<any>(null);
+
+  useEffect(() => {
+    let interval: any;
+    if (pollingOrder) {
+      interval = setInterval(async () => {
+        try {
+          const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+          const res = await fetch(`${baseUrl}/api/payments/status/${pollingOrder.orderNumber}`);
+          const data = await res.json();
+          if (data.paymentStatus === 'PAID') {
+            clearInterval(interval);
+            setPollingOrder(null);
+            setLastOrderData({ ...pollingOrder, paymentStatus: 'PAID' });
+            clearCart();
+            setSelectedCustomer(null);
+            setIsSuccessModalOpen(true);
+          }
+        } catch (e) {
+           console.error("Polling error", e);
+        }
+      }, 3000);
+    }
+    return () => clearInterval(interval);
+  }, [pollingOrder]);
+  
   // New States for POS Upgrades
   // New States for POS Upgrades
   // Default to OPEN if activeSession exists, else CLOSED
@@ -688,8 +714,9 @@ export default function POSPage() {
               tax: 0
             });
             
-            setLastOrderData({
+            const newOrderData = {
               orderId: orderRes?.orderNumber || `POS-${Date.now()}`,
+              orderNumber: orderRes?.orderNumber,
               cashierName: user?.name || "User",
               items: cart,
               subtotal,
@@ -698,11 +725,16 @@ export default function POSPage() {
               paymentMethod: method,
               tendered: total, // we don't have tendered from PaymentModal yet, assume exact change for now
               change: 0
-            });
+            };
 
-            clearCart();
-            setSelectedCustomer(null);
-            setIsSuccessModalOpen(true);
+            if (method.toLowerCase() === 'koko') {
+               setPollingOrder(newOrderData);
+            } else {
+               setLastOrderData(newOrderData);
+               clearCart();
+               setSelectedCustomer(null);
+               setIsSuccessModalOpen(true);
+            }
           } catch (err: any) {
             console.error(err);
             globalDialog.alert(err?.response?.data?.error || err.message || "Failed to process payment. Please try again.");
@@ -712,6 +744,21 @@ export default function POSPage() {
       />}
       {isCustomerModalOpen && <CustomerSelectionModal onClose={() => setIsCustomerModalOpen(false)} onSelect={(c) => setSelectedCustomer(c)} />}
       {isSuccessModalOpen && <OrderSuccessModal onClose={() => setIsSuccessModalOpen(false)} orderData={lastOrderData} />}
+      
+      {pollingOrder && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-surface p-8 rounded-2xl flex flex-col items-center gap-4 max-w-sm w-full">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <h2 className="text-xl font-bold font-inter text-foreground">Awaiting Koko Payment</h2>
+            <p className="text-muted text-center text-sm font-inter">
+              Please ask the customer to complete the payment via the Koko app. We are waiting for the confirmation.
+            </p>
+            <button onClick={() => setPollingOrder(null)} className="mt-4 w-full px-6 py-3 bg-surface border border-border font-inter font-semibold text-foreground hover:bg-background rounded-lg transition-colors">
+              Run in Background
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );

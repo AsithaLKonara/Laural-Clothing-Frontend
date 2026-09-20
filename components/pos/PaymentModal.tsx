@@ -11,7 +11,7 @@ export default function PaymentModal({ total, onClose, onSuccess }: { total: str
   const paymentMethods = [
     { name: "Cash", icon: <Banknote size={24} /> },
     { name: "Card", icon: <CreditCard size={24} /> },
-    { name: "Koko", icon: <Image src="/payment-methods/payzy.png" alt="Koko" width={24} height={24} className="object-contain" /> }, // Use Payzy image as placeholder for Koko if no Koko image
+    { name: "Koko", icon: <span className="font-bold text-[10px] text-primary tracking-widest">KOKO</span> },
     { name: "Mintpay", icon: <Image src="/payment-methods/mintpay-pill.png" alt="Mintpay" width={40} height={20} className="object-contain" /> },
     { name: "Payzy", icon: <Image src="/payment-methods/payzy.png" alt="Payzy" width={24} height={24} className="object-contain" /> },
     { name: "Bank Transfer", icon: <Landmark size={24} /> },
