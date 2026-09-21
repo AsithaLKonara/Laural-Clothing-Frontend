@@ -93,6 +93,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
   const [images, setImages] = useState<string[]>(["", "", "", ""]);
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
   const [activeImageSlot, setActiveImageSlot] = useState<number | null>(null);
+  const [initialGlobalStock, setInitialGlobalStock] = useState<number>(0);
 
   const createProductMutation = useCreateProduct();
   const updateProductMutation = useUpdateProduct();
@@ -150,6 +151,11 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
       setSizeGuideEnabled(productToEdit.sizeGuideEnabled || false);
       setSizeGuideContent(productToEdit.sizeGuideContent || "S — Chest: 36\", Waist: 30\"\nM — Chest: 38\", Waist: 32\"\nL — Chest: 40\", Waist: 34\"\nXL — Chest: 42\", Waist: 36\"");
       setSizeGuideImageUrl(productToEdit.sizeGuideImageUrl || "");
+      if (productToEdit.allowedPaymentMethods) {
+        setSelectedPaymentMethods(productToEdit.allowedPaymentMethods);
+      } else {
+        setSelectedPaymentMethods([...PAYMENT_GATEWAYS]);
+      }
       
       if (productToEdit.variants && productToEdit.variants.length > 0) {
         const firstVariant = productToEdit.variants[0];
@@ -244,7 +250,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
             color,
             sku: generateSKU(productName || "PROD", size, color),
             barcode: "",
-            stock: Object.fromEntries(branchCodes.map((b: string) => [b, 0])),
+            stock: Object.fromEntries(branchCodes.map((b: string) => [b, initialGlobalStock])),
             price: basePrice || "",
             compareAtPrice: compareAtPrice || "",
           });
@@ -268,6 +274,15 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
 
   function removeVariant(id: string) {
     setVariants(prev => prev.filter(v => v.id !== id));
+  }
+
+  function applyStockToAll() {
+    if (variants.length === 0) return toast.error("Generate variants first");
+    setVariants(prev => prev.map(v => ({
+      ...v,
+      stock: Object.fromEntries(branchCodes.map((b: string) => [b, initialGlobalStock]))
+    })));
+    toast.success(`Applied ${initialGlobalStock} stock to all variants`);
   }
 
   function togglePayment(gw: string) {
@@ -368,6 +383,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
         sizeGuideEnabled,
         sizeGuideContent: sizeGuideEnabled ? sizeGuideContent : undefined,
         sizeGuideImageUrl: sizeGuideEnabled ? sizeGuideImageUrl : undefined,
+        allowedPaymentMethods: selectedPaymentMethods,
         variants: getVariantsPayload()
       };
       
@@ -381,6 +397,15 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
     } catch (error: any) {
       console.error("Failed to save product", error.response?.data || error);
       toast.error(error.response?.data?.error || "Failed to save product. Please try again.");
+    }
+  };
+  const onError = (errors: any) => {
+    console.error("Form Validation Errors:", errors);
+    const errorKeys = Object.keys(errors);
+    if (errorKeys.length > 0) {
+      toast.error(`Please check required fields: ${errorKeys.join(', ')}`);
+    } else {
+      toast.error("Please fill in all required fields.");
     }
   };
 
@@ -428,7 +453,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
         </div>
 
         {/* Body Form */}
-        <form id="add-product-form" onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
+        <form id="add-product-form" onSubmit={handleSubmit(onSubmit, onError)} className="flex flex-col flex-1 overflow-hidden">
           <div className="flex-1 overflow-y-auto p-8">
 
             {/* ────────── BASIC INFO ────────── */}
@@ -772,7 +797,31 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
               <div className="flex flex-col gap-6 max-w-[700px]">
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
                   <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
-                  <p className="text-sm font-inter text-amber-700">Per-variant stock is managed in the <strong>Variants tab</strong>. Use this section to set reorder thresholds and tracking preferences.</p>
+                  <p className="text-sm font-inter text-amber-700">Per-variant stock is managed in the <strong>Variants tab</strong>. You can use this section to set an initial stock amount and apply it globally to all generated variants.</p>
+                </div>
+
+                <div className="flex flex-col gap-4 bg-white border border-stone-200 rounded-xl p-5">
+                  <h3 className="font-inter font-bold text-stone-900">Initial Stock Configuration</h3>
+                  <div className="flex items-end gap-4">
+                    <div className="flex flex-col gap-2 flex-1">
+                      <label className="label">Initial Global Stock</label>
+                      <input 
+                        type="number" 
+                        value={initialGlobalStock} 
+                        onChange={e => setInitialGlobalStock(parseInt(e.target.value) || 0)} 
+                        min={0}
+                        className="input" 
+                      />
+                      <p className="text-xs text-stone-400 font-inter">This amount will be applied to all new variants when generated.</p>
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={applyStockToAll}
+                      className="h-[42px] px-6 bg-stone-900 text-white rounded-lg text-sm font-medium hover:bg-stone-800 transition-colors whitespace-nowrap mb-[22px]"
+                    >
+                      Apply to all existing variants
+                    </button>
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-4 bg-white border border-stone-200 rounded-xl p-5">

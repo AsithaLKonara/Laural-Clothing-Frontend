@@ -32,6 +32,7 @@ export interface Product {
   categoryId: string | null;
   category?: { id: string; name: string; slug: string; };
   status?: string;
+  allowedPaymentMethods?: string[];
   sizeGuideEnabled?: boolean;
   sizeGuideContent?: string | null;
   sizeGuideImageUrl?: string | null;

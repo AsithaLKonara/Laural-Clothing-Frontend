@@ -88,21 +88,45 @@ export default function CheckoutPage() {
   const shippingFee = 400; // Flat fee for now
   const total = subtotal + shippingFee - appliedLoyaltyPoints;
 
+  const filteredPaymentMethods = React.useMemo(() => {
+    if (!availablePaymentMethods.length) return [];
+    if (!cartItems.length) return availablePaymentMethods;
+
+    // A method is only available if EVERY product in the cart allows it.
+    return availablePaymentMethods.filter(method => {
+      return cartItems.every((item: any) => {
+        const allowedMethods = item.variant?.product?.allowedPaymentMethods;
+        if (!allowedMethods) return true; // Fallback only if undefined
+        return allowedMethods.some((m: string) => m.toLowerCase() === method.id.toLowerCase());
+      });
+    });
+  }, [availablePaymentMethods, cartItems]);
+
   const hasFiredPixel = useRef(false);
   useEffect(() => {
     if (!isCartPending && cartItems.length > 0 && !hasFiredPixel.current) {
       if (typeof window !== 'undefined' && window.fbq) {
         window.fbq('track', 'InitiateCheckout', {
-          content_ids: cartItems.map(item => item.variant.product.id),
+          content_ids: cartItems.map((item: any) => item.variant.product.id),
           content_type: 'product',
           num_items: cartItems.length,
           value: total,
           currency: 'LKR'
         });
+        hasFiredPixel.current = true;
       }
-      hasFiredPixel.current = true;
     }
-  }, [isCartPending, cartItems, total]);
+  }, [cartItems, isCartPending, total]);
+
+  useEffect(() => {
+    // Select first available payment method if current is not in list
+    if (filteredPaymentMethods.length > 0) {
+      const isCurrentValid = filteredPaymentMethods.some(m => m.id === paymentMethod);
+      if (!isCurrentValid) {
+        setValue("paymentMethod", filteredPaymentMethods[0].id);
+      }
+    }
+  }, [filteredPaymentMethods, paymentMethod, setValue]);
 
   const handleSelectAddress = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = e.target.value;
@@ -170,7 +194,24 @@ export default function CheckoutPage() {
           const { order, payment } = data;
           
           if (data.paymentMethod !== 'cod' && payment?.redirectUrl) {
-            window.location.href = payment.redirectUrl;
+            if (payment.isFormRedirect && payment.formData) {
+              const form = document.createElement('form');
+              form.method = 'POST';
+              form.action = payment.redirectUrl;
+              
+              Object.keys(payment.formData).forEach(key => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = payment.formData[key];
+                form.appendChild(input);
+              });
+              
+              document.body.appendChild(form);
+              form.submit();
+            } else {
+              window.location.href = payment.redirectUrl;
+            }
           } else {
             router.push(`/checkout/success?orderNumber=${order.orderNumber}`);
           }
@@ -639,11 +680,11 @@ export default function CheckoutPage() {
             
             <div className="flex flex-col border border-stone-200 rounded-[24px] overflow-hidden bg-white shadow-sm">
               
-              {availablePaymentMethods.length === 0 ? (
-                <div className="p-8 text-center text-stone-500">Loading payment methods...</div>
+              {filteredPaymentMethods.length === 0 ? (
+                <div className="p-8 text-center text-stone-500">No payment methods available for the selected items.</div>
               ) : (
-                availablePaymentMethods.map((method, index) => (
-                  <label key={method.id} className={`flex flex-col p-4 cursor-pointer hover:bg-stone-50 transition-colors ${index !== availablePaymentMethods.length - 1 ? 'border-b border-stone-200' : ''} ${paymentMethod === method.id ? 'bg-stone-50/50' : ''}`}>
+                filteredPaymentMethods.map((method, index) => (
+                  <label key={method.id} className={`flex flex-col p-4 cursor-pointer hover:bg-stone-50 transition-colors ${index !== filteredPaymentMethods.length - 1 ? 'border-b border-stone-200' : ''} ${paymentMethod === method.id ? 'bg-stone-50/50' : ''}`}>
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center gap-4">
                         <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === method.id ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
