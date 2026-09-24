@@ -26,7 +26,7 @@ export default function NewArrivalsSection({ initialData }: { initialData?: Pagi
       {/* Explore More Link */}
       <div className="flex justify-end items-center w-full max-w-[1038px]">
         <Link 
-          href="/new-arrivals" 
+          href="/shop" 
           className="flex items-center justify-center gap-[10px] pb-1 border-b border-primary"
         >
           <span className="font-signature font-normal text-sm md:text-base leading-[22px] text-primary">

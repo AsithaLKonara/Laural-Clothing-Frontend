@@ -36,7 +36,7 @@ api.interceptors.request.use(
     const method = (config.method || "").toUpperCase();
 
     if (STATE_MUTATING_METHODS.includes(method)) {
-      const csrfToken = csrfTokenMemory || getCookie("seramaaduwen_csrf");
+      const csrfToken = csrfTokenMemory || getCookie("laural_csrf");
       if (csrfToken) {
         config.headers["x-csrf-token"] = csrfToken;
       }
@@ -76,7 +76,7 @@ api.interceptors.response.use(
         // This GET will cause the backend to set a fresh seramaaduwen_csrf cookie
         await api.get("/auth/csrf");
         // Re-attach the new token and retry
-        const freshToken = csrfTokenMemory || getCookie("seramaaduwen_csrf");
+        const freshToken = csrfTokenMemory || getCookie("laural_csrf");
         if (freshToken) {
           originalRequest.headers["x-csrf-token"] = freshToken;
         }
@@ -90,12 +90,12 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       if (typeof window !== "undefined") {
         // Clear tokens from localStorage
-        localStorage.removeItem("seramaaduwen_user");
+        localStorage.removeItem("laural_user");
         
         // Clear Next.js middleware cookies
-        document.cookie = "seramaaduwen_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
-        document.cookie = "seramaaduwen_refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
-        document.cookie = "seramaaduwen_role=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+        document.cookie = "laural_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+        document.cookie = "laural_refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+        document.cookie = "laural_role=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
         
         // Notify Zustand to update UI state
         // We import dynamically to avoid circular dependencies if any

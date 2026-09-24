@@ -34,7 +34,7 @@ export default function OfferCollectionSection({ initialData }: { initialData?: 
       {/* Explore More Link */}
       <div className="flex justify-end items-center w-full max-w-[1038px] mb-8 md:mb-[60px]">
         <Link 
-          href="/offer-collection" 
+          href="/sale" 
           className="flex items-center justify-center gap-[10px] pb-1 border-b border-primary"
         >
           <span className="font-signature font-normal text-sm md:text-base leading-[22px] text-primary">

@@ -8,7 +8,7 @@ import { useAuthStore } from "@/store/auth.store";
 
 /**
  * Prefetches the CSRF token from the backend on app mount.
- * This triggers the server to set the `seramaaduwen_csrf` cookie, which the
+ * This triggers the server to set the `laural_csrf` cookie, which the
  * API interceptor in services/api.ts then reads and attaches as x-csrf-token
  * on all state-changing requests (POST, PUT, PATCH, DELETE).
  *
@@ -17,7 +17,7 @@ import { useAuthStore } from "@/store/auth.store";
  */
 function CsrfInitializer() {
   useEffect(() => {
-    // Silently fetch CSRF token — the response sets the seramaaduwen_csrf cookie
+    // Silently fetch CSRF token — the response sets the laural_csrf cookie
     api.get("/auth/csrf").catch(() => {
       // Ignore errors — the cookie will be set on the next successful request
     });
