@@ -70,7 +70,7 @@ function SearchResults() {
           
           {hasResults ? (
             <div className="w-full">
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-[30px] w-full max-w-max mx-auto md:mx-0">
+              <div className="grid grid-cols-2 md:grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-4 md:gap-[30px] w-full max-w-max mx-auto md:mx-0">
                 {isLoading ? (
                   Array.from({ length: 12 }).map((_, i) => (
                     <div key={i} className="flex justify-center w-full">

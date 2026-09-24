@@ -116,7 +116,7 @@ export default function ShopContent({ initialData }: { initialData?: PaginatedRe
 
         {/* Product Grid Area */}
         <div className="flex-1 flex flex-col items-center md:items-start py-6 md:py-[40px] px-4 md:px-[40px] transition-all duration-500 ease-in-out w-full overflow-hidden">
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-[30px] w-full">
+          <div className="grid grid-cols-2 md:grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-4 md:gap-[30px] w-full">
             {isLoading ? (
               Array.from({ length: itemsPerPage }).map((_, i) => (
                 <div key={i} className="flex justify-center w-full">
