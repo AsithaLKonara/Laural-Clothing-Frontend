@@ -647,8 +647,15 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
                       ) : (
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-stone-50 border border-stone-200 rounded-lg p-2 w-full sm:w-auto">
                           <div className="flex items-center gap-2">
-                             <div className="w-7 h-7 rounded-md border border-stone-200 shrink-0" style={{ backgroundColor: newColorHex.match(/^#([0-9a-fA-F]{3}){1,2}$/) ? newColorHex : '#000000' }} />
-                             <input type="text" value={newColorHex} onChange={e => setNewColorHex(e.target.value)} placeholder="#HEX" className="px-2 py-1.5 bg-white rounded-md text-sm border border-stone-200 outline-none w-24 focus:border-stone-400 font-mono" />
+                             <div className="relative w-7 h-7 rounded-md border border-stone-200 shrink-0 overflow-hidden">
+                               <input 
+                                 type="color" 
+                                 value={newColorHex.match(/^#([0-9a-fA-F]{6})$/i) ? newColorHex : '#000000'}
+                                 onChange={e => setNewColorHex(e.target.value.toUpperCase())}
+                                 className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
+                               />
+                             </div>
+                             <input type="text" value={newColorHex} onChange={e => setNewColorHex(e.target.value)} placeholder="#HEX" className="px-2 py-1.5 bg-white rounded-md text-sm border border-stone-200 outline-none w-24 focus:border-stone-400 font-mono uppercase" />
                           </div>
                           <div className="flex items-center gap-2">
                             <input type="text" value={newColorName} onChange={e => setNewColorName(e.target.value)} placeholder="Color Name" className="px-2 py-1.5 bg-white rounded-md text-sm border border-stone-200 outline-none w-32 focus:border-stone-400" onKeyDown={e => e.key === 'Enter' && handleAddCustomColor()} />
