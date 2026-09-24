@@ -7,7 +7,7 @@ import PageHeader from "@/components/dashboard/PageHeader";
 import FilterBar from "@/components/dashboard/FilterBar";
 import DataTable from "@/components/dashboard/DataTable";
 import { OrderStatusBadge, BranchBadge, PaymentGatewayBadge } from "@/components/dashboard/Badges";
-import CourierLabelModal from "@/components/admin/CourierLabelModal";
+import ShippingLabelModal from "@/app/admin/shipping/components/ShippingLabelModal";
 import FardarDispatchModal from "@/components/admin/FardarDispatchModal";
 import { Printer, Truck, Plus } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
@@ -153,22 +153,9 @@ export default function OrdersPage() {
       )}
 
       {showLabelModal && (
-        <CourierLabelModal 
-          orders={orders.filter((o: any) => selectedOrders.includes(o.id)).map((o: any) => {
-            const customerName = o.customer ? `${o.customer.firstName} ${o.customer.lastName || ''}` : o.shippingAddress?.firstName ? `${o.shippingAddress.firstName} ${o.shippingAddress.lastName || ''}` : 'Guest';
-            const address = o.shippingAddress ? `${o.shippingAddress.addressLine1}, ${o.shippingAddress.city}, ${o.shippingAddress.postalCode || ''}` : 'No Address Provided';
-            const phone = o.shippingAddress?.phone || o.customer?.phone || 'No Phone';
-            const itemsCount = o._count?.items || 1;
-            
-            return {
-              id: o.orderNumber || o.id,
-              customer: customerName,
-              address: address,
-              phone: phone,
-              itemsCount: itemsCount,
-              weight: "Standard"
-            };
-          })}
+        <ShippingLabelModal 
+          orderIds={selectedOrders}
+          isOpen={showLabelModal}
           onClose={() => setShowLabelModal(false)}
         />
       )}

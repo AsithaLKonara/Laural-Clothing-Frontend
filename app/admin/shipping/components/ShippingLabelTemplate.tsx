@@ -54,7 +54,7 @@ export default function ShippingLabelTemplate({ order, index, total }: { order: 
         </div>
         <div className="col-span-2 mt-1">
           <p className="text-[10px] uppercase text-gray-500 font-bold">Tracking Number:</p>
-          <p className="font-bold text-xl tracking-widest">{order.trackingNumber}</p>
+          <p className="font-bold text-xl tracking-widest">{order.trackingNumber || 'PENDING'}</p>
         </div>
       </div>
 

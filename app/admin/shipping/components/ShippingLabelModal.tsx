@@ -33,7 +33,7 @@ export default function ShippingLabelModal({ orderIds, isOpen, onClose }: Shippi
 
       Promise.all(fetchPromises).then(responses => {
         const validOrders = responses
-          .filter(res => res && res.data && res.data.trackingNumber)
+          .filter(res => res && res.data)
           .map(res => res!.data);
         
         setOrders(validOrders);
