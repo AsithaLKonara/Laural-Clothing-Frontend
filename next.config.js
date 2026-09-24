@@ -33,7 +33,7 @@ const securityHeaders = [
       "frame-src https://challenges.cloudflare.com",
       "object-src 'none'",
       "base-uri 'self'",
-      "form-action 'self'",
+      "form-action 'self' https://*.paykoko.com https://*.onepay.lk",
     ].join('; '),
   },
 ];
