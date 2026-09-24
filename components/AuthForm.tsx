@@ -17,7 +17,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/auth.store";
 import { generateDeviceFingerprint } from "@/lib/fingerprint";
-import { Turnstile } from "@marsidev/react-turnstile";
+import { Turnstile, TurnstileInstance } from "@marsidev/react-turnstile";
 
 type AuthView = "login" | "register" | "forgot-password" | "otp" | "change-password";
 
@@ -64,6 +64,7 @@ function LoginForm({ setView, mounted }: { setView: (v: AuthView) => void, mount
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const turnstileRef = useRef<TurnstileInstance>(null);
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -96,6 +97,7 @@ function LoginForm({ setView, mounted }: { setView: (v: AuthView) => void, mount
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message || "Failed to sign in. Please check your credentials.";
       setError(msg);
+      turnstileRef.current?.reset();
     } finally {
       setLoading(false);
     }
@@ -167,6 +169,7 @@ function LoginForm({ setView, mounted }: { setView: (v: AuthView) => void, mount
         {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
           <div className="w-full flex justify-center mt-2 mb-2">
             <Turnstile 
+              ref={turnstileRef}
               siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} 
               onSuccess={(token) => setValue("turnstileToken", token)}
               options={{ theme: 'dark' }}
@@ -227,6 +230,7 @@ function RegisterForm({ setView, mounted }: { setView: (v: AuthView) => void, mo
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const turnstileRef = useRef<TurnstileInstance>(null);
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -261,6 +265,7 @@ function RegisterForm({ setView, mounted }: { setView: (v: AuthView) => void, mo
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message || "Failed to create account. Please try again.";
       setError(msg);
+      turnstileRef.current?.reset();
     } finally {
       setLoading(false);
     }
@@ -350,6 +355,7 @@ function RegisterForm({ setView, mounted }: { setView: (v: AuthView) => void, mo
           {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
             <div className="w-full flex justify-center mt-2 mb-2">
               <Turnstile 
+                ref={turnstileRef}
                 siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} 
                 onSuccess={(token) => setValue("turnstileToken", token)}
                 options={{ theme: 'dark' }}
