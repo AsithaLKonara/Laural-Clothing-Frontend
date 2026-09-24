@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Eye, EyeOff, ArrowRight, CheckCircle2 } from "lucide-react";
-import { Turnstile, TurnstileInstance } from "@marsidev/react-turnstile";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod" ;
 import {
@@ -64,7 +63,6 @@ function LoginForm({ setView, mounted }: { setView: (v: AuthView) => void, mount
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const turnstileRef = useRef<TurnstileInstance>(null);
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -97,7 +95,6 @@ function LoginForm({ setView, mounted }: { setView: (v: AuthView) => void, mount
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message || "Failed to sign in. Please check your credentials.";
       setError(msg);
-      turnstileRef.current?.reset();
     } finally {
       setLoading(false);
     }
@@ -166,15 +163,7 @@ function LoginForm({ setView, mounted }: { setView: (v: AuthView) => void, mount
           </div>
         )}
 
-        <div className="w-full flex justify-center mt-2">
-          {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
-            <Turnstile 
-              ref={turnstileRef}
-              siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} 
-              onSuccess={(token) => setValue("turnstileToken", token)} 
-            />
-          )}
-        </div>
+        {/* Turnstile removed */}
 
         <button type="submit" disabled={loading} className="group w-full h-[56px] bg-stone-50 flex justify-between items-center px-[24px] hover:bg-stone-200 transition-colors disabled:opacity-50">
           <span className="font-urbanist font-bold text-sm text-black uppercase tracking-[0.1em]">
@@ -349,11 +338,7 @@ function RegisterForm({ setView, mounted }: { setView: (v: AuthView) => void, mo
             </div>
           )}
 
-          <div className="w-full flex justify-center mt-2">
-            {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
-              <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} onSuccess={(token) => setValue("turnstileToken", token)} />
-            )}
-          </div>
+          {/* Turnstile removed */}
 
           <button type="submit" disabled={loading} className="group w-full h-[56px] bg-stone-50 flex justify-between items-center px-[24px] hover:bg-stone-200 transition-colors mt-[8px] disabled:opacity-50">
             <span className="font-urbanist font-bold text-sm text-black uppercase tracking-[0.1em]">
@@ -416,11 +401,7 @@ function ForgotPasswordForm({ setView, mounted }: { setView: (v: AuthView) => vo
           {errors.email && <span className="text-red-500 text-xs mt-1 block">{errors.email.message}</span>}
         </div>
 
-        <div className="w-full flex justify-center mt-2">
-          {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
-            <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} onSuccess={(token) => setValue("turnstileToken", token)} />
-          )}
-        </div>
+        {/* Turnstile removed */}
 
         <button 
           type="submit"
@@ -561,11 +542,7 @@ function ChangePasswordForm({ setView, mounted }: { setView: (v: AuthView) => vo
           {errors.confirmPassword && <span className="text-red-500 text-xs mt-1 block">{errors.confirmPassword.message}</span>}
         </div>
         
-        <div className="w-full flex justify-center mt-2">
-          {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
-            <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} onSuccess={(token) => setValue("turnstileToken", token)} />
-          )}
-        </div>
+        {/* Turnstile removed */}
 
         <button 
           type="submit"

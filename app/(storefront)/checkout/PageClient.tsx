@@ -23,7 +23,7 @@ import { globalDialog } from "@/store/dialog.store";
 import { generateDeviceFingerprint, isLikelyBot } from "@/lib/fingerprint";
 import { Turnstile } from "@marsidev/react-turnstile";
 import { paymentService } from "@/services/payment.service";
-import { fardarDistrictCityMap, allFardarCities } from "@/lib/fardarCities";
+import slAddress from "sl-address";
 
 export default function CheckoutPage() {
   const {
@@ -48,7 +48,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     const currentCity = watch("city");
     if (district && currentCity) {
-      const validCities = fardarDistrictCityMap[district];
+      const validCities = slAddress.getCitiesByDistrict(district);
       if (validCities && !validCities.includes(currentCity)) {
         setValue("city", "");
       }
@@ -152,9 +152,9 @@ export default function CheckoutPage() {
         firstName: data.fullName.split(' ')[0],
         lastName: data.fullName.split(' ').slice(1).join(' '),
         addressLine1: data.addressLine1,
-        addressLine2: data.addressLine2,
-        addressLine3: data.addressLine3,
-        district: data.district,
+        addressLine2: data.addressLine2 || null,
+        addressLine3: data.addressLine3 || null,
+        district: data.district || null,
         city: data.city,
         postalCode: null,
         phone: data.phone,
@@ -250,7 +250,7 @@ export default function CheckoutPage() {
 
   return (
     <main className="flex flex-col items-center w-full min-h-screen bg-background pt-[83px]">
-      <div className="flex flex-col lg:flex-row w-full max-w-[1280px] mx-auto py-[60px] px-4 md:px-[80px] lg:px-[120px] gap-12 lg:gap-[60px]">
+      <div className="flex flex-col-reverse lg:flex-row w-full max-w-[1280px] mx-auto py-[60px] px-4 md:px-[80px] lg:px-[120px] gap-12 lg:gap-[60px]">
         
         {/* Left Column: Forms */}
         <div className="flex flex-col flex-1 w-full lg:pr-[60px] lg:border-r lg:border-stone-200 gap-10">
@@ -353,7 +353,7 @@ export default function CheckoutPage() {
                         className={`w-full h-[52px] px-[20px] appearance-none border ${errors.district ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all`}
                       >
                         <option value="">Select district</option>
-                        {["Ampara","Anuradhapura","Badulla","Batticaloa","Colombo","Galle","Gampaha","Hambantota","Jaffna","Kalutara","Kandy","Kegalle","Kilinochchi","Kurunegala","Mannar","Matale","Matara","Monaragala","Mullaitivu","Nuwara Eliya","Polonnaruwa","Puttalam","Ratnapura","Trincomalee","Vavuniya"].map(d => (
+                        {slAddress.getDistricts().map((d: string) => (
                           <option key={d} value={d}>{d}</option>
                         ))}
                       </select>
@@ -373,7 +373,7 @@ export default function CheckoutPage() {
                         className={`w-full h-[52px] px-[20px] appearance-none border ${errors.city ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all`}
                       >
                         <option value="">Select city</option>
-                        {(district && fardarDistrictCityMap[district] ? fardarDistrictCityMap[district] : allFardarCities).map(c => (
+                        {(district ? slAddress.getCitiesByDistrict(district) : []).map((c: string) => (
                           <option key={c} value={c}>{c}</option>
                         ))}
                       </select>
@@ -552,22 +552,60 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            {/* Turnstile CAPTCHA */}
-            <div className="flex justify-center w-full my-4">
-              {mounted && process.env.NODE_ENV !== 'development' && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
-                <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} onSuccess={(token) => setValue("turnstileToken", token)} />
-              )}
-            </div>
+            {/* Turnstile CAPTCHA removed as per requirement */}
+            {/* Payment Methods */}
+            <div className="flex flex-col gap-3 w-full pt-4">
+              <h3 className="font-poppins font-medium text-xl text-primary">
+                Payment Method <span className="text-accent">*</span>
+              </h3>
+              
+              <div className="flex flex-col border border-stone-200 rounded-[24px] overflow-hidden bg-white shadow-sm">
+                
+                {filteredPaymentMethods.length === 0 ? (
+                  <div className="p-8 text-center text-stone-500">No payment methods available for the selected items.</div>
+                ) : (
+                  filteredPaymentMethods.map((method, index) => (
+                    <label key={method.id} className={`flex flex-col p-4 cursor-pointer hover:bg-stone-50 transition-colors ${index !== filteredPaymentMethods.length - 1 ? 'border-b border-stone-200' : ''} ${paymentMethod === method.id ? 'bg-stone-50/50' : ''}`}>
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === method.id ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
+                            {paymentMethod === method.id && <div className="w-2 h-2 rounded-full bg-white" />}
+                          </div>
+                          <input type="radio" value={method.id} {...register("paymentMethod")} className="hidden" />
+                          <div className="flex items-center gap-2">
+                            {method.id === 'cod' && <Banknote size={18} className="text-stone-500" />}
+                            {method.id === 'onepay' && <CreditCard size={18} className="text-stone-500" />}
+                            <span className="font-poppins text-sm text-primary font-medium">{method.name}</span>
+                          </div>
+                        </div>
+                        {method.badge && (
+                          <span className="font-poppins text-[11px] font-semibold tracking-wider uppercase text-emerald-600 bg-emerald-50 px-2 py-1 rounded-sm">{method.badge}</span>
+                        )}
+                      </div>
+                      
+                      {method.id === 'onepay' && paymentMethod === 'onepay' && (
+                        <div className="ml-9 mt-4 flex flex-col gap-3 animate-in slide-in-from-top-2 duration-300">
+                          <div className="flex items-center gap-2 text-stone-500 bg-white p-3 rounded-lg border border-stone-200 shadow-sm text-sm font-poppins">
+                            <ShieldCheck size={18} className="text-emerald-600" />
+                            Secure checkout powered by OnePay
+                          </div>
+                        </div>
+                      )}
+                    </label>
+                  ))
+                )}
+              </div>
 
-            {/* Mobile Place Order Button (Shows above cart on mobile) */}
-            <div className="flex lg:hidden w-full pt-4">
-               <button 
-                type="submit"
-                disabled={initiateCheckout.isPending || cartItems.length === 0}
-                className="w-full h-[54px] flex justify-center items-center bg-primary hover:bg-stone-800 transition-colors rounded-full font-poppins font-semibold text-sm text-white uppercase tracking-widest disabled:opacity-50"
-              >
-                {initiateCheckout.isPending ? "Processing..." : "Place Order"}
-              </button>
+              {/* Place Order Button */}
+              <div className="flex w-full pt-6">
+                 <button 
+                  type="submit"
+                  disabled={initiateCheckout.isPending || cartItems.length === 0}
+                  className="w-full h-[54px] flex justify-center items-center bg-primary hover:bg-stone-800 transition-colors rounded-full font-poppins font-semibold text-sm text-white uppercase tracking-widest shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {initiateCheckout.isPending ? "Processing..." : "Place Order"}
+                </button>
+              </div>
             </div>
             
           </form>
@@ -671,67 +709,6 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* Payment Methods */}
-          <div className="flex flex-col gap-3 w-full pb-[100px]">
-            <h3 className="font-poppins font-medium text-sm text-primary uppercase tracking-wider mb-2">
-              Payment Method
-            </h3>
-            
-            <div className="flex flex-col border border-stone-200 rounded-[24px] overflow-hidden bg-white shadow-sm">
-              
-              {filteredPaymentMethods.length === 0 ? (
-                <div className="p-8 text-center text-stone-500">No payment methods available for the selected items.</div>
-              ) : (
-                filteredPaymentMethods.map((method, index) => (
-                  <label key={method.id} className={`flex flex-col p-4 cursor-pointer hover:bg-stone-50 transition-colors ${index !== filteredPaymentMethods.length - 1 ? 'border-b border-stone-200' : ''} ${paymentMethod === method.id ? 'bg-stone-50/50' : ''}`}>
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-4">
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === method.id ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
-                          {paymentMethod === method.id && <div className="w-2 h-2 rounded-full bg-white" />}
-                        </div>
-                        <input type="radio" value={method.id} {...register("paymentMethod")} className="hidden" />
-                        <div className="flex items-center gap-2">
-                          {method.id === 'cod' && <Banknote size={18} className="text-stone-500" />}
-                          {method.id === 'onepay' && <CreditCard size={18} className="text-stone-500" />}
-                          <span className="font-poppins text-sm text-primary font-medium">{method.name}</span>
-                        </div>
-                      </div>
-                      {method.badge && (
-                        <span className="font-poppins text-[11px] font-semibold tracking-wider uppercase text-emerald-600 bg-emerald-50 px-2 py-1 rounded-sm">{method.badge}</span>
-                      )}
-                    </div>
-                    
-                    {method.id === 'onepay' && paymentMethod === 'onepay' && (
-                      <div className="ml-9 mt-4 flex flex-col gap-3 animate-in slide-in-from-top-2 duration-300">
-                        <div className="flex items-center gap-2 text-stone-500 bg-white p-3 rounded-lg border border-stone-200 shadow-sm text-sm font-poppins">
-                          <ShieldCheck size={18} className="text-emerald-600" />
-                          Secure checkout powered by OnePay
-                        </div>
-                      </div>
-                    )}
-                  </label>
-                ))
-              )}
-            </div>
-
-            {/* Desktop Place Order Button */}
-            <div className="hidden lg:flex w-full pt-6">
-               <button 
-                type="button"
-                onClick={(e) => {
-                  const form = document.getElementById('checkout-form') as HTMLFormElement;
-                  if (form) {
-                    form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-                  }
-                }}
-                disabled={initiateCheckout.isPending || cartItems.length === 0}
-                className="w-full h-[54px] flex justify-center items-center bg-primary hover:bg-stone-800 transition-colors rounded-full font-poppins font-semibold text-sm text-white uppercase tracking-widest shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {initiateCheckout.isPending ? "Processing..." : "Place Order"}
-              </button>
-            </div>
-
-          </div>
         </div>
 
       </div>

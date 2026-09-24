@@ -310,6 +310,15 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
       </div>
 
       {/* Apply Filter Button - Removed for instant filtering */}
+      <div className="mt-auto pt-6 pb-2 w-full">
+        <button 
+          onClick={() => router.push(pathname)}
+          disabled={!selectedColor && !selectedSize && !minPriceParam && !maxPriceParam}
+          className="w-full py-3 bg-stone-900 text-white font-poppins font-medium text-sm rounded-full hover:bg-stone-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Reset Filters
+        </button>
+      </div>
     </div>
   );
 }

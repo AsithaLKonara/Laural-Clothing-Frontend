@@ -4,8 +4,8 @@ import * as z from "zod";
 export const checkoutSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
   addressLine1: z.string().min(2, "Address Line 1 is required"),
-  addressLine2: z.string().min(2, "Address Line 2 is required"),
-  addressLine3: z.string().min(2, "Address Line 3 is required"),
+  addressLine2: z.string().optional().or(z.literal("")),
+  addressLine3: z.string().optional().or(z.literal("")),
   district: z.string().min(2, "District is required"),
   city: z.string().min(2, "City is required"),
   phone: z.string().min(10, "Valid phone number is required"),

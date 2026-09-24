@@ -19,7 +19,7 @@ export default function PosReportPage() {
     return { startDate: start, endDate: end };
   }, [dateRange]);
 
-  const { data, isLoading, error } = usePosReport(startDate, endDate);
+  const { data, isPending, error } = usePosReport(startDate, endDate);
 
   const handleDownloadCSV = () => {
     if (!data) return;
@@ -38,8 +38,8 @@ export default function PosReportPage() {
     window.URL.revokeObjectURL(url);
   };
 
-  if (isLoading) return <div className="p-10 font-poppins">Loading report...</div>;
-  if (error || !data) return <div className="p-10 font-poppins text-red-500">Failed to load report.</div>;
+  if (isPending) return <div className="p-10 font-poppins text-stone-500 flex flex-col gap-2"><span>Loading report data...</span><span className="text-xs text-stone-400">If this takes more than 10 seconds, check if the backend API is running.</span></div>;
+  if (error || !data) return <div className="p-10 font-poppins text-red-500">Failed to load report. {(error as any)?.message || "Unknown error"}</div>;
 
   return (
     <div className="flex flex-col p-4 md:p-10 max-w-[1280px] mx-auto w-full gap-8">
