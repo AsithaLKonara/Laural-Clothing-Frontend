@@ -133,13 +133,23 @@ export default function FilterSidebar({ isOpen = true, onToggle }: FilterSidebar
         <h2 className="font-poppins font-bold text-xl text-primary flex items-center gap-2">
           <Filter size={20} /> Filters
         </h2>
-        <button 
-          onClick={onToggle}
-          className="p-2 -mr-2 rounded-full hover:bg-stone-200 transition-colors"
-          title="Hide Filters"
-        >
-          <SlidersHorizontal size={20} className="text-[#1C1917]" />
-        </button>
+        <div className="flex items-center gap-2">
+          {(selectedColor || selectedSize || minPriceParam || maxPriceParam) && (
+            <button 
+              onClick={() => router.push(pathname)}
+              className="font-poppins text-xs font-medium text-stone-500 hover:text-stone-900 transition-colors underline underline-offset-2"
+            >
+              Clear All
+            </button>
+          )}
+          <button 
+            onClick={onToggle}
+            className="p-2 -mr-2 rounded-full hover:bg-stone-200 transition-colors"
+            title="Hide Filters"
+          >
+            <SlidersHorizontal size={20} className="text-[#1C1917]" />
+          </button>
+        </div>
       </div>
 
       <div className="w-full h-[1px] bg-[#44403B]/20" />

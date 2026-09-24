@@ -70,7 +70,7 @@ export default function Navbar() {
 
   return (
     <nav className={`w-full z-[50] transition-colors duration-300 ${navBgClass}`}>
-      <div className="w-full px-4 md:px-8 lg:px-[120px] h-[83px] flex md:grid md:grid-cols-3 justify-between items-center relative">
+      <div className="w-full px-4 md:px-6 lg:px-12 xl:px-[120px] h-[83px] flex justify-between items-center relative gap-4">
         
         {/* Mobile Hamburger (Left) */}
         <div className="flex md:hidden flex-1 items-center">
@@ -83,7 +83,7 @@ export default function Navbar() {
         </div>
 
         {/* Desktop Left Links */}
-        <div className="hidden md:flex items-center space-x-[40px] text-xs font-bold font-poppins">
+        <div className="hidden md:flex flex-1 items-center space-x-[15px] lg:space-x-[30px] xl:space-x-[40px] text-xs font-bold font-poppins">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
@@ -103,9 +103,9 @@ export default function Navbar() {
         </div>
 
         {/* Center Logo */}
-        <div className="flex justify-center flex-1 md:flex-none">
+        <div className="flex justify-center shrink-0">
           <Link href="/">
-            <div className="relative w-[240px] md:w-[280px] h-[36px] md:h-[42px]">
+            <div className="relative w-[200px] md:w-[240px] lg:w-[280px] h-[30px] md:h-[36px] lg:h-[42px]">
               <Image 
                 src={logoImage}
                 alt="SERAMAADUWEN.LK"
@@ -120,8 +120,8 @@ export default function Navbar() {
 
         {/* Right Actions */}
         <div className="flex justify-end flex-1 items-center">
-          <div className="hidden md:flex items-center gap-[4px] space-x-4 mr-4">
-            <Link href="/login" className={`font-poppins font-bold text-xs tracking-wide uppercase transition-colors hover:opacity-70 ${textColorClass}`}>
+          <div className="hidden lg:flex items-center gap-[4px] space-x-2 xl:space-x-4 mr-2 xl:mr-4">
+            <Link href="/login" className={`font-poppins font-bold text-[10px] xl:text-xs tracking-wide uppercase transition-colors hover:opacity-70 ${textColorClass}`}>
               LOGIN/REGISTER
             </Link>
           </div>

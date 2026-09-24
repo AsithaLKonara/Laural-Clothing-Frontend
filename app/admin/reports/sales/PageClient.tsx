@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";
 import { useSalesReport } from "@/hooks/useReports";
 import { Download } from "lucide-react";
@@ -14,8 +14,11 @@ const SalesChart = dynamic(() => import("./SalesChart"), {
 export default function SalesReportPage() {
   const [dateRange, setDateRange] = useState("30"); // 30 days
   
-  const endDate = new Date().toISOString();
-  const startDate = new Date(Date.now() - parseInt(dateRange) * 24 * 60 * 60 * 1000).toISOString();
+  const { startDate, endDate } = useMemo(() => {
+    const end = new Date().toISOString();
+    const start = new Date(Date.now() - parseInt(dateRange) * 24 * 60 * 60 * 1000).toISOString();
+    return { startDate: start, endDate: end };
+  }, [dateRange]);
   
   const { data, isLoading, error } = useSalesReport(startDate, endDate);
 

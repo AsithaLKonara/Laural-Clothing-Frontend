@@ -72,7 +72,7 @@ export default function ShopContent({ initialData }: { initialData?: PaginatedRe
 
       {/* Breadcrumbs & Tool Bar */}
       <div className="w-full bg-background border-b border-[#44403B]/10">
-        <div className="flex flex-row justify-between items-center w-full max-w-[1280px] mx-auto h-[54px] px-[20px] md:px-[120px]">
+        <div className="flex flex-row justify-between items-center w-full h-[54px] px-[20px] md:px-[40px]">
           
           <span className="font-urbanist text-sm text-primary underline decoration-1 underline-offset-4 cursor-pointer hover:text-[#5E3122]">
             Home / Shop
@@ -93,7 +93,7 @@ export default function ShopContent({ initialData }: { initialData?: PaginatedRe
       </div>
 
       {/* Main Content Area */}
-      <div className="flex flex-col md:flex-row w-full max-w-[1440px] mx-auto min-h-screen relative">
+      <div className="flex flex-col md:flex-row w-full min-h-screen relative">
         
         {/* Mobile Filter Overlay */}
         {isSidebarOpen && (
@@ -115,8 +115,8 @@ export default function ShopContent({ initialData }: { initialData?: PaginatedRe
         </div>
 
         {/* Product Grid Area */}
-        <div className="flex-1 flex flex-col items-center md:items-start py-6 md:py-[40px] px-4 md:px-[40px] transition-all duration-500 ease-in-out">
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-[30px] w-full max-w-max mx-auto md:mx-0">
+        <div className="flex-1 flex flex-col items-center md:items-start py-6 md:py-[40px] px-4 md:px-[40px] transition-all duration-500 ease-in-out w-full overflow-hidden">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-[30px] w-full">
             {isLoading ? (
               Array.from({ length: itemsPerPage }).map((_, i) => (
                 <div key={i} className="flex justify-center w-full">

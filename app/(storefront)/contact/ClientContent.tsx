@@ -6,9 +6,16 @@ import Image from "next/image";
 import { MapPin, Phone, Mail } from "lucide-react";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
+import { useBranches } from "@/hooks/useInventory";
+import { usePublicSettings } from "@/hooks/useSettings";
 
 export default function ClientContent() {
   const [phoneNumber, setPhoneNumber] = useState<string | undefined>();
+  const { data: branchesData } = useBranches();
+  const { data: settingsData } = usePublicSettings();
+  
+  const mainBranch = branchesData?.data?.[0] || branchesData?.[0];
+  const supportEmail = settingsData?.find((s: any) => s.key === "support_email")?.value;
 
   return (
     <main className="flex flex-col items-center w-full min-h-screen bg-background pt-[83px]">
@@ -144,7 +151,7 @@ export default function ClientContent() {
                   <MapPin size={16} strokeWidth={1.5} className="text-primary group-hover:text-white transition-colors" />
                 </div>
                 <span className="font-poppins font-light text-sm text-primary">
-                  Colombo Flagship Studio, Sri Lanka
+                  {mainBranch?.address || "Colombo Flagship Studio, Sri Lanka"}
                 </span>
               </div>
 
@@ -154,7 +161,7 @@ export default function ClientContent() {
                   <Phone size={16} strokeWidth={1.5} className="text-primary group-hover:text-white transition-colors" />
                 </div>
                 <span className="font-poppins font-light text-sm text-primary">
-                  +94 76 112 8979
+                  {mainBranch?.phone || "+94 76 112 8979"}
                 </span>
               </div>
 
@@ -164,7 +171,7 @@ export default function ClientContent() {
                   <Mail size={16} strokeWidth={1.5} className="text-primary group-hover:text-white transition-colors" />
                 </div>
                 <span className="font-poppins font-light text-sm text-primary">
-                  info@seramaaduwenclothing.com
+                  {supportEmail || "info@seramaaduwenclothing.com"}
                 </span>
               </div>
 

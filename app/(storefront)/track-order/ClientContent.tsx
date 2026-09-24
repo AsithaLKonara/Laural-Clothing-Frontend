@@ -98,8 +98,8 @@ function OrderTrackingCard({ order }: { order: any }) {
           {order.items?.map((item: any) => (
             <div key={item.id} className="flex flex-row items-center w-full p-3 bg-stone-50 border border-stone-100 rounded-lg gap-4">
               <div className="w-[50px] h-[50px] relative bg-stone-200 rounded-md overflow-hidden shrink-0">
-                {item.variant?.product?.images?.[0] ? (
-                  <Image src={item.variant.product.images[0]} alt={item.variant.product.name} fill sizes="100px" className="object-cover object-top" />
+                {(item.variant?.featuredImage || item.variant?.gallery?.[0]) ? (
+                  <Image src={item.variant?.featuredImage || item.variant?.gallery?.[0]} alt={item.variant?.product?.name || 'Product'} fill sizes="100px" className="object-cover object-top" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-stone-400">
                     <Package size={16} />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";
 import { useBranchReport } from "@/hooks/useReports";
 import { Download, Building2 } from "lucide-react";
@@ -13,8 +13,11 @@ const BranchesChart = dynamic(() => import("./BranchesChart"), {
 
 export default function BranchReportPage() {
   const [dateRange, setDateRange] = useState("30");
-  const endDate = new Date().toISOString();
-  const startDate = new Date(Date.now() - parseInt(dateRange) * 24 * 60 * 60 * 1000).toISOString();
+  const { startDate, endDate } = useMemo(() => {
+    const end = new Date().toISOString();
+    const start = new Date(Date.now() - parseInt(dateRange) * 24 * 60 * 60 * 1000).toISOString();
+    return { startDate: start, endDate: end };
+  }, [dateRange]);
 
   const { data, isLoading, error } = useBranchReport(startDate, endDate);
 

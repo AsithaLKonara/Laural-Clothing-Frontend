@@ -4,13 +4,13 @@ import React, { Suspense, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle2, ChevronRight, Package, Loader2 } from "lucide-react";
-import { useOrderById } from "@/hooks/useOrders";
+import { useOrderConfirmation } from "@/hooks/useOrders";
 
 function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
-  const orderId = searchParams.get("orderId");
+  const orderNumber = searchParams.get("orderNumber");
 
-  const { data: order, isLoading, isError } = useOrderById(orderId || "");
+  const { data: order, isLoading, isError } = useOrderConfirmation(orderNumber || "");
 
   const hasFiredPixel = useRef(false);
   useEffect(() => {

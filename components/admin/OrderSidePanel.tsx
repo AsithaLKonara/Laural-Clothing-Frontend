@@ -171,7 +171,7 @@ export default function OrderSidePanel({ orderId, isOpen, onClose }: OrderSidePa
               <div key={item.id} className="flex gap-4 items-center border-b border-stone-100 pb-4 last:border-0 last:pb-0">
                 <div className="w-14 h-14 bg-stone-100 rounded-md overflow-hidden relative shrink-0">
                   <Image 
-                    src={item.variant?.product?.featuredImage || "/products/default.jpg"} 
+                    src={item.variant?.featuredImage || item.variant?.gallery?.[0] || "/products/default.jpg"} 
                     alt="Product"
                     fill
                     sizes="64px"

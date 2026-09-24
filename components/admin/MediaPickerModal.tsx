@@ -57,7 +57,7 @@ export default function MediaPickerModal({ onSelect, onClose, title = "Pick from
 
   const filtered = files.filter((f: any) => {
     const matchSearch = !search || f.name.toLowerCase().includes(search.toLowerCase());
-    return matchSearch && f.type === "image";
+    return matchSearch && f.type.startsWith("image");
   });
 
   const handleUploadFiles = async (chosenFiles: File[]) => {

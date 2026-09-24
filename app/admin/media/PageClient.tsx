@@ -284,7 +284,7 @@ export default function AdminMediaPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: "Total Files", value: mediaResponse?.total || files.length, color: "text-stone-900" },
-          { label: "Images", value: files.filter((f: any) => f.type === "image").length, color: "text-blue-600" },
+          { label: "Images", value: files.filter((f: any) => f.type.startsWith("image")).length, color: "text-blue-600" },
           { label: "Unused Files", value: files.filter((f: any) => !f.usedIn || f.usedIn.length === 0).length, color: "text-orange-600" },
           { label: "Storage Used", value: `${(totalSize / (1024 * 1024)).toFixed(2)} MB`, color: "text-purple-600" },
         ].map(({ label, value, color }) => (

@@ -15,7 +15,7 @@ export default function OfferCollectionSection({ initialData }: { initialData?: 
     [Autoplay({ delay: 3000, stopOnInteraction: true })]
   );
 
-  const { data: response, isLoading } = useProducts({ skip: 8, take: 8 }, initialData);
+  const { data: response, isLoading } = useProducts({ skip: 0, take: 8 }, initialData);
   const products = response?.data || [];
 
   return (

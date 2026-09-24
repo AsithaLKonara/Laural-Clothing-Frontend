@@ -6,6 +6,8 @@ import { MapPin, Phone, Mail } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useCategories } from "@/hooks/useCategories";
 import { useCms } from "@/hooks/useCms";
+import { useBranches } from "@/hooks/useInventory";
+import { usePublicSettings } from "@/hooks/useSettings";
 import { useState, useEffect } from "react";
 
 export default function Footer() {
@@ -16,6 +18,11 @@ export default function Footer() {
   const { data: response } = useCategories();
   const categories = response?.data?.slice(0, 5) || []; // Show up to 5 categories
   const { pages } = useCms();
+  const { data: branchesData } = useBranches();
+  const { data: settingsData } = usePublicSettings();
+  
+  const mainBranch = branchesData?.data?.[0] || branchesData?.[0]; // Support either data wrapper or direct array
+  const supportEmail = settingsData?.find((s: any) => s.key === "support_email")?.value;
   
   if (pathname === "/login") return null;
 
@@ -49,16 +56,16 @@ export default function Footer() {
             {/* Contact Items */}
             <div className="flex flex-col gap-[12px] w-full mt-2">
               <div className="flex items-center gap-[10px]">
-                <MapPin className="w-[20px] h-[20px] text-background" />
-                <span className="font-inter text-sm leading-[21px] text-background/90">Colombo, Sri Lanka</span>
+                <MapPin className="w-[20px] h-[20px] text-background shrink-0" />
+                <span className="font-inter text-sm leading-[21px] text-background/90">{mainBranch?.address || "Colombo, Sri Lanka"}</span>
               </div>
               <div className="flex items-center gap-[10px]">
-                <Phone className="w-[20px] h-[20px] text-background" />
-                <span className="font-inter text-sm leading-[21px] text-background/90">+94 76 112 8979</span>
+                <Phone className="w-[20px] h-[20px] text-background shrink-0" />
+                <span className="font-inter text-sm leading-[21px] text-background/90">{mainBranch?.phone || "+94 76 112 8979"}</span>
               </div>
               <div className="flex items-center gap-[10px]">
-                <Mail className="w-[20px] h-[20px] text-background" />
-                <span className="font-inter text-sm leading-[21px] text-background/90">info.seramaaduwenclothing.com</span>
+                <Mail className="w-[20px] h-[20px] text-background shrink-0" />
+                <span className="font-inter text-sm leading-[21px] text-background/90">{supportEmail || "info@seramaaduwen.lk"}</span>
               </div>
             </div>
           </div>
