@@ -11,3 +11,6 @@ coverage/
 .agents/mcp_config.json
 .vercel
 config.bat
+
+.env
+.env.production
