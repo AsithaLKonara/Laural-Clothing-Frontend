@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation";
 import { useAddresses, useAddAddress, MOCK_CUSTOMER_ID } from "@/hooks/useAddress";
 import { globalDialog } from "@/store/dialog.store";
 import { generateDeviceFingerprint, isLikelyBot } from "@/lib/fingerprint";
-import { Turnstile } from "@marsidev/react-turnstile";
+import { Turnstile, TurnstileInstance } from "@marsidev/react-turnstile";
 import { paymentService } from "@/services/payment.service";
 import slAddress from "sl-address";
 
@@ -58,6 +58,7 @@ export default function CheckoutPage() {
   const [discountCode, setDiscountCode] = useState("");
   const [isLoyaltyModalOpen, setIsLoyaltyModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const turnstileRef = useRef<TurnstileInstance>(null);
   const [availablePaymentMethods, setAvailablePaymentMethods] = useState<any[]>([]);
 
   useEffect(() => {
@@ -219,6 +220,7 @@ export default function CheckoutPage() {
         onError: (error) => {
           console.error("Checkout failed:", error);
           globalDialog.alert("Checkout failed. Please try again.");
+          turnstileRef.current?.reset();
         }
       }
     );
@@ -555,6 +557,7 @@ export default function CheckoutPage() {
             {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
               <div className="w-full flex justify-center mt-2 mb-2">
                 <Turnstile 
+                  ref={turnstileRef}
                   siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} 
                   onSuccess={(token) => setValue("turnstileToken", token)}
                 />
