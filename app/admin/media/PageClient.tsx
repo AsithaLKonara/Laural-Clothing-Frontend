@@ -7,7 +7,7 @@ import {
   FileImage, AlertCircle, ArrowRight, Loader2, Cloud
 } from "lucide-react";
 import PageHeader from "@/components/admin/PageHeader";
-import { useMedia, useUploadMedia, useDeleteMedia, useSyncS3 } from "@/hooks/useMedia";
+import { useMedia, useUploadMedia, useDeleteMedia, useSyncLocal } from "@/hooks/useMedia";
 import { globalDialog } from "@/store/dialog.store";
 import Image from "next/image";
 
@@ -197,14 +197,14 @@ export default function AdminMediaPage() {
   const totalPages = mediaResponse?.totalPages || 1;
   const { mutateAsync: uploadMedia } = useUploadMedia();
   const { mutateAsync: deleteMedia } = useDeleteMedia();
-  const { mutateAsync: syncS3, isPending: isSyncing } = useSyncS3();
+  const { mutateAsync: syncLocal, isPending: isSyncing } = useSyncLocal();
 
-  const handleSyncS3 = async () => {
+  const handleSyncLocal = async () => {
     try {
-      const res = await syncS3();
+      const res = await syncLocal();
       globalDialog.alert(`Synced successfully. Added ${res.added} missing files.`);
     } catch (err) {
-      globalDialog.alert("Failed to sync S3 files.");
+      globalDialog.alert("Failed to sync local files.");
     }
   };
 
@@ -362,12 +362,12 @@ export default function AdminMediaPage() {
 
         <div className="flex gap-2 shrink-0">
           <button 
-            onClick={handleSyncS3} 
+            onClick={handleSyncLocal} 
             disabled={isSyncing}
             className="flex items-center gap-2 px-3 py-1.5 text-xs font-inter font-semibold rounded-lg transition-colors border border-stone-200 text-stone-700 hover:bg-stone-50 disabled:opacity-50"
           >
             {isSyncing ? <Loader2 size={14} className="animate-spin" /> : <Cloud size={14} />}
-            Sync S3
+            Sync Local
           </button>
           <button onClick={() => setView("grid")} className={`p-2 rounded-lg border transition-colors ${view === "grid" ? "bg-stone-900 text-white border-stone-900" : "border-stone-200 text-stone-500 hover:bg-stone-50"}`}>
             <Grid size={16}/>

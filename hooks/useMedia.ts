@@ -23,23 +23,8 @@ export function useUploadMedia() {
   
   return useMutation({
     mutationFn: async ({ file, folder, onProgress }: { file: File, folder: string, onProgress?: (progress: number) => void }) => {
-      // 1. Get presigned URL
-      const type = file.type.startsWith('video/') ? 'video' : 'image';
-      const { url, key, publicUrl } = await mediaService.generatePresignedUrl(file.name, file.type, folder);
-      
-      // 2. Upload to S3
-      await mediaService.uploadToS3(url, file, onProgress);
-      
-      // 3. Confirm with Backend
-      const record = await mediaService.createMediaRecord({
-        name: file.name,
-        type,
-        folder,
-        size: file.size,
-        url: publicUrl,
-        key
-      });
-      
+      // 1. Upload to backend
+      const record = await mediaService.uploadMedia(file, folder, onProgress);
       return record;
     },
     onSuccess: () => {
@@ -48,10 +33,10 @@ export function useUploadMedia() {
   });
 }
 
-export function useSyncS3() {
+export function useSyncLocal() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: mediaService.syncS3,
+    mutationFn: mediaService.syncLocal,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['media'] });
     },
