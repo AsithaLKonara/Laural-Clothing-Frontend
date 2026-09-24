@@ -236,12 +236,11 @@ export default function CheckoutPage() {
       return;
     }
 
-    // TEMPORARILY DISABLED FOR TESTING
-    // if (!isAuthenticated && !isPhoneVerified) {
-    //   setPendingCheckoutData(data);
-    //   setIsOtpModalOpen(true);
-    //   return;
-    // }
+    if (!isAuthenticated && !isPhoneVerified) {
+      setPendingCheckoutData(data);
+      setIsOtpModalOpen(true);
+      return;
+    }
     
     // Generate fingerprint right before submission
     data.deviceFingerprint = await generateDeviceFingerprint();
@@ -725,9 +724,10 @@ export default function CheckoutPage() {
                     form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
                   }
                 }}
-                className="w-full h-[54px] flex justify-center items-center bg-primary hover:bg-stone-800 transition-colors rounded-full font-poppins font-semibold text-sm text-white uppercase tracking-widest shadow-lg hover:shadow-xl"
+                disabled={initiateCheckout.isPending || cartItems.length === 0}
+                className="w-full h-[54px] flex justify-center items-center bg-primary hover:bg-stone-800 transition-colors rounded-full font-poppins font-semibold text-sm text-white uppercase tracking-widest shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Place Order
+                {initiateCheckout.isPending ? "Processing..." : "Place Order"}
               </button>
             </div>
 
