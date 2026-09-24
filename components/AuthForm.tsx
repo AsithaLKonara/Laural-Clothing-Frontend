@@ -17,6 +17,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/auth.store";
 import { generateDeviceFingerprint } from "@/lib/fingerprint";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 type AuthView = "login" | "register" | "forgot-password" | "otp" | "change-password";
 
@@ -163,7 +164,15 @@ function LoginForm({ setView, mounted }: { setView: (v: AuthView) => void, mount
           </div>
         )}
 
-        {/* Turnstile removed */}
+        {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+          <div className="w-full flex justify-center mt-2 mb-2">
+            <Turnstile 
+              siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} 
+              onSuccess={(token) => setValue("turnstileToken", token)}
+              options={{ theme: 'dark' }}
+            />
+          </div>
+        )}
 
         <button type="submit" disabled={loading} className="group w-full h-[56px] bg-stone-50 flex justify-between items-center px-[24px] hover:bg-stone-200 transition-colors disabled:opacity-50">
           <span className="font-urbanist font-bold text-sm text-black uppercase tracking-[0.1em]">
@@ -338,7 +347,15 @@ function RegisterForm({ setView, mounted }: { setView: (v: AuthView) => void, mo
             </div>
           )}
 
-          {/* Turnstile removed */}
+          {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+            <div className="w-full flex justify-center mt-2 mb-2">
+              <Turnstile 
+                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} 
+                onSuccess={(token) => setValue("turnstileToken", token)}
+                options={{ theme: 'dark' }}
+              />
+            </div>
+          )}
 
           <button type="submit" disabled={loading} className="group w-full h-[56px] bg-stone-50 flex justify-between items-center px-[24px] hover:bg-stone-200 transition-colors mt-[8px] disabled:opacity-50">
             <span className="font-urbanist font-bold text-sm text-black uppercase tracking-[0.1em]">

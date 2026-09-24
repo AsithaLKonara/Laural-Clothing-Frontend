@@ -552,7 +552,14 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            {/* Turnstile CAPTCHA removed as per requirement */}
+            {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+              <div className="w-full flex justify-center mt-2 mb-2">
+                <Turnstile 
+                  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} 
+                  onSuccess={(token) => setValue("turnstileToken", token)}
+                />
+              </div>
+            )}
             {/* Payment Methods */}
             <div className="flex flex-col gap-3 w-full pt-4">
               <h3 className="font-poppins font-medium text-xl text-primary">
