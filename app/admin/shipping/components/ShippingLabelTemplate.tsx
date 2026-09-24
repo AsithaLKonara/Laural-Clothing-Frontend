@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function ShippingLabelTemplate({ order, index, total }: { order: any; index?: number; total?: number }) {
+export default function ShippingLabelTemplate({ order, index, total, storeName, storeAddress, storePhone }: { order: any; index?: number; total?: number; storeName?: string; storeAddress?: string; storePhone?: string; }) {
   const customerName = order.customer 
     ? `${order.customer.firstName || ''} ${order.customer.lastName || ''}`
     : order.shippingAddress?.firstName 
@@ -27,10 +27,9 @@ export default function ShippingLabelTemplate({ order, index, total }: { order: 
         {/* Sender (From) Section */}
         <div className="text-xs">
           <h2 className="font-bold border-b border-gray-300 mb-1 uppercase text-[10px] text-gray-600">From:</h2>
-          <p className="font-bold">SERAMAADUWEN.LK Ltd.</p>
-          <p>123 Fashion Avenue</p>
-          <p>Colombo 07</p>
-          <p>Tel: +94 11 234 5678</p>
+          <p className="font-bold whitespace-pre-wrap">{storeName || 'SERAMAADUWEN.LK Ltd.'}</p>
+          <p className="whitespace-pre-wrap">{storeAddress || '123 Fashion Avenue\nColombo 07'}</p>
+          <p className="mt-1 font-bold text-[10px]">Tel: {storePhone || '+94 11 234 5678'}</p>
         </div>
 
         {/* Receiver (To) Section */}

@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { X, Printer, Loader2 } from 'lucide-react';
 import { orderService } from '@/services/order.service';
 import ShippingLabelTemplate from './ShippingLabelTemplate';
+import { useSettings } from '@/hooks/useSettings';
 
 interface ShippingLabelModalProps {
   orderIds: string[];
@@ -17,6 +18,12 @@ export default function ShippingLabelModal({ orderIds, isOpen, onClose }: Shippi
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const { data: settingsData } = useSettings();
+  const settings = settingsData || [];
+  
+  const storeName = settings.find(s => s.key === 'store_name')?.value || 'SERAMAADUWEN.LK Ltd.';
+  const storeAddress = settings.find(s => s.key === 'store_address')?.value || '123 Fashion Avenue\nColombo 07';
+  const storePhone = settings.find(s => s.key === 'support_phone')?.value || '+94 11 234 5678';
 
   useEffect(() => {
     setMounted(true);
@@ -50,7 +57,7 @@ export default function ShippingLabelModal({ orderIds, isOpen, onClose }: Shippi
   const printContent = (
     <div className="hidden print:block print-portal bg-white w-full">
       {orders.map((order) => (
-        <ShippingLabelTemplate key={`print-${order.id}`} order={order} />
+        <ShippingLabelTemplate key={`print-${order.id}`} order={order} storeName={storeName} storeAddress={storeAddress} storePhone={storePhone} />
       ))}
     </div>
   );
@@ -110,7 +117,10 @@ export default function ShippingLabelModal({ orderIds, isOpen, onClose }: Shippi
                     key={order.id} 
                     order={order} 
                     index={index + 1} 
-                    total={orders.length} 
+                    total={orders.length}
+                    storeName={storeName}
+                    storeAddress={storeAddress}
+                    storePhone={storePhone}
                   />
                 ))}
               </div>
