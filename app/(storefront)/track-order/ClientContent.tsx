@@ -2,8 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import PhoneInput from "react-phone-number-input";
-import "react-phone-number-input/style.css";
+
 import { Package, Truck, CheckCircle, Search, MapPin } from "lucide-react";
 import { useTrackOrderByPhone } from "@/hooks/useOrders";
 
@@ -134,8 +133,10 @@ export default function ClientContent() {
   const { data: ordersData, isLoading, isError } = useTrackOrderByPhone(searchPhone);
 
   const handleTrack = () => {
-    if (phoneNumber && phoneNumber.length > 5) {
+    if (phoneNumber && /^0\d{9}$/.test(phoneNumber)) {
       setSearchPhone(phoneNumber);
+    } else {
+      alert("Please enter a valid 10-digit phone number starting with 0");
     }
   };
 
@@ -157,33 +158,13 @@ export default function ClientContent() {
                 Phone number <span className="text-accent">*</span>
               </label>
               
-              <PhoneInput 
-                placeholder="Enter phone number to track"
-                value={phoneNumber}
-                onChange={setPhoneNumber}
-                defaultCountry="LK"
-                className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-all"
-                numberInputProps={{
-                  className: "w-full h-full bg-transparent border-none outline-none text-primary font-poppins text-sm placeholder:text-stone-400 pl-4",
-                }}
+              <input 
+                type="tel"
+                placeholder="Enter phone number to track (e.g., 0712345678)"
+                value={phoneNumber || ''}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400"
               />
-              <style jsx global>{`
-                .PhoneInputCountry {
-                  border-right: 1px solid #e7e5e4;
-                  padding-right: 12px;
-                  margin-right: 0;
-                }
-                .PhoneInputCountryIcon {
-                  width: 24px;
-                  height: 16px;
-                  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-                  border: none;
-                }
-                .PhoneInputCountrySelectArrow {
-                  color: #a8a29e;
-                  opacity: 1;
-                }
-              `}</style>
             </div>
 
             {/* Search Button */}

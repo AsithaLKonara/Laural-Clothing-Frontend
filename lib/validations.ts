@@ -8,6 +8,7 @@ export const checkoutSchema = z.object({
   addressLine3: z.string().optional().or(z.literal("")),
   district: z.string().min(2, "District is required"),
   city: z.string().min(2, "City is required"),
+  nearestCity: z.string().min(2, "Nearest City is required"),
   phone: z.string().regex(/^0\d{9}$/, "Phone number must be 10 digits starting with 0 (e.g., 0712345678)"),
   email: z.string().email("Please enter a valid email address"),
   termsAccepted: z.boolean().refine((val) => val === true, {
@@ -69,7 +70,7 @@ export const registerSchema = z.object({
     .regex(/[0-9]/, "Password must contain at least one number")
     .regex(/[!@#$%^&*(),.?":{}|<>]/, "Password must contain at least one special character"),
   birthday: z.string().optional().or(z.literal("")),
-  phone: z.string().optional().or(z.literal("")),
+  phone: z.string().regex(/^0\d{9}$/, "Phone number must be 10 digits starting with 0").optional().or(z.literal("")),
   _honeypot: z.string().optional(),
   turnstileToken: z.string().optional(),
 }).strict();
@@ -108,7 +109,7 @@ export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 export const posCustomerSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  phone: z.string().min(10, "Valid phone number is required"),
+  phone: z.string().regex(/^0\d{9}$/, "Phone number must be 10 digits starting with 0 (e.g., 0712345678)"),
   email: z.string().email("Please enter a valid email address").optional().or(z.literal("")),
 }).strict();
 

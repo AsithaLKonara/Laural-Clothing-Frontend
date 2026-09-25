@@ -2,11 +2,9 @@
 
 import { X, Search, UserPlus, Phone, User, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { posCustomerSchema, POSCustomerFormData } from "@/lib/validations";
-import PhoneInput from "react-phone-number-input";
-import "react-phone-number-input/style.css";
 import { useCustomers, useCreateCustomer } from "@/hooks/useCustomers";
 import { useDebounce } from "@/hooks/useDebounce";
 
@@ -136,21 +134,11 @@ export default function CustomerSelectionModal({ onClose, onSelect }: { onClose:
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="font-inter font-semibold text-sm text-foreground">Phone Number</label>
-                <Controller
-                  name="phone"
-                  control={control}
-                  render={({ field }) => (
-                    <PhoneInput 
-                      placeholder="Enter phone number"
-                      value={field.value}
-                      onChange={field.onChange}
-                      defaultCountry="LK"
-                      className={`w-full bg-surface border ${errors.phone ? 'border-red-500' : 'border-border'} rounded-xl py-3 px-4 font-inter text-sm text-foreground focus-within:outline-none focus-within:border-primary`}
-                      numberInputProps={{
-                        className: "w-full h-full bg-transparent border-none outline-none text-foreground font-inter text-sm placeholder:text-muted pl-4",
-                      }}
-                    />
-                  )}
+                <input 
+                  type="tel"
+                  placeholder="Enter phone number (e.g., 0712345678)"
+                  {...register("phone")}
+                  className={`w-full bg-surface border ${errors.phone ? 'border-red-500' : 'border-border'} rounded-xl py-3 px-4 font-inter text-sm text-foreground focus:outline-none focus:border-primary placeholder:text-muted`}
                 />
                 {errors.phone && <span className="text-red-500 text-xs mt-1">{errors.phone.message}</span>}
               </div>

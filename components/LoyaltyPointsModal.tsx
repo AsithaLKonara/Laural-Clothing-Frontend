@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import PhoneInput from "react-phone-number-input";
-import "react-phone-number-input/style.css";
+
 import { X, Search, Loader2 } from "lucide-react";
 import { orderService } from "@/services/order.service";
 
@@ -33,7 +32,10 @@ export default function LoyaltyPointsModal({ isOpen, onClose, onApplyPoints }: L
   if (!isOpen) return null;
 
   const handleSearch = async () => {
-    if (!phoneNumber || phoneNumber.length < 6) return;
+    if (!phoneNumber || !/^0\d{9}$/.test(phoneNumber)) {
+      setErrorMsg("Please enter a valid 10-digit phone number starting with 0");
+      return;
+    }
     setIsLoading(true);
     setErrorMsg("");
     try {
@@ -94,15 +96,12 @@ export default function LoyaltyPointsModal({ isOpen, onClose, onApplyPoints }: L
                 Phone number <span className="text-accent">*</span>
               </label>
               
-              <PhoneInput 
-                placeholder="Enter phone number"
-                value={phoneNumber}
-                onChange={setPhoneNumber}
-                defaultCountry="LK"
-                className="w-full h-[52px] px-[20px] border border-[#44403B] rounded-full bg-white font-poppins text-sm text-primary outline-none focus-within:ring-1 focus-within:ring-primary transition-all"
-                numberInputProps={{
-                  className: "w-full h-full bg-transparent border-none outline-none text-primary font-poppins text-sm placeholder:text-stone-400 pl-4",
-                }}
+              <input 
+                type="tel"
+                placeholder="Enter phone number (e.g., 0712345678)"
+                value={phoneNumber || ''}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                className="w-full h-[52px] px-[20px] border border-[#44403B] rounded-full bg-white font-poppins text-sm text-primary outline-none focus:ring-1 focus:ring-primary transition-all placeholder:text-stone-400"
               />
             </div>
             

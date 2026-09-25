@@ -23,6 +23,7 @@ import { generateDeviceFingerprint, isLikelyBot } from "@/lib/fingerprint";
 import { Turnstile, TurnstileInstance } from "@marsidev/react-turnstile";
 import { paymentService } from "@/services/payment.service";
 import slAddress from "sl-address";
+import { allFardarCities } from "@/lib/fardarCities";
 
 export default function CheckoutPage() {
   const {
@@ -139,6 +140,7 @@ export default function CheckoutPage() {
       setValue("addressLine3", addr.addressLine3 || "");
       setValue("district", addr.district || "");
       setValue("city", addr.city);
+      setValue("nearestCity", addr.nearestCity || "");
       setValue("phone", addr.phone);
     }
   };
@@ -155,6 +157,7 @@ export default function CheckoutPage() {
         addressLine3: data.addressLine3 || null,
         district: data.district || null,
         city: data.city,
+        nearestCity: data.nearestCity || null,
         postalCode: null,
         phone: data.phone,
         type: "SHIPPING",
@@ -180,6 +183,7 @@ export default function CheckoutPage() {
           addressLine3: data.addressLine3,
           district: data.district,
           city: data.city,
+          nearestCity: data.nearestCity,
           phone: data.phone,
         },
         paymentMethod: data.paymentMethod,
@@ -386,6 +390,26 @@ export default function CheckoutPage() {
                     </div>
                     {errors.city && <span className="text-red-500 text-xs mt-1 pl-4">{errors.city.message}</span>}
                   </div>
+                </div>
+
+                {/* Nearest City */}
+                <div className="flex flex-col gap-2 w-full">
+                  <label className="font-poppins font-medium text-xs uppercase tracking-wider text-stone-500">
+                    Nearest City (For Courier) <span className="text-accent">*</span>
+                  </label>
+                  <div className="relative">
+                    <select 
+                      {...register("nearestCity")}
+                      className={`w-full h-[52px] px-[20px] appearance-none border ${errors.nearestCity ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all`}
+                    >
+                      <option value="">Select nearest city</option>
+                      {allFardarCities.map((c: string) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" size={18} />
+                  </div>
+                  {errors.nearestCity && <span className="text-red-500 text-xs mt-1 pl-4">{errors.nearestCity.message}</span>}
                 </div>
 
                 {/* Phone & Email (Row on Desktop) */}

@@ -4,8 +4,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { MapPin, Phone, Mail } from "lucide-react";
-import PhoneInput from "react-phone-number-input";
-import "react-phone-number-input/style.css";
+
 import { useBranches } from "@/hooks/useInventory";
 import { usePublicSettings } from "@/hooks/useSettings";
 
@@ -60,34 +59,13 @@ export default function ClientContent() {
                 Phone number <span className="text-accent">*</span>
               </label>
               
-              <PhoneInput 
-                placeholder="Enter phone number"
-                value={phoneNumber}
-                onChange={setPhoneNumber}
-                defaultCountry="LK"
-                className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-all"
-                numberInputProps={{
-                  className: "w-full h-full bg-transparent border-none outline-none text-primary font-poppins text-sm placeholder:text-stone-400 pl-4",
-                }}
+              <input 
+                type="tel"
+                placeholder="Enter phone number (e.g., 0712345678)"
+                value={phoneNumber || ''}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400"
               />
-              {/* Custom CSS overrides for PhoneInput flag to match luxury styling */}
-              <style jsx global>{`
-                .PhoneInputCountry {
-                  border-right: 1px solid #e7e5e4;
-                  padding-right: 12px;
-                  margin-right: 0;
-                }
-                .PhoneInputCountryIcon {
-                  width: 24px;
-                  height: 16px;
-                  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-                  border: none;
-                }
-                .PhoneInputCountrySelectArrow {
-                  color: #a8a29e;
-                  opacity: 1;
-                }
-              `}</style>
             </div>
 
             {/* Message */}
