@@ -268,11 +268,25 @@ export default function AccessControlPage() {
         </button>
       </div>
 
-      <div className="mb-6"><AdminStatCards metrics={[
-  { title: "Total", value: "---", theme: "white-blue" },
-  { title: "Active", value: "---", theme: "white-stone" },
-  { title: "Pending", value: "---", theme: "orange" }
-]} /></div>
+      <div className="mb-6">
+        <AdminStatCards metrics={[
+          { 
+            title: "Total", 
+            value: loading ? "..." : (activeTab === "roles" ? roles.length : users.length).toString(), 
+            theme: "white-blue" 
+          },
+          { 
+            title: "Active", 
+            value: loading ? "..." : (activeTab === "roles" ? roles.filter(r => r.status === "Active").length : users.filter(u => u.status?.toLowerCase() === "active").length).toString(), 
+            theme: "white-stone" 
+          },
+          { 
+            title: activeTab === "roles" ? "System" : "Pending", 
+            value: loading ? "..." : (activeTab === "roles" ? roles.filter(r => r.isSystem).length : users.filter(u => u.status?.toLowerCase() === "pending").length).toString(), 
+            theme: "orange" 
+          }
+        ]} />
+      </div>
       <FilterBar
         placeholder={activeTab === "roles" ? "Search roles..." : "Search users by name or email..."}
         searchQuery={searchTerm}
