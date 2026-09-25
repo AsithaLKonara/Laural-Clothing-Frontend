@@ -176,7 +176,9 @@ export default function AdminReturnsPage() {
                         <input type="checkbox" checked={selectedRMAs.includes(ret.id)} onChange={() => handleSelectOne(ret.id)} className="rounded text-stone-900 focus:ring-stone-900 border-stone-300" />
                       </td>
                       <td className="py-4 px-2 font-inter font-medium text-sm text-stone-900">{ret.rmaId}</td>
-                      <td className="py-4 px-6 font-inter text-sm text-blue-600 hover:underline cursor-pointer">{ret.orderId}</td>
+                      <td className="py-4 px-6 font-inter text-sm text-blue-600 hover:underline cursor-pointer">
+                        {ret.orderId ? ret.orderId : <span className="text-stone-500 font-medium">MANUAL RETURN</span>}
+                      </td>
                       <td className="py-4 px-6 font-inter text-sm text-stone-600">{ret.customer}</td>
                       <td className="py-4 px-6 font-inter text-sm text-stone-500">{ret.date}</td>
                       <td className="py-4 px-6">

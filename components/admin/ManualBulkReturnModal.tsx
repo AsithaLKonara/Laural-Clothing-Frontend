@@ -67,8 +67,15 @@ export default function ManualBulkReturnModal({ onClose, onSuccess }: ManualBulk
       }
 
       const product = res.data;
-      const variant = product.variants?.find((v: any) => v.sku === currentSku);
-      
+      const lowerSku = currentSku.toLowerCase();
+      const variant = product.variants?.find((v: any) => 
+        v.sku?.toLowerCase() === lowerSku || 
+        v.barcode?.toLowerCase() === lowerSku ||
+        v.sku?.toLowerCase().startsWith(lowerSku) ||
+        v.barcode?.toLowerCase().startsWith(lowerSku) ||
+        v.id?.toLowerCase().startsWith(lowerSku) ||
+        product.id?.toLowerCase().startsWith(lowerSku)
+      );
       if (!variant) {
         globalDialog.alert(`Variant for SKU ${currentSku} not found.`);
         setIsScanning(false);

@@ -17,6 +17,7 @@ import {
   Ruler,
   CreditCard,
   Globe,
+  Barcode,
 } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -167,7 +168,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
           size: v.size || "",
           color: v.color || "",
           sku: v.sku || "",
-          barcode: "",
+          barcode: v.barcode || "",
           stock: branchCodes.reduce((acc: any, code: string) => {
             const branchInventory = v.inventoryItems?.find((inv: any) => inv.branch?.code === code);
             acc[code] = branchInventory?.quantity || 0;
@@ -285,6 +286,15 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
     toast.success(`Applied ${initialGlobalStock} stock to all variants`);
   }
 
+  function autoGenerateBarcodes() {
+    if (variants.length === 0) return toast.error("Generate variants first");
+    setVariants(prev => prev.map(v => ({
+      ...v,
+      barcode: v.barcode || Math.floor(1000000000 + Math.random() * 9000000000).toString()
+    })));
+    toast.success("Generated missing barcodes");
+  }
+
   function togglePayment(gw: string) {
     setSelectedPaymentMethods(prev => prev.includes(gw) ? prev.filter(g => g !== gw) : [...prev, gw]);
   }
@@ -331,6 +341,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
           size: v.size,
           color: v.color,
           sku: v.sku || null,
+          barcode: v.barcode || null,
           price: parseFloat(v.price || "0"),
           salePrice: v.compareAtPrice ? parseFloat(v.compareAtPrice) : null,
           quantity: Object.values(v.stock).reduce((sum, qty) => sum + qty, 0),
@@ -668,15 +679,25 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={generateVariants}
-                  disabled={selectedSizes.length === 0 || selectedColors.length === 0}
-                  className="w-fit bg-stone-900 text-white px-6 py-3 rounded-lg font-inter font-medium text-sm hover:bg-stone-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  <Plus size={16} />
-                  Generate {selectedSizes.length * selectedColors.length} Variant{selectedSizes.length * selectedColors.length !== 1 ? "s" : ""}
-                </button>
+                <div className="flex items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={generateVariants}
+                    disabled={selectedSizes.length === 0 || selectedColors.length === 0}
+                    className="w-fit bg-stone-900 text-white px-6 py-3 rounded-lg font-inter font-medium text-sm hover:bg-stone-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    <Plus size={16} />
+                    Generate {selectedSizes.length * selectedColors.length} Variant{selectedSizes.length * selectedColors.length !== 1 ? "s" : ""}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={autoGenerateBarcodes}
+                    className="w-fit bg-stone-100 text-stone-700 border border-stone-200 px-6 py-3 rounded-lg font-inter font-medium text-sm hover:bg-stone-200 transition-colors flex items-center gap-2"
+                  >
+                    <Barcode size={16} />
+                    Auto-Gen Barcodes
+                  </button>
+                </div>
 
                 {variants.length > 0 && (
                   <div className="border border-stone-200 rounded-xl overflow-hidden">

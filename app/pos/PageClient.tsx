@@ -195,7 +195,15 @@ export default function POSPage() {
       try {
         const product = await scanBarcodeMutation.mutateAsync(barcode);
         if (product && product.variants) {
-          const matchingVariant = product.variants.find((v: any) => v.sku?.toLowerCase() === barcode.toLowerCase());
+          const lowerSku = barcode.toLowerCase();
+          const matchingVariant = product.variants.find((v: any) => 
+            v.sku?.toLowerCase() === lowerSku || 
+            v.barcode?.toLowerCase() === lowerSku ||
+            v.sku?.toLowerCase().startsWith(lowerSku) ||
+            v.barcode?.toLowerCase().startsWith(lowerSku) ||
+            v.id?.toLowerCase().startsWith(lowerSku) ||
+            product.id?.toLowerCase().startsWith(lowerSku)
+          );
           if (matchingVariant) {
             // If in SALES mode, don't allow scanning out-of-stock items
             if (posMode === 'SALES' && matchingVariant.stockStatus !== 'instock' && matchingVariant.quantity <= 0) {
@@ -282,7 +290,15 @@ export default function POSPage() {
         try {
           const product = await scanBarcodeMutation.mutateAsync(searchTerm);
           if (product && product.variants) {
-            const matchingVariant = product.variants.find((v: any) => v.sku?.toLowerCase() === searchTerm.toLowerCase());
+            const lowerSku = searchTerm.toLowerCase();
+            const matchingVariant = product.variants.find((v: any) => 
+              v.sku?.toLowerCase() === lowerSku || 
+              v.barcode?.toLowerCase() === lowerSku ||
+              v.sku?.toLowerCase().startsWith(lowerSku) ||
+              v.barcode?.toLowerCase().startsWith(lowerSku) ||
+              v.id?.toLowerCase().startsWith(lowerSku) ||
+              product.id?.toLowerCase().startsWith(lowerSku)
+            );
             if (matchingVariant) {
               addToCart(product, matchingVariant, 1);
               setSearchTerm("");

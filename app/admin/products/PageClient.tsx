@@ -152,7 +152,7 @@ export default function ProductsPage() {
           <span className="text-stone-300">·</span>
           <button onClick={() => handleDelete(row.id)} disabled={deleteProductMutation.isPending} className="text-red-500 hover:underline font-medium disabled:opacity-50">Archive</button>
           <span className="text-stone-300">·</span>
-          <button onClick={() => setPrintingProduct({ sku: row.sku || row.id, name: row.name })} className="text-stone-500 hover:text-stone-900 transition-colors tooltip" title="Print Barcode">
+          <button onClick={() => setPrintingProduct({ sku: row.barcode || row.sku || row.variants?.[0]?.barcode || row.variants?.[0]?.sku || row.id, name: row.name })} className="text-stone-500 hover:text-stone-900 transition-colors tooltip" title="Print Barcode">
             <Barcode size={16} />
           </button>
         </div>

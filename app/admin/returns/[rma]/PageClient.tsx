@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronLeft, CheckCircle2, AlertCircle, Package, Truck, Info, Camera, RefreshCw } from "lucide-react";
 import PageHeader from "@/components/admin/PageHeader";
@@ -27,15 +27,14 @@ export default function AdminReturnDetailsPage({ params }: { params: Promise<{ r
   const [step, setStep] = useState<"MODERATION" | "INSPECTION" | "RESOLUTION">(initialStep);
 
   // Sync step if data loads later
-  use(
-    (async () => {
-       if (rma && step === "MODERATION" && ["IN_TRANSIT", "RECEIVED"].includes(rma.status)) {
-         setStep("INSPECTION");
-       }
-    })()
-  );
+  useEffect(() => {
+    if (rma && step === "MODERATION" && ["IN_TRANSIT", "RECEIVED"].includes(rma.status)) {
+      setStep("INSPECTION");
+    }
+  }, [rma, step]);
 
   const [itemConditions, setItemConditions] = useState<Record<string, string>>({});
+  const [resolutionMethod, setResolutionMethod] = useState<"REFUND" | "STORE_CREDIT" | "EXCHANGE">("REFUND");
 
   const handleUpdateStatus = async (newStatus: string) => {
     try {
@@ -191,20 +190,25 @@ export default function AdminReturnDetailsPage({ params }: { params: Promise<{ r
                   <h4 className="font-inter font-medium text-sm text-stone-900">Inspect Returned Items</h4>
                   
                   {/* Item Inspection Card */}
-                  {rma.items?.map((item: any) => (
+                  {rma.items?.map((item: any) => {
+                    const variant = item.variant || item.orderItem?.variant;
+                    const product = variant?.product;
+                    return (
                     <div key={item.id} className="border border-stone-200 rounded-lg p-4 flex gap-4">
                       <div className="w-16 h-20 bg-stone-100 rounded flex-shrink-0 relative overflow-hidden">
-                        {item.orderItem?.variant?.product?.featuredImage && (
-                          <Image src={item.orderItem.variant.product.featuredImage} alt="Product" fill sizes="100px" className="object-cover" />
+                        {product?.featuredImage && (
+                          <Image src={product.featuredImage} alt="Product" fill sizes="100px" className="object-cover" />
                         )}
                       </div>
                       <div className="flex flex-col flex-1 gap-2">
                         <div className="flex justify-between items-start">
                           <div>
-                            <p className="font-inter font-semibold text-sm text-stone-900">{item.orderItem?.variant?.product?.name}</p>
-                            <p className="font-inter text-xs text-stone-500">{item.orderItem?.variant?.name} • Qty: {item.quantity}</p>
+                            <p className="font-inter font-semibold text-sm text-stone-900">{product?.name || "Unknown Product"}</p>
+                            <p className="font-inter text-xs text-stone-500">{variant?.name || "Unknown Variant"} • Qty: {item.quantity}</p>
                           </div>
-                          <span className="font-inter font-medium text-sm text-stone-900">LKR {item.orderItem?.priceAtPurchase?.toLocaleString()}</span>
+                          <span className="font-inter font-medium text-sm text-stone-900">
+                            {item.orderItem?.priceAtPurchase ? `LKR ${item.orderItem.priceAtPurchase.toLocaleString()}` : 'MANUAL'}
+                          </span>
                         </div>
                         
                         <div className="flex gap-2 mt-2">
@@ -231,7 +235,8 @@ export default function AdminReturnDetailsPage({ params }: { params: Promise<{ r
                         </div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
 
                 </div>
 
@@ -285,17 +290,26 @@ export default function AdminReturnDetailsPage({ params }: { params: Promise<{ r
                 <div className="flex flex-col gap-3 pt-4 border-t border-stone-100">
                   <h4 className="font-inter font-medium text-sm text-stone-900">Select Resolution Method</h4>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <button className="flex flex-col items-start p-4 border border-emerald-500 bg-emerald-50 rounded-lg text-left shadow-sm">
-                      <span className="font-inter font-bold text-sm text-emerald-900 mb-1">Original Payment</span>
-                      <span className="font-inter text-xs text-emerald-700">Refund directly to payment method</span>
+                    <button 
+                      onClick={() => setResolutionMethod("REFUND")}
+                      className={`flex flex-col items-start p-4 border rounded-lg text-left transition-colors ${resolutionMethod === "REFUND" ? "border-emerald-500 bg-emerald-50 shadow-sm" : "border-stone-200 bg-white hover:bg-stone-50"}`}
+                    >
+                      <span className={`font-inter font-bold text-sm mb-1 ${resolutionMethod === "REFUND" ? "text-emerald-900" : "text-stone-900"}`}>Original Payment</span>
+                      <span className={`font-inter text-xs ${resolutionMethod === "REFUND" ? "text-emerald-700" : "text-stone-500"}`}>Refund directly to payment method</span>
                     </button>
-                    <button className="flex flex-col items-start p-4 border border-stone-200 bg-white hover:bg-stone-50 rounded-lg text-left transition-colors">
-                      <span className="font-inter font-bold text-sm text-stone-900 mb-1">Store Credit</span>
-                      <span className="font-inter text-xs text-stone-500">Issue as Loyalty Points (8,150 pts)</span>
+                    <button 
+                      onClick={() => setResolutionMethod("STORE_CREDIT")}
+                      className={`flex flex-col items-start p-4 border rounded-lg text-left transition-colors ${resolutionMethod === "STORE_CREDIT" ? "border-emerald-500 bg-emerald-50 shadow-sm" : "border-stone-200 bg-white hover:bg-stone-50"}`}
+                    >
+                      <span className={`font-inter font-bold text-sm mb-1 ${resolutionMethod === "STORE_CREDIT" ? "text-emerald-900" : "text-stone-900"}`}>Store Credit</span>
+                      <span className={`font-inter text-xs ${resolutionMethod === "STORE_CREDIT" ? "text-emerald-700" : "text-stone-500"}`}>Issue as Loyalty Points</span>
                     </button>
-                    <button className="flex flex-col items-start p-4 border border-stone-200 bg-white hover:bg-stone-50 rounded-lg text-left transition-colors">
-                      <span className="font-inter font-bold text-sm text-stone-900 mb-1">Exchange Item</span>
-                      <span className="font-inter text-xs text-stone-500">Create zero-dollar replacement order</span>
+                    <button 
+                      onClick={() => setResolutionMethod("EXCHANGE")}
+                      className={`flex flex-col items-start p-4 border rounded-lg text-left transition-colors ${resolutionMethod === "EXCHANGE" ? "border-emerald-500 bg-emerald-50 shadow-sm" : "border-stone-200 bg-white hover:bg-stone-50"}`}
+                    >
+                      <span className={`font-inter font-bold text-sm mb-1 ${resolutionMethod === "EXCHANGE" ? "text-emerald-900" : "text-stone-900"}`}>Exchange Item</span>
+                      <span className={`font-inter text-xs ${resolutionMethod === "EXCHANGE" ? "text-emerald-700" : "text-stone-500"}`}>Create zero-dollar replacement order</span>
                     </button>
                   </div>
                 </div>
@@ -306,7 +320,10 @@ export default function AdminReturnDetailsPage({ params }: { params: Promise<{ r
                     disabled={updateStatusMutation.isPending}
                     className="w-full bg-emerald-600 text-white font-inter font-medium py-3 rounded-lg hover:bg-emerald-700 transition-colors shadow-sm flex items-center justify-center gap-2 disabled:opacity-50"
                   >
-                    <CheckCircle2 size={18} /> Issue Refund & Close RMA
+                    <CheckCircle2 size={18} /> 
+                    {resolutionMethod === "REFUND" ? "Issue Refund & Close RMA" : 
+                     resolutionMethod === "STORE_CREDIT" ? "Issue Store Credit & Close RMA" : 
+                     "Process Exchange & Close RMA"}
                   </button>
                 </div>
 
@@ -327,7 +344,13 @@ export default function AdminReturnDetailsPage({ params }: { params: Promise<{ r
             
             <div className="flex flex-col gap-1">
               <span className="font-inter text-xs font-medium text-stone-500 uppercase tracking-wider">Original Order</span>
-              <Link href={`/admin/orders/${rma.order?.orderNumber}`} className="font-inter font-medium text-sm text-blue-600 hover:underline">#{rma.order?.orderNumber}</Link>
+              {rma.order?.orderNumber ? (
+                <Link href={`/admin/orders/${rma.order.orderNumber}`} className="font-inter font-medium text-sm text-blue-600 hover:underline">
+                  #{rma.order.orderNumber}
+                </Link>
+              ) : (
+                <span className="font-inter font-medium text-sm text-stone-500">MANUAL RETURN</span>
+              )}
             </div>
             
             <div className="flex flex-col gap-1">

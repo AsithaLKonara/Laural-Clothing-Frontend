@@ -86,6 +86,7 @@ export const useProcessBulkManualReturns = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['returns'] });
     }
   });
 };
