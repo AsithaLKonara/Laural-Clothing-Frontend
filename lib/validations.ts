@@ -8,7 +8,7 @@ export const checkoutSchema = z.object({
   addressLine3: z.string().optional().or(z.literal("")),
   district: z.string().min(2, "District is required"),
   city: z.string().min(2, "City is required"),
-  phone: z.string().min(10, "Valid phone number is required"),
+  phone: z.string().regex(/^0\d{9}$/, "Phone number must be 10 digits starting with 0 (e.g., 0712345678)"),
   email: z.string().email("Please enter a valid email address"),
   termsAccepted: z.boolean().refine((val) => val === true, {
     message: "You must accept the terms and conditions",
@@ -37,10 +37,10 @@ export const checkoutSchema = z.object({
         path: ["billingCity"],
       });
     }
-    if (!data.billingPhone || data.billingPhone.length < 10) {
+    if (!data.billingPhone || !/^0\d{9}$/.test(data.billingPhone)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Valid billing phone number is required",
+        message: "Valid 10-digit billing phone number starting with 0 is required",
         path: ["billingPhone"],
       });
     }

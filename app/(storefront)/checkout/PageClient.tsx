@@ -4,12 +4,11 @@ import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { TicketPercent, CreditCard, Banknote, ShieldCheck, Award, ChevronDown } from "lucide-react";
-import PhoneInput from "react-phone-number-input";
-import "react-phone-number-input/style.css";
+
 import LoyaltyPointsModal from "@/components/LoyaltyPointsModal";
 import OtpVerificationModal from "@/components/OtpVerificationModal";
 import { useAuthStore } from "@/store/auth.store";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { checkoutSchema, CheckoutFormData } from "@/lib/validations";
 import { useProducts } from "@/hooks/useProducts";
@@ -29,7 +28,6 @@ export default function CheckoutPage() {
   const {
     register,
     handleSubmit,
-    control,
     watch,
     setValue,
     formState: { errors },
@@ -397,23 +395,17 @@ export default function CheckoutPage() {
                     <label className="font-poppins font-medium text-xs uppercase tracking-wider text-stone-500">
                       Phone number <span className="text-accent">*</span>
                     </label>
-                    <Controller
-                      name="phone"
-                      control={control}
-                      render={({ field }) => (
-                        <PhoneInput 
-                          placeholder="Enter phone number"
-                          value={field.value}
-                          onChange={field.onChange}
-                          defaultCountry="LK"
-                          className={`w-full h-[52px] px-[20px] border ${errors.phone ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-all`}
-                          numberInputProps={{
-                            className: "w-full h-full bg-transparent border-none outline-none text-primary font-poppins text-sm placeholder:text-stone-400 pl-4",
-                          }}
-                        />
-                      )}
+                    <input 
+                      type="tel"
+                      placeholder="e.g. 0712345678"
+                      {...register("phone")}
+                      className={`w-full h-[52px] px-[20px] border ${errors.phone ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400`}
                     />
-                    {errors.phone && <span className="text-red-500 text-xs mt-1 pl-4">{errors.phone.message}</span>}
+                    {errors.phone ? (
+                      <span className="text-red-500 text-xs mt-1 pl-4">{errors.phone.message}</span>
+                    ) : (
+                      <span className="text-stone-400 text-xs mt-1 pl-4">Format: 0712345678</span>
+                    )}
                   </div>
 
                   {/* Email */}
@@ -537,23 +529,17 @@ export default function CheckoutPage() {
                     <label className="font-poppins font-medium text-xs uppercase tracking-wider text-stone-500">
                       Phone <span className="text-accent">*</span>
                     </label>
-                    <Controller
-                      name="billingPhone"
-                      control={control}
-                      render={({ field }) => (
-                        <PhoneInput 
-                          placeholder="Enter phone number"
-                          value={field.value}
-                          onChange={field.onChange}
-                          defaultCountry="LK"
-                          className={`w-full h-[52px] px-[20px] border ${errors.billingPhone ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-all`}
-                          numberInputProps={{
-                            className: "w-full h-full bg-transparent border-none outline-none text-primary font-poppins text-sm placeholder:text-stone-400 pl-4",
-                          }}
-                        />
-                      )}
+                    <input 
+                      type="tel"
+                      placeholder="e.g. 0712345678"
+                      {...register("billingPhone")}
+                      className={`w-full h-[52px] px-[20px] border ${errors.billingPhone ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400`}
                     />
-                    {errors.billingPhone && <span className="text-red-500 text-xs mt-1 pl-4">{errors.billingPhone.message}</span>}
+                    {errors.billingPhone ? (
+                      <span className="text-red-500 text-xs mt-1 pl-4">{errors.billingPhone.message}</span>
+                    ) : (
+                      <span className="text-stone-400 text-xs mt-1 pl-4">Format: 0712345678</span>
+                    )}
                   </div>
                 </div>
               </div>
