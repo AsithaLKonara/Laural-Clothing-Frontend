@@ -731,6 +731,8 @@ export default function POSPage() {
               tax: 0
             });
             
+            const activeBranch = activeSession?.branch || user?.branch || branches?.find((b: any) => b.id === branchId);
+
             const newOrderData = {
               orderId: orderRes?.orderNumber || `POS-${Date.now()}`,
               orderNumber: orderRes?.orderNumber,
@@ -741,7 +743,10 @@ export default function POSPage() {
               total,
               paymentMethod: method,
               tendered: total, // we don't have tendered from PaymentModal yet, assume exact change for now
-              change: 0
+              change: 0,
+              branchName: activeBranch?.name,
+              branchAddress: activeBranch?.address,
+              branchPhone: activeBranch?.phone
             };
 
             if (method.toLowerCase() === 'koko') {
