@@ -95,7 +95,8 @@ function LoginForm({ setView, mounted }: { setView: (v: AuthView) => void, mount
         router.push("/account");
       }
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || "Failed to sign in. Please check your credentials.";
+      const serverMsg = err.response?.data?.error?.message || err.response?.data?.message || err.response?.data?.error;
+      const msg = serverMsg || (err.isAxiosError ? "Network error. Please try again." : err.message) || "Failed to sign in. Please check your credentials.";
       setError(msg);
       turnstileRef.current?.reset();
     } finally {
@@ -263,7 +264,8 @@ function RegisterForm({ setView, mounted }: { setView: (v: AuthView) => void, mo
         }
       }, 1000);
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || "Failed to create account. Please try again.";
+      const serverMsg = err.response?.data?.error?.message || err.response?.data?.message || err.response?.data?.error;
+      const msg = serverMsg || (err.isAxiosError ? "Network error. Please try again." : err.message) || "Failed to create account. Please try again.";
       setError(msg);
       turnstileRef.current?.reset();
     } finally {

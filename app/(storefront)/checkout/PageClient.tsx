@@ -222,7 +222,8 @@ export default function CheckoutPage() {
         },
         onError: (error: any) => {
           console.error("Checkout failed:", error);
-          const errMsg = error.response?.data?.error?.message || error.response?.data?.message || error.message || "Checkout failed. Please try again.";
+          const serverMsg = error.response?.data?.error?.message || error.response?.data?.error || error.response?.data?.message;
+          const errMsg = serverMsg || (error.isAxiosError ? "Network error or server unreachable." : error.message) || "Checkout failed. Please try again.";
           globalDialog.alert(errMsg);
           turnstileRef.current?.reset();
         }

@@ -738,7 +738,8 @@ export default function POSPage() {
             }
           } catch (err: any) {
             console.error(err);
-            globalDialog.alert(err?.response?.data?.error || err.message || "Failed to process payment. Please try again.");
+            const serverMsg = err?.response?.data?.error?.message || err?.response?.data?.error || err?.response?.data?.message;
+            globalDialog.alert(serverMsg || (err?.isAxiosError ? "Network error. Please try again." : err?.message) || "Failed to process payment. Please try again.");
           }
         }}  
         total={Math.max(0, cart.reduce((sum, item) => sum + (item.price * item.qty), 0) - cartVouchers.reduce((sum, v) => sum + v.amount, 0)).toFixed(2)} 
