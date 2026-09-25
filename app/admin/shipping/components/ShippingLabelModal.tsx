@@ -57,7 +57,13 @@ export default function ShippingLabelModal({ orderIds, isOpen, onClose }: Shippi
   const printContent = (
     <div className="hidden print:block print-portal bg-white w-full">
       {orders.map((order) => (
-        <ShippingLabelTemplate key={`print-${order.id}`} order={order} storeName={storeName} storeAddress={storeAddress} storePhone={storePhone} />
+        <ShippingLabelTemplate 
+          key={`print-${order.id}`} 
+          order={order} 
+          storeName={order.branch?.name || storeName} 
+          storeAddress={order.branch?.address || storeAddress} 
+          storePhone={order.branch?.phone || storePhone} 
+        />
       ))}
     </div>
   );
@@ -118,9 +124,9 @@ export default function ShippingLabelModal({ orderIds, isOpen, onClose }: Shippi
                     order={order} 
                     index={index + 1} 
                     total={orders.length}
-                    storeName={storeName}
-                    storeAddress={storeAddress}
-                    storePhone={storePhone}
+                    storeName={order.branch?.name || storeName}
+                    storeAddress={order.branch?.address || storeAddress}
+                    storePhone={order.branch?.phone || storePhone}
                   />
                 ))}
               </div>

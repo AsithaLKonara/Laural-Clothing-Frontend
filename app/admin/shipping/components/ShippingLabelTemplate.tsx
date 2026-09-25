@@ -18,8 +18,8 @@ export default function ShippingLabelTemplate({ order, index, total, storeName, 
     <div className="w-[400px] border-2 border-black p-4 bg-white font-mono text-sm relative print:w-full print:border-none print:h-screen print:flex print:flex-col mx-auto">
       <div className="absolute top-4 right-4 font-bold text-lg tracking-widest">FARDAR</div>
       
-      <div className="border-b-2 border-black pb-3 mb-4">
-        <h1 className="text-xl font-bold mb-1">SHIPPING LABEL</h1>
+      <div className="border-b-2 border-black pb-3 mb-4 flex items-center justify-between">
+        <h1 className="text-2xl font-black italic tracking-tighter">SERAMAADUWEN.LK</h1>
       </div>
 
       {/* Addresses Section (Side by Side) */}
@@ -87,6 +87,17 @@ export default function ShippingLabelTemplate({ order, index, total, storeName, 
           {codAmount > 0 ? `Rs. ${codAmount.toFixed(2)}` : 'PAID'}
         </p>
       </div>
+
+      {order.trackingNumber && (
+        <div className="border-2 border-black p-4 bg-white flex flex-col items-center justify-center mt-3">
+          <img 
+            src={`https://bwipjs-api.metafloor.com/?bcid=code128&text=${order.trackingNumber}&scaleX=2&scaleY=1.5`} 
+            alt="Barcode" 
+            className="w-[80%] h-16 object-contain"
+          />
+          <p className="mt-1 font-bold text-sm tracking-widest">{order.trackingNumber}</p>
+        </div>
+      )}
       
       <div className="mt-4 text-center text-xs text-gray-500 italic print:hidden">
         {total ? `Label ${index} of ${total}` : 'Preview'}

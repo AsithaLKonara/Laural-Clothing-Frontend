@@ -90,7 +90,7 @@ export default function ShippingDashboard() {
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold">Fardar Shipping Dashboard</h1>
+        <h1 className="text-2xl font-semibold">Courier Shipments</h1>
         <div className="flex items-center gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
@@ -110,6 +110,70 @@ export default function ShippingDashboard() {
               Print Selected Labels ({selectedOrderIds.length})
             </Button>
           )}
+        </div>
+      </div>
+
+      {/* Stats Cards Section */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-[#FF003A] text-white rounded-xl p-5 shadow-sm relative overflow-hidden">
+          <p className="text-xs font-semibold uppercase tracking-wider mb-2 opacity-90">Success Rate (Today)</p>
+          <p className="text-4xl font-bold">{(orders.filter((o:any) => o.status === 'DELIVERED').length / (orders.length || 1) * 100).toFixed(1)}%</p>
+          <div className="mt-4 text-xs opacity-90">
+            {orders.filter((o:any) => o.status === 'DELIVERED').length} delivered of {orders.length} in period
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20">
+            <div className="h-full bg-white/50" style={{ width: `${(orders.filter((o:any) => o.status === 'DELIVERED').length / (orders.length || 1) * 100)}%` }} />
+          </div>
+        </div>
+        
+        <div className="bg-[#FFF4E5] text-[#D84B16] rounded-xl p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider mb-2">Return Rate (Today)</p>
+          <p className="text-4xl font-bold">{(orders.filter((o:any) => o.status === 'RETURNED').length / (orders.length || 1) * 100).toFixed(1)}%</p>
+          <div className="mt-4 text-xs flex items-center gap-1 bg-[#FDE8D7] w-max px-2 py-1 rounded">
+            <span>↺</span> {orders.filter((o:any) => o.status === 'RETURNED').length} Returned
+          </div>
+        </div>
+
+        <div className="bg-white border border-blue-100 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider mb-2 text-blue-600">Dispatched</p>
+            <p className="text-4xl font-bold text-blue-900">{orders.filter((o:any) => o.status === 'DISPATCHED' || o.trackingNumber).length}</p>
+          </div>
+          <div className="flex gap-2 mt-4 text-[10px] font-semibold text-blue-600">
+            <span className="bg-blue-50 px-2 py-1 rounded">Picked Up: {orders.filter((o:any) => o.status === 'PICKED_UP').length}</span>
+            <span className="bg-blue-50 px-2 py-1 rounded">In Transit: {orders.filter((o:any) => o.status === 'IN_TRANSIT').length}</span>
+          </div>
+        </div>
+
+        <div className="bg-white border border-stone-200 rounded-xl p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider mb-2 text-stone-500">Total Shipments</p>
+          <p className="text-4xl font-bold text-stone-900">{orders.length}</p>
+          <div className="flex gap-2 mt-4 text-[10px] font-semibold">
+            <span className="bg-emerald-50 text-emerald-700 px-2 py-1 rounded">✓ {orders.filter((o:any) => o.status === 'DELIVERED').length} Delivered</span>
+            <span className="bg-stone-100 text-stone-600 px-2 py-1 rounded">✕ {orders.filter((o:any) => o.status === 'CANCELLED').length} Cancelled</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-6">
+        <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-3">Status Breakdown</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          {[
+            { label: 'Pending Approval', status: 'PENDING', color: 'bg-orange-50 text-orange-700' },
+            { label: 'Processing', status: 'PROCESSING', color: 'bg-gray-50 text-gray-700' },
+            { label: 'Pending Pickup', status: 'DISPATCHED', color: 'bg-yellow-50 text-yellow-700' },
+            { label: 'Picked Up', status: 'PICKED_UP', color: 'bg-blue-50 text-blue-700' },
+            { label: 'In Transit', status: 'IN_TRANSIT', color: 'bg-indigo-50 text-indigo-700' },
+            { label: 'Out for Del.', status: 'OUT_FOR_DELIVERY', color: 'bg-purple-50 text-purple-700' },
+            { label: 'Delivered', status: 'DELIVERED', color: 'bg-emerald-50 text-emerald-700' },
+            { label: 'Returned', status: 'RETURNED', color: 'bg-red-50 text-red-700' },
+            { label: 'Cancelled', status: 'CANCELLED', color: 'bg-stone-100 text-stone-700' },
+          ].map(stat => (
+            <div key={stat.label} className={`flex items-center gap-3 p-3 rounded-xl border border-stone-100 ${stat.color}`}>
+              <div className="text-lg font-bold">{orders.filter((o:any) => o.status === stat.status).length}</div>
+              <div className="text-xs font-semibold leading-tight">{stat.label}</div>
+            </div>
+          ))}
         </div>
       </div>
 

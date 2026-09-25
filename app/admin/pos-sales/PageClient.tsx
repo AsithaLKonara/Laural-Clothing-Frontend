@@ -7,6 +7,7 @@ import { useOrders } from "@/hooks/useOrders";
 import { useBranchReport } from "@/hooks/useReports";
 import { format } from "date-fns";
 import Link from "next/link";
+import { X, ExternalLink } from "lucide-react";
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('en-LK', {
@@ -35,6 +36,14 @@ export default function POSSalesClient() {
 
   const orders = ordersData?.data || [];
   const meta = ordersData?.meta;
+
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
+
+  const openOrderDetails = (order: any) => {
+    setSelectedOrder(order);
+    setIsSidePanelOpen(true);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -214,12 +223,12 @@ export default function POSSalesClient() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <Link 
-                          href={`/admin/orders/${order.id}`}
+                        <button 
+                          onClick={() => openOrderDetails(order)}
                           className="text-primary hover:text-primary-hover font-inter text-sm font-semibold hover:underline"
                         >
                           View Details
-                        </Link>
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -239,6 +248,98 @@ export default function POSSalesClient() {
           )}
         </div>
       </div>
+
+      {/* Order Details Side Panel */}
+      {isSidePanelOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end bg-stone-900/60 backdrop-blur-sm transition-opacity" onClick={() => setIsSidePanelOpen(false)}>
+          <div className="w-[450px] max-w-full bg-white h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-300" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-6 border-b border-stone-200 shrink-0">
+              <h2 className="text-xl font-bold font-inter text-stone-900">Order Details</h2>
+              <button onClick={() => setIsSidePanelOpen(false)} className="text-stone-400 hover:text-stone-700 bg-stone-100 hover:bg-stone-200 p-2 rounded-full transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto flex-1">
+              {selectedOrder && (
+                <div className="flex flex-col gap-6">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Order ID</p>
+                      <p className="font-mono font-bold text-lg text-stone-900">{selectedOrder.orderNumber}</p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(selectedOrder.status)}`}>
+                      {selectedOrder.status}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Date</p>
+                      <p className="text-sm font-medium text-stone-900">{format(new Date(selectedOrder.createdAt), "MMM d, yyyy")}</p>
+                      <p className="text-xs text-stone-500">{format(new Date(selectedOrder.createdAt), "h:mm a")}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Customer</p>
+                      <p className="text-sm font-medium text-stone-900">{selectedOrder.customer?.firstName ? `${selectedOrder.customer.firstName} ${selectedOrder.customer.lastName || ''}` : 'Walk-in Customer'}</p>
+                      {(selectedOrder.customer?.phone || selectedOrder.customer?.email) && (
+                        <p className="text-xs text-stone-500 mt-0.5">{selectedOrder.customer?.phone || selectedOrder.customer?.email}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="border-t border-stone-200 pt-6">
+                    <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-4">Items ({selectedOrder.items?.length || 0})</p>
+                    <div className="flex flex-col gap-4">
+                      {selectedOrder.items?.map((item: any) => (
+                        <div key={item.id} className="flex justify-between items-center bg-stone-50 p-3 rounded-lg border border-stone-100">
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-sm text-stone-900">{item.variant?.product?.name || 'Unknown Product'}</span>
+                            <span className="text-xs text-stone-500 mt-0.5">{item.variant?.name || 'Variant'} • Qty: {item.quantity}</span>
+                          </div>
+                          <span className="font-semibold text-sm text-stone-900">
+                            {formatPrice(item.priceAtPurchase * item.quantity)}
+                          </span>
+                        </div>
+                      ))}
+                      {(!selectedOrder.items || selectedOrder.items.length === 0) && (
+                        <div className="text-center p-4 bg-stone-50 rounded-lg border border-stone-100 border-dashed">
+                          <p className="text-sm text-stone-500">No item details available.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="border-t border-stone-200 pt-6">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-stone-600 font-medium">Subtotal</span>
+                      <span className="text-sm font-semibold text-stone-900">{formatPrice(selectedOrder.subtotal)}</span>
+                    </div>
+                    {selectedOrder.tax > 0 && (
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm text-stone-600 font-medium">Tax</span>
+                        <span className="text-sm font-semibold text-stone-900">{formatPrice(selectedOrder.tax)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center pt-3 mt-3 border-t border-stone-200">
+                      <span className="text-base font-bold text-stone-900">Total</span>
+                      <span className="text-lg font-bold text-primary">{formatPrice(selectedOrder.total)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="p-6 border-t border-stone-200 bg-stone-50 shrink-0">
+               <button 
+                 onClick={() => window.print()} 
+                 className="w-full flex items-center justify-center gap-2 bg-white border border-stone-300 hover:bg-stone-100 text-stone-900 font-semibold py-2.5 rounded-lg transition-colors text-sm"
+               >
+                 <FileText size={16} /> Print Receipt
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

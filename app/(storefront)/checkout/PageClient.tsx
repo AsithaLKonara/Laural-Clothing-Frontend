@@ -238,7 +238,7 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (!isAuthenticated && !isPhoneVerified && data.paymentMethod !== 'koko') {
+    if (!isAuthenticated && !isPhoneVerified && data.paymentMethod !== 'koko' && data.paymentMethod !== 'cod') {
       setPendingCheckoutData(data);
       setIsOtpModalOpen(true);
       return;
