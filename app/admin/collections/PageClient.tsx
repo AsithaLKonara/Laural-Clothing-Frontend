@@ -1,4 +1,5 @@
 "use client";
+import AdminStatCards from "@/components/admin/AdminStatCards";
 
 import { useState } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";
@@ -114,9 +115,9 @@ export default function CollectionsPage() {
       </div>
 
       <div className="mb-6"><AdminStatCards metrics={[
-  { title: "Total", value: "---", theme: "white-blue" },
-  { title: "Active", value: "---", theme: "white-stone" },
-  { title: "Pending", value: "---", theme: "orange" }
+  { title: "Total", value: collections.length.toString(), theme: "white-blue" },
+  { title: "Active", value: collections.filter((c: any) => c.status === "ACTIVE").length.toString(), theme: "white-stone" },
+  { title: "Pending", value: collections.filter((c: any) => c.status === "DRAFT").length.toString(), theme: "orange" }
 ]} /></div>
       <FilterBar 
         placeholder="Search collections..." 

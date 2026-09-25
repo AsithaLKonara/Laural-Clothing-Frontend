@@ -1,4 +1,5 @@
 "use client";
+import AdminStatCards from "@/components/admin/AdminStatCards";
 
 import { useState } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";
@@ -203,9 +204,9 @@ export default function ProductsPage() {
         />
 
         <div className="mb-6"><AdminStatCards metrics={[
-  { title: "Total", value: "---", theme: "white-blue" },
-  { title: "Active", value: "---", theme: "white-stone" },
-  { title: "Pending", value: "---", theme: "orange" }
+  { title: "Total", value: meta?.total?.toString() || products.length.toString(), theme: "white-blue" },
+  { title: "Active", value: products.filter((p: any) => p.status === "ACTIVE").length.toString(), theme: "white-stone" },
+  { title: "Pending", value: products.filter((p: any) => p.status === "DRAFT").length.toString(), theme: "orange" }
 ]} /></div>
       <FilterBar
           placeholder="Search products by name or SKU..."

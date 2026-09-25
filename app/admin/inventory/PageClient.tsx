@@ -1,4 +1,5 @@
 'use client';
+import AdminStatCards from "@/components/admin/AdminStatCards";
 
 import { useState, useEffect } from 'react';
 import { useBranches, useInventory, useTransfers, useAdjustStock, useCreateTransfer, useUpdateTransferStatus, useInventoryStats } from '@/hooks/useInventory';

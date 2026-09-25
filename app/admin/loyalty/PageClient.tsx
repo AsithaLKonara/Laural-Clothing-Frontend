@@ -1,4 +1,5 @@
 "use client";
+import AdminStatCards from "@/components/admin/AdminStatCards";
 
 import PageHeader from "@/components/dashboard/PageHeader";
 import StatCard from "@/components/dashboard/StatCard";
@@ -73,11 +74,7 @@ export default function LoyaltyPage() {
             className="border border-stone-200 rounded-md px-3 py-1.5 text-xs font-inter w-64" 
           />
         </div>
-        <div className="mb-6"><AdminStatCards metrics={[
-  { title: "Total", value: "---", theme: "white-blue" },
-  { title: "Active", value: "---", theme: "white-stone" },
-  { title: "Pending", value: "---", theme: "orange" }
-]} /></div>
+
       <DataTable 
           data={members}
           columns={columns}

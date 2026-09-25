@@ -1,4 +1,5 @@
 "use client";
+import AdminStatCards from "@/components/admin/AdminStatCards";
 
 import { useState, useEffect, useCallback } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";

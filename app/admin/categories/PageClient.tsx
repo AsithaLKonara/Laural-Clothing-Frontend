@@ -1,4 +1,5 @@
 "use client";
+import AdminStatCards from "@/components/admin/AdminStatCards";
 
 import { useState } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";
@@ -108,9 +109,9 @@ export default function CategoriesPage() {
       </div>
 
       <div className="mb-6"><AdminStatCards metrics={[
-  { title: "Total", value: "---", theme: "white-blue" },
-  { title: "Active", value: "---", theme: "white-stone" },
-  { title: "Pending", value: "---", theme: "orange" }
+  { title: "Total", value: categories.length.toString(), theme: "white-blue" },
+  { title: "Active", value: categories.filter((c: any) => c.status !== "Inactive").length.toString(), theme: "white-stone" },
+  { title: "Pending", value: "0", theme: "orange" }
 ]} /></div>
       <FilterBar 
         placeholder="Search categories..." 

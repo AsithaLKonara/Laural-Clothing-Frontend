@@ -1,4 +1,5 @@
 "use client";
+import AdminStatCards from "@/components/admin/AdminStatCards";
 
 import { useState } from "react";
 import { Search, Loader2, Store, Calendar, FileText, Download } from "lucide-react";
@@ -156,9 +157,9 @@ export default function POSSalesClient() {
 
         {/* Orders Table */}
         <div className="mb-6"><AdminStatCards metrics={[
-  { title: "Total", value: "---", theme: "white-blue" },
-  { title: "Active", value: "---", theme: "white-stone" },
-  { title: "Pending", value: "---", theme: "orange" }
+  { title: "Total", value: orders.length.toString(), theme: "white-blue" },
+  { title: "Active", value: orders.filter((s: any) => s.status === "DELIVERED").length.toString(), theme: "white-stone" },
+  { title: "Pending", value: orders.filter((s: any) => s.status === "PENDING").length.toString(), theme: "orange" }
 ]} /></div>
       <div className="bg-surface border border-border rounded-xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">

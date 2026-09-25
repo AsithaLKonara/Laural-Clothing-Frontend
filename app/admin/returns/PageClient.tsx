@@ -94,8 +94,8 @@ export default function AdminReturnsPage() {
       <div className="mb-2">
         <AdminStatCards metrics={[
           { title: "Total Returns", value: total, theme: "white-blue" },
-          { title: "Requested", value: returns.filter(r => r.status === 'REQUESTED').length, theme: "orange" },
-          { title: "Refunded", value: returns.filter(r => r.status === 'REFUNDED').length, theme: "white-stone" }
+          { title: "Requested", value: returns.filter((r: any) => r.status === 'REQUESTED').length, theme: "orange" },
+          { title: "Refunded", value: returns.filter((r: any) => r.status === 'REFUNDED').length, theme: "white-stone" }
         ]} />
       </div>
 
