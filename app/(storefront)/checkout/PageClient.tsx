@@ -208,18 +208,22 @@ export default function CheckoutPage() {
                 form.appendChild(input);
               });
               
+              useCartStore.getState().clearSession();
               document.body.appendChild(form);
               form.submit();
             } else {
+              useCartStore.getState().clearSession();
               window.location.href = payment.redirectUrl;
             }
           } else {
-            router.push(`/checkout/success?orderNumber=${order.orderNumber}`);
+            useCartStore.getState().clearSession();
+            window.location.href = `/checkout/success?orderNumber=${order.orderNumber}`;
           }
         },
-        onError: (error) => {
+        onError: (error: any) => {
           console.error("Checkout failed:", error);
-          globalDialog.alert("Checkout failed. Please try again.");
+          const errMsg = error.response?.data?.error?.message || error.response?.data?.message || error.message || "Checkout failed. Please try again.";
+          globalDialog.alert(errMsg);
           turnstileRef.current?.reset();
         }
       }

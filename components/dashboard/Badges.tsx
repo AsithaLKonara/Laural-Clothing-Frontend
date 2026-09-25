@@ -82,11 +82,12 @@ export function BranchBadge({ branch }: { branch: string }) {
 
 export function OrderStatusBadge({ status }: { status: string }) {
   let variant: 'success' | 'warning' | 'info' | 'neutral' | 'error' = 'neutral';
+  const norm = status?.toUpperCase() || '';
   
-  if (['Delivered', 'Completed', 'Paid'].includes(status)) variant = 'success';
-  else if (['Processing', 'Packed', 'Shipped', 'In Transit'].includes(status)) variant = 'info';
-  else if (['Pending', 'Awaiting Payment'].includes(status)) variant = 'warning';
-  else if (['Cancelled', 'Failed', 'Returned'].includes(status)) variant = 'error';
+  if (['DELIVERED', 'COMPLETED', 'PAID', 'SUCCESS'].includes(norm)) variant = 'success';
+  else if (['PROCESSING', 'PACKED', 'SHIPPED', 'IN TRANSIT', 'DISPATCHED'].includes(norm)) variant = 'info';
+  else if (['PENDING', 'AWAITING_PAYMENT', 'AWAITING PAYMENT'].includes(norm)) variant = 'warning';
+  else if (['CANCELLED', 'FAILED', 'RETURNED'].includes(norm)) variant = 'error';
   
   return <StatusBadge label={status} variant={variant} dot />;
 }
