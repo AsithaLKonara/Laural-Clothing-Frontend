@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search, Filter, RotateCcw, AlertCircle, CheckCircle2, Truck, Package, Clock, RefreshCw } from "lucide-react";
 import PageHeader from "@/components/admin/PageHeader";
 import BulkReturnModal from "@/components/admin/BulkReturnModal";
+import AdminStatCards from "@/components/admin/AdminStatCards";
 
 import { useReturns } from "@/hooks/useReturns";
 import { globalDialog } from "@/store/dialog.store";
@@ -89,6 +90,14 @@ export default function AdminReturnsPage() {
         actionLabel="Export CSV"
         onAction={() => console.log("Export CSV")}
       />
+
+      <div className="mb-2">
+        <AdminStatCards metrics={[
+          { title: "Total Returns", value: total, theme: "white-blue" },
+          { title: "Requested", value: returns.filter(r => r.status === 'REQUESTED').length, theme: "orange" },
+          { title: "Refunded", value: returns.filter(r => r.status === 'REFUNDED').length, theme: "white-stone" }
+        ]} />
+      </div>
 
       {/* Filters & Search */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 border border-stone-200 rounded-xl shadow-sm">

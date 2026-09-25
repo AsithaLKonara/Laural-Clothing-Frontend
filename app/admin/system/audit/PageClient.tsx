@@ -90,6 +90,11 @@ export default function AuditPage() {
         description="Immutable record of all system-level modifications and critical operations."
       />
 
+      <div className="mb-6"><AdminStatCards metrics={[
+  { title: "Total", value: "---", theme: "white-blue" },
+  { title: "Active", value: "---", theme: "white-stone" },
+  { title: "Pending", value: "---", theme: "orange" }
+]} /></div>
       <FilterBar 
         placeholder="Search logs by user or resource..." 
         searchQuery={searchQuery}

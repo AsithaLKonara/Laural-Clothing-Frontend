@@ -13,6 +13,8 @@ import { Printer, Truck, Plus } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
 import Link from "next/link";
 import OrderSidePanel from "@/components/admin/OrderSidePanel";
+import AdminStatCards from "@/components/admin/AdminStatCards";
+import OrderSidePanel from "@/components/admin/OrderSidePanel";
 
 export default function OrdersPage() {
   const router = useRouter();
@@ -118,6 +120,22 @@ export default function OrdersPage() {
           <Plus size={16} /> Quick Dispatch
         </Link>
       </div>
+
+      <AdminStatCards 
+        metrics={[
+          { title: "Total Revenue", value: `Rs. ${orders.reduce((sum: number, o: any) => sum + (o.total || 0), 0).toLocaleString()}`, theme: "red", progress: 100 },
+          { title: "Total Orders", value: meta.totalCount || orders.length, theme: "white-stone" },
+          { title: "Completed", value: orders.filter((o: any) => o.status === 'DELIVERED').length, theme: "white-blue" },
+          { title: "Pending", value: orders.filter((o: any) => o.status === 'PENDING').length, theme: "orange" }
+        ]}
+        statuses={[
+          { label: "Pending", value: orders.filter((o: any) => o.status === 'PENDING').length, colorClass: "bg-orange-50 text-orange-700" },
+          { label: "Processing", value: orders.filter((o: any) => o.status === 'PROCESSING').length, colorClass: "bg-blue-50 text-blue-700" },
+          { label: "Dispatched", value: orders.filter((o: any) => o.status === 'DISPATCHED').length, colorClass: "bg-indigo-50 text-indigo-700" },
+          { label: "Delivered", value: orders.filter((o: any) => o.status === 'DELIVERED').length, colorClass: "bg-emerald-50 text-emerald-700" },
+          { label: "Cancelled", value: orders.filter((o: any) => o.status === 'CANCELLED').length, colorClass: "bg-stone-100 text-stone-700" }
+        ]}
+      />
 
       <FilterBar 
         placeholder="Search order, phone, customer, tracking..." 

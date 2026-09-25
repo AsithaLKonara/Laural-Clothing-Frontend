@@ -73,7 +73,12 @@ export default function LoyaltyPage() {
             className="border border-stone-200 rounded-md px-3 py-1.5 text-xs font-inter w-64" 
           />
         </div>
-        <DataTable 
+        <div className="mb-6"><AdminStatCards metrics={[
+  { title: "Total", value: "---", theme: "white-blue" },
+  { title: "Active", value: "---", theme: "white-stone" },
+  { title: "Pending", value: "---", theme: "orange" }
+]} /></div>
+      <DataTable 
           data={members}
           columns={columns}
           keyExtractor={(row) => row.phone + row.customer}

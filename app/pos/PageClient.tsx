@@ -16,6 +16,7 @@ import { RotateCcw, ShoppingCart, Zap, ArrowLeft, Clock, History, ArrowRightLeft
 import Link from "next/link";
 import { useInfiniteProducts, useScanBarcode } from "@/hooks/useProducts";
 import { useIntersection } from "@/hooks/useIntersection";
+import OrderSidePanel from "@/components/admin/OrderSidePanel";
 import { useCategories } from "@/hooks/useCategories";
 import { useBranches } from "@/hooks/useInventory";
 import { useRouter } from "next/navigation";

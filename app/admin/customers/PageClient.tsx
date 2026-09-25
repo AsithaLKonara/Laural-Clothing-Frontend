@@ -77,6 +77,11 @@ export default function CustomersPage() {
         description="View and manage registered customers and guest checkout histories."
       />
 
+      <div className="mb-6"><AdminStatCards metrics={[
+  { title: "Total", value: "---", theme: "white-blue" },
+  { title: "Active", value: "---", theme: "white-stone" },
+  { title: "Pending", value: "---", theme: "orange" }
+]} /></div>
       <FilterBar 
         placeholder="Search by name, phone, or email..." 
         searchQuery={searchQuery}

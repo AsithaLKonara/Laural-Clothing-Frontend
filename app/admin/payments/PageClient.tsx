@@ -81,6 +81,11 @@ export default function PaymentsPage() {
       </div>
 
       {/* Transactions Table */}
+      <div className="mb-6"><AdminStatCards metrics={[
+  { title: "Total", value: "---", theme: "white-blue" },
+  { title: "Active", value: "---", theme: "white-stone" },
+  { title: "Pending", value: "---", theme: "orange" }
+]} /></div>
       <DataTable 
         data={transactions}
         columns={columns}

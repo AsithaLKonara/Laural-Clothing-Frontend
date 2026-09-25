@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 export default function ShippingLabelTemplate({ order, index, total, storeName, storeAddress, storePhone }: { order: any; index?: number; total?: number; storeName?: string; storeAddress?: string; storePhone?: string; }) {
   const customerName = order.customer 
@@ -15,11 +16,11 @@ export default function ShippingLabelTemplate({ order, index, total, storeName, 
   const codAmount = order.paymentMethod?.toUpperCase() === 'COD' ? order.total : 0;
 
   return (
-    <div className="w-[400px] border-2 border-black p-4 bg-white font-mono text-sm relative print:w-full print:border-none print:h-screen print:flex print:flex-col mx-auto">
-      <div className="absolute top-4 right-4 font-bold text-lg tracking-widest">FARDAR</div>
+    <div className="w-[384px] h-[576px] overflow-hidden border-2 border-black p-4 bg-white font-mono text-sm relative print:w-[4in] print:h-[6in] print:border-none print:m-0 print:p-4 print:overflow-hidden mx-auto flex flex-col">
+      <div className="absolute top-4 right-4 font-bold text-lg tracking-widest z-10">FARDAR</div>
       
-      <div className="border-b-2 border-black pb-3 mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-black italic tracking-tighter">SERAMAADUWEN.LK</h1>
+      <div className="border-b-2 border-black pb-3 mb-4 flex items-center">
+        <Image src="/images/logo.png" alt="Seramaaduwen Logo" width={200} height={40} className="object-contain" />
       </div>
 
       {/* Addresses Section (Side by Side) */}

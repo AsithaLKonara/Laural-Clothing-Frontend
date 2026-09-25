@@ -267,6 +267,11 @@ export default function AccessControlPage() {
         </button>
       </div>
 
+      <div className="mb-6"><AdminStatCards metrics={[
+  { title: "Total", value: "---", theme: "white-blue" },
+  { title: "Active", value: "---", theme: "white-stone" },
+  { title: "Pending", value: "---", theme: "orange" }
+]} /></div>
       <FilterBar
         placeholder={activeTab === "roles" ? "Search roles..." : "Search users by name or email..."}
         searchQuery={searchTerm}

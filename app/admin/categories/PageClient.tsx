@@ -107,6 +107,11 @@ export default function CategoriesPage() {
         ))}
       </div>
 
+      <div className="mb-6"><AdminStatCards metrics={[
+  { title: "Total", value: "---", theme: "white-blue" },
+  { title: "Active", value: "---", theme: "white-stone" },
+  { title: "Pending", value: "---", theme: "orange" }
+]} /></div>
       <FilterBar 
         placeholder="Search categories..." 
         searchQuery={searchQuery}

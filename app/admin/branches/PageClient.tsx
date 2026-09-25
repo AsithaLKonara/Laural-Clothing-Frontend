@@ -162,7 +162,12 @@ export default function BranchesPage() {
         {isLoading ? (
           <div className="p-8 text-center text-stone-500">Loading branches...</div>
         ) : (
-          <DataTable
+          <div className="mb-6"><AdminStatCards metrics={[
+  { title: "Total", value: "---", theme: "white-blue" },
+  { title: "Active", value: "---", theme: "white-stone" },
+  { title: "Pending", value: "---", theme: "orange" }
+]} /></div>
+      <DataTable
             columns={columns}
             data={branches}
             keyExtractor={(row) => row.id}

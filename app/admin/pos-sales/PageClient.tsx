@@ -155,7 +155,12 @@ export default function POSSalesClient() {
         </div>
 
         {/* Orders Table */}
-        <div className="bg-surface border border-border rounded-xl overflow-hidden shadow-sm">
+        <div className="mb-6"><AdminStatCards metrics={[
+  { title: "Total", value: "---", theme: "white-blue" },
+  { title: "Active", value: "---", theme: "white-stone" },
+  { title: "Pending", value: "---", theme: "orange" }
+]} /></div>
+      <div className="bg-surface border border-border rounded-xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>

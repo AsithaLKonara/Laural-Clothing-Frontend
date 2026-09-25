@@ -84,31 +84,13 @@ export default function InventoryDashboard() {
       </div>
 
       {activeTab === 'STOCK' && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <StatCard 
-            label="Total Items" 
-            value={statsData?.totalSKUs?.toString() || '0'} 
-            trend="Active variants" 
-            trendType="neutral" 
-          />
-          <StatCard 
-            label="Total Qty" 
-            value={statsData?.totalItems?.toLocaleString() || '0'} 
-            trend="Total units in stock" 
-            trendType="neutral" 
-          />
-          <StatCard 
-            label="Low Stock Alerts" 
-            value={statsData?.lowStockCount?.toString() || '0'} 
-            trend={statsData?.lowStockCount > 0 ? 'Requires attention' : 'All good'} 
-            trendType={statsData?.lowStockCount > 0 ? 'negative' : 'positive'} 
-          />
-          <StatCard 
-            label="Out of Stock" 
-            value={statsData?.outOfStockCount?.toString() || '0'} 
-            trend={statsData?.outOfStockCount > 0 ? 'Immediate action' : 'All good'} 
-            trendType={statsData?.outOfStockCount > 0 ? 'negative' : 'positive'} 
-          />
+        <div className="mb-8">
+          <AdminStatCards metrics={[
+            { title: "Total Items", value: statsData?.totalSKUs?.toString() || '0', theme: "white-blue" },
+            { title: "Total Qty", value: statsData?.totalItems?.toLocaleString() || '0', theme: "white-stone" },
+            { title: "Low Stock Alerts", value: statsData?.lowStockCount?.toString() || '0', theme: "orange" },
+            { title: "Out of Stock", value: statsData?.outOfStockCount?.toString() || '0', theme: "red" }
+          ]} />
         </div>
       )}
 

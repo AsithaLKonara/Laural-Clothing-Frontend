@@ -202,7 +202,12 @@ export default function ProductsPage() {
           description="Manage your product catalog, categories, and inventory base."
         />
 
-        <FilterBar
+        <div className="mb-6"><AdminStatCards metrics={[
+  { title: "Total", value: "---", theme: "white-blue" },
+  { title: "Active", value: "---", theme: "white-stone" },
+  { title: "Pending", value: "---", theme: "orange" }
+]} /></div>
+      <FilterBar
           placeholder="Search products by name or SKU..."
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
