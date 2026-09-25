@@ -19,7 +19,7 @@ function CheckoutSuccessContent() {
         window.fbq('track', 'Purchase', {
           value: order.total,
           currency: 'LKR',
-          content_ids: order.items?.map((item: any) => item.productVariant?.product?.id) || [],
+          content_ids: order.items?.map((item: any) => item.variant?.product?.id) || [],
           content_type: 'product',
         });
       }
