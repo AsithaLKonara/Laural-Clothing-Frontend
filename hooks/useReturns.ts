@@ -76,3 +76,16 @@ export const useBulkUpdateReturns = () => {
     }
   });
 };
+export const useProcessBulkManualReturns = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: { branchId: string, items: { variantId: string, quantity: number, condition: string, notes?: string }[] }) => {
+      const res = await api.post('/returns/manual-bulk', data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+    }
+  });
+};

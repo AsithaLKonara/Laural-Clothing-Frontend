@@ -72,6 +72,7 @@ export default function AddressesPage() {
       addressLine3: data.addressLine3 || null,
       district: data.district || null,
       postalCode: data.postalCode || null,
+      nearestCity: null,
     };
 
     if (editingId) {

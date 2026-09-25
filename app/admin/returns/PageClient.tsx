@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search, Filter, RotateCcw, AlertCircle, CheckCircle2, Truck, Package, Clock, RefreshCw } from "lucide-react";
 import PageHeader from "@/components/admin/PageHeader";
 import BulkReturnModal from "@/components/admin/BulkReturnModal";
+import ManualBulkReturnModal from "@/components/admin/ManualBulkReturnModal";
 import AdminStatCards from "@/components/admin/AdminStatCards";
 
 import { useReturns } from "@/hooks/useReturns";
@@ -30,6 +31,7 @@ export default function AdminReturnsPage() {
   const [page, setPage] = useState(1);
   const [selectedRMAs, setSelectedRMAs] = useState<string[]>([]);
   const [showBulkModal, setShowBulkModal] = useState(false);
+  const [showManualModal, setShowManualModal] = useState(false);
 
   const { data, isLoading } = useReturns(page, 10, debouncedSearch, filter);
   
@@ -87,8 +89,8 @@ export default function AdminReturnsPage() {
       <PageHeader 
         title="Returns & RMAs" 
         subtitle="Manage customer return requests and inspect returned items."
-        actionLabel="Export CSV"
-        onAction={() => console.log("Export CSV")}
+        actionLabel="Manual Return Items"
+        onAction={() => setShowManualModal(true)}
       />
 
       <div className="mb-2">
@@ -235,7 +237,6 @@ export default function AdminReturnsPage() {
         </div>
       )}
 
-      {/* Bulk Modal */}
       {showBulkModal && (
         <BulkReturnModal 
           selectedRMAs={returns.filter((r: any) => selectedRMAs.includes(r.id))}
@@ -244,6 +245,14 @@ export default function AdminReturnsPage() {
             setShowBulkModal(false);
             setSelectedRMAs([]);
           }}
+        />
+      )}
+
+      {/* Manual Bulk Modal */}
+      {showManualModal && (
+        <ManualBulkReturnModal 
+          onClose={() => setShowManualModal(false)}
+          onSuccess={() => setShowManualModal(false)}
         />
       )}
     </div>

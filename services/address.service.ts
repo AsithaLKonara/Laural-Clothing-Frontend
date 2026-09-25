@@ -11,6 +11,7 @@ export interface Address {
   district: string | null;
   city: string;
   postalCode: string | null;
+  nearestCity: string | null;
   phone: string;
   isDefault: boolean;
   createdAt: string;

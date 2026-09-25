@@ -26,6 +26,7 @@ export interface InitiateCheckoutPayload {
     district?: string | null;
     city: string;
     postalCode?: string;
+    nearestCity?: string | null;
     phone: string;
   };
   paymentMethod?: string;
