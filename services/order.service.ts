@@ -38,7 +38,7 @@ export const orderService = {
   createQuickDispatch: (data: QuickDispatchPayload) => 
     api.post<any>('/orders/quick-dispatch', data),
 
-  getOrders: (params?: { search?: string; page?: number; limit?: number; status?: string; branchId?: string; paymentGateway?: string; customerId?: string; type?: string }) => 
+  getOrders: (params?: { search?: string; page?: number; limit?: number; status?: string; branchId?: string; paymentGateway?: string; customerId?: string; type?: string; startDate?: string; endDate?: string }) => 
     api.get<any>('/orders', { params }),
 
   getOrderById: (id: string) => 

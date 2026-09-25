@@ -27,6 +27,8 @@ export default function OrdersPage() {
   const [status, setStatus] = useState<string>("");
   const [branchId, setBranchId] = useState<string>("");
   const [paymentGateway, setPaymentGateway] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
   const [page, setPage] = useState<number>(1);
 
   const { data: ordersData, isLoading: ordersLoading } = useOrders({
@@ -34,6 +36,8 @@ export default function OrdersPage() {
     status: status || undefined,
     branchId: branchId || undefined,
     paymentGateway: paymentGateway || undefined,
+    startDate: startDate || undefined,
+    endDate: endDate || undefined,
     page: page
   });
 
@@ -76,6 +80,25 @@ export default function OrdersPage() {
 
   const filters = (
     <>
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-inter text-stone-500 font-medium hidden lg:inline-block whitespace-nowrap">From:</span>
+        <input 
+          type="date" 
+          value={startDate} 
+          onChange={e => { setStartDate(e.target.value); setPage(1); }}
+          className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400"
+        />
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-inter text-stone-500 font-medium hidden lg:inline-block whitespace-nowrap">To:</span>
+        <input 
+          type="date" 
+          value={endDate} 
+          onChange={e => { setEndDate(e.target.value); setPage(1); }}
+          className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400"
+        />
+      </div>
+      <div className="w-px h-6 bg-stone-200 hidden md:block mx-1"></div>
       <select 
         value={status} 
         onChange={e => { setStatus(e.target.value); setPage(1); }}
