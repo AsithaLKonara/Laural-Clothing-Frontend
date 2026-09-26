@@ -27,6 +27,7 @@ export default function VariantSelectionModal({ product, onClose, onAdd, allowOu
   const uniqueSizes = Array.from(new Set(availableSizes)) as string[];
 
   const [selectedSize, setSelectedSize] = useState("");
+  const [selectedVariantId, setSelectedVariantId] = useState(variants[0]?.id || "");
   
   // Automatically select the first size when color changes
   useEffect(() => {
@@ -39,10 +40,19 @@ export default function VariantSelectionModal({ product, onClose, onAdd, allowOu
 
   if (!product) return null;
 
-  const selectedVariant = variants.find((v: any) => 
-    (!selectedColor || v.color === selectedColor) && 
-    (!selectedSize || v.size === selectedSize)
-  ) || variants[0];
+  const hasColors = availableColors.length > 0;
+  const hasSizes = uniqueSizes.length > 0;
+  const showDirectVariants = !hasColors && !hasSizes && variants.length > 1;
+
+  const selectedVariant = useMemo(() => {
+    if (showDirectVariants) {
+      return variants.find((v: any) => v.id === selectedVariantId) || variants[0];
+    }
+    return variants.find((v: any) => 
+      (!selectedColor || v.color === selectedColor) && 
+      (!selectedSize || v.size === selectedSize)
+    ) || variants[0];
+  }, [variants, selectedColor, selectedSize, showDirectVariants, selectedVariantId]);
 
   const price = selectedVariant?.price || 0;
   const inStock = selectedVariant?.stockStatus === 'instock';
@@ -99,7 +109,7 @@ export default function VariantSelectionModal({ product, onClose, onAdd, allowOu
           <div className="w-full h-[1px] bg-border"></div>
 
           {/* Color Selection */}
-          {availableColors.length > 0 && (
+          {hasColors && (
             <div className="flex flex-col gap-3">
               <label className="font-inter font-semibold text-sm text-foreground">Color: {selectedColor}</label>
               <div className="flex gap-3 flex-wrap">
@@ -121,7 +131,7 @@ export default function VariantSelectionModal({ product, onClose, onAdd, allowOu
           )}
 
           {/* Size Selection */}
-          {uniqueSizes.length > 0 && (
+          {hasSizes && (
             <div className="flex flex-col gap-3">
               <label className="font-inter font-semibold text-sm text-foreground">Size: {selectedSize}</label>
               <div className="flex gap-2 flex-wrap">
@@ -136,6 +146,28 @@ export default function VariantSelectionModal({ product, onClose, onAdd, allowOu
                     }`}
                   >
                     {size}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Direct Variant Selection (Fallback) */}
+          {showDirectVariants && (
+            <div className="flex flex-col gap-3">
+              <label className="font-inter font-semibold text-sm text-foreground">Variant</label>
+              <div className="flex gap-2 flex-wrap">
+                {variants.map((v: any) => (
+                  <button 
+                    key={v.id}
+                    onClick={() => setSelectedVariantId(v.id)}
+                    className={`px-4 py-2 rounded-lg font-inter font-semibold text-sm transition-colors border ${
+                      selectedVariantId === v.id 
+                        ? 'border-primary text-primary bg-primary-soft' 
+                        : 'border-border text-foreground hover:border-muted bg-surface'
+                    }`}
+                  >
+                    {v.name || v.sku || 'Variant'}
                   </button>
                 ))}
               </div>
