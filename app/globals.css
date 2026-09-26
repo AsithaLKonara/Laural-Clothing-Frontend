@@ -82,6 +82,11 @@
     display: block !important;
   }
 
+  /* react-to-print overrides — ensures iframes don't hide contents */
+  .react-to-print-content, .react-to-print-content * {
+    visibility: visible !important;
+  }
+
   /* The receipt itself — visible and positioned at top-left */
   .print-receipt {
     visibility: visible !important;

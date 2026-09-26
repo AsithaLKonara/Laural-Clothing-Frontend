@@ -173,7 +173,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
           size: v.size || "",
           color: v.color || "",
           sku: v.sku || "",
-          barcode: v.barcode || "",
+          barcode: v.barcode || `20${Math.floor(10000000000 + Math.random() * 89999999999)}`,
           stock: branchCodes.reduce((acc: any, code: string) => {
             const branchInventory = v.inventoryItems?.find((inv: any) => inv.branch?.code === code);
             acc[code] = branchInventory?.quantity || 0;
@@ -1160,7 +1160,11 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
 // ── Single Variant Barcode Print Modal ──────────────────────────────────────
 function VariantBarcodePrintModal({ barcode, label, onClose }: { barcode: string; label: string; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
-  const handlePrint = useReactToPrint({ contentRef: ref, documentTitle: `Barcode-${barcode}` });
+  const handlePrint = useReactToPrint({
+    contentRef: ref,
+    documentTitle: `Barcode-${barcode}`,
+    pageStyle: `@page { size: A4 portrait; margin: 10mm; } body { visibility: visible !important; } body * { visibility: visible !important; }`,
+  });
   const displayCode = barcode.length > 12 ? barcode.substring(0, 12) : barcode;
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
@@ -1171,8 +1175,8 @@ function VariantBarcodePrintModal({ barcode, label, onClose }: { barcode: string
         </div>
         <div className="p-6 flex flex-col items-center gap-4 bg-stone-100">
           <div className="bg-white p-5 rounded-xl shadow-sm border border-stone-200 flex flex-col items-center w-full">
-            <div ref={ref} className="flex flex-col items-center bg-white p-2 w-full">
-              <p className="font-sans font-bold text-sm text-center mb-1 text-stone-900">{label}</p>
+            <div ref={ref} className="react-to-print-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'white', padding: '16px', width: '100%', fontFamily: 'sans-serif' }}>
+              <p style={{ fontWeight: 700, fontSize: '14px', textAlign: 'center', margin: '0 0 4px 0', color: '#1c1917' }}>{label}</p>
               <BarcodeLib value={displayCode} format="CODE128" width={1.5} height={55} displayValue fontSize={13} margin={4} />
             </div>
           </div>
@@ -1192,7 +1196,11 @@ function VariantBarcodePrintModal({ barcode, label, onClose }: { barcode: string
 // ── Bulk Barcode Print Modal ─────────────────────────────────────────────────
 function BulkBarcodePrintModal({ variants, onClose }: { variants: { barcode: string; label: string }[]; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
-  const handlePrint = useReactToPrint({ contentRef: ref, documentTitle: "Bulk-Barcodes" });
+  const handlePrint = useReactToPrint({
+    contentRef: ref,
+    documentTitle: "Bulk-Barcodes",
+    pageStyle: `@page { size: A4 portrait; margin: 10mm; } body { visibility: visible !important; } body * { visibility: visible !important; }`,
+  });
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 max-h-[90vh]">
