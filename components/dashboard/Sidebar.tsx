@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -29,7 +30,9 @@ import {
   PanelsTopLeft,
   HardDrive,
   X,
-  LogOut
+  LogOut,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 
 interface NavItem {
@@ -42,6 +45,7 @@ interface NavItem {
 export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIsOpen?: (v: boolean) => void }) {
   const pathname = usePathname();
   const { user, hasPermission, hasRole, isSuperAdmin } = useAuthStore();
+  const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
 
   const getInitials = (name?: string | null) => {
     if (!name) return "US";
@@ -123,8 +127,24 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
 
   const primaryRole = user?.roles?.[0] || "Staff User";
 
+  // Initialize expanded groups based on active route
+  useEffect(() => {
+    const activeGroup = visibleGroups.find(group => 
+      group.items.some(item => item.href === "/admin" ? pathname === "/admin" : pathname?.startsWith(item.href))
+    );
+    if (activeGroup && !expandedGroups.includes(activeGroup.label)) {
+      setExpandedGroups(prev => [...prev, activeGroup.label]);
+    }
+  }, [pathname]);
+
+  const toggleGroup = (label: string) => {
+    setExpandedGroups(prev => 
+      prev.includes(label) ? prev.filter(g => g !== label) : [...prev, label]
+    );
+  };
+
   return (
-    <aside className={`fixed left-0 top-0 bottom-0 w-[224px] bg-surface border-r border-border flex flex-col z-50 text-text-secondary transition-transform duration-300 md:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
+    <aside className={`fixed left-0 top-0 bottom-0 w-[240px] bg-surface border-r border-border flex flex-col z-50 text-text-secondary transition-transform duration-300 md:translate-x-0 ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
       {/* Logo Area */}
       <div className="h-[67px] flex items-center justify-between px-6 border-b border-border shrink-0 bg-surface">
         <Link href="/" className="flex items-center gap-2">
@@ -138,30 +158,50 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIs
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-8 scrollbar-hide">
-        {visibleGroups.map((group, idx) => (
-          <div key={idx} className="flex flex-col gap-1">
-            <span className="px-3 mb-2 font-poppins font-semibold text-[10px] uppercase tracking-wider text-muted">{group.label}</span>
-            {group.items.map((item) => {
-              const Icon = item.icon;
-              const isActive = item.href === "/admin" ? pathname === "/admin" : pathname?.startsWith(item.href);
+      <div className="flex-1 overflow-y-auto py-6 px-3 flex flex-col gap-2 scrollbar-hide">
+        {visibleGroups.map((group, idx) => {
+          const isExpanded = expandedGroups.includes(group.label);
+          return (
+            <div key={idx} className="flex flex-col gap-1 mb-2">
+              <button 
+                onClick={() => toggleGroup(group.label)}
+                className="flex items-center justify-between px-3 py-2 w-full rounded-lg hover:bg-stone-50 transition-colors group"
+              >
+                <span className="font-poppins font-semibold text-[11px] uppercase tracking-wider text-stone-500 group-hover:text-foreground transition-colors">
+                  {group.label}
+                </span>
+                {isExpanded ? (
+                  <ChevronDown size={14} className="text-stone-400" />
+                ) : (
+                  <ChevronRight size={14} className="text-stone-400" />
+                )}
+              </button>
+              
+              {isExpanded && (
+                <div className="flex flex-col gap-0.5 mt-1">
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = item.href === "/admin" ? pathname === "/admin" : pathname?.startsWith(item.href);
 
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all border-l-4 ${isActive
-                      ? "bg-accent-soft text-primary border-primary font-bold shadow-sm"
-                      : "border-transparent text-text-secondary hover:bg-background hover:text-foreground font-medium"
-                    }`}
-                >
-                  <Icon size={18} />
-                  <span className="font-inter text-sm">{item.name}</span>
-                </Link>
-              );
-            })}
-          </div>
-        ))}
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className={`flex items-center gap-3 px-3 py-2.5 mx-1 rounded-lg transition-all ${isActive
+                            ? "bg-stone-100 text-stone-900 font-bold"
+                            : "text-stone-500 hover:bg-stone-50 hover:text-stone-900 font-medium"
+                          }`}
+                      >
+                        <Icon size={18} className={isActive ? "text-stone-900" : "text-stone-400"} />
+                        <span className="font-inter text-sm">{item.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* User Profile Footer */}

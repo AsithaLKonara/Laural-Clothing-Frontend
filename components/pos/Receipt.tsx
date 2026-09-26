@@ -76,10 +76,10 @@ const Receipt = forwardRef<HTMLDivElement, ReceiptProps>((props, ref) => {
       {divider}
 
       {/* Items Header */}
-      <div style={{ display: "flex", fontWeight: "bold", fontSize: "10px", marginBottom: "2px" }}>
-        <span style={{ flex: 1 }}>Item</span>
-        <span style={{ width: "22px", textAlign: "center" }}>Qty</span>
-        <span style={{ width: "52px", textAlign: "right" }}>Rs.</span>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 30px 60px", gap: "4px", fontWeight: "bold", fontSize: "10px", marginBottom: "2px" }}>
+        <span>Item</span>
+        <span style={{ textAlign: "center" }}>Qty</span>
+        <span style={{ textAlign: "right" }}>Rs.</span>
       </div>
 
       {divider}
@@ -89,12 +89,12 @@ const Receipt = forwardRef<HTMLDivElement, ReceiptProps>((props, ref) => {
         {items.map((item, idx) => (
           <div key={idx} style={{ marginBottom: "4px" }}>
             <div style={{ fontSize: "10px" }}>{truncate(item.name)}</div>
-            <div style={{ display: "flex", fontSize: "10px" }}>
-              <span style={{ flex: 1, color: "#555", fontSize: "9px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 30px 60px", gap: "4px", fontSize: "10px" }}>
+              <span style={{ color: "#555", fontSize: "9px" }}>
                 {[item.color, item.size].filter(Boolean).join(" / ")}
               </span>
-              <span style={{ width: "22px", textAlign: "center" }}>x{item.qty}</span>
-              <span style={{ width: "52px", textAlign: "right" }}>{fmt(item.price * item.qty)}</span>
+              <span style={{ textAlign: "center" }}>x{item.qty}</span>
+              <span style={{ textAlign: "right" }}>{fmt(item.price * item.qty)}</span>
             </div>
           </div>
         ))}

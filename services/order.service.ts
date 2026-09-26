@@ -11,6 +11,7 @@ export interface CustomerData {
   addressLine3?: string;
   city: string;
   district?: string;
+  nearestCity?: string;
   postalCode?: string;
   isGuest?: boolean;
 }

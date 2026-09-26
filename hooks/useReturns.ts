@@ -1,12 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/services/api';
 
-export const useReturns = (page: number, limit: number, search?: string, status?: string, customerId?: string) => {
+export const useReturns = (page: number, limit: number, search?: string, status?: string, customerId?: string, origin?: string, type?: string) => {
   return useQuery({
-    queryKey: ['returns', { page, limit, search, status, customerId }],
+    queryKey: ['returns', { page, limit, search, status, customerId, origin, type }],
     queryFn: async () => {
       const res = await api.get('/returns', {
-        params: { page, limit, search, status, customerId }
+        params: { page, limit, search, status, customerId, origin, type }
       });
       return res.data;
     },

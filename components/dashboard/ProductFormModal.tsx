@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   X,
   ImagePlus,
@@ -18,7 +18,10 @@ import {
   CreditCard,
   Globe,
   Barcode,
+  Printer,
 } from "lucide-react";
+import BarcodeLib from "react-barcode";
+import { useReactToPrint } from "react-to-print";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createProductSchema, CreateProductFormData } from "@/lib/validations";
@@ -95,6 +98,8 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
   const [activeImageSlot, setActiveImageSlot] = useState<number | null>(null);
   const [initialGlobalStock, setInitialGlobalStock] = useState<number>(0);
+  const [printingVariant, setPrintingVariant] = useState<{ barcode: string; label: string } | null>(null);
+  const [showBulkBarcodePrint, setShowBulkBarcodePrint] = useState(false);
 
   const createProductMutation = useCreateProduct();
   const updateProductMutation = useUpdateProduct();
@@ -239,6 +244,10 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
     setSelectedColors(prev => prev.includes(color) ? prev.filter(c => c !== color) : [...prev, color]);
   }
 
+  function generateUniqueBarcode(): string {
+    return `20${Math.floor(10000000000 + Math.random() * 89999999999)}`;
+  }
+
   function generateVariants() {
     const newVariants: Variant[] = [];
     for (const size of selectedSizes) {
@@ -250,7 +259,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
             size,
             color,
             sku: generateSKU(productName || "PROD", size, color),
-            barcode: "",
+            barcode: generateUniqueBarcode(), // Auto-generate barcode on creation
             stock: Object.fromEntries(branchCodes.map((b: string) => [b, initialGlobalStock])),
             price: basePrice || "",
             compareAtPrice: compareAtPrice || "",
@@ -284,15 +293,6 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
       stock: Object.fromEntries(branchCodes.map((b: string) => [b, initialGlobalStock]))
     })));
     toast.success(`Applied ${initialGlobalStock} stock to all variants`);
-  }
-
-  function autoGenerateBarcodes() {
-    if (variants.length === 0) return toast.error("Generate variants first");
-    setVariants(prev => prev.map(v => ({
-      ...v,
-      barcode: v.barcode || Math.floor(1000000000 + Math.random() * 9000000000).toString()
-    })));
-    toast.success("Generated missing barcodes");
   }
 
   function togglePayment(gw: string) {
@@ -679,7 +679,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 flex-wrap">
                   <button
                     type="button"
                     onClick={generateVariants}
@@ -689,14 +689,16 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
                     <Plus size={16} />
                     Generate {selectedSizes.length * selectedColors.length} Variant{selectedSizes.length * selectedColors.length !== 1 ? "s" : ""}
                   </button>
-                  <button
-                    type="button"
-                    onClick={autoGenerateBarcodes}
-                    className="w-fit bg-stone-100 text-stone-700 border border-stone-200 px-6 py-3 rounded-lg font-inter font-medium text-sm hover:bg-stone-200 transition-colors flex items-center gap-2"
-                  >
-                    <Barcode size={16} />
-                    Auto-Gen Barcodes
-                  </button>
+                  {variants.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowBulkBarcodePrint(true)}
+                      className="w-fit bg-stone-100 text-stone-700 border border-stone-200 px-6 py-3 rounded-lg font-inter font-medium text-sm hover:bg-stone-200 transition-colors flex items-center gap-2"
+                    >
+                      <Printer size={16} />
+                      Print All Barcodes ({variants.length})
+                    </button>
+                  )}
                 </div>
 
                 {variants.length > 0 && (
@@ -726,12 +728,21 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
                               />
                             </td>
                             <td className="px-4 py-3">
-                              <input
-                                className="font-mono text-xs border border-stone-200 rounded px-2 py-1 w-28 outline-none focus:border-stone-400"
-                                value={v.barcode}
-                                placeholder="Barcode"
-                                onChange={e => updateVariantField(v.id, "barcode", e.target.value)}
-                              />
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-mono text-xs bg-stone-50 border border-stone-200 rounded px-2 py-1 text-stone-600 select-all cursor-text min-w-[7rem]">
+                                  {v.barcode || '—'}
+                                </span>
+                                {v.barcode && (
+                                  <button
+                                    type="button"
+                                    title="Print barcode"
+                                    onClick={() => setPrintingVariant({ barcode: v.barcode, label: `${productName} — ${v.size}/${v.color}` })}
+                                    className="p-1 text-stone-400 hover:text-stone-800 hover:bg-stone-100 rounded transition-colors"
+                                  >
+                                    <Printer size={13} />
+                                  </button>
+                                )}
+                              </div>
                             </td>
                             <td className="px-4 py-3">
                               <input
@@ -1122,6 +1133,97 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
           title="Select Product Image"
         />
       )}
+
+      {/* Per-variant Barcode Print Modal */}
+      {printingVariant && (
+        <VariantBarcodePrintModal
+          barcode={printingVariant.barcode}
+          label={printingVariant.label}
+          onClose={() => setPrintingVariant(null)}
+        />
+      )}
+
+      {/* Bulk Barcode Print Modal */}
+      {showBulkBarcodePrint && (
+        <BulkBarcodePrintModal
+          variants={variants.filter(v => v.barcode).map(v => ({
+            barcode: v.barcode,
+            label: `${productName} — ${v.size}/${v.color}`
+          }))}
+          onClose={() => setShowBulkBarcodePrint(false)}
+        />
+      )}
     </div>
   );
 }
+
+// ── Single Variant Barcode Print Modal ──────────────────────────────────────
+function VariantBarcodePrintModal({ barcode, label, onClose }: { barcode: string; label: string; onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const handlePrint = useReactToPrint({ contentRef: ref, documentTitle: `Barcode-${barcode}` });
+  const displayCode = barcode.length > 12 ? barcode.substring(0, 12) : barcode;
+  return (
+    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between p-4 border-b border-stone-200 bg-stone-50">
+          <h3 className="font-inter font-bold text-base text-stone-900">Print Barcode</h3>
+          <button onClick={onClose} className="p-1.5 text-stone-400 hover:text-stone-900 hover:bg-stone-200 rounded-lg transition-colors"><X size={18} /></button>
+        </div>
+        <div className="p-6 flex flex-col items-center gap-4 bg-stone-100">
+          <div className="bg-white p-5 rounded-xl shadow-sm border border-stone-200 flex flex-col items-center w-full">
+            <div ref={ref} className="flex flex-col items-center bg-white p-2 w-full">
+              <p className="font-sans font-bold text-sm text-center mb-1 text-stone-900">{label}</p>
+              <BarcodeLib value={displayCode} format="CODE128" width={1.5} height={55} displayValue fontSize={13} margin={4} />
+            </div>
+          </div>
+          <p className="text-xs text-stone-500 font-inter text-center">Label: {label}</p>
+        </div>
+        <div className="p-4 border-t border-stone-200 bg-stone-50 flex justify-end gap-3">
+          <button onClick={onClose} className="px-4 py-2 bg-white border border-stone-200 text-stone-700 font-inter font-medium text-sm rounded-lg hover:bg-stone-50 transition-colors">Cancel</button>
+          <button onClick={() => handlePrint()} className="px-5 py-2 bg-stone-900 text-white font-inter font-medium text-sm rounded-lg hover:bg-stone-800 transition-colors flex items-center gap-2">
+            <Printer size={15} /> Print Label
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Bulk Barcode Print Modal ─────────────────────────────────────────────────
+function BulkBarcodePrintModal({ variants, onClose }: { variants: { barcode: string; label: string }[]; onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const handlePrint = useReactToPrint({ contentRef: ref, documentTitle: "Bulk-Barcodes" });
+  return (
+    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 max-h-[90vh]">
+        <div className="flex items-center justify-between p-4 border-b border-stone-200 bg-stone-50 shrink-0">
+          <div>
+            <h3 className="font-inter font-bold text-base text-stone-900">Bulk Barcode Print</h3>
+            <p className="text-xs text-stone-500 font-inter mt-0.5">{variants.length} barcode{variants.length !== 1 ? "s" : ""} will be printed</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 text-stone-400 hover:text-stone-900 hover:bg-stone-200 rounded-lg transition-colors"><X size={18} /></button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-6 bg-stone-100">
+          <div ref={ref} className="grid grid-cols-3 gap-4 bg-stone-100 p-2" style={{ printColorAdjust: "exact" }}>
+            {variants.map((v, i) => {
+              const displayCode = v.barcode.length > 12 ? v.barcode.substring(0, 12) : v.barcode;
+              return (
+                <div key={i} className="bg-white p-3 rounded-lg border border-stone-200 flex flex-col items-center">
+                  <p className="font-sans font-semibold text-[10px] text-center leading-tight mb-1 text-stone-800">{v.label}</p>
+                  <BarcodeLib value={displayCode} format="CODE128" width={1.2} height={40} displayValue fontSize={10} margin={2} />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div className="p-4 border-t border-stone-200 bg-stone-50 flex justify-end gap-3 shrink-0">
+          <button onClick={onClose} className="px-4 py-2 bg-white border border-stone-200 text-stone-700 font-inter font-medium text-sm rounded-lg hover:bg-stone-50 transition-colors">Cancel</button>
+          <button onClick={() => handlePrint()} className="px-5 py-2 bg-stone-900 text-white font-inter font-medium text-sm rounded-lg hover:bg-stone-800 transition-colors flex items-center gap-2">
+            <Printer size={15} /> Print All {variants.length} Labels
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+

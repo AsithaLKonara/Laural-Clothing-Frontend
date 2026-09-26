@@ -9,7 +9,8 @@ import { useBranches } from "@/hooks/useInventory";
 import { useProducts } from "@/hooks/useProducts";
 import Image from "next/image";
 import { useDebounce } from "@/hooks/useDebounce";
-import { fardarDistrictCityMap, allFardarCities } from "@/lib/fardarCities";
+import slAddress from "sl-address";
+import { allFardarCities } from "@/lib/fardarCities";
 
 interface CartItem {
   variantId: string;
@@ -33,8 +34,9 @@ export default function QuickDispatchPage() {
     addressLine1: "",
     addressLine2: "",
     addressLine3: "",
-    city: "",
     district: "",
+    city: "",
+    nearestCity: "",
     postalCode: "",
   });
 
@@ -53,6 +55,8 @@ export default function QuickDispatchPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  const isPhoneValid = /^0\d{9}$/.test(phone);
+
   const handlePhoneSearch = async () => {
     if (phone.length < 9) return;
     setIsSearchingCustomer(true);
@@ -68,6 +72,7 @@ export default function QuickDispatchPage() {
         addressLine3: address.addressLine3 || "",
         district: address.district || "",
         city: address.city || "",
+        nearestCity: address.nearestCity || address.city || "",
         postalCode: address.postalCode || "",
       });
     }
@@ -112,8 +117,12 @@ export default function QuickDispatchPage() {
     e.preventDefault();
     setError("");
     
-    if (!phone || !customer.firstName || !customer.addressLine1 || !customer.city) {
-      setError("Please fill in all required customer details (Phone, First Name, Address, City).");
+    if (!phone || !/^0\d{9}$/.test(phone)) {
+      setError("Phone number must start with 0 and be 10 digits (e.g. 0771234567).");
+      return;
+    }
+    if (!customer.firstName || !customer.addressLine1 || !customer.city || !customer.nearestCity) {
+      setError("Please fill in all required customer details (Phone, First Name, Address, City, Nearest City).");
       return;
     }
     if (!branchId) {
@@ -180,10 +189,17 @@ export default function QuickDispatchPage() {
                     onChange={e => setPhone(e.target.value)} 
                     onBlur={handlePhoneSearch}
                     placeholder="e.g. 0771234567" 
-                    className="flex-1 border border-stone-200 rounded-xl px-4 py-2.5 text-sm font-inter outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 transition-all"
+                    className={`flex-1 border ${phone.length > 0 && !isPhoneValid ? 'border-red-500' : 'border-stone-200'} rounded-xl px-4 py-2.5 text-sm font-inter outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 transition-all`}
                   />
                   {isSearchingCustomer && <div className="flex items-center px-2 text-stone-400"><Loader2 className="animate-spin" size={18}/></div>}
                 </div>
+                {phone.length > 0 && !isPhoneValid ? (
+                  <span className="text-red-500 text-xs mt-1">
+                    Phone number must start with 0 and be 10 digits (e.g., 0712345678)
+                  </span>
+                ) : (
+                  <span className="text-stone-400 text-xs mt-1">Format: 0712345678 (10 digits starting with 0)</span>
+                )}
               </div>
 
               <div className="flex flex-col gap-1.5">
@@ -226,7 +242,7 @@ export default function QuickDispatchPage() {
                   className="border border-stone-200 rounded-xl px-4 py-2.5 text-sm font-inter outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 transition-all bg-white"
                 >
                   <option value="">Select District</option>
-                  {Object.keys(fardarDistrictCityMap).map(d => (
+                  {slAddress.getDistricts().map(d => (
                     <option key={d} value={d}>{d}</option>
                   ))}
                 </select>
@@ -240,11 +256,26 @@ export default function QuickDispatchPage() {
                   className="border border-stone-200 rounded-xl px-4 py-2.5 text-sm font-inter outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 transition-all bg-white"
                 >
                   <option value="">Select City</option>
-                  {(customer.district && fardarDistrictCityMap[customer.district] ? fardarDistrictCityMap[customer.district] : allFardarCities).map(c => (
+                  {(customer.district ? slAddress.getCitiesByDistrict(customer.district) : []).map(c => (
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
               </div>
+
+              <div className="sm:col-span-2 flex flex-col gap-1.5">
+                <label className="font-inter text-xs font-semibold text-stone-500 uppercase">Nearest City (For Courier) *</label>
+                <select 
+                  value={customer.nearestCity} 
+                  onChange={e => setCustomer({...customer, nearestCity: e.target.value})} 
+                  className="border border-stone-200 rounded-xl px-4 py-2.5 text-sm font-inter outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 transition-all bg-white"
+                >
+                  <option value="">Select nearest city</option>
+                  {allFardarCities.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="flex flex-col gap-1.5">
                 <label className="font-inter text-xs font-semibold text-stone-500 uppercase">Postal Code</label>
                 <input value={customer.postalCode} onChange={e => setCustomer({...customer, postalCode: e.target.value})} className="border border-stone-200 rounded-xl px-4 py-2.5 text-sm font-inter outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 transition-all"/>

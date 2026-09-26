@@ -1,7 +1,7 @@
 "use client";
 "use client";
 
-import { Maximize, Search, Trash2, CreditCard, Banknote, LayoutGrid, UserPlus, X, ChevronRight, CheckCircle2, ShoppingBag } from "lucide-react";
+import { Maximize, Search, Trash2, CreditCard, Banknote, LayoutGrid, UserPlus, X, ChevronRight, CheckCircle2, ShoppingBag, Lock } from "lucide-react";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import VariantSelectionModal from "@/components/pos/VariantSelectionModal";
@@ -41,7 +41,7 @@ export default function POSPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [posMode, setPosMode] = useState<"SALES" | "RETURNS" | "DISPATCH" | "EXCHANGE">("SALES");
   
-  const { data: activeSession } = useCurrentSession(terminalId);
+  const { data: activeSession, isLoading: sessionLoading } = useCurrentSession(terminalId);
   const { data: branchesResponse } = useBranches();
   const branches = Array.isArray(branchesResponse) ? branchesResponse : (branchesResponse as any)?.data || [];
 
@@ -92,9 +92,10 @@ export default function POSPage() {
   const isShiftModalOpen = shiftModalMode !== null;
   
   useEffect(() => {
+    if (sessionLoading) return; // wait until loaded
     if (activeSession) setShiftState("OPEN");
     else setShiftState("CLOSED");
-  }, [activeSession]);
+  }, [activeSession, sessionLoading]);
   
   const [heldCarts, setHeldCarts] = useState<{id: string, time: string, items: any[]}[]>([]);
   const [isHeldCartsModalOpen, setIsHeldCartsModalOpen] = useState(false);
@@ -424,8 +425,38 @@ export default function POSPage() {
       </div>
 
       {/* Main Layout Area */}
-      {posMode === "RETURNS" ? (
-        <PosReturnsMode />
+      {sessionLoading ? (
+        <div className="flex-1 flex flex-col items-center justify-center bg-surface overflow-hidden">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="font-inter text-muted text-sm">Checking shift status...</p>
+        </div>
+      ) : shiftState === "CLOSED" ? (
+        <div className="flex-1 flex flex-col items-center justify-center bg-surface overflow-hidden">
+          <div className="w-24 h-24 bg-stone-100 rounded-full flex items-center justify-center mb-6">
+            <Lock size={48} className="text-stone-400" />
+          </div>
+          <h2 className="font-inter font-bold text-3xl text-foreground mb-4">Shift Closed</h2>
+          <p className="font-inter text-muted mb-8 max-w-md text-center">
+            You need to open a shift with an initial cash float before you can start processing sales, returns, or exchanges.
+          </p>
+          <button 
+            onClick={() => setShiftModalMode("OPEN")}
+            className="px-8 py-3 bg-primary text-white font-inter font-bold rounded-xl shadow-lg hover:bg-primary-hover hover:-translate-y-1 transition-all"
+          >
+            Open Shift Now
+          </button>
+        </div>
+      ) : posMode === "RETURNS" ? (
+        <PosReturnsMode branchId={branchId} />
+      ) : posMode === "EXCHANGE" ? (
+        <PosExchangeTicket
+          isMobileCartOpen={isMobileCartOpen}
+          setIsMobileCartOpen={setIsMobileCartOpen}
+          cart={cart}
+          updateQty={updateQty}
+          clearCart={clearCart}
+          branchId={branchId}
+        />
       ) : (
         <div className="flex-1 flex overflow-hidden">
           
@@ -490,11 +521,8 @@ export default function POSPage() {
                     <button 
                       key={p.id}
                       onClick={() => { 
-                        if (posMode === "DISPATCH" || posMode === "EXCHANGE") {
-                          addToCart(p);
-                        } else {
-                          setSelectedProduct(p); setIsVariantModalOpen(true); 
-                        }
+                        setSelectedProduct(p); 
+                        setIsVariantModalOpen(true); 
                       }}
                       className="bg-surface border border-border rounded-xl flex flex-col hover:border-accent hover:shadow-md transition-all text-left active:scale-95 overflow-hidden"
                     >
@@ -551,14 +579,7 @@ export default function POSPage() {
               cart={cart}
               updateQty={updateQty}
               clearCart={clearCart}
-            />
-          ) : posMode === "EXCHANGE" ? (
-            <PosExchangeTicket 
-              isMobileCartOpen={isMobileCartOpen}
-              setIsMobileCartOpen={setIsMobileCartOpen}
-              cart={cart}
-              updateQty={updateQty}
-              clearCart={clearCart}
+              branchId={branchId}
             />
           ) : (
             <div className={`fixed inset-y-0 right-0 w-full sm:w-[420px] bg-surface flex flex-col shrink-0 shadow-2xl lg:shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] z-50 lg:z-0 lg:static transform transition-transform duration-300 lg:translate-x-0 ${isMobileCartOpen ? "translate-x-0" : "translate-x-full"}`}>
@@ -629,7 +650,7 @@ export default function POSPage() {
 
                 <div className="mt-4">
                   <button 
-                    disabled={shiftState === "CLOSED" || cart.length === 0}
+                    disabled={cart.length === 0}
                     onClick={() => {
                       if (!branchId) {
                         globalDialog.alert("No branch assigned to your account. Please contact your administrator to assign you to a branch before processing sales.");
@@ -640,9 +661,9 @@ export default function POSPage() {
                     className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover disabled:bg-stone-300 disabled:cursor-not-allowed rounded-xl py-4 transition-colors shadow-lg shadow-primary/20"
                   >
                     <span className="font-inter font-bold text-lg text-white">
-                      {shiftState === "CLOSED" ? "Shift Closed" : "Charge"}
+                      Charge
                     </span>
-                    {shiftState === "OPEN" && <ChevronRight size={20} className="text-white" />}
+                    <ChevronRight size={20} className="text-white" />
                   </button>
                 </div>
                 <div className="grid grid-cols-2 gap-3 mt-2">
