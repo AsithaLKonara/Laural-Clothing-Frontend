@@ -98,9 +98,9 @@ export default function VariantSelectionModal({ product, onClose, onAdd, allowOu
               <div className="flex items-center gap-3 mt-1">
                 <span className="font-inter font-bold text-primary text-lg">Rs. {price.toFixed(2)}</span>
                 <span className={`font-inter text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded border ${
-                  inStock ? "text-muted bg-background border-border" : "text-error bg-error/10 border-error/20"
+                  (inStock || allowOutOfStock) ? "text-muted bg-background border-border" : "text-error bg-error/10 border-error/20"
                 }`}>
-                  {inStock ? "In Stock" : "Out of Stock"}
+                  {inStock ? "In Stock" : (allowOutOfStock ? "Pre-Sold" : "Out of Stock")}
                 </span>
               </div>
             </div>

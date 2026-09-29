@@ -192,7 +192,7 @@ export default function POSPage() {
 
   useBarcodeScanner({
     onScan: async (barcode) => {
-      if (shiftState === 'CLOSED' || posMode !== 'SALES') return;
+      if (shiftState === 'CLOSED' || (posMode !== 'SALES' && posMode !== 'DISPATCH')) return;
       try {
         const product = await scanBarcodeMutation.mutateAsync(barcode);
         if (product && product.variants) {
@@ -220,7 +220,7 @@ export default function POSPage() {
         globalDialog.alert("Product not found or invalid barcode.");
       }
     },
-    disabled: isPaymentModalOpen || isCustomerModalOpen || isVariantModalOpen || isShiftModalOpen || shiftState === 'CLOSED' || posMode !== 'SALES'
+    disabled: isPaymentModalOpen || isCustomerModalOpen || isVariantModalOpen || isShiftModalOpen || shiftState === 'CLOSED' || (posMode !== 'SALES' && posMode !== 'DISPATCH')
   });
 
   const toggleFullscreen = () => {
@@ -538,9 +538,9 @@ export default function POSPage() {
                             {price.toFixed(2)}
                           </span>
                           <span className={`font-inter text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded border ${
-                            inStock ? "text-muted bg-background border-border" : "text-error bg-error/10 border-error/20"
+                            (inStock || posMode === 'DISPATCH') ? "text-muted bg-background border-border" : "text-error bg-error/10 border-error/20"
                           }`}>
-                            {inStock ? "In Stock" : "Out"}
+                            {inStock ? "In Stock" : (posMode === 'DISPATCH' ? "Pre-Sold" : "Out")}
                           </span>
                         </div>
                       </div>
