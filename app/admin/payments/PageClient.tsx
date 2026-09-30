@@ -7,6 +7,7 @@ import StatCard from "@/components/dashboard/StatCard";
 import { PaymentGatewayBadge } from "@/components/dashboard/Badges";
 import { useState, useMemo } from "react";
 import { usePaymentTransactions, usePaymentKpis } from "@/hooks/usePayments";
+import { api } from "@/services/api";
 import FilterBar from "@/components/dashboard/FilterBar";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, PieChart, Pie, Cell } from "recharts";
 
@@ -30,6 +31,7 @@ export default function PaymentsPage() {
   const [status, setStatus] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
 
   const { data: txResponse, isLoading: txLoading } = usePaymentTransactions({
     gateway,
@@ -116,6 +118,56 @@ export default function PaymentsPage() {
   const last7Str = new Date(new Date().setDate(new Date().getDate() - 7)).toISOString().split("T")[0];
   const last30Str = new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split("T")[0];
   const last90Str = new Date(new Date().setDate(new Date().getDate() - 90)).toISOString().split("T")[0];
+
+  const handleDownloadCSV = async () => {
+    try {
+      setIsExporting(true);
+      const params = new URLSearchParams();
+      params.append("limit", "10000");
+      if (gateway) params.append("gateway", gateway);
+      if (status) params.append("status", status);
+      if (startDate) params.append("startDate", startDate);
+      if (endDate) params.append("endDate", endDate);
+
+      const res = await api.get('/payments/transactions', { params });
+      
+      const exportData = res.data?.data || [];
+      if (exportData.length === 0) {
+        alert("No data available to export for the selected filters.");
+        return;
+      }
+
+      const headers = ['ID', 'Order', 'Customer', 'Gateway', 'Method', 'Amount (Rs)', 'Status', 'Date', 'Time'];
+      const csvContent = [
+        headers.join(','),
+        ...exportData.map((t: any) => [
+          `"${t.id}"`,
+          `"${t.order}"`,
+          `"${t.customer}"`,
+          `"${t.gateway}"`,
+          `"${t.method}"`,
+          t.amount,
+          `"${t.status}"`,
+          `"${t.date}"`,
+          `"${t.created}"`
+        ].join(','))
+      ].join('\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `financial-report-${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (e) {
+      console.error("Export Error:", e);
+      alert('Failed to generate CSV. Please ensure the backend is running.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const getQuickSelectVariant = (rangeStart: string, rangeEnd: string) => {
     return startDate === rangeStart && endDate === rangeEnd ? "bg-stone-900 text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200";
@@ -349,8 +401,17 @@ export default function PaymentsPage() {
           </div>
           <h3 className="font-inter font-bold text-stone-900 text-xl mb-2">Financial Accounting Reports</h3>
           <p className="text-stone-500 max-w-md mb-6">Generate and download comprehensive CSV reports of all transactions, refunds, and net revenue for accounting software integration.</p>
-          <button className="bg-stone-900 hover:bg-stone-800 text-white font-medium py-2 px-6 rounded-lg transition-colors">
-            Generate CSV Report
+          <button 
+            onClick={handleDownloadCSV}
+            disabled={isExporting}
+            className="bg-stone-900 hover:bg-stone-800 disabled:bg-stone-400 text-white font-medium py-2 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+          >
+            {isExporting ? (
+              <>
+                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                Generating...
+              </>
+            ) : "Generate CSV Report"}
           </button>
         </div>
       )}
