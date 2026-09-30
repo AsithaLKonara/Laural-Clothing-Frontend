@@ -49,7 +49,7 @@ export default function CollectionsSection({ initialData }: { initialData?: Pagi
           {categories.slice(0, 6).map((category: Category, idx: number) => {
             const imageUrl = category.imageUrl || placeholderImages[idx % placeholderImages.length];
             return (
-              <div key={category.id} className="w-[calc(50%-6px)] md:w-[calc(33.333%-14px)] lg:w-[calc(16.666%-17px)]">
+              <div key={category.id} className="flex justify-center w-full max-w-[245px]">
                 <CategoryCard
                   title={category.name}
                   imageUrl={imageUrl}

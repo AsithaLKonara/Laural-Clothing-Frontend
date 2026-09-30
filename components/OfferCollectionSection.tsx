@@ -44,8 +44,8 @@ export default function OfferCollectionSection({ initialData }: { initialData?: 
       </div>
 
       {/* Product Carousel */}
-      <div className="w-full max-w-[1040px] overflow-hidden" ref={emblaRef}>
-        <div className={`flex -ml-[20px] ${(!isLoading && products.length < 4) ? 'justify-center' : ''}`}>
+      <div className="w-full max-w-[1040px] overflow-hidden" ref={products.length > 4 || isLoading ? emblaRef : undefined}>
+        <div className={`flex ${products.length > 4 || isLoading ? '-ml-[20px]' : 'justify-center flex-wrap gap-5'}`}>
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="flex-[0_0_265px] min-w-[265px] pl-[20px]">
@@ -53,7 +53,7 @@ export default function OfferCollectionSection({ initialData }: { initialData?: 
               </div>
             ))
           ) : products.map((product: Product) => (
-            <div key={product.id} className="flex-[0_0_265px] min-w-[265px] pl-[20px]">
+            <div key={product.id} className={products.length > 4 ? "flex-[0_0_265px] min-w-[265px] pl-[20px]" : "flex justify-center w-full max-w-[245px]"}>
               <ProductCard product={product} />
             </div>
           ))}

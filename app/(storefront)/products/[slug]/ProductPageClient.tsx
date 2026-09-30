@@ -412,8 +412,8 @@ export default function ProductPageClient({
       {/* Related Products */}
       <div className="flex flex-col items-center w-full max-w-[1280px] mx-auto px-4 md:px-[120px] py-16 md:py-[80px]">
         <h2 className="font-poppins text-2xl md:text-4xl text-primary mb-8">Related Products</h2>
-        <div className="w-full max-w-[1040px] overflow-hidden" ref={emblaRef}>
-          <div className="flex -ml-[20px]">
+        <div className="w-full max-w-[1040px] overflow-hidden" ref={relatedProducts.length > 4 ? emblaRef : undefined}>
+          <div className={`flex ${relatedProducts.length > 4 ? '-ml-[20px]' : 'justify-center flex-wrap gap-5'}`}>
             {relatedProducts.length === 0 ? (
               Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="flex-[0_0_265px] min-w-[265px] pl-[20px]">
@@ -421,7 +421,7 @@ export default function ProductPageClient({
                 </div>
               ))
             ) : relatedProducts.slice(0, 8).map((product: Product) => (
-              <div key={product.id} className="flex-[0_0_265px] min-w-[265px] pl-[20px]">
+              <div key={product.id} className={relatedProducts.length > 4 ? "flex-[0_0_265px] min-w-[265px] pl-[20px]" : "flex justify-center w-full max-w-[245px]"}>
                 <ProductCard product={product} />
               </div>
             ))}

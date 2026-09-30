@@ -17,10 +17,18 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, imageUrl = "/products/default.jpg", priority = false }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const [selectedSize, setSelectedSize] = useState<string | null>(() => {
-    const inStock = product?.variants?.filter((v: any) => v.stockStatus === 'instock') || [];
-    return inStock.length > 0 ? inStock[0].size : (product?.variants?.[0]?.size || null);
-  });
+  const [showVariantSelector, setShowVariantSelector] = useState(false);
+  
+  const uniqueSizes = product?.variants 
+    ? Array.from(new Set(product.variants.map((v: any) => v.size).filter(Boolean))).slice(0, 4) as string[]
+    : [];
+  const uniqueColors = product?.variants
+    ? Array.from(new Set(product.variants.map((v: any) => v.color).filter(Boolean))) as string[]
+    : [];
+    
+  const [selectedSize, setSelectedSize] = useState<string | null>(uniqueSizes.length === 1 ? uniqueSizes[0] : null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(uniqueColors.length === 1 ? uniqueColors[0] : null);
+
   const router = useRouter();
   const sessionId = useCartStore((state) => state.sessionId);
   const openDrawer = useCartStore((state) => state.openDrawer);
@@ -82,14 +90,13 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
   const currentPrice = currentPriceObj.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const oldPrice = basePrice > 0 ? originalPriceObj.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00";
   const installment = (currentPriceObj / 3).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const uniqueSizes = product?.variants 
-    ? Array.from(new Set(product.variants.map((v: any) => v.size).filter(Boolean))).slice(0, 4)
-    : [];
-  const displaySizes = uniqueSizes as string[];
+  const displaySizes = uniqueSizes;
   
-  const inStockSizes = new Set(
-    product?.variants?.filter((v: any) => v.stockStatus === 'instock').map((v: any) => v.size) || []
-  );
+  const inStockVariants = product?.variants?.filter((v: any) => v.stockStatus === 'instock') || [];
+  const inStockSizes = new Set(inStockVariants.map((v: any) => v.size));
+  const inStockColors = new Set(inStockVariants.map((v: any) => v.color));
+
+  const needsSelection = (uniqueSizes.length > 1 && !selectedSize) || (uniqueColors.length > 1 && !selectedColor);
 
   return (
     <div 
@@ -135,37 +142,69 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
         
         {/* Bottom Overlays */}
         <div className="absolute bottom-0 w-full flex flex-col z-20 pointer-events-none">
-          {/* Sizes Row (Hover Only) */}
-          {displaySizes.length > 0 && (
+          {/* Variant Selector (Hover or Active) */}
+          {(displaySizes.length > 0 || uniqueColors.length > 0) && (
             <div 
-              className={`flex items-center justify-center min-h-[36px] py-1.5 w-full bg-black/30 backdrop-blur-sm transition-all duration-300 pointer-events-auto ${
-                isHovered ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'
+              className={`flex flex-col items-center justify-center min-h-[36px] py-2 w-full bg-black/40 backdrop-blur-md transition-all duration-300 pointer-events-auto gap-2 ${
+                (isHovered || showVariantSelector) ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'
               }`}
             >
-              <div className="flex flex-wrap justify-center gap-[4px] px-2 w-full">
-                {displaySizes.map((size: any) => {
-                  const isAvailable = inStockSizes.has(size);
-                  const isSelected = selectedSize === size;
-                  return (
-                    <div 
-                      key={size} 
-                      onClick={(e) => { 
-                        e.stopPropagation(); 
-                        e.preventDefault();
-                        if (isAvailable) setSelectedSize(size); 
-                      }} 
-                      className={`flex justify-center items-center px-1.5 min-w-[28px] h-[20px] rounded-full transition-colors ${
-                        !isAvailable ? 'bg-black/50 border border-white/10 cursor-not-allowed opacity-50' : 
-                        isSelected ? 'bg-white border border-white cursor-pointer' : 'bg-black/80 border border-white/20 cursor-pointer hover:bg-black'
-                      }`}
-                    >
-                      <span className={`font-inter font-bold text-[10px] truncate max-w-[50px] ${
-                        isSelected ? 'text-black' : 'text-white'
-                      }`}>{size}</span>
-                    </div>
-                  );
-                })}
-              </div>
+              {/* Colors */}
+              {uniqueColors.length > 0 && (
+                <div className="flex flex-wrap justify-center gap-[6px] px-2 w-full">
+                  {uniqueColors.map((color: string) => {
+                    const isAvailable = inStockColors.has(color);
+                    const isSelected = selectedColor === color;
+                    return (
+                      <div 
+                        key={color} 
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          e.preventDefault();
+                          if (isAvailable) setSelectedColor(color); 
+                        }} 
+                        className={`w-[18px] h-[18px] rounded-full transition-all flex items-center justify-center ${
+                          !isAvailable ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'
+                        } ${isSelected ? 'ring-2 ring-white ring-offset-1 ring-offset-black/50' : 'ring-1 ring-white/50 hover:ring-white'}`}
+                        style={{ backgroundColor: color.toLowerCase() }}
+                        title={color}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Sizes */}
+              {displaySizes.length > 0 && (
+                <div className="flex flex-wrap justify-center gap-[4px] px-2 w-full">
+                  {displaySizes.map((size: string) => {
+                    // Check if this size is available for the selected color (if any)
+                    const isAvailableForColor = selectedColor 
+                      ? inStockVariants.some((v: any) => v.size === size && v.color === selectedColor)
+                      : inStockSizes.has(size);
+                    
+                    const isSelected = selectedSize === size;
+                    return (
+                      <div 
+                        key={size} 
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          e.preventDefault();
+                          if (isAvailableForColor) setSelectedSize(size); 
+                        }} 
+                        className={`flex justify-center items-center px-1.5 min-w-[28px] h-[20px] rounded-full transition-colors ${
+                          !isAvailableForColor ? 'bg-black/50 border border-white/10 cursor-not-allowed opacity-50' : 
+                          isSelected ? 'bg-white border border-white cursor-pointer' : 'bg-black/80 border border-white/20 cursor-pointer hover:bg-black'
+                        }`}
+                      >
+                        <span className={`font-inter font-bold text-[10px] truncate max-w-[50px] ${
+                          isSelected ? 'text-black' : 'text-white'
+                        }`}>{size}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
           
@@ -176,27 +215,39 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
               e.stopPropagation();
               e.preventDefault();
               
-              const variantToAdd = selectedSize 
-                ? product?.variants?.find((v: any) => v.size === selectedSize && v.stockStatus === 'instock') 
+              if (needsSelection) {
+                setShowVariantSelector(true);
+                return;
+              }
+
+              const variantToAdd = (selectedSize || selectedColor) 
+                ? product?.variants?.find((v: any) => 
+                    (!uniqueSizes.length || v.size === selectedSize) && 
+                    (!uniqueColors.length || v.color === selectedColor) &&
+                    v.stockStatus === 'instock'
+                  ) 
                 : defaultVariant;
 
               if (inStock && variantToAdd) {
                 addToCart.mutate(
                   { variantId: variantToAdd.id, quantity: 1 },
                   {
-                    onSuccess: () => openDrawer(),
+                    onSuccess: () => {
+                       setShowVariantSelector(false);
+                       openDrawer();
+                    }
                   }
                 );
               }
             }}
             className={`flex justify-center items-center w-full py-2.5 transition-colors pointer-events-auto ${
               inStock 
-                ? 'bg-stone-900 hover:bg-black cursor-pointer' 
+                ? (needsSelection && showVariantSelector ? 'bg-accent hover:bg-accent/90' : 'bg-stone-900 hover:bg-black') 
                 : 'bg-stone-400 cursor-not-allowed'
             }`}
           >
             <span className="font-poppins font-medium text-[11px] text-white uppercase tracking-[0.1em]">
-              {addToCart.isPending ? 'Adding...' : inStock ? 'Add to cart' : 'Out of stock'}
+              {addToCart.isPending ? 'Adding...' : !inStock ? 'Out of stock' : (needsSelection && showVariantSelector) ? 'Select Options' : 'Add to cart'}
             </span>
           </button>
         </div>
