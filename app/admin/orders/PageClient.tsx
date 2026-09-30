@@ -14,6 +14,7 @@ import { useOrders } from "@/hooks/useOrders";
 import Link from "next/link";
 import AdminStatCards from "@/components/admin/AdminStatCards";
 import OrderSidePanel from "@/components/admin/OrderSidePanel";
+import { useBranches } from "@/hooks/useInventory";
 
 export default function OrdersPage() {
   const router = useRouter();
@@ -29,6 +30,7 @@ export default function OrdersPage() {
   const [paymentGateway, setPaymentGateway] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
+  const [type, setType] = useState<string>("");
   const [page, setPage] = useState<number>(1);
 
   const { data: ordersData, isLoading: ordersLoading } = useOrders({
@@ -36,6 +38,7 @@ export default function OrdersPage() {
     status: status || undefined,
     branchId: branchId || undefined,
     paymentGateway: paymentGateway || undefined,
+    type: type || undefined,
     startDate: startDate || undefined,
     endDate: endDate || undefined,
     page: page
@@ -78,27 +81,22 @@ export default function OrdersPage() {
     },
   ];
 
+  const { data: branchesData } = useBranches();
+  const branches = branchesData?.data || [];
+
   const filters = (
     <>
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-inter text-stone-500 font-medium hidden lg:inline-block whitespace-nowrap">From:</span>
-        <input 
-          type="date" 
-          value={startDate} 
-          onChange={e => { setStartDate(e.target.value); setPage(1); }}
-          className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400"
-        />
-      </div>
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-inter text-stone-500 font-medium hidden lg:inline-block whitespace-nowrap">To:</span>
-        <input 
-          type="date" 
-          value={endDate} 
-          onChange={e => { setEndDate(e.target.value); setPage(1); }}
-          className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400"
-        />
-      </div>
-      <div className="w-px h-6 bg-stone-200 hidden md:block mx-1"></div>
+      <select 
+        value={branchId}
+        onChange={e => { setBranchId(e.target.value); setPage(1); }}
+        className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400 max-w-[140px]"
+      >
+        <option value="">All Branches</option>
+        {branches.map((b: any) => (
+          <option key={b.id} value={b.id}>{b.name}</option>
+        ))}
+      </select>
+
       <select 
         value={status} 
         onChange={e => { setStatus(e.target.value); setPage(1); }}
@@ -125,6 +123,94 @@ export default function OrdersPage() {
         <option value="COD">COD</option>
         <option value="BANK_TRANSFER">Bank Transfer</option>
       </select>
+
+      <select 
+        value={type}
+        onChange={e => { setType(e.target.value); setPage(1); }}
+        className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400"
+      >
+        <option value="">All Types</option>
+        <option value="ECOMMERCE">Online Store</option>
+        <option value="POS">In-Store (POS)</option>
+        <option value="MANUAL">Manual</option>
+      </select>
+    </>
+  );
+
+  const handleDateQuickSelect = (option: string) => {
+    const today = new Date();
+    let start = "";
+    let end = today.toISOString().split("T")[0];
+
+    switch (option) {
+      case "today":
+        start = end;
+        break;
+      case "7days":
+        const last7 = new Date(today);
+        last7.setDate(today.getDate() - 7);
+        start = last7.toISOString().split("T")[0];
+        break;
+      case "30days":
+        const last30 = new Date(today);
+        last30.setDate(today.getDate() - 30);
+        start = last30.toISOString().split("T")[0];
+        break;
+      case "90days":
+        const last90 = new Date(today);
+        last90.setDate(today.getDate() - 90);
+        start = last90.toISOString().split("T")[0];
+        break;
+      case "all":
+        start = "";
+        end = "";
+        break;
+    }
+
+    setStartDate(start);
+    setEndDate(end);
+    setPage(1);
+  };
+
+  const getQuickSelectVariant = (rangeStart: string, rangeEnd: string) => {
+    return startDate === rangeStart && endDate === rangeEnd ? "bg-stone-900 text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200";
+  };
+  
+  const todayStr = new Date().toISOString().split("T")[0];
+  const last7Str = new Date(new Date().setDate(new Date().getDate() - 7)).toISOString().split("T")[0];
+  const last30Str = new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split("T")[0];
+  const last90Str = new Date(new Date().setDate(new Date().getDate() - 90)).toISOString().split("T")[0];
+
+  const bottomRow = (
+    <>
+      <div className="flex items-center gap-2 flex-wrap flex-1">
+        <button onClick={() => handleDateQuickSelect("all")} className={`px-3 py-1.5 rounded-md text-xs font-inter font-medium transition-colors ${getQuickSelectVariant("", "")}`}>All Time</button>
+        <button onClick={() => handleDateQuickSelect("today")} className={`px-3 py-1.5 rounded-md text-xs font-inter font-medium transition-colors ${getQuickSelectVariant(todayStr, todayStr)}`}>Today</button>
+        <button onClick={() => handleDateQuickSelect("7days")} className={`px-3 py-1.5 rounded-md text-xs font-inter font-medium transition-colors ${getQuickSelectVariant(last7Str, todayStr)}`}>Last 7 Days</button>
+        <button onClick={() => handleDateQuickSelect("30days")} className={`px-3 py-1.5 rounded-md text-xs font-inter font-medium transition-colors ${getQuickSelectVariant(last30Str, todayStr)}`}>Last 30 Days</button>
+        <button onClick={() => handleDateQuickSelect("90days")} className={`px-3 py-1.5 rounded-md text-xs font-inter font-medium transition-colors ${getQuickSelectVariant(last90Str, todayStr)}`}>Last 90 Days</button>
+      </div>
+
+      <div className="flex items-center gap-3 bg-stone-50 p-1.5 rounded-lg border border-stone-200 w-full md:w-auto">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-inter text-stone-500 font-medium whitespace-nowrap pl-2">Custom Range:</span>
+          <input 
+            type="date" 
+            value={startDate} 
+            onChange={e => { setStartDate(e.target.value); setPage(1); }}
+            className="bg-white border border-stone-200 rounded-md py-1.5 px-2 text-xs font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400"
+          />
+        </div>
+        <span className="text-stone-300">-</span>
+        <div className="flex items-center gap-2">
+          <input 
+            type="date" 
+            value={endDate} 
+            onChange={e => { setEndDate(e.target.value); setPage(1); }}
+            className="bg-white border border-stone-200 rounded-md py-1.5 px-2 text-xs font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400"
+          />
+        </div>
+      </div>
     </>
   );
 
@@ -163,7 +249,8 @@ export default function OrdersPage() {
         placeholder="Search order, phone, customer, tracking..." 
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        filters={filters} 
+        filters={filters}
+        bottomRow={bottomRow}
       />
 
       <DataTable 
