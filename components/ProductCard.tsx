@@ -17,6 +17,10 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, imageUrl = "/products/default.jpg", priority = false }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [selectedSize, setSelectedSize] = useState<string | null>(() => {
+    const inStock = product?.variants?.filter((v: any) => v.stockStatus === 'instock') || [];
+    return inStock.length > 0 ? inStock[0].size : (product?.variants?.[0]?.size || null);
+  });
   const router = useRouter();
   const sessionId = useCartStore((state) => state.sessionId);
   const openDrawer = useCartStore((state) => state.openDrawer);
@@ -81,7 +85,11 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
   const uniqueSizes = product?.variants 
     ? Array.from(new Set(product.variants.map((v: any) => v.size).filter(Boolean))).slice(0, 4)
     : [];
-  const displaySizes = uniqueSizes;
+  const displaySizes = uniqueSizes as string[];
+  
+  const inStockSizes = new Set(
+    product?.variants?.filter((v: any) => v.stockStatus === 'instock').map((v: any) => v.size) || []
+  );
 
   return (
     <div 
@@ -135,11 +143,28 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
               }`}
             >
               <div className="flex flex-wrap justify-center gap-[4px] px-2 w-full">
-                {displaySizes.map((size: any) => (
-                  <div key={size} onClick={(e) => e.stopPropagation()} className="flex justify-center items-center px-1.5 min-w-[28px] h-[20px] bg-black/80 border border-white/20 rounded-full cursor-pointer hover:bg-black transition-colors">
-                    <span className="font-inter font-bold text-[10px] text-white truncate max-w-[50px]">{size}</span>
-                  </div>
-                ))}
+                {displaySizes.map((size: any) => {
+                  const isAvailable = inStockSizes.has(size);
+                  const isSelected = selectedSize === size;
+                  return (
+                    <div 
+                      key={size} 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        e.preventDefault();
+                        if (isAvailable) setSelectedSize(size); 
+                      }} 
+                      className={`flex justify-center items-center px-1.5 min-w-[28px] h-[20px] rounded-full transition-colors ${
+                        !isAvailable ? 'bg-black/50 border border-white/10 cursor-not-allowed opacity-50' : 
+                        isSelected ? 'bg-white border border-white cursor-pointer' : 'bg-black/80 border border-white/20 cursor-pointer hover:bg-black'
+                      }`}
+                    >
+                      <span className={`font-inter font-bold text-[10px] truncate max-w-[50px] ${
+                        isSelected ? 'text-black' : 'text-white'
+                      }`}>{size}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -150,9 +175,14 @@ export default function ProductCard({ product, imageUrl = "/products/default.jpg
             onClick={(e) => {
               e.stopPropagation();
               e.preventDefault();
-              if (inStock && defaultVariant) {
+              
+              const variantToAdd = selectedSize 
+                ? product?.variants?.find((v: any) => v.size === selectedSize && v.stockStatus === 'instock') 
+                : defaultVariant;
+
+              if (inStock && variantToAdd) {
                 addToCart.mutate(
-                  { variantId: defaultVariant.id, quantity: 1 },
+                  { variantId: variantToAdd.id, quantity: 1 },
                   {
                     onSuccess: () => openDrawer(),
                   }
