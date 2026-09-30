@@ -46,7 +46,7 @@ export default function CuratedCollectionsSection() {
             className="group relative w-full md:w-1/2 aspect-[4/5] md:aspect-square lg:aspect-[4/3] overflow-hidden rounded-sm"
           >
             <Image 
-              src={img?.replace(/\.jpg$/, '.jpeg')}
+              src={img}
               alt={collection.title}
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
