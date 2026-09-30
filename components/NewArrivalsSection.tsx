@@ -36,15 +36,15 @@ export default function NewArrivalsSection({ initialData }: { initialData?: Pagi
       </div>
 
       {/* Product Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-[20px] py-8 md:py-[60px] w-full max-w-[1040px] place-items-center">
+      <div className="flex flex-wrap justify-center gap-3 md:gap-[20px] py-8 md:py-[60px] w-full max-w-[1040px]">
         {isLoading ? (
           Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="w-full flex justify-center">
+            <div key={i} className="w-[calc(50%-6px)] lg:w-[calc(25%-15px)] flex justify-center">
               <div className="w-full max-w-[245px] h-[380px] bg-stone-100 animate-pulse rounded-lg"></div>
             </div>
           ))
         ) : products.slice(0, 8).map((product: Product, idx: number) => (
-          <div key={product.id} className="w-full flex justify-center">
+          <div key={product.id} className="w-[calc(50%-6px)] lg:w-[calc(25%-15px)] flex justify-center">
             <ProductCard product={product} priority={idx < 4} />
           </div>
         ))}

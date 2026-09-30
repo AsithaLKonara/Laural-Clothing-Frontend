@@ -36,7 +36,7 @@ export default function CuratedCollectionsSection() {
         <div className="w-12 h-[1px] bg-stone-300 mt-4 mb-2" />
       </div>
 
-      <div className="max-w-[1280px] mx-auto w-full flex flex-col md:flex-row gap-4 md:gap-6">
+      <div className="max-w-[1280px] mx-auto w-full flex flex-col md:flex-row justify-center gap-4 md:gap-6">
         {displayCollections.map((collection, idx) => {
           const img = collection.imageUrl || fallbacks[idx % fallbacks.length];
           return (

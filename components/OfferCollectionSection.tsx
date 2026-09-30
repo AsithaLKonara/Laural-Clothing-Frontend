@@ -45,7 +45,7 @@ export default function OfferCollectionSection({ initialData }: { initialData?: 
 
       {/* Product Carousel */}
       <div className="w-full max-w-[1040px] overflow-hidden" ref={emblaRef}>
-        <div className="flex -ml-[20px]">
+        <div className={`flex -ml-[20px] ${(!isLoading && products.length < 4) ? 'justify-center' : ''}`}>
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="flex-[0_0_265px] min-w-[265px] pl-[20px]">

@@ -45,17 +45,18 @@ export default function CollectionsSection({ initialData }: { initialData?: Pagi
       </div>
 
       {/* Cards Row */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-[20px] w-full mt-4 md:mt-8">
+        <div className="flex flex-wrap justify-center gap-3 md:gap-[20px] w-full mt-4 md:mt-8">
           {categories.slice(0, 6).map((category: Category, idx: number) => {
             const imageUrl = category.imageUrl || placeholderImages[idx % placeholderImages.length];
             return (
-              <CategoryCard
-                key={category.id}
-                title={category.name}
-                imageUrl={imageUrl}
-                href={`/categories/${category.slug}`}
-                priority={idx < 6}
-              />
+              <div key={category.id} className="w-[calc(50%-6px)] md:w-[calc(33.333%-14px)] lg:w-[calc(16.666%-17px)]">
+                <CategoryCard
+                  title={category.name}
+                  imageUrl={imageUrl}
+                  href={`/categories/${category.slug}`}
+                  priority={idx < 6}
+                />
+              </div>
             );
           })}
         </div>
