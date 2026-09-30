@@ -72,8 +72,8 @@ export default function CategoryPageClient({ initialData }: { initialData?: Pagi
         </div>
 
         {/* Product Grid Area */}
-        <div className="flex-1 flex flex-col items-center md:items-start py-6 md:py-[40px] px-4 md:px-[40px] transition-all duration-500 ease-in-out">
-          <div className="grid grid-cols-2 md:grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-4 md:gap-[30px] w-full max-w-max mx-auto md:mx-0">
+        <div className="flex-1 flex flex-col items-center md:items-start py-6 md:py-[40px] px-4 md:px-[40px] transition-all duration-500 ease-in-out w-full overflow-hidden">
+          <div className="grid grid-cols-2 md:grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-4 md:gap-[30px] w-full">
             {isLoading ? (
               Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} className="flex justify-center w-full">
