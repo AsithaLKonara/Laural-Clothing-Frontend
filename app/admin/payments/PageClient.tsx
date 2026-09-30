@@ -122,14 +122,13 @@ export default function PaymentsPage() {
   const handleDownloadCSV = async () => {
     try {
       setIsExporting(true);
-      const params = new URLSearchParams();
-      params.append("limit", "10000");
-      if (gateway) params.append("gateway", gateway);
-      if (status) params.append("status", status);
-      if (startDate) params.append("startDate", startDate);
-      if (endDate) params.append("endDate", endDate);
+      const reqParams: Record<string, string> = { limit: "10000" };
+      if (gateway) reqParams.gateway = gateway;
+      if (status) reqParams.status = status;
+      if (startDate) reqParams.startDate = startDate;
+      if (endDate) reqParams.endDate = endDate;
 
-      const res = await api.get('/payments/transactions', { params });
+      const res = await api.get('/payments/transactions', { params: reqParams });
       
       const exportData = res.data?.data || [];
       if (exportData.length === 0) {
