@@ -5,7 +5,7 @@ import { CartProvider } from "@/components/CartProvider";
 import PromoBanner from "@/components/PromoBanner";
 
 export const metadata: Metadata = {
-  title: "Laural Clothing",
+  title: "SERAMAADUWEN.LK",
   description: "Pieces edited for quiet luxury — cut clean, worn easy.",
 };
 

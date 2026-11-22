@@ -1,4 +1,5 @@
 "use client";
+import AdminStatCards from "@/components/admin/AdminStatCards";
 
 import { useState } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";
@@ -162,12 +163,19 @@ export default function BranchesPage() {
         {isLoading ? (
           <div className="p-8 text-center text-stone-500">Loading branches...</div>
         ) : (
-          <DataTable
+          <>
+          <div className="mb-6"><AdminStatCards metrics={[
+  { title: "Total", value: branches.length.toString(), theme: "white-blue" },
+  { title: "Active", value: branches.filter((b: any) => b.status === "OPERATIONAL").length.toString(), theme: "white-stone" },
+  { title: "Pending", value: branches.filter((b: any) => b.status !== "OPERATIONAL").length.toString(), theme: "orange" }
+]} /></div>
+      <DataTable
             columns={columns}
             data={branches}
             keyExtractor={(row) => row.id}
             onRowClick={(row) => console.log("Branch selected:", row)}
           />
+          </>
         )}
       </div>
 

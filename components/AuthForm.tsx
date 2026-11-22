@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Eye, EyeOff, ArrowRight, CheckCircle2 } from "lucide-react";
-import { Turnstile, TurnstileInstance } from "@marsidev/react-turnstile";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod" ;
 import {
@@ -18,6 +17,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/auth.store";
 import { generateDeviceFingerprint } from "@/lib/fingerprint";
+import { Turnstile, TurnstileInstance } from "@marsidev/react-turnstile";
 
 type AuthView = "login" | "register" | "forgot-password" | "otp" | "change-password";
 
@@ -95,7 +95,8 @@ function LoginForm({ setView, mounted }: { setView: (v: AuthView) => void, mount
         router.push("/account");
       }
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || "Failed to sign in. Please check your credentials.";
+      const serverMsg = err.response?.data?.error?.message || err.response?.data?.message || err.response?.data?.error;
+      const msg = serverMsg || (err.isAxiosError ? "Network error. Please try again." : err.message) || "Failed to sign in. Please check your credentials.";
       setError(msg);
       turnstileRef.current?.reset();
     } finally {
@@ -166,15 +167,16 @@ function LoginForm({ setView, mounted }: { setView: (v: AuthView) => void, mount
           </div>
         )}
 
-        <div className="w-full flex justify-center mt-2">
-          {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+        {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+          <div className="w-full flex justify-center mt-2 mb-2">
             <Turnstile 
               ref={turnstileRef}
               siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} 
-              onSuccess={(token) => setValue("turnstileToken", token)} 
+              onSuccess={(token) => setValue("turnstileToken", token)}
+              options={{ theme: 'dark' }}
             />
-          )}
-        </div>
+          </div>
+        )}
 
         <button type="submit" disabled={loading} className="group w-full h-[56px] bg-stone-50 flex justify-between items-center px-[24px] hover:bg-stone-200 transition-colors disabled:opacity-50">
           <span className="font-urbanist font-bold text-sm text-black uppercase tracking-[0.1em]">
@@ -205,7 +207,7 @@ function LoginForm({ setView, mounted }: { setView: (v: AuthView) => void, mount
 
       <div className="flex flex-row justify-center items-center gap-[8px] w-full mt-4">
         <span className="font-poppins font-light text-sm text-stone-400">
-          New to Laural?
+          New to SERAMAADUWEN.LK?
         </span>
         <button 
           type="button"
@@ -229,6 +231,7 @@ function RegisterForm({ setView, mounted }: { setView: (v: AuthView) => void, mo
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const turnstileRef = useRef<TurnstileInstance>(null);
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -261,8 +264,10 @@ function RegisterForm({ setView, mounted }: { setView: (v: AuthView) => void, mo
         }
       }, 1000);
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || "Failed to create account. Please try again.";
+      const serverMsg = err.response?.data?.error?.message || err.response?.data?.message || err.response?.data?.error;
+      const msg = serverMsg || (err.isAxiosError ? "Network error. Please try again." : err.message) || "Failed to create account. Please try again.";
       setError(msg);
+      turnstileRef.current?.reset();
     } finally {
       setLoading(false);
     }
@@ -272,7 +277,7 @@ function RegisterForm({ setView, mounted }: { setView: (v: AuthView) => void, mo
     <div className="flex flex-col items-center w-full gap-[32px] animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col items-center gap-[8px]">
         <h2 className="font-inria text-4xl md:text-5xl leading-[1.2] text-center text-stone-50 tracking-wide">
-          Join Laural
+          Join SERAMAADUWEN.LK
         </h2>
         <p className="font-poppins font-light text-sm text-stone-400 text-center">
           Discover pieces edited for quiet luxury.
@@ -282,7 +287,7 @@ function RegisterForm({ setView, mounted }: { setView: (v: AuthView) => void, mo
       {success ? (
         <div className="flex flex-col items-center gap-4 py-8 text-center animate-in fade-in">
           <CheckCircle2 className="w-12 h-12 text-emerald-400" />
-          <h3 className="font-inria text-2xl text-stone-50">Welcome to Laural</h3>
+          <h3 className="font-inria text-2xl text-stone-50">Welcome to SERAMAADUWEN.LK</h3>
           <p className="font-urbanist text-stone-400 text-sm">Your account has been created. Redirecting you...</p>
         </div>
       ) : (
@@ -349,11 +354,16 @@ function RegisterForm({ setView, mounted }: { setView: (v: AuthView) => void, mo
             </div>
           )}
 
-          <div className="w-full flex justify-center mt-2">
-            {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
-              <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} onSuccess={(token) => setValue("turnstileToken", token)} />
-            )}
-          </div>
+          {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+            <div className="w-full flex justify-center mt-2 mb-2">
+              <Turnstile 
+                ref={turnstileRef}
+                siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} 
+                onSuccess={(token) => setValue("turnstileToken", token)}
+                options={{ theme: 'dark' }}
+              />
+            </div>
+          )}
 
           <button type="submit" disabled={loading} className="group w-full h-[56px] bg-stone-50 flex justify-between items-center px-[24px] hover:bg-stone-200 transition-colors mt-[8px] disabled:opacity-50">
             <span className="font-urbanist font-bold text-sm text-black uppercase tracking-[0.1em]">
@@ -416,11 +426,7 @@ function ForgotPasswordForm({ setView, mounted }: { setView: (v: AuthView) => vo
           {errors.email && <span className="text-red-500 text-xs mt-1 block">{errors.email.message}</span>}
         </div>
 
-        <div className="w-full flex justify-center mt-2">
-          {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
-            <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} onSuccess={(token) => setValue("turnstileToken", token)} />
-          )}
-        </div>
+        {/* Turnstile removed */}
 
         <button 
           type="submit"
@@ -561,11 +567,7 @@ function ChangePasswordForm({ setView, mounted }: { setView: (v: AuthView) => vo
           {errors.confirmPassword && <span className="text-red-500 text-xs mt-1 block">{errors.confirmPassword.message}</span>}
         </div>
         
-        <div className="w-full flex justify-center mt-2">
-          {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
-            <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} onSuccess={(token) => setValue("turnstileToken", token)} />
-          )}
-        </div>
+        {/* Turnstile removed */}
 
         <button 
           type="submit"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   X,
   ImagePlus,
@@ -17,7 +17,11 @@ import {
   Ruler,
   CreditCard,
   Globe,
+  Barcode,
+  Printer,
 } from "lucide-react";
+import BarcodeLib from "react-barcode";
+import { useReactToPrint } from "react-to-print";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createProductSchema, CreateProductFormData } from "@/lib/validations";
@@ -25,6 +29,7 @@ import { useCreateProduct, useUpdateProduct } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { useAdminCollections } from "@/hooks/useAdminCollections";
 import { useBranches } from "@/hooks/useInventory";
+import { toast } from "@/store/toast.store";
 import MediaPickerModal from "@/components/admin/MediaPickerModal";
 import Image from "next/image";
 
@@ -80,6 +85,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
   const [selectedPaymentMethods, setSelectedPaymentMethods] = useState<string[]>([...PAYMENT_GATEWAYS]);
   const [sizeGuideEnabled, setSizeGuideEnabled] = useState(false);
   const [sizeGuideContent, setSizeGuideContent] = useState("S — Chest: 36\", Waist: 30\"\nM — Chest: 38\", Waist: 32\"\nL — Chest: 40\", Waist: 34\"\nXL — Chest: 42\", Waist: 36\"");
+  const [sizeGuideImageUrl, setSizeGuideImageUrl] = useState("");
   
   const [customSizes, setCustomSizes] = useState<string[]>([]);
   const [customColors, setCustomColors] = useState<{name: string, hex: string}[]>([]);
@@ -91,6 +97,9 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
   const [images, setImages] = useState<string[]>(["", "", "", ""]);
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
   const [activeImageSlot, setActiveImageSlot] = useState<number | null>(null);
+  const [initialGlobalStock, setInitialGlobalStock] = useState<number>(0);
+  const [printingVariant, setPrintingVariant] = useState<{ barcode: string; label: string } | null>(null);
+  const [showBulkBarcodePrint, setShowBulkBarcodePrint] = useState(false);
 
   const createProductMutation = useCreateProduct();
   const updateProductMutation = useUpdateProduct();
@@ -115,7 +124,10 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
       costPrice: "",
       tags: "",
       metaTitle: "",
-      metaDesc: ""
+      metaDesc: "",
+      sizeGuideEnabled: false,
+      sizeGuideContent: "",
+      sizeGuideImageUrl: ""
     }
   });
 
@@ -142,6 +154,14 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
       setValue("description", productToEdit.description || "");
       setValue("category", productToEdit.categoryId || ""); // Note: might need ID to Name mapping depending on select
       setSlugEdited(true);
+      setSizeGuideEnabled(productToEdit.sizeGuideEnabled || false);
+      setSizeGuideContent(productToEdit.sizeGuideContent || "S — Chest: 36\", Waist: 30\"\nM — Chest: 38\", Waist: 32\"\nL — Chest: 40\", Waist: 34\"\nXL — Chest: 42\", Waist: 36\"");
+      setSizeGuideImageUrl(productToEdit.sizeGuideImageUrl || "");
+      if (productToEdit.allowedPaymentMethods) {
+        setSelectedPaymentMethods(productToEdit.allowedPaymentMethods);
+      } else {
+        setSelectedPaymentMethods([...PAYMENT_GATEWAYS]);
+      }
       
       if (productToEdit.variants && productToEdit.variants.length > 0) {
         const firstVariant = productToEdit.variants[0];
@@ -153,7 +173,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
           size: v.size || "",
           color: v.color || "",
           sku: v.sku || "",
-          barcode: "",
+          barcode: v.barcode || `20${Math.floor(10000000000 + Math.random() * 89999999999)}`,
           stock: branchCodes.reduce((acc: any, code: string) => {
             const branchInventory = v.inventoryItems?.find((inv: any) => inv.branch?.code === code);
             acc[code] = branchInventory?.quantity || 0;
@@ -183,6 +203,9 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
       setValue("basePrice", "");
       setValue("compareAtPrice", "");
       setSlugEdited(false);
+      setSizeGuideEnabled(false);
+      setSizeGuideContent("S — Chest: 36\", Waist: 30\"\nM — Chest: 38\", Waist: 32\"\nL — Chest: 40\", Waist: 34\"\nXL — Chest: 42\", Waist: 36\"");
+      setSizeGuideImageUrl("");
       setSelectedSizes([]);
       setSelectedColors([]);
       setVariants([]);
@@ -221,6 +244,10 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
     setSelectedColors(prev => prev.includes(color) ? prev.filter(c => c !== color) : [...prev, color]);
   }
 
+  function generateUniqueBarcode(): string {
+    return `20${Math.floor(10000000000 + Math.random() * 89999999999)}`;
+  }
+
   function generateVariants() {
     const newVariants: Variant[] = [];
     for (const size of selectedSizes) {
@@ -232,8 +259,8 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
             size,
             color,
             sku: generateSKU(productName || "PROD", size, color),
-            barcode: "",
-            stock: Object.fromEntries(branchCodes.map((b: string) => [b, 0])),
+            barcode: generateUniqueBarcode(), // Auto-generate barcode on creation
+            stock: Object.fromEntries(branchCodes.map((b: string) => [b, initialGlobalStock])),
             price: basePrice || "",
             compareAtPrice: compareAtPrice || "",
           });
@@ -259,35 +286,104 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
     setVariants(prev => prev.filter(v => v.id !== id));
   }
 
+  function applyStockToAll() {
+    if (variants.length === 0) return toast.error("Generate variants first");
+    setVariants(prev => prev.map(v => ({
+      ...v,
+      stock: Object.fromEntries(branchCodes.map((b: string) => [b, initialGlobalStock]))
+    })));
+    toast.success(`Applied ${initialGlobalStock} stock to all variants`);
+  }
+
   function togglePayment(gw: string) {
     setSelectedPaymentMethods(prev => prev.includes(gw) ? prev.filter(g => g !== gw) : [...prev, gw]);
   }
 
   const onSubmit = async (data: CreateProductFormData) => {
     try {
-      const variantPayloads = variants.map(v => {
+      const formatVariantPayload = (v: Variant, isUpdate: boolean = false) => {
         const branchCodeToId = Object.fromEntries(
           (branchesData || []).map((b: any) => [b.code, b.id])
         );
+        
+        // Find existing variant to know which inventory items already exist
+        const existingVariant = isUpdate && productToEdit 
+          ? productToEdit.variants?.find((pv: any) => pv.id === v.id) 
+          : null;
+        
+        const inventoryUpdate: any[] = [];
+        const inventoryCreate: any[] = [];
+        
+        Object.entries(v.stock).forEach(([code, qty]) => {
+          const branchId = branchCodeToId[code];
+          if (!branchId) return;
+          
+          const existingItem = existingVariant?.inventoryItems?.find((inv: any) => inv.branchId === branchId);
+          
+          if (existingItem) {
+            inventoryUpdate.push({
+              where: { id: existingItem.id },
+              data: { quantity: qty }
+            });
+          } else {
+            inventoryCreate.push({
+              branchId,
+              quantity: qty
+            });
+          }
+        });
+        
+        const inventoryItems: any = {};
+        if (inventoryCreate.length > 0) inventoryItems.create = inventoryCreate;
+        if (inventoryUpdate.length > 0) inventoryItems.update = inventoryUpdate;
 
         return {
           size: v.size,
           color: v.color,
           sku: v.sku || null,
+          barcode: v.barcode || null,
           price: parseFloat(v.price || "0"),
           salePrice: v.compareAtPrice ? parseFloat(v.compareAtPrice) : null,
           quantity: Object.values(v.stock).reduce((sum, qty) => sum + qty, 0),
           stockStatus: "instock",
           featuredImage: images[0] || null,
           gallery: images.slice(1).filter(url => url !== ""),
-          inventoryItems: {
-            create: Object.entries(v.stock).map(([code, qty]) => ({
-              branchId: branchCodeToId[code],
-              quantity: qty
-            })).filter(inv => inv.branchId) // ensure branchId is valid
-          }
+          inventoryItems: Object.keys(inventoryItems).length > 0 ? inventoryItems : undefined
         };
-      });
+      };
+
+      const getVariantsPayload = () => {
+        if (!productToEdit) {
+          return { create: variants.map(v => formatVariantPayload(v, false)) };
+        }
+
+        const variantsToUpdate = variants.filter(v => productToEdit.variants?.find((pv: any) => pv.id === v.id));
+        const variantsToCreate = variants.filter(v => !productToEdit.variants?.find((pv: any) => pv.id === v.id));
+        
+        // Instead of hard-deleting variants (which crashes Prisma due to FK constraints on Orders/Transactions),
+        // we "soft-delete" them by setting stock to 0 and marking them out of stock.
+        const variantsToDelete = productToEdit.variants?.filter((pv: any) => !variants.find(v => v.id === pv.id)) || [];
+
+        return {
+          update: [
+            ...variantsToUpdate.map(v => ({
+              where: { id: v.id },
+              data: formatVariantPayload(v, true)
+            })),
+            ...variantsToDelete.map((v: any) => ({
+              where: { id: v.id },
+              data: {
+                quantity: 0,
+                stockStatus: "outofstock",
+                inventoryItems: {
+                  deleteMany: {}
+                }
+              }
+            }))
+          ],
+          create: variantsToCreate.map(v => formatVariantPayload(v, false))
+        };
+      };
 
       const payload = {
         name: data.name,
@@ -295,12 +391,11 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
         description: data.description,
         categoryId: data.category || undefined,
         collectionId: data.collection || undefined,
-        variants: productToEdit ? {
-          deleteMany: {}, // Clean replace
-          create: variantPayloads,
-        } : {
-          create: variantPayloads,
-        }
+        sizeGuideEnabled,
+        sizeGuideContent: sizeGuideEnabled ? sizeGuideContent : undefined,
+        sizeGuideImageUrl: sizeGuideEnabled ? sizeGuideImageUrl : undefined,
+        allowedPaymentMethods: selectedPaymentMethods,
+        variants: getVariantsPayload()
       };
       
       if (productToEdit) {
@@ -308,9 +403,20 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
       } else {
         await createProductMutation.mutateAsync(payload);
       }
+      toast.success(productToEdit ? "Product updated successfully!" : "Product created successfully!");
       onClose();
-    } catch (error) {
-      console.error("Failed to save product", error);
+    } catch (error: any) {
+      console.error("Failed to save product", error.response?.data || error);
+      toast.error(error.response?.data?.error || "Failed to save product. Please try again.");
+    }
+  };
+  const onError = (errors: any) => {
+    console.error("Form Validation Errors:", errors);
+    const errorKeys = Object.keys(errors);
+    if (errorKeys.length > 0) {
+      toast.error(`Please check required fields: ${errorKeys.join(', ')}`);
+    } else {
+      toast.error("Please fill in all required fields.");
     }
   };
 
@@ -358,7 +464,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
         </div>
 
         {/* Body Form */}
-        <form id="add-product-form" onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
+        <form id="add-product-form" onSubmit={handleSubmit(onSubmit, onError)} className="flex flex-col flex-1 overflow-hidden">
           <div className="flex-1 overflow-y-auto p-8">
 
             {/* ────────── BASIC INFO ────────── */}
@@ -552,8 +658,15 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
                       ) : (
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-stone-50 border border-stone-200 rounded-lg p-2 w-full sm:w-auto">
                           <div className="flex items-center gap-2">
-                             <div className="w-7 h-7 rounded-md border border-stone-200 shrink-0" style={{ backgroundColor: newColorHex.match(/^#([0-9a-fA-F]{3}){1,2}$/) ? newColorHex : '#000000' }} />
-                             <input type="text" value={newColorHex} onChange={e => setNewColorHex(e.target.value)} placeholder="#HEX" className="px-2 py-1.5 bg-white rounded-md text-sm border border-stone-200 outline-none w-24 focus:border-stone-400 font-mono" />
+                             <div className="relative w-7 h-7 rounded-md border border-stone-200 shrink-0 overflow-hidden">
+                               <input 
+                                 type="color" 
+                                 value={newColorHex.match(/^#([0-9a-fA-F]{6})$/i) ? newColorHex : '#000000'}
+                                 onChange={e => setNewColorHex(e.target.value.toUpperCase())}
+                                 className="absolute -top-2 -left-2 w-12 h-12 cursor-pointer"
+                               />
+                             </div>
+                             <input type="text" value={newColorHex} onChange={e => setNewColorHex(e.target.value)} placeholder="#HEX" className="px-2 py-1.5 bg-white rounded-md text-sm border border-stone-200 outline-none w-24 focus:border-stone-400 font-mono uppercase" />
                           </div>
                           <div className="flex items-center gap-2">
                             <input type="text" value={newColorName} onChange={e => setNewColorName(e.target.value)} placeholder="Color Name" className="px-2 py-1.5 bg-white rounded-md text-sm border border-stone-200 outline-none w-32 focus:border-stone-400" onKeyDown={e => e.key === 'Enter' && handleAddCustomColor()} />
@@ -566,15 +679,27 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={generateVariants}
-                  disabled={selectedSizes.length === 0 || selectedColors.length === 0}
-                  className="w-fit bg-stone-900 text-white px-6 py-3 rounded-lg font-inter font-medium text-sm hover:bg-stone-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  <Plus size={16} />
-                  Generate {selectedSizes.length * selectedColors.length} Variant{selectedSizes.length * selectedColors.length !== 1 ? "s" : ""}
-                </button>
+                <div className="flex items-center gap-4 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={generateVariants}
+                    disabled={selectedSizes.length === 0 || selectedColors.length === 0}
+                    className="w-fit bg-stone-900 text-white px-6 py-3 rounded-lg font-inter font-medium text-sm hover:bg-stone-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    <Plus size={16} />
+                    Generate {selectedSizes.length * selectedColors.length} Variant{selectedSizes.length * selectedColors.length !== 1 ? "s" : ""}
+                  </button>
+                  {variants.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowBulkBarcodePrint(true)}
+                      className="w-fit bg-stone-100 text-stone-700 border border-stone-200 px-6 py-3 rounded-lg font-inter font-medium text-sm hover:bg-stone-200 transition-colors flex items-center gap-2"
+                    >
+                      <Printer size={16} />
+                      Print All Barcodes ({variants.length})
+                    </button>
+                  )}
+                </div>
 
                 {variants.length > 0 && (
                   <div className="border border-stone-200 rounded-xl overflow-hidden">
@@ -603,12 +728,21 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
                               />
                             </td>
                             <td className="px-4 py-3">
-                              <input
-                                className="font-mono text-xs border border-stone-200 rounded px-2 py-1 w-28 outline-none focus:border-stone-400"
-                                value={v.barcode}
-                                placeholder="Barcode"
-                                onChange={e => updateVariantField(v.id, "barcode", e.target.value)}
-                              />
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-mono text-xs bg-stone-50 border border-stone-200 rounded px-2 py-1 text-stone-600 select-all cursor-text min-w-[7rem]">
+                                  {v.barcode || '—'}
+                                </span>
+                                {v.barcode && (
+                                  <button
+                                    type="button"
+                                    title="Print barcode"
+                                    onClick={() => setPrintingVariant({ barcode: v.barcode, label: `${productName} — ${v.size}/${v.color}` })}
+                                    className="p-1 text-stone-400 hover:text-stone-800 hover:bg-stone-100 rounded transition-colors"
+                                  >
+                                    <Printer size={13} />
+                                  </button>
+                                )}
+                              </div>
                             </td>
                             <td className="px-4 py-3">
                               <input
@@ -702,7 +836,31 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
               <div className="flex flex-col gap-6 max-w-[700px]">
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
                   <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
-                  <p className="text-sm font-inter text-amber-700">Per-variant stock is managed in the <strong>Variants tab</strong>. Use this section to set reorder thresholds and tracking preferences.</p>
+                  <p className="text-sm font-inter text-amber-700">Per-variant stock is managed in the <strong>Variants tab</strong>. You can use this section to set an initial stock amount and apply it globally to all generated variants.</p>
+                </div>
+
+                <div className="flex flex-col gap-4 bg-white border border-stone-200 rounded-xl p-5">
+                  <h3 className="font-inter font-bold text-stone-900">Initial Stock Configuration</h3>
+                  <div className="flex items-end gap-4">
+                    <div className="flex flex-col gap-2 flex-1">
+                      <label className="label">Initial Global Stock</label>
+                      <input 
+                        type="number" 
+                        value={initialGlobalStock} 
+                        onChange={e => setInitialGlobalStock(parseInt(e.target.value) || 0)} 
+                        min={0}
+                        className="input" 
+                      />
+                      <p className="text-xs text-stone-400 font-inter">This amount will be applied to all new variants when generated.</p>
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={applyStockToAll}
+                      className="h-[42px] px-6 bg-stone-900 text-white rounded-lg text-sm font-medium hover:bg-stone-800 transition-colors whitespace-nowrap mb-[22px]"
+                    >
+                      Apply to all existing variants
+                    </button>
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-4 bg-white border border-stone-200 rounded-xl p-5">
@@ -761,7 +919,41 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
                 </label>
 
                 {sizeGuideEnabled && (
-                  <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-6">
+                    <div className="flex flex-col gap-2">
+                      <label className="label">Size Guide Image (Optional)</label>
+                      <div className="flex items-center gap-4">
+                        <div 
+                          onClick={() => { setActiveImageSlot(99); setIsMediaModalOpen(true); }}
+                          className="relative w-32 h-32 border-2 border-dashed border-stone-300 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-stone-50 hover:border-accent transition-all group overflow-hidden shrink-0"
+                        >
+                          {sizeGuideImageUrl ? (
+                            <>
+                              <Image src={sizeGuideImageUrl} alt="Size Guide" fill className="object-cover" />
+                              <div className="absolute inset-0 bg-stone-900/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                <p className="font-inter text-white text-xs font-medium">Change</p>
+                              </div>
+                              <button 
+                                onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  setSizeGuideImageUrl("");
+                                }}
+                                className="absolute top-2 right-2 bg-white/80 backdrop-blur-sm rounded-full p-1 text-stone-700 hover:bg-white transition-colors z-20"
+                              >
+                                <X size={14} />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <ImagePlus size={24} className="text-stone-300 group-hover:text-accent transition-colors" />
+                              <span className="font-inter text-xs text-stone-400 group-hover:text-accent text-center px-2">Upload visual guide</span>
+                            </>
+                          )}
+                        </div>
+                        <p className="text-xs text-stone-400 max-w-[250px] font-inter">Upload a visual guide showing how to measure the garment.</p>
+                      </div>
+                    </div>
+
                     <div className="flex flex-col gap-2">
                       <label className="label">Size Guide Content</label>
                       <textarea
@@ -864,7 +1056,7 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
                 <div className="bg-white border border-stone-200 rounded-xl p-5 flex flex-col gap-1.5">
                   <p className="text-[10px] text-stone-400 font-inter uppercase tracking-wider">Google Preview</p>
                   <a href="#" className="font-medium text-blue-700 text-base hover:underline truncate">
-                    {metaTitle || productName || "Product Name"} — Laural Clothing
+                    {metaTitle || productName || "Product Name"} — SERAMAADUWEN.LK
                   </a>
                   <p className="text-sm text-stone-600 font-inter line-clamp-2">
                     {metaDesc || "Product description will appear here in search results. Write a compelling summary to improve click-through rates."}
@@ -931,7 +1123,9 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
         <MediaPickerModal
           onClose={() => { setIsMediaModalOpen(false); setActiveImageSlot(null); }}
           onSelect={(url) => {
-            if (activeImageSlot !== null) {
+            if (activeImageSlot === 99) {
+              setSizeGuideImageUrl(url);
+            } else if (activeImageSlot !== null) {
               setImages(prev => { const n = [...prev]; n[activeImageSlot] = url; return n; });
             }
             setIsMediaModalOpen(false);
@@ -939,6 +1133,105 @@ export default function ProductFormModal({ isOpen, onClose, productToEdit }: Pro
           title="Select Product Image"
         />
       )}
+
+      {/* Per-variant Barcode Print Modal */}
+      {printingVariant && (
+        <VariantBarcodePrintModal
+          barcode={printingVariant.barcode}
+          label={printingVariant.label}
+          onClose={() => setPrintingVariant(null)}
+        />
+      )}
+
+      {/* Bulk Barcode Print Modal */}
+      {showBulkBarcodePrint && (
+        <BulkBarcodePrintModal
+          variants={variants.filter(v => v.barcode).map(v => ({
+            barcode: v.barcode,
+            label: `${productName} — ${v.size}/${v.color}`
+          }))}
+          onClose={() => setShowBulkBarcodePrint(false)}
+        />
+      )}
     </div>
   );
 }
+
+// ── Single Variant Barcode Print Modal ──────────────────────────────────────
+function VariantBarcodePrintModal({ barcode, label, onClose }: { barcode: string; label: string; onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const handlePrint = useReactToPrint({
+    contentRef: ref,
+    documentTitle: `Barcode-${barcode}`,
+    pageStyle: `@page { size: A4 portrait; margin: 10mm; } body { visibility: visible !important; } body * { visibility: visible !important; }`,
+  });
+  const displayCode = barcode.length > 12 ? barcode.substring(0, 12) : barcode;
+  return (
+    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between p-4 border-b border-stone-200 bg-stone-50">
+          <h3 className="font-inter font-bold text-base text-stone-900">Print Barcode</h3>
+          <button onClick={onClose} className="p-1.5 text-stone-400 hover:text-stone-900 hover:bg-stone-200 rounded-lg transition-colors"><X size={18} /></button>
+        </div>
+        <div className="p-6 flex flex-col items-center gap-4 bg-stone-100">
+          <div className="bg-white p-5 rounded-xl shadow-sm border border-stone-200 flex flex-col items-center w-full">
+            <div ref={ref} className="react-to-print-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'white', padding: '16px', width: '100%', fontFamily: 'sans-serif' }}>
+              <p style={{ fontWeight: 700, fontSize: '14px', textAlign: 'center', margin: '0 0 4px 0', color: '#1c1917' }}>{label}</p>
+              <BarcodeLib value={displayCode} format="CODE128" width={1.5} height={55} displayValue fontSize={13} margin={4} />
+            </div>
+          </div>
+          <p className="text-xs text-stone-500 font-inter text-center">Label: {label}</p>
+        </div>
+        <div className="p-4 border-t border-stone-200 bg-stone-50 flex justify-end gap-3">
+          <button onClick={onClose} className="px-4 py-2 bg-white border border-stone-200 text-stone-700 font-inter font-medium text-sm rounded-lg hover:bg-stone-50 transition-colors">Cancel</button>
+          <button onClick={() => handlePrint()} className="px-5 py-2 bg-stone-900 text-white font-inter font-medium text-sm rounded-lg hover:bg-stone-800 transition-colors flex items-center gap-2">
+            <Printer size={15} /> Print Label
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Bulk Barcode Print Modal ─────────────────────────────────────────────────
+function BulkBarcodePrintModal({ variants, onClose }: { variants: { barcode: string; label: string }[]; onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const handlePrint = useReactToPrint({
+    contentRef: ref,
+    documentTitle: "Bulk-Barcodes",
+    pageStyle: `@page { size: A4 portrait; margin: 10mm; } body { visibility: visible !important; } body * { visibility: visible !important; }`,
+  });
+  return (
+    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 max-h-[90vh]">
+        <div className="flex items-center justify-between p-4 border-b border-stone-200 bg-stone-50 shrink-0">
+          <div>
+            <h3 className="font-inter font-bold text-base text-stone-900">Bulk Barcode Print</h3>
+            <p className="text-xs text-stone-500 font-inter mt-0.5">{variants.length} barcode{variants.length !== 1 ? "s" : ""} will be printed</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 text-stone-400 hover:text-stone-900 hover:bg-stone-200 rounded-lg transition-colors"><X size={18} /></button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-6 bg-stone-100">
+          <div ref={ref} className="grid grid-cols-3 gap-4 bg-stone-100 p-2" style={{ printColorAdjust: "exact" }}>
+            {variants.map((v, i) => {
+              const displayCode = v.barcode.length > 12 ? v.barcode.substring(0, 12) : v.barcode;
+              return (
+                <div key={i} className="bg-white p-3 rounded-lg border border-stone-200 flex flex-col items-center">
+                  <p className="font-sans font-semibold text-[10px] text-center leading-tight mb-1 text-stone-800">{v.label}</p>
+                  <BarcodeLib value={displayCode} format="CODE128" width={1.2} height={40} displayValue fontSize={10} margin={2} />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div className="p-4 border-t border-stone-200 bg-stone-50 flex justify-end gap-3 shrink-0">
+          <button onClick={onClose} className="px-4 py-2 bg-white border border-stone-200 text-stone-700 font-inter font-medium text-sm rounded-lg hover:bg-stone-50 transition-colors">Cancel</button>
+          <button onClick={() => handlePrint()} className="px-5 py-2 bg-stone-900 text-white font-inter font-medium text-sm rounded-lg hover:bg-stone-800 transition-colors flex items-center gap-2">
+            <Printer size={15} /> Print All {variants.length} Labels
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+

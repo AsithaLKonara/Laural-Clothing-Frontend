@@ -12,8 +12,8 @@ for page in about contact returns sale track-order; do
 import ClientContent from "./ClientContent";
 
 export const metadata = {
-  title: "$(echo $page | awk '{print toupper(substr($0,1,1)) substr($0,2)}') - Laural Clothing",
-  description: "$(echo $page | awk '{print toupper(substr($0,1,1)) substr($0,2)}') page for Laural Clothing."
+  title: "$(echo $page | awk '{print toupper(substr($0,1,1)) substr($0,2)}') - SERAMAADUWEN.LK",
+  description: "$(echo $page | awk '{print toupper(substr($0,1,1)) substr($0,2)}') page for SERAMAADUWEN.LK."
 };
 
 export default function Page() {

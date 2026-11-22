@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 
 async function getProductData(slug: string) {
   try {
-    return await serverFetch<Product>(`/products/slug/${slug}`, { next: { revalidate: 3600, tags: ['products'] } });
+    return await serverFetch<Product>(`/products/slug/${slug}`, { next: { revalidate: 60, tags: ['products'] } });
   } catch (error) {
     return null;
   }
@@ -22,7 +22,7 @@ async function getProductData(slug: string) {
 
 async function getRelatedProducts() {
   try {
-    return await serverFetch<PaginatedResponse<Product>>(`/products?skip=0&take=8`, { next: { revalidate: 3600, tags: ['products'] } });
+    return await serverFetch<PaginatedResponse<Product>>(`/products?skip=0&take=8`, { next: { revalidate: 60, tags: ['products'] } });
   } catch (error) {
     return null;
   }
@@ -76,13 +76,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     
   return {
     title: product.name,
-    description: product.description?.substring(0, 160) || `Discover the elegant ${product.name} at Laural Clothing. Designed for the modern aesthetic.`,
+    description: product.description?.substring(0, 160) || `Discover the elegant ${product.name} at SERAMAADUWEN.LK. Designed for the modern aesthetic.`,
     alternates: {
       canonical: `/products/${slug}`,
     },
     openGraph: {
-      title: `${product.name} | Laural Clothing`,
-      description: product.description?.substring(0, 160) || `Discover the elegant ${product.name} at Laural Clothing.`,
+      title: `${product.name} | SERAMAADUWEN.LK`,
+      description: product.description?.substring(0, 160) || `Discover the elegant ${product.name} at SERAMAADUWEN.LK.`,
       url: `/products/${slug}`,
       images: [
         {
@@ -103,7 +103,7 @@ export default async function ProductPage({ params }: Props) {
     getRelatedProducts(),
   ]);
   
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://laural.lk';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://seramaaduwen.lk';
 
   let allImages: string[] = [];
   if (product?.variants) {
@@ -146,7 +146,7 @@ export default async function ProductPage({ params }: Props) {
       {product && (
         <ProductSchema
           name={product.name}
-          description={product.description?.substring(0, 160) || `Discover the elegant ${product.name} at Laural Clothing.`}
+          description={product.description?.substring(0, 160) || `Discover the elegant ${product.name} at SERAMAADUWEN.LK.`}
           image={schemaImage}
           price={product.variants?.[0]?.price || 0}
           url={`${baseUrl}/products/${slug}`}

@@ -6,9 +6,10 @@ import { useState, useEffect } from "react";
 interface ProductGalleryProps {
   images: string[];
   productName?: string;
+  discountPercentage?: number;
 }
 
-export default function ProductGallery({ images, productName = "Product" }: ProductGalleryProps) {
+export default function ProductGallery({ images, productName = "Product", discountPercentage = 0 }: ProductGalleryProps) {
   const [activeImage, setActiveImage] = useState(images[0] || "/products/default.jpg");
   const [zoomStyle, setZoomStyle] = useState({ display: 'none', backgroundPosition: '0% 0%' });
 
@@ -80,11 +81,13 @@ export default function ProductGallery({ images, productName = "Product" }: Prod
         />
         
         {/* Optional Badge */}
-        <div className="absolute top-4 right-4 bg-red-500/10 backdrop-blur-sm px-[14px] py-[6px] rounded-full z-20">
-          <span className="font-poppins font-medium text-base text-red-500">
-            -40%
-          </span>
-        </div>
+        {discountPercentage > 0 && (
+          <div className="absolute top-4 right-4 bg-red-500/10 backdrop-blur-sm px-[14px] py-[6px] rounded-full z-20">
+            <span className="font-poppins font-medium text-base text-red-500">
+              -{discountPercentage}%
+            </span>
+          </div>
+        )}
       </div>
       
     </div>

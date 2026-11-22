@@ -11,6 +11,16 @@ export interface ProductVariant {
   size: string | null;
   featuredImage: string | null;
   gallery: string[];
+  flashSaleItems?: {
+    salePrice: number;
+    flashSale: {
+      name: string;
+      discount: number;
+      status: string;
+      startDate: string | null;
+      endDate: string | null;
+    };
+  }[];
 }
 
 export interface Product {
@@ -22,6 +32,10 @@ export interface Product {
   categoryId: string | null;
   category?: { id: string; name: string; slug: string; };
   status?: string;
+  allowedPaymentMethods?: string[];
+  sizeGuideEnabled?: boolean;
+  sizeGuideContent?: string | null;
+  sizeGuideImageUrl?: string | null;
   createdAt: string;
   updatedAt: string;
   variants?: ProductVariant[];

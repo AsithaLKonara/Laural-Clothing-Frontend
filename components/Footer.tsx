@@ -6,6 +6,8 @@ import { MapPin, Phone, Mail } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useCategories } from "@/hooks/useCategories";
 import { useCms } from "@/hooks/useCms";
+import { useBranches } from "@/hooks/useInventory";
+import { usePublicSettings } from "@/hooks/useSettings";
 import { useState, useEffect } from "react";
 
 export default function Footer() {
@@ -16,6 +18,11 @@ export default function Footer() {
   const { data: response } = useCategories();
   const categories = response?.data?.slice(0, 5) || []; // Show up to 5 categories
   const { pages } = useCms();
+  const { data: branchesData } = useBranches();
+  const { data: settingsData } = usePublicSettings();
+  
+  const mainBranch = branchesData?.data?.[0] || branchesData?.[0]; // Support either data wrapper or direct array
+  const supportEmail = settingsData?.find((s: any) => s.key === "support_email")?.value;
   
   if (pathname === "/login") return null;
 
@@ -37,34 +44,34 @@ export default function Footer() {
         </div>
 
         {/* Content Row */}
-        <div className="relative z-10 flex flex-col md:flex-row flex-wrap items-start justify-between w-full max-w-[1280px] px-4 md:px-8 lg:px-[120px] gap-10 md:gap-[64px]">
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 w-full px-4 md:px-8 lg:px-[120px]">
           
           {/* Brand Col */}
-          <div className="flex flex-col items-start gap-[20px] w-[320px]">
+          <div className="flex flex-col items-start gap-[20px] lg:col-span-3">
             {/* Logo */}
-            <div className="relative w-[180px] h-[40px]">
-               <Image src="/logo-white.png" alt="Laural Clothing" fill sizes="200px" className="object-contain object-left" />
+            <div className="relative w-[280px] h-[60px] mb-4">
+               <Image src="/logo-white.png" alt="SERAMAADUWEN.LK" fill sizes="200px" className="object-contain object-left" />
             </div>
             
             {/* Contact Items */}
             <div className="flex flex-col gap-[12px] w-full mt-2">
               <div className="flex items-center gap-[10px]">
-                <MapPin className="w-[20px] h-[20px] text-background" />
-                <span className="font-inter text-sm leading-[21px] text-background/90">Colombo, Sri Lanka</span>
+                <MapPin className="w-[20px] h-[20px] text-background shrink-0" />
+                <span className="font-inter text-sm leading-[21px] text-background/90">{mainBranch?.address || "Colombo, Sri Lanka"}</span>
               </div>
               <div className="flex items-center gap-[10px]">
-                <Phone className="w-[20px] h-[20px] text-background" />
-                <span className="font-inter text-sm leading-[21px] text-background/90">+94 76 112 8979</span>
+                <Phone className="w-[20px] h-[20px] text-background shrink-0" />
+                <span className="font-inter text-sm leading-[21px] text-background/90">{mainBranch?.phone || "+94 76 112 8979"}</span>
               </div>
               <div className="flex items-center gap-[10px]">
-                <Mail className="w-[20px] h-[20px] text-background" />
-                <span className="font-inter text-sm leading-[21px] text-background/90">info.lauralclothing.com</span>
+                <Mail className="w-[20px] h-[20px] text-background shrink-0" />
+                <span className="font-inter text-sm leading-[21px] text-background/90">{supportEmail || "info@seramaaduwen.lk"}</span>
               </div>
             </div>
           </div>
 
           {/* Links Cols */}
-          <div className="flex flex-col sm:flex-row gap-8 lg:gap-[48px] flex-1 justify-between md:justify-end">
+          <div className="flex flex-col sm:flex-row gap-8 lg:gap-8 lg:col-span-6 justify-between lg:justify-center w-full">
             {/* Shop Col */}
             <div className="flex flex-col gap-[16px] min-w-[120px]">
               <h4 className="font-inter font-bold text-sm tracking-[0.02em] uppercase text-background">Shop</h4>
@@ -101,7 +108,7 @@ export default function Footer() {
           </div>
 
           {/* Newsletter Col */}
-          <div className="flex flex-col gap-[16px] w-full md:w-[360px]">
+          <div className="flex flex-col gap-[16px] lg:col-span-3 w-full">
             <h4 className="font-inter font-bold text-sm tracking-[0.02em] uppercase text-background">Newsletter</h4>
             <p className="font-inter text-sm leading-[21px] text-background/90">
               Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.
@@ -123,7 +130,7 @@ export default function Footer() {
         </div>
 
         {/* Legal & Social Pre-Bottom */}
-        <div className="relative z-10 flex flex-col items-center w-full max-w-[1280px] px-4 md:px-8 lg:px-[120px] mt-8 md:mt-[48px]">
+        <div className="relative z-10 flex flex-col items-center w-full px-4 md:px-8 lg:px-[120px] mt-8 md:mt-[48px]">
           <div className="w-full h-[1px] bg-background/20" />
           <div className="flex flex-col md:flex-row justify-between items-center w-full py-[20px] gap-6 md:gap-0">
             <div className="flex flex-wrap justify-center md:justify-start items-center gap-[16px]">
@@ -132,20 +139,20 @@ export default function Footer() {
               <Link href="/terms-conditions" className="font-inter text-xs text-background/85 hover:text-white transition-colors">Terms & Conditions</Link>
             </div>
             <div className="flex items-center gap-[16px]">
-              <div className="flex justify-center items-center w-[40px] h-[40px] border border-background rounded-full hover:bg-background/10 transition-colors cursor-pointer">
+              <Link href="https://www.instagram.com/serama_aduwen?stkn=MWw4b2VudGo1dDU1aA==" target="_blank" rel="noopener noreferrer" className="flex justify-center items-center w-[40px] h-[40px] border border-background rounded-full hover:bg-background/10 transition-colors cursor-pointer">
                 {/* Facebook SVG */}
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-background">
                   <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
                 </svg>
-              </div>
-              <div className="flex justify-center items-center w-[40px] h-[40px] border border-background rounded-full hover:bg-background/10 transition-colors cursor-pointer">
+              </Link>
+              <Link href="https://www.instagram.com/serama_aduwen?stkn=MWw4b2VudGo1dDU1aA==" target="_blank" rel="noopener noreferrer" className="flex justify-center items-center w-[40px] h-[40px] border border-background rounded-full hover:bg-background/10 transition-colors cursor-pointer">
                 {/* Instagram SVG */}
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-background">
                   <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
                   <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
                   <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
                 </svg>
-              </div>
+              </Link>
             </div>
           </div>
         </div>
@@ -154,7 +161,7 @@ export default function Footer() {
       {/* True Bottom Bar */}
       <div className="flex flex-col md:flex-row justify-between items-center w-full py-4 md:py-0 min-h-[40px] px-4 md:px-8 lg:px-[120px] bg-background gap-4 md:gap-0">
         <p className="font-inter text-xs text-stone-500 text-center md:text-left">
-          © 2026 Laural Clothing. All Rights Reserved. Developed by ScriptLK Digital
+          © 2026 SERAMAADUWEN.LK. All Rights Reserved. 
         </p>
         <div className="relative w-[309px] h-[24px]">
           <Image src="/footer/payments.webp" alt="Payment Methods" fill sizes="400px" className="object-contain md:object-right" />

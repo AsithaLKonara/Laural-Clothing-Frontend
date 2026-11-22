@@ -13,6 +13,7 @@ interface FardarDispatchModalProps {
 export default function FardarDispatchModal({ orderIds, onClose, onSuccess }: FardarDispatchModalProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const updateStatusMutation = useUpdateOrderStatus();
 
   const handleProcess = async () => {
@@ -27,9 +28,10 @@ export default function FardarDispatchModal({ orderIds, onClose, onSuccess }: Fa
       setTimeout(() => {
         onSuccess();
       }, 1500);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert("Failed to dispatch orders");
+      const msg = e?.response?.data?.error || e?.message || "Failed to dispatch orders. Please check API configuration.";
+      setErrorMessage(msg);
     } finally {
       setIsProcessing(false);
     }
@@ -59,7 +61,7 @@ export default function FardarDispatchModal({ orderIds, onClose, onSuccess }: Fa
             <h2 className="font-inter font-bold text-xl text-stone-900 flex items-center gap-2">
               <Truck className="text-stone-700" size={24} /> Dispatch via Fardar
             </h2>
-            <p className="font-inter text-sm text-stone-500 mt-1">Simulating bulk courier dispatch.</p>
+            <p className="font-inter text-sm text-stone-500 mt-1">Send dispatch request to Fardar API.</p>
           </div>
           <button onClick={onClose} className="p-2 text-stone-400 hover:text-stone-900 hover:bg-stone-200 rounded-lg transition-colors">
             <X size={20} />
@@ -67,6 +69,11 @@ export default function FardarDispatchModal({ orderIds, onClose, onSuccess }: Fa
         </div>
 
         <div className="p-6 overflow-y-auto bg-stone-100 flex-1 flex flex-col gap-6">
+          {errorMessage && (
+            <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-sm font-inter">
+              <strong>Dispatch Failed:</strong> {errorMessage}
+            </div>
+          )}
           <div className="bg-white border border-stone-200 rounded-xl p-5 shadow-sm flex flex-col gap-4">
             <p className="font-inter text-sm text-stone-700">
               You are about to generate Fardar tracking numbers and mark the following <span className="font-bold">{orderIds.length} order(s)</span> as <strong>Dispatched</strong>.

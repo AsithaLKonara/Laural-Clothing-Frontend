@@ -12,7 +12,7 @@ interface AuthState {
   setAuth: (user: UserProfile) => void;
   login: (payload: LoginPayload) => Promise<AuthResponse>;
   register: (payload: RegisterPayload) => Promise<AuthResponse>;
-  logout: () => Promise<void>;
+  logout: (redirectTo?: string) => Promise<void>;
   initAuth: () => Promise<void>;
 
   // RBAC Helpers
@@ -64,7 +64,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  logout: async () => {
+  logout: async (redirectTo?: string) => {
     try {
       await authService.logout();
     } catch {
@@ -79,6 +79,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isAuthenticated: false,
         isLoading: false,
       });
+
+      if (redirectTo && typeof window !== "undefined") {
+        window.location.href = redirectTo;
+      }
     }
   },
 
@@ -116,13 +120,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           set({ user: freshUser, isAuthenticated: true, isLoading: false });
         }
       } catch (err: any) {
-        if (err.response?.status === 401) {
+        if (err.response?.status === 401 && cachedUser) {
           try {
             const refreshed = await authService.refresh();
             get().setAuth(refreshed.user);
           } catch {
             get().logout();
           }
+        } else if (!cachedUser) {
+          get().logout();
         }
       }
     } catch {

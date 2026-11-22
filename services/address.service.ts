@@ -7,8 +7,11 @@ export interface Address {
   lastName: string;
   addressLine1: string;
   addressLine2: string | null;
+  addressLine3: string | null;
+  district: string | null;
   city: string;
   postalCode: string | null;
+  nearestCity: string | null;
   phone: string;
   isDefault: boolean;
   createdAt: string;

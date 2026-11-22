@@ -5,8 +5,8 @@ import { Product } from "@/types/product";
 import { PaginatedResponse } from "@/types/api";
 
 export const metadata = {
-  title: "Sale - Laural Clothing",
-  description: "Sale page for Laural Clothing."
+  title: "Sale - SERAMAADUWEN.LK",
+  description: "Sale page for SERAMAADUWEN.LK."
 };
 
 // Server-render on demand — prevents Railway build hanging on API calls during SSG

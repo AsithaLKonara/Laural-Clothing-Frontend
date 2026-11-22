@@ -6,6 +6,7 @@ import { useCartStore } from "@/store/useCartStore";
 import { useCart, useUpdateCartItem, useRemoveCartItem } from "@/hooks/useCart";
 import Link from "next/link";
 import Image from "next/image";
+import { getEffectivePrice } from "@/lib/pricing";
 
 export default function CartSidePanel() {
   const sessionId = useCartStore((state) => state.sessionId);
@@ -40,7 +41,7 @@ export default function CartSidePanel() {
   }, [isDrawerOpen, closeDrawer]);
 
   const items = cart?.items ?? [];
-  const subtotal = items.reduce((sum, item) => sum + (item.quantity * (item.variant.salePrice ?? item.variant.price)), 0);
+  const subtotal = items.reduce((sum, item) => sum + (item.quantity * getEffectivePrice(item.variant)), 0);
 
   return (
     <>
@@ -151,7 +152,7 @@ export default function CartSidePanel() {
 
                     <div className="flex flex-col items-end gap-2">
                       <p className="font-inter font-medium text-stone-900 text-sm">
-                        Rs. {(item.variant.salePrice ?? item.variant.price).toLocaleString()}
+                        Rs. {getEffectivePrice(item.variant).toLocaleString()}
                       </p>
                       <button 
                         onClick={() => removeItem.mutate(item.id)}

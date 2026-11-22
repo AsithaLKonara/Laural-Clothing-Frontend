@@ -1,7 +1,7 @@
 "use client";
 "use client";
 
-import { Maximize, Search, Trash2, CreditCard, Banknote, LayoutGrid, UserPlus, X, ChevronRight, CheckCircle2, ShoppingBag } from "lucide-react";
+import { Maximize, Search, Trash2, CreditCard, Banknote, LayoutGrid, UserPlus, X, ChevronRight, CheckCircle2, ShoppingBag, Lock } from "lucide-react";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import VariantSelectionModal from "@/components/pos/VariantSelectionModal";
@@ -16,6 +16,7 @@ import { RotateCcw, ShoppingCart, Zap, ArrowLeft, Clock, History, ArrowRightLeft
 import Link from "next/link";
 import { useInfiniteProducts, useScanBarcode } from "@/hooks/useProducts";
 import { useIntersection } from "@/hooks/useIntersection";
+import OrderSidePanel from "@/components/admin/OrderSidePanel";
 import { useCategories } from "@/hooks/useCategories";
 import { useBranches } from "@/hooks/useInventory";
 import { useRouter } from "next/navigation";
@@ -40,7 +41,7 @@ export default function POSPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [posMode, setPosMode] = useState<"SALES" | "RETURNS" | "DISPATCH" | "EXCHANGE">("SALES");
   
-  const { data: activeSession } = useCurrentSession(terminalId);
+  const { data: activeSession, isLoading: sessionLoading } = useCurrentSession(terminalId);
   const { data: branchesResponse } = useBranches();
   const branches = Array.isArray(branchesResponse) ? branchesResponse : (branchesResponse as any)?.data || [];
 
@@ -57,6 +58,32 @@ export default function POSPage() {
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   
+  const [pollingOrder, setPollingOrder] = useState<any>(null);
+
+  useEffect(() => {
+    let interval: any;
+    if (pollingOrder) {
+      interval = setInterval(async () => {
+        try {
+          const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+          const res = await fetch(`${baseUrl}/api/payments/status/${pollingOrder.orderNumber}`);
+          const data = await res.json();
+          if (data.paymentStatus === 'PAID') {
+            clearInterval(interval);
+            setPollingOrder(null);
+            setLastOrderData({ ...pollingOrder, paymentStatus: 'PAID' });
+            clearCart();
+            setSelectedCustomer(null);
+            setIsSuccessModalOpen(true);
+          }
+        } catch (e) {
+           console.error("Polling error", e);
+        }
+      }, 3000);
+    }
+    return () => clearInterval(interval);
+  }, [pollingOrder]);
+  
   // New States for POS Upgrades
   // New States for POS Upgrades
   // Default to OPEN if activeSession exists, else CLOSED
@@ -65,9 +92,10 @@ export default function POSPage() {
   const isShiftModalOpen = shiftModalMode !== null;
   
   useEffect(() => {
+    if (sessionLoading) return; // wait until loaded
     if (activeSession) setShiftState("OPEN");
     else setShiftState("CLOSED");
-  }, [activeSession]);
+  }, [activeSession, sessionLoading]);
   
   const [heldCarts, setHeldCarts] = useState<{id: string, time: string, items: any[]}[]>([]);
   const [isHeldCartsModalOpen, setIsHeldCartsModalOpen] = useState(false);
@@ -164,11 +192,19 @@ export default function POSPage() {
 
   useBarcodeScanner({
     onScan: async (barcode) => {
-      if (shiftState === 'CLOSED' || posMode !== 'SALES') return;
+      if (shiftState === 'CLOSED' || (posMode !== 'SALES' && posMode !== 'DISPATCH')) return;
       try {
         const product = await scanBarcodeMutation.mutateAsync(barcode);
         if (product && product.variants) {
-          const matchingVariant = product.variants.find((v: any) => v.sku?.toLowerCase() === barcode.toLowerCase());
+          const lowerSku = barcode.toLowerCase();
+          const matchingVariant = product.variants.find((v: any) => 
+            v.sku?.toLowerCase() === lowerSku || 
+            v.barcode?.toLowerCase() === lowerSku ||
+            v.sku?.toLowerCase().startsWith(lowerSku) ||
+            v.barcode?.toLowerCase().startsWith(lowerSku) ||
+            v.id?.toLowerCase().startsWith(lowerSku) ||
+            product.id?.toLowerCase().startsWith(lowerSku)
+          );
           if (matchingVariant) {
             // If in SALES mode, don't allow scanning out-of-stock items
             if (posMode === 'SALES' && matchingVariant.stockStatus !== 'instock' && matchingVariant.quantity <= 0) {
@@ -184,7 +220,7 @@ export default function POSPage() {
         globalDialog.alert("Product not found or invalid barcode.");
       }
     },
-    disabled: isPaymentModalOpen || isCustomerModalOpen || isVariantModalOpen || isShiftModalOpen || shiftState === 'CLOSED' || posMode !== 'SALES'
+    disabled: isPaymentModalOpen || isCustomerModalOpen || isVariantModalOpen || isShiftModalOpen || shiftState === 'CLOSED' || (posMode !== 'SALES' && posMode !== 'DISPATCH')
   });
 
   const toggleFullscreen = () => {
@@ -255,7 +291,15 @@ export default function POSPage() {
         try {
           const product = await scanBarcodeMutation.mutateAsync(searchTerm);
           if (product && product.variants) {
-            const matchingVariant = product.variants.find((v: any) => v.sku?.toLowerCase() === searchTerm.toLowerCase());
+            const lowerSku = searchTerm.toLowerCase();
+            const matchingVariant = product.variants.find((v: any) => 
+              v.sku?.toLowerCase() === lowerSku || 
+              v.barcode?.toLowerCase() === lowerSku ||
+              v.sku?.toLowerCase().startsWith(lowerSku) ||
+              v.barcode?.toLowerCase().startsWith(lowerSku) ||
+              v.id?.toLowerCase().startsWith(lowerSku) ||
+              product.id?.toLowerCase().startsWith(lowerSku)
+            );
             if (matchingVariant) {
               addToCart(product, matchingVariant, 1);
               setSearchTerm("");
@@ -381,8 +425,38 @@ export default function POSPage() {
       </div>
 
       {/* Main Layout Area */}
-      {posMode === "RETURNS" ? (
-        <PosReturnsMode />
+      {sessionLoading ? (
+        <div className="flex-1 flex flex-col items-center justify-center bg-surface overflow-hidden">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="font-inter text-muted text-sm">Checking shift status...</p>
+        </div>
+      ) : shiftState === "CLOSED" ? (
+        <div className="flex-1 flex flex-col items-center justify-center bg-surface overflow-hidden">
+          <div className="w-24 h-24 bg-stone-100 rounded-full flex items-center justify-center mb-6">
+            <Lock size={48} className="text-stone-400" />
+          </div>
+          <h2 className="font-inter font-bold text-3xl text-foreground mb-4">Shift Closed</h2>
+          <p className="font-inter text-muted mb-8 max-w-md text-center">
+            You need to open a shift with an initial cash float before you can start processing sales, returns, or exchanges.
+          </p>
+          <button 
+            onClick={() => setShiftModalMode("OPEN")}
+            className="px-8 py-3 bg-primary text-white font-inter font-bold rounded-xl shadow-lg hover:bg-primary-hover hover:-translate-y-1 transition-all"
+          >
+            Open Shift Now
+          </button>
+        </div>
+      ) : posMode === "RETURNS" ? (
+        <PosReturnsMode branchId={branchId} />
+      ) : posMode === "EXCHANGE" ? (
+        <PosExchangeTicket
+          isMobileCartOpen={isMobileCartOpen}
+          setIsMobileCartOpen={setIsMobileCartOpen}
+          cart={cart}
+          updateQty={updateQty}
+          clearCart={clearCart}
+          branchId={branchId}
+        />
       ) : (
         <div className="flex-1 flex overflow-hidden">
           
@@ -447,11 +521,8 @@ export default function POSPage() {
                     <button 
                       key={p.id}
                       onClick={() => { 
-                        if (posMode === "DISPATCH" || posMode === "EXCHANGE") {
-                          addToCart(p);
-                        } else {
-                          setSelectedProduct(p); setIsVariantModalOpen(true); 
-                        }
+                        setSelectedProduct(p); 
+                        setIsVariantModalOpen(true); 
                       }}
                       className="bg-surface border border-border rounded-xl flex flex-col hover:border-accent hover:shadow-md transition-all text-left active:scale-95 overflow-hidden"
                     >
@@ -467,9 +538,9 @@ export default function POSPage() {
                             {price.toFixed(2)}
                           </span>
                           <span className={`font-inter text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded border ${
-                            inStock ? "text-muted bg-background border-border" : "text-error bg-error/10 border-error/20"
+                            (inStock || posMode === 'DISPATCH') ? "text-muted bg-background border-border" : "text-error bg-error/10 border-error/20"
                           }`}>
-                            {inStock ? "In Stock" : "Out"}
+                            {inStock ? "In Stock" : (posMode === 'DISPATCH' ? "Pre-Sold" : "Out")}
                           </span>
                         </div>
                       </div>
@@ -508,14 +579,7 @@ export default function POSPage() {
               cart={cart}
               updateQty={updateQty}
               clearCart={clearCart}
-            />
-          ) : posMode === "EXCHANGE" ? (
-            <PosExchangeTicket 
-              isMobileCartOpen={isMobileCartOpen}
-              setIsMobileCartOpen={setIsMobileCartOpen}
-              cart={cart}
-              updateQty={updateQty}
-              clearCart={clearCart}
+              branchId={branchId}
             />
           ) : (
             <div className={`fixed inset-y-0 right-0 w-full sm:w-[420px] bg-surface flex flex-col shrink-0 shadow-2xl lg:shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] z-50 lg:z-0 lg:static transform transition-transform duration-300 lg:translate-x-0 ${isMobileCartOpen ? "translate-x-0" : "translate-x-full"}`}>
@@ -586,7 +650,7 @@ export default function POSPage() {
 
                 <div className="mt-4">
                   <button 
-                    disabled={shiftState === "CLOSED" || cart.length === 0}
+                    disabled={cart.length === 0}
                     onClick={() => {
                       if (!branchId) {
                         globalDialog.alert("No branch assigned to your account. Please contact your administrator to assign you to a branch before processing sales.");
@@ -597,9 +661,9 @@ export default function POSPage() {
                     className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover disabled:bg-stone-300 disabled:cursor-not-allowed rounded-xl py-4 transition-colors shadow-lg shadow-primary/20"
                   >
                     <span className="font-inter font-bold text-lg text-white">
-                      {shiftState === "CLOSED" ? "Shift Closed" : "Charge"}
+                      Charge
                     </span>
-                    {shiftState === "OPEN" && <ChevronRight size={20} className="text-white" />}
+                    <ChevronRight size={20} className="text-white" />
                   </button>
                 </div>
                 <div className="grid grid-cols-2 gap-3 mt-2">
@@ -688,8 +752,11 @@ export default function POSPage() {
               tax: 0
             });
             
-            setLastOrderData({
+            const activeBranch = activeSession?.branch || user?.branch || branches?.find((b: any) => b.id === branchId);
+
+            const newOrderData = {
               orderId: orderRes?.orderNumber || `POS-${Date.now()}`,
+              orderNumber: orderRes?.orderNumber,
               cashierName: user?.name || "User",
               items: cart,
               subtotal,
@@ -697,21 +764,45 @@ export default function POSPage() {
               total,
               paymentMethod: method,
               tendered: total, // we don't have tendered from PaymentModal yet, assume exact change for now
-              change: 0
-            });
+              change: 0,
+              branchName: activeBranch?.name,
+              branchAddress: activeBranch?.address,
+              branchPhone: activeBranch?.phone
+            };
 
-            clearCart();
-            setSelectedCustomer(null);
-            setIsSuccessModalOpen(true);
+            if (method.toLowerCase() === 'koko') {
+               setPollingOrder(newOrderData);
+            } else {
+               setLastOrderData(newOrderData);
+               clearCart();
+               setSelectedCustomer(null);
+               setIsSuccessModalOpen(true);
+            }
           } catch (err: any) {
             console.error(err);
-            globalDialog.alert(err?.response?.data?.error || err.message || "Failed to process payment. Please try again.");
+            const serverMsg = err?.response?.data?.error?.message || err?.response?.data?.error || err?.response?.data?.message;
+            globalDialog.alert(serverMsg || (err?.isAxiosError ? "Network error. Please try again." : err?.message) || "Failed to process payment. Please try again.");
           }
         }}  
         total={Math.max(0, cart.reduce((sum, item) => sum + (item.price * item.qty), 0) - cartVouchers.reduce((sum, v) => sum + v.amount, 0)).toFixed(2)} 
       />}
       {isCustomerModalOpen && <CustomerSelectionModal onClose={() => setIsCustomerModalOpen(false)} onSelect={(c) => setSelectedCustomer(c)} />}
       {isSuccessModalOpen && <OrderSuccessModal onClose={() => setIsSuccessModalOpen(false)} orderData={lastOrderData} />}
+      
+      {pollingOrder && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-surface p-8 rounded-2xl flex flex-col items-center gap-4 max-w-sm w-full">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <h2 className="text-xl font-bold font-inter text-foreground">Awaiting Koko Payment</h2>
+            <p className="text-muted text-center text-sm font-inter">
+              Please ask the customer to complete the payment via the Koko app. We are waiting for the confirmation.
+            </p>
+            <button onClick={() => setPollingOrder(null)} className="mt-4 w-full px-6 py-3 bg-surface border border-border font-inter font-semibold text-foreground hover:bg-background rounded-lg transition-colors">
+              Run in Background
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -59,7 +59,7 @@ export default function BulkMessageModal({ isOpen, onClose }: BulkMessageModalPr
     if (fsId) {
       const fs = activeFlashSales.find((s: any) => s.id === fsId);
       if (fs && !message) {
-        setMessage(`Flash Sale: ${fs.name}! Shop now at laural.lk`);
+        setMessage(`Flash Sale: ${fs.name}! Shop now at seramaaduwen.lk`);
       }
     }
   }

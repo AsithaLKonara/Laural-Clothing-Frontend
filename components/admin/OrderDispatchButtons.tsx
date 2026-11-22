@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Truck, Printer } from "lucide-react";
 import FardarDispatchModal from "./FardarDispatchModal";
-import CourierLabelModal from "./CourierLabelModal";
+import ShippingLabelModal from "@/app/admin/shipping/components/ShippingLabelModal";
 
 interface OrderDispatchButtonsProps {
   orderId: string;
@@ -43,15 +43,9 @@ export default function OrderDispatchButtons({ orderId, customerName, address, p
       )}
 
       {showLabelModal && (
-        <CourierLabelModal 
-          orders={[{
-            id: orderId,
-            customer: customerName,
-            address: address,
-            phone: phone,
-            itemsCount: 1, // Passed down from parent if needed, for now 1
-            weight: "Standard"
-          }]}
+        <ShippingLabelModal 
+          orderIds={[orderId]}
+          isOpen={showLabelModal}
           onClose={() => setShowLabelModal(false)}
         />
       )}

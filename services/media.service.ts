@@ -1,4 +1,5 @@
 import { api } from './api';
+import axios from 'axios';
 
 export interface MediaFile {
   id: string;
@@ -30,30 +31,24 @@ export const mediaService = {
     return data;
   },
 
-  generatePresignedUrl: async (filename: string, contentType: string, folder?: string): Promise<{ url: string, key: string, publicUrl: string }> => {
-    const { data } = await api.post('/media/presigned-url', { filename, contentType, folder });
-    return data;
-  },
+  uploadMedia: async (file: File, folder?: string, onProgress?: (progress: number) => void): Promise<MediaFile> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (folder) {
+      formData.append('folder', folder);
+    }
 
-  uploadToS3: async (presignedUrl: string, file: File): Promise<void> => {
-    await fetch(presignedUrl, {
-      method: 'PUT',
-      body: file,
+    const { data } = await api.post('/media/upload', formData, {
       headers: {
-        'Content-Type': file.type,
+        'Content-Type': 'multipart/form-data',
       },
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.total && onProgress) {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          onProgress(percentCompleted);
+        }
+      }
     });
-  },
-
-  createMediaRecord: async (payload: {
-    name: string;
-    type: string;
-    folder: string;
-    size: number;
-    url: string;
-    key: string;
-  }): Promise<MediaFile> => {
-    const { data } = await api.post('/media', payload);
     return data;
   },
 
@@ -61,8 +56,8 @@ export const mediaService = {
     await api.delete(`/media/${id}`);
   },
 
-  syncS3: async (): Promise<{ added: number }> => {
-    const { data } = await api.post('/media/sync-s3');
+  syncLocal: async (): Promise<{ added: number }> => {
+    const { data } = await api.post('/media/sync-s3'); // Keeps old path for backwards compatibility
     return data;
   }
 };

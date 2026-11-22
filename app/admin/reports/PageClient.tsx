@@ -3,6 +3,7 @@
 import PageHeader from "@/components/dashboard/PageHeader";
 import { BarChart3, TrendingUp, Users, ShoppingBag, Box, MapPin, CreditCard, MonitorSmartphone, Tag } from "lucide-react";
 import Link from "next/link";
+import AdminStatCards from "@/components/admin/AdminStatCards";
 
 export default function ReportsPage() {
   const reportCards = [
@@ -22,7 +23,15 @@ export default function ReportsPage() {
         description="Access comprehensive data reports across all business domains."
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+      <div className="mt-8 mb-4">
+        <AdminStatCards metrics={[
+          { title: "Total Reports Generated", value: "2,541", theme: "white-blue" },
+          { title: "Active Scheduled Reports", value: "12", theme: "orange" },
+          { title: "Storage Used", value: "1.2 GB", theme: "white-stone" }
+        ]} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
         {reportCards.map((report, idx) => {
           const content = (
             <div className="bg-white border border-stone-200 rounded-xl p-6 hover:shadow-md transition-shadow cursor-pointer group h-full flex flex-col">

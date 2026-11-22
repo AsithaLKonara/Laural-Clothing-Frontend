@@ -1,23 +1,26 @@
 "use client";
+import AdminStatCards from "@/components/admin/AdminStatCards";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";
 import FilterBar from "@/components/dashboard/FilterBar";
 import DataTable from "@/components/dashboard/DataTable";
 import { StatusBadge } from "@/components/dashboard/Badges";
 import ProductFormModal from "@/components/dashboard/ProductFormModal";
-import BarcodePrintModal from "@/components/admin/BarcodePrintModal";
 import BulkEditModal from "@/components/admin/BulkEditModal";
 import Link from "next/link";
-import { Barcode, Edit, ArchiveRestore, CheckCircle2 } from "lucide-react";
-import { useProducts, useDeleteProduct } from "@/hooks/useProducts";
+import { Barcode, Edit, ArchiveRestore, CheckCircle2, Printer, X } from "lucide-react";
+import BarcodeLib from "react-barcode";
+import { useReactToPrint } from "react-to-print";
+import { useProducts, useDeleteProduct, useBulkEditProducts } from "@/hooks/useProducts";
 import { Product } from "@/types/product";
 import { globalDialog } from "@/store/dialog.store";
+import { toast } from "@/store/toast.store";
 
 export default function ProductsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [productToEdit, setProductToEdit] = useState<Product | undefined>(undefined);
-  const [printingProduct, setPrintingProduct] = useState<{sku: string, name: string} | null>(null);
+  const [printingProduct, setPrintingProduct] = useState<{name: string, variants: any[]} | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [showBulkEditModal, setShowBulkEditModal] = useState(false);
 
@@ -32,12 +35,14 @@ export default function ProductsPage() {
     skip: (page - 1) * take,
     take: take,
     search: searchQuery || undefined,
-    category: categoryFilter === "All Categories" ? undefined : (categoryFilter || undefined)
+    category: categoryFilter === "All Categories" ? undefined : (categoryFilter || undefined),
+    status: statusFilter === "All Status" ? undefined : (statusFilter || undefined)
   } as any);
   const products = response?.data || [];
   const meta = response?.meta || { total: 0, skip: 0, take: take };
   const totalPages = Math.ceil(meta.total / (meta.take || take)) || 1;
   const deleteProductMutation = useDeleteProduct();
+  const bulkEditProductsMutation = useBulkEditProducts();
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
@@ -52,8 +57,33 @@ export default function ProductsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (await globalDialog.confirm("Are you sure you want to archive/delete this product?")) {
+    if (await globalDialog.confirm("Are you sure you want to archive this product?")) {
       await deleteProductMutation.mutateAsync(id);
+      toast.success("Product archived successfully");
+    }
+  };
+
+  const handleBulkPublish = async () => {
+    if (selectedProducts.length === 0) return;
+    try {
+      await bulkEditProductsMutation.mutateAsync({ productIds: selectedProducts, data: { status: 'ACTIVE' } });
+      toast.success(`${selectedProducts.length} products published successfully.`);
+      setSelectedProducts([]);
+    } catch (e) {
+      toast.error('Failed to publish products');
+    }
+  };
+
+  const handleBulkArchive = async () => {
+    if (selectedProducts.length === 0) return;
+    if (await globalDialog.confirm(`Are you sure you want to archive ${selectedProducts.length} products?`)) {
+      try {
+        await bulkEditProductsMutation.mutateAsync({ productIds: selectedProducts, data: { status: 'ARCHIVED' } });
+        toast.success(`${selectedProducts.length} products archived successfully.`);
+        setSelectedProducts([]);
+      } catch (e) {
+        toast.error('Failed to archive products');
+      }
     }
   };
 
@@ -123,7 +153,11 @@ export default function ProductsPage() {
           <span className="text-stone-300">·</span>
           <button onClick={() => handleDelete(row.id)} disabled={deleteProductMutation.isPending} className="text-red-500 hover:underline font-medium disabled:opacity-50">Archive</button>
           <span className="text-stone-300">·</span>
-          <button onClick={() => setPrintingProduct({ sku: row.sku || row.id, name: row.name })} className="text-stone-500 hover:text-stone-900 transition-colors tooltip" title="Print Barcode">
+          <button
+            onClick={() => setPrintingProduct({ name: row.name, variants: row.variants || [] })}
+            className="text-stone-500 hover:text-stone-900 transition-colors"
+            title="Print Variant Barcodes"
+          >
             <Barcode size={16} />
           </button>
         </div>
@@ -155,6 +189,7 @@ export default function ProductsPage() {
         <option value="LOW_STOCK">Low Stock</option>
         <option value="OUT_OF_STOCK">Out of Stock</option>
         <option value="DRAFT">Draft</option>
+        <option value="ARCHIVED">Archived</option>
       </select>
       <button
         onClick={handleAdd}
@@ -173,7 +208,12 @@ export default function ProductsPage() {
           description="Manage your product catalog, categories, and inventory base."
         />
 
-        <FilterBar
+        <div className="mb-6"><AdminStatCards metrics={[
+  { title: "Total", value: meta?.total?.toString() || products.length.toString(), theme: "white-blue" },
+  { title: "Active", value: products.filter((p: any) => p.status === "ACTIVE").length.toString(), theme: "white-stone" },
+  { title: "Pending", value: products.filter((p: any) => p.status === "DRAFT").length.toString(), theme: "orange" }
+]} /></div>
+      <FilterBar
           placeholder="Search products by name or SKU..."
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -209,10 +249,10 @@ export default function ProductsPage() {
             <button onClick={() => setShowBulkEditModal(true)} className="font-inter font-semibold text-sm bg-stone-800 text-white px-4 py-2 rounded-full hover:bg-stone-700 transition-colors flex items-center gap-2">
               <Edit size={14} /> Bulk Edit
             </button>
-            <button onClick={() => setSelectedProducts([])} className="font-inter font-semibold text-sm bg-emerald-600 text-white px-4 py-2 rounded-full hover:bg-emerald-500 transition-colors flex items-center gap-2">
+            <button onClick={handleBulkPublish} disabled={bulkEditProductsMutation.isPending} className="font-inter font-semibold text-sm bg-emerald-600 text-white px-4 py-2 rounded-full hover:bg-emerald-500 transition-colors flex items-center gap-2 disabled:opacity-50">
               <CheckCircle2 size={14} /> Publish
             </button>
-            <button onClick={() => setSelectedProducts([])} className="font-inter font-semibold text-sm bg-stone-800 text-white px-4 py-2 rounded-full hover:bg-stone-700 transition-colors flex items-center gap-2">
+            <button onClick={handleBulkArchive} disabled={bulkEditProductsMutation.isPending} className="font-inter font-semibold text-sm bg-stone-800 text-white px-4 py-2 rounded-full hover:bg-stone-700 transition-colors flex items-center gap-2 disabled:opacity-50">
               <ArchiveRestore size={14} /> Archive
             </button>
           </div>
@@ -231,12 +271,215 @@ export default function ProductsPage() {
       )}
 
       {printingProduct && (
-        <BarcodePrintModal 
-          productSku={printingProduct.sku} 
-          productName={printingProduct.name} 
-          onClose={() => setPrintingProduct(null)} 
+        <ProductVariantsBarcodeModal
+          productName={printingProduct.name}
+          variants={printingProduct.variants}
+          onClose={() => setPrintingProduct(null)}
         />
       )}
     </>
   );
 }
+
+// ── Per-variant + Bulk Barcode Print Modal ───────────────────────────────────
+// ── Label size presets ───────────────────────────────────────────────────────
+const LABEL_SIZES = [
+  { id: 'auto',    label: 'Auto (Printer)',   desc: 'Let printer decide',   css: 'auto',       bW: 1.5, bH: 45 },
+  { id: '30x20',   label: '30 × 20 mm',       desc: 'Tiny roll',            css: '30mm 20mm',  bW: 0.8, bH: 20 },
+  { id: '50x30',   label: '50 × 30 mm',       desc: 'Small roll',           css: '50mm 30mm',  bW: 1.0, bH: 28 },
+  { id: '60x40',   label: '60 × 40 mm',       desc: 'Standard label',       css: '60mm 40mm',  bW: 1.2, bH: 35 },
+  { id: '100x50',  label: '100 × 50 mm',      desc: 'Wide label',           css: '100mm 50mm', bW: 1.8, bH: 40 },
+  { id: '4x6in',   label: '4″ × 6″',          desc: 'Shipping label',       css: '4in 6in',    bW: 2.2, bH: 60 },
+  { id: 'a4',      label: 'A4',               desc: 'Full page (3 per row)', css: 'A4 portrait', bW: 1.2, bH: 40 },
+] as const;
+type LabelSizeId = typeof LABEL_SIZES[number]['id'];
+
+function ProductVariantsBarcodeModal({
+  productName,
+  variants,
+  onClose,
+}: {
+  productName: string;
+  variants: any[];
+  onClose: () => void;
+}) {
+  const bulkRef = useRef<HTMLDivElement>(null);
+  const singleRef = useRef<HTMLDivElement>(null);
+  const [selectedVariantIdx, setSelectedVariantIdx] = useState<number | null>(null);
+  const [labelSizeId, setLabelSizeId] = useState<LabelSizeId>('auto');
+
+  const activeSize = LABEL_SIZES.find(s => s.id === labelSizeId) || LABEL_SIZES[0];
+
+  const barcodePrintPageStyle = `
+    @page {
+      size: ${activeSize.css};
+      margin: ${labelSizeId === 'a4' ? '10mm' : '2mm'};
+    }
+    body { visibility: visible !important; margin: 0; padding: 0; background: white; }
+    body * { visibility: visible !important; }
+  `;
+
+  const handleBulkPrint = useReactToPrint({
+    contentRef: bulkRef,
+    documentTitle: `Barcodes-${productName}`,
+    pageStyle: barcodePrintPageStyle,
+  });
+
+  const handleSinglePrint = useReactToPrint({
+    contentRef: singleRef,
+    documentTitle: `Barcode-${selectedVariantIdx !== null ? variants[selectedVariantIdx]?.barcode : ''}`,
+    pageStyle: barcodePrintPageStyle,
+  });
+
+  const variantsWithBarcodes = variants.filter((v: any) => v.barcode);
+  const selectedVariant = selectedVariantIdx !== null ? variants[selectedVariantIdx] : null;
+
+  const getDisplayCode = (barcode: string) =>
+    barcode && barcode.length > 12 ? barcode.substring(0, 12) : barcode;
+
+  return (
+    <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 max-h-[90vh]">
+
+        {/* Header */}
+        <div className="flex items-center justify-between p-5 border-b border-stone-200 bg-stone-50 shrink-0">
+          <div>
+            <h2 className="font-inter font-bold text-lg text-stone-900">Variant Barcodes</h2>
+            <p className="text-sm text-stone-500 font-inter mt-0.5">
+              {productName} &mdash; {variantsWithBarcodes.length} variant{variantsWithBarcodes.length !== 1 ? 's' : ''} with barcodes
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => handleBulkPrint()}
+              disabled={variantsWithBarcodes.length === 0}
+              className="flex items-center gap-2 px-4 py-2 bg-stone-900 text-white font-inter font-medium text-sm rounded-lg hover:bg-stone-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Printer size={15} />
+              Print All ({variantsWithBarcodes.length})
+            </button>
+            <button onClick={onClose} className="p-2 text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded-lg transition-colors">
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+
+        {/* Label Size Selector */}
+        <div className="px-5 py-3 border-b border-stone-100 bg-stone-50 shrink-0">
+          <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider mb-2">Label / Roll Size</p>
+          <div className="flex flex-wrap gap-2">
+            {LABEL_SIZES.map(s => (
+              <button
+                key={s.id}
+                onClick={() => setLabelSizeId(s.id)}
+                className={`flex flex-col items-start px-3 py-1.5 rounded-lg border text-left transition-all text-xs font-inter ${
+                  labelSizeId === s.id
+                    ? 'bg-stone-900 border-stone-900 text-white'
+                    : 'bg-white border-stone-200 text-stone-700 hover:border-stone-400'
+                }`}
+              >
+                <span className="font-semibold leading-tight">{s.label}</span>
+                <span className={`text-[9px] leading-tight ${labelSizeId === s.id ? 'text-stone-300' : 'text-stone-400'}`}>{s.desc}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="flex flex-1 overflow-hidden">
+          {/* Variant List */}
+          <div className="w-56 border-r border-stone-200 overflow-y-auto shrink-0 bg-stone-50">
+            <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider px-4 pt-4 pb-2">
+              Select Variant
+            </p>
+            {variants.length === 0 ? (
+              <p className="text-sm text-stone-400 font-inter px-4 py-6 text-center">No variants found</p>
+            ) : (
+              variants.map((v: any, i: number) => (
+                <button
+                  key={v.id || i}
+                  onClick={() => setSelectedVariantIdx(i)}
+                  className={`w-full text-left px-4 py-3 border-b border-stone-100 transition-colors text-sm font-inter ${
+                    selectedVariantIdx === i
+                      ? 'bg-stone-900 text-white'
+                      : 'hover:bg-stone-100 text-stone-700'
+                  }`}
+                >
+                  <p className="font-semibold text-xs mb-0.5">{v.size} / {v.color}</p>
+                  <p className={`text-[10px] font-mono truncate ${selectedVariantIdx === i ? 'text-stone-300' : 'text-stone-400'}`}>
+                    {v.barcode ? v.barcode : 'No barcode'}
+                  </p>
+                </button>
+              ))
+            )}
+          </div>
+
+          {/* Preview Panel */}
+          <div className="flex-1 flex flex-col items-center justify-center p-8 bg-stone-100 overflow-y-auto">
+            {selectedVariant ? (
+              <>
+                {selectedVariant.barcode ? (
+                  <div className="flex flex-col items-center gap-5 w-full">
+                    {/* Live preview label */}
+                    <div className="flex items-center gap-2 text-xs text-stone-500 font-inter">
+                      <span>Previewing as:</span>
+                      <span className="font-semibold text-stone-800">{activeSize.label}</span>
+                    </div>
+                    <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-6 flex flex-col items-center w-full max-w-xs">
+                      <div ref={singleRef} className="react-to-print-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'white', padding: '8px', width: '100%', fontFamily: 'sans-serif' }}>
+                        <p style={{ fontWeight: 700, fontSize: '11px', textAlign: 'center', margin: '0 0 3px 0', color: '#1c1917' }}>{productName}</p>
+                        <p style={{ fontSize: '10px', textAlign: 'center', margin: '0 0 6px 0', color: '#78716c' }}>{selectedVariant.size} / {selectedVariant.color}</p>
+                        <BarcodeLib value={getDisplayCode(selectedVariant.barcode)} format="CODE128" width={activeSize.bW} height={activeSize.bH} displayValue fontSize={10} margin={3} />
+                      </div>
+                    </div>
+                    <button onClick={() => handleSinglePrint()} className="flex items-center gap-2 px-5 py-2.5 bg-stone-900 text-white font-inter font-semibold text-sm rounded-lg hover:bg-stone-800 transition-colors">
+                      <Printer size={15} /> Print This Barcode
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-3 text-stone-400">
+                    <Barcode size={40} className="opacity-20" />
+                    <p className="font-inter text-sm">No barcode on this variant</p>
+                    <p className="font-inter text-xs">Edit the product to auto-generate barcodes</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-3 text-stone-400">
+                <Barcode size={40} className="opacity-20" />
+                <p className="font-inter text-sm font-medium">Select a variant</p>
+                <p className="font-inter text-xs">Click a variant on the left to preview its barcode</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Bulk print area — off-screen so react-to-print can render it */}
+        <div style={{ position: 'fixed', left: '-9999px', top: 0, width: activeSize.id === 'a4' ? '21cm' : activeSize.css.replace(' ', ' x ').split(' ')[0], pointerEvents: 'none' }} aria-hidden="true">
+          <div
+            ref={bulkRef}
+            className="react-to-print-content"
+            style={{
+              padding: '8px',
+              display: 'grid',
+              gridTemplateColumns: activeSize.id === 'a4' ? 'repeat(3, 1fr)' : '1fr',
+              gap: activeSize.id === 'a4' ? '10px' : '4px',
+              background: 'white',
+              fontFamily: 'sans-serif',
+            }}
+          >
+            {variantsWithBarcodes.map((v: any, i: number) => (
+              <div key={v.id || i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', border: '1px solid #e7e5e4', padding: '6px', background: 'white' }}>
+                <p style={{ fontWeight: 700, fontSize: '9px', textAlign: 'center', color: '#1c1917', margin: '0 0 2px 0' }}>{productName}</p>
+                <p style={{ fontSize: '8px', textAlign: 'center', color: '#78716c', margin: '0 0 3px 0' }}>{v.size} / {v.color}</p>
+                <BarcodeLib value={getDisplayCode(v.barcode)} format="CODE128" width={activeSize.bW} height={activeSize.bH} displayValue fontSize={8} margin={2} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+

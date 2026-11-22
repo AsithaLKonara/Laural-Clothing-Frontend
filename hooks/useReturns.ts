@@ -1,12 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/services/api';
 
-export const useReturns = (page: number, limit: number, search?: string, status?: string, customerId?: string) => {
+export const useReturns = (page: number, limit: number, search?: string, status?: string, customerId?: string, origin?: string, type?: string) => {
   return useQuery({
-    queryKey: ['returns', { page, limit, search, status, customerId }],
+    queryKey: ['returns', { page, limit, search, status, customerId, origin, type }],
     queryFn: async () => {
       const res = await api.get('/returns', {
-        params: { page, limit, search, status, customerId }
+        params: { page, limit, search, status, customerId, origin, type }
       });
       return res.data;
     },
@@ -72,6 +72,20 @@ export const useBulkUpdateReturns = () => {
       return res.data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['returns'] });
+    }
+  });
+};
+export const useProcessBulkManualReturns = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: { branchId: string, items: { variantId: string, quantity: number, condition: string, notes?: string }[] }) => {
+      const res = await api.post('/returns/manual-bulk', data);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
       queryClient.invalidateQueries({ queryKey: ['returns'] });
     }
   });

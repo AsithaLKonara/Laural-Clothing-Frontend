@@ -7,7 +7,7 @@ import { orderService } from "@/services/order.service";
 import { useGenerateVoucher } from "@/hooks/usePos";
 import { useScanBarcode } from "@/hooks/useProducts";
 
-export default function PosReturnsMode() {
+export default function PosReturnsMode({ branchId }: { branchId?: string }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [orderFound, setOrderFound] = useState(false);
   const [loadedOrder, setLoadedOrder] = useState<any>(null);
@@ -104,7 +104,7 @@ export default function PosReturnsMode() {
     try {
       if (refundMethod === "STORE_CREDIT") {
         await generateVoucherMutation.mutateAsync({
-          branchId: "BR-001",
+          branchId: branchId || "",
           returnedItems: selectedItems.map(i => ({ variantId: i.variantId || i.id, qty: i.qty })),
           value: calculateRefund(),
           orderId: loadedOrder?.id
@@ -121,8 +121,9 @@ export default function PosReturnsMode() {
       }
       setIsSuccess(true);
     } catch (error: any) {
-      console.error(error);
-      setErrorMsg(error?.response?.data?.error || "Failed to process return.");
+      const apiError = error?.response?.data?.error;
+      const message = typeof apiError === "string" ? apiError : (apiError?.message || "Failed to process return.");
+      setErrorMsg(message);
     } finally {
       setIsProcessing(false);
     }
@@ -154,7 +155,7 @@ export default function PosReturnsMode() {
         {/* Hidden Printable Receipt */}
         <div className="print-receipt print-only bg-white text-black p-4 font-mono text-sm leading-snug mx-auto">
           <div className="text-center flex flex-col items-center gap-1 mb-4">
-            <h2 className="font-bold text-xl tracking-widest">LAURAL</h2>
+            <img src="/logo.png" alt="LAURAL" className="h-6 object-contain grayscale brightness-0" />
             <span className="text-xs">RETURN RECEIPT</span>
           </div>
           <div className="flex justify-between mb-1">
@@ -213,7 +214,7 @@ export default function PosReturnsMode() {
               Search
             </button>
           </form>
-          {errorMsg && <p className="mt-2 text-sm text-error font-inter font-bold">{errorMsg}</p>}
+          {errorMsg && <p className="mt-2 text-sm text-error font-inter font-bold">{typeof errorMsg === 'string' ? errorMsg : (errorMsg as any)?.message || JSON.stringify(errorMsg)}</p>}
         </div>
 
         {/* Order Results */}
@@ -282,7 +283,7 @@ export default function PosReturnsMode() {
                           type="checkbox" 
                           disabled={alreadyReturned}
                           checked={!!selectedItems.find(i => i.id === item.id)}
-                          onChange={() => toggleItem({ ...variant, id: item.id }, price)}
+                          onChange={() => toggleItem({ ...variant, id: item.id, variantId: variant.id }, price)}
                           className="w-5 h-5 rounded border-border text-primary focus:ring-primary disabled:opacity-50"
                         />
                       </div>
@@ -309,7 +310,7 @@ export default function PosReturnsMode() {
       </div>
 
       {/* Right Side: Refund Actions */}
-      <div className="fixed inset-y-0 right-0 w-[420px] bg-surface flex flex-col shrink-0 shadow-2xl z-50 transform transition-transform duration-300 translate-x-0 border-l border-border">
+      <div className="w-[380px] bg-surface flex flex-col shrink-0 shadow-xl border-l border-border overflow-hidden">
         
         <div className="p-6 border-b border-border bg-background flex flex-col justify-center shrink-0 h-[80px]">
           <h2 className="font-inter font-bold text-xl text-foreground flex items-center gap-2">

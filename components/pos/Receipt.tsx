@@ -13,10 +13,13 @@ export interface ReceiptProps {
   paymentMethod: string;
   tendered?: number;
   change?: number;
+  branchName?: string;
+  branchAddress?: string;
+  branchPhone?: string;
 }
 
 const Receipt = forwardRef<HTMLDivElement, ReceiptProps>((props, ref) => {
-  const { orderId, cashierName, date, items, subtotal, discount, total, paymentMethod, tendered, change } = props;
+  const { orderId, cashierName, date, items, subtotal, discount, total, paymentMethod, tendered, change, branchName, branchAddress, branchPhone } = props;
 
   const fmt = (n: number) => n.toFixed(2);
   const truncate = (str: string, max = 28) => str.length > max ? str.slice(0, max - 1) + "\u2026" : str;
@@ -55,9 +58,10 @@ const Receipt = forwardRef<HTMLDivElement, ReceiptProps>((props, ref) => {
     <div ref={ref} className="print-receipt" style={containerStyle}>
       {/* Store Header */}
       <div style={{ textAlign: "center", marginBottom: "4px" }}>
-        <div style={{ fontWeight: "bold", fontSize: "16px", letterSpacing: "3px" }}>LAURAL</div>
-        <div style={{ fontSize: "10px" }}>Point of Sale Receipt</div>
-        <div style={{ fontSize: "10px", marginTop: "2px" }}>Tel: +94 77 123 4567</div>
+        <img src="/logo.png" alt="LAURAL" style={{ height: "24px", margin: "0 auto 4px", filter: "grayscale(100%) brightness(0)", objectFit: "contain" }} />
+        {branchName && <div style={{ fontSize: "12px", fontWeight: "bold" }}>{branchName}</div>}
+        <div style={{ fontSize: "10px" }}>{branchAddress || "Point of Sale Receipt"}</div>
+        <div style={{ fontSize: "10px", marginTop: "2px" }}>Tel: {branchPhone || "+94 77 123 4567"}</div>
       </div>
 
       {divider}
@@ -72,10 +76,10 @@ const Receipt = forwardRef<HTMLDivElement, ReceiptProps>((props, ref) => {
       {divider}
 
       {/* Items Header */}
-      <div style={{ display: "flex", fontWeight: "bold", fontSize: "10px", marginBottom: "2px" }}>
-        <span style={{ flex: 1 }}>Item</span>
-        <span style={{ width: "22px", textAlign: "center" }}>Qty</span>
-        <span style={{ width: "52px", textAlign: "right" }}>Rs.</span>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 30px 60px", gap: "4px", fontWeight: "bold", fontSize: "10px", marginBottom: "2px" }}>
+        <span>Item</span>
+        <span style={{ textAlign: "center" }}>Qty</span>
+        <span style={{ textAlign: "right" }}>Rs.</span>
       </div>
 
       {divider}
@@ -85,12 +89,12 @@ const Receipt = forwardRef<HTMLDivElement, ReceiptProps>((props, ref) => {
         {items.map((item, idx) => (
           <div key={idx} style={{ marginBottom: "4px" }}>
             <div style={{ fontSize: "10px" }}>{truncate(item.name)}</div>
-            <div style={{ display: "flex", fontSize: "10px" }}>
-              <span style={{ flex: 1, color: "#555", fontSize: "9px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 30px 60px", gap: "4px", fontSize: "10px" }}>
+              <span style={{ color: "#555", fontSize: "9px" }}>
                 {[item.color, item.size].filter(Boolean).join(" / ")}
               </span>
-              <span style={{ width: "22px", textAlign: "center" }}>x{item.qty}</span>
-              <span style={{ width: "52px", textAlign: "right" }}>{fmt(item.price * item.qty)}</span>
+              <span style={{ textAlign: "center" }}>x{item.qty}</span>
+              <span style={{ textAlign: "right" }}>{fmt(item.price * item.qty)}</span>
             </div>
           </div>
         ))}
@@ -132,7 +136,7 @@ const Receipt = forwardRef<HTMLDivElement, ReceiptProps>((props, ref) => {
         <div style={{ marginTop: "6px", fontFamily: "monospace", fontSize: "9px", letterSpacing: "2px", wordBreak: "break-all" }}>
           {orderId}
         </div>
-        <div style={{ fontSize: "8px", color: "#888", marginTop: "6px" }}>Powered by Laural POS</div>
+        <div style={{ fontSize: "8px", color: "#888", marginTop: "6px" }}>Powered by SERAMAADUWEN.LK POS</div>
       </div>
     </div>
   );

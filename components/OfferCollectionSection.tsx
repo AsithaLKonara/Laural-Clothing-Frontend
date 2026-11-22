@@ -15,7 +15,7 @@ export default function OfferCollectionSection({ initialData }: { initialData?: 
     [Autoplay({ delay: 3000, stopOnInteraction: true })]
   );
 
-  const { data: response, isLoading } = useProducts({ skip: 8, take: 8 }, initialData);
+  const { data: response, isLoading } = useProducts({ skip: 0, take: 8 }, initialData);
   const products = response?.data || [];
 
   return (
@@ -34,7 +34,7 @@ export default function OfferCollectionSection({ initialData }: { initialData?: 
       {/* Explore More Link */}
       <div className="flex justify-end items-center w-full max-w-[1038px] mb-8 md:mb-[60px]">
         <Link 
-          href="/offer-collection" 
+          href="/sale" 
           className="flex items-center justify-center gap-[10px] pb-1 border-b border-primary"
         >
           <span className="font-signature font-normal text-sm md:text-base leading-[22px] text-primary">
@@ -44,14 +44,16 @@ export default function OfferCollectionSection({ initialData }: { initialData?: 
       </div>
 
       {/* Product Carousel */}
-      <div className="w-full max-w-[1040px] overflow-hidden" ref={emblaRef}>
-        <div className="flex gap-[20px]">
+      <div className="w-full max-w-[1040px] overflow-hidden" ref={products.length > 4 || isLoading ? emblaRef : undefined}>
+        <div className={`flex ${products.length > 4 || isLoading ? '-ml-[20px]' : 'justify-center flex-wrap gap-5'}`}>
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex-[0_0_245px] min-w-[245px] h-[380px] bg-stone-100 animate-pulse rounded-lg"></div>
+              <div key={i} className="flex-[0_0_265px] min-w-[265px] pl-[20px]">
+                <div className="w-full h-[380px] bg-stone-100 animate-pulse rounded-lg"></div>
+              </div>
             ))
           ) : products.map((product: Product) => (
-            <div key={product.id} className="flex-[0_0_245px] min-w-[245px]">
+            <div key={product.id} className={products.length > 4 ? "flex-[0_0_265px] min-w-[265px] pl-[20px]" : "flex justify-center w-full max-w-[245px]"}>
               <ProductCard product={product} />
             </div>
           ))}

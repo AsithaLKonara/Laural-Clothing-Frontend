@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { orderService } from "../services/order.service";
 
-export function useOrders(params?: { search?: string; page?: number; limit?: number; status?: string; branchId?: string; paymentGateway?: string; customerId?: string; type?: string }) {
+export function useOrders(params?: { search?: string; page?: number; limit?: number; status?: string; branchId?: string; paymentGateway?: string; customerId?: string; type?: string; startDate?: string; endDate?: string }) {
   return useQuery({
     queryKey: ["orders", params],
     queryFn: async () => {
@@ -40,7 +40,8 @@ export function useUpdateOrderStatus() {
 export const useDispatchOrder = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (orderId: string) => orderService.dispatchOrder(orderId),
+    mutationFn: ({ orderId, weightKg }: { orderId: string, weightKg?: number }) => 
+      orderService.dispatchOrder(orderId, weightKg),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
     },

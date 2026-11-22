@@ -4,11 +4,17 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { MapPin, Phone, Mail } from "lucide-react";
-import PhoneInput from "react-phone-number-input";
-import "react-phone-number-input/style.css";
+
+import { useBranches } from "@/hooks/useInventory";
+import { usePublicSettings } from "@/hooks/useSettings";
 
 export default function ClientContent() {
   const [phoneNumber, setPhoneNumber] = useState<string | undefined>();
+  const { data: branchesData } = useBranches();
+  const { data: settingsData } = usePublicSettings();
+  
+  const mainBranch = branchesData?.data?.[0] || branchesData?.[0];
+  const supportEmail = settingsData?.find((s: any) => s.key === "support_email")?.value;
 
   return (
     <main className="flex flex-col items-center w-full min-h-screen bg-background pt-[83px]">
@@ -53,34 +59,13 @@ export default function ClientContent() {
                 Phone number <span className="text-accent">*</span>
               </label>
               
-              <PhoneInput 
-                placeholder="Enter phone number"
-                value={phoneNumber}
-                onChange={setPhoneNumber}
-                defaultCountry="LK"
-                className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-all"
-                numberInputProps={{
-                  className: "w-full h-full bg-transparent border-none outline-none text-primary font-poppins text-sm placeholder:text-stone-400 pl-4",
-                }}
+              <input 
+                type="tel"
+                placeholder="Enter phone number (e.g., 0712345678)"
+                value={phoneNumber || ''}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400"
               />
-              {/* Custom CSS overrides for PhoneInput flag to match luxury styling */}
-              <style jsx global>{`
-                .PhoneInputCountry {
-                  border-right: 1px solid #e7e5e4;
-                  padding-right: 12px;
-                  margin-right: 0;
-                }
-                .PhoneInputCountryIcon {
-                  width: 24px;
-                  height: 16px;
-                  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-                  border: none;
-                }
-                .PhoneInputCountrySelectArrow {
-                  color: #a8a29e;
-                  opacity: 1;
-                }
-              `}</style>
             </div>
 
             {/* Message */}
@@ -122,8 +107,8 @@ export default function ClientContent() {
             {/* Logo */}
             <div className="w-[180px] h-[34px] relative">
               <Image 
-                src="/logo.webp" 
-                alt="Laural Clothing" 
+                src="/logo.png" 
+                alt="SERAMAADUWEN.LK" 
                 fill 
                 sizes="200px"
                 className="object-contain object-left" 
@@ -144,7 +129,7 @@ export default function ClientContent() {
                   <MapPin size={16} strokeWidth={1.5} className="text-primary group-hover:text-white transition-colors" />
                 </div>
                 <span className="font-poppins font-light text-sm text-primary">
-                  Colombo Flagship Studio, Sri Lanka
+                  {mainBranch?.address || "Colombo Flagship Studio, Sri Lanka"}
                 </span>
               </div>
 
@@ -154,7 +139,7 @@ export default function ClientContent() {
                   <Phone size={16} strokeWidth={1.5} className="text-primary group-hover:text-white transition-colors" />
                 </div>
                 <span className="font-poppins font-light text-sm text-primary">
-                  +94 76 112 8979
+                  {mainBranch?.phone || "+94 76 112 8979"}
                 </span>
               </div>
 
@@ -164,7 +149,7 @@ export default function ClientContent() {
                   <Mail size={16} strokeWidth={1.5} className="text-primary group-hover:text-white transition-colors" />
                 </div>
                 <span className="font-poppins font-light text-sm text-primary">
-                  info@lauralclothing.com
+                  {supportEmail || "info@seramaaduwenclothing.com"}
                 </span>
               </div>
 

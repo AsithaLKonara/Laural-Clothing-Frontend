@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Storefront, Admin and POS UI for Laural Clothing",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start -H 0.0.0.0",
+    "dev": "node init && next dev",
+    "build": "node init && next build",
+    "start": "node init && next start -H 0.0.0.0",
     "lint": "next lint"
   },
   "dependencies": {
@@ -24,10 +24,13 @@
     "next": "^15.0.0",
     "postcss": "^8.5.26",
     "react": "^19.0.0",
+    "react-barcode": "^1.6.1",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.0.0",
     "react-phone-number-input": "^3.4.17",
+    "react-to-print": "^3.3.0",
     "recharts": "^3.10.1",
+    "sl-address": "^1.1.1",
     "tailwindcss": "^3.4.0",
     "use-debounce": "^10.1.1",
     "uuid": "^14.0.1",

@@ -1,4 +1,5 @@
 "use client";
+import AdminStatCards from "@/components/admin/AdminStatCards";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -77,6 +78,11 @@ export default function CustomersPage() {
         description="View and manage registered customers and guest checkout histories."
       />
 
+      <div className="mb-6"><AdminStatCards metrics={[
+  { title: "Total", value: meta?.total?.toString() || customers.length.toString(), theme: "white-blue" },
+  { title: "Active", value: customers.filter((c: any) => c.status === "ACTIVE").length.toString(), theme: "white-stone" },
+  { title: "Pending", value: customers.filter((c: any) => c.status === "INACTIVE").length.toString(), theme: "orange" }
+]} /></div>
       <FilterBar 
         placeholder="Search by name, phone, or email..." 
         searchQuery={searchQuery}

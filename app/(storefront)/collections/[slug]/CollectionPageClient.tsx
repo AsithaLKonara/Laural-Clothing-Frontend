@@ -84,7 +84,7 @@ export default function CollectionPageClient({ initialData }: { initialData?: Pa
 
         {/* Product Grid Area */}
         <div className="flex-1 flex flex-col items-center md:items-start py-6 md:py-[40px] px-4 md:px-[40px] transition-all duration-500 ease-in-out">
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-[30px] w-full max-w-max mx-auto md:mx-0">
+          <div className="grid grid-cols-2 md:grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-4 md:gap-[30px] w-full max-w-max mx-auto md:mx-0">
             {isLoading ? (
               Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} className="flex justify-center w-full">

@@ -8,7 +8,10 @@ export interface CustomerData {
   lastName: string;
   addressLine1: string;
   addressLine2?: string;
+  addressLine3?: string;
   city: string;
+  district?: string;
+  nearestCity?: string;
   postalCode?: string;
   isGuest?: boolean;
 }
@@ -24,6 +27,7 @@ export interface QuickDispatchPayload {
   paymentMethod: string;
   subtotal: number;
   shippingFee: number;
+  discount?: number;
   tax: number;
   total: number;
 }
@@ -35,7 +39,7 @@ export const orderService = {
   createQuickDispatch: (data: QuickDispatchPayload) => 
     api.post<any>('/orders/quick-dispatch', data),
 
-  getOrders: (params?: { search?: string; page?: number; limit?: number; status?: string; branchId?: string; paymentGateway?: string; customerId?: string; type?: string }) => 
+  getOrders: (params?: { search?: string; page?: number; limit?: number; status?: string; branchId?: string; paymentGateway?: string; customerId?: string; type?: string; startDate?: string; endDate?: string }) => 
     api.get<any>('/orders', { params }),
 
   getOrderById: (id: string) => 
@@ -55,8 +59,9 @@ export const orderService = {
     return data;
   },
   
-  dispatchOrder: async (orderId: string) => {
-    const { data } = await api.patch(`/orders/${orderId}/status`, { status: 'DISPATCHED' });
+  dispatchOrder: async (orderId: string, weightKg?: number) => {
+    const payload = weightKg ? { status: 'DISPATCHED', weightKg } : { status: 'DISPATCHED' };
+    const { data } = await api.patch(`/orders/${orderId}/status`, payload);
     return data;
   },
 

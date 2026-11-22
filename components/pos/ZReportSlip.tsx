@@ -25,7 +25,8 @@ const ZReportSlip = forwardRef<HTMLDivElement, ZReportProps>((props, ref) => {
     <div ref={ref} className="print-receipt w-[300px] bg-white text-black p-4 font-mono text-sm leading-snug mx-auto shadow-md">
       {/* Header */}
       <div className="text-center flex flex-col items-center gap-1 mb-4">
-        <h2 className="font-bold text-xl tracking-widest">Z-REPORT</h2>
+        <img src="/logo.png" alt="LAURAL" className="h-6 object-contain grayscale brightness-0" />
+        <h2 className="font-bold text-xl tracking-widest mt-1">Z-REPORT</h2>
         <span className="text-xs">{session.branch.name}</span>
         <span className="text-[10px]">Session: {session.id}</span>
       </div>
@@ -108,7 +109,7 @@ const ZReportSlip = forwardRef<HTMLDivElement, ZReportProps>((props, ref) => {
       {/* Footer */}
       <div className="text-center flex flex-col items-center gap-2 text-[10px] mt-6">
         <span>--- END OF REPORT ---</span>
-        <span className="text-stone-400">Powered by Laural POS</span>
+        <span className="text-stone-400">Powered by SERAMAADUWEN.LK POS</span>
       </div>
 
     </div>

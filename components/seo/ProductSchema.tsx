@@ -20,7 +20,7 @@ export default function ProductSchema(props: ProductSchemaProps) {
     sku: props.sku,
     brand: {
       '@type': 'Brand',
-      name: props.brand || 'Laural Clothing',
+      name: props.brand || 'SERAMAADUWEN.LK',
     },
     offers: {
       '@type': 'Offer',

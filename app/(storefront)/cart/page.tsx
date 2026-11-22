@@ -18,6 +18,7 @@ import {
   Loader2
 } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
+import { getEffectivePrice } from "@/lib/pricing";
 import { useCart, useUpdateCartItem, useRemoveCartItem, useClearCart } from "@/hooks/useCart";
 
 const FREE_SHIPPING_THRESHOLD = 15000;
@@ -39,7 +40,7 @@ export default function CartPage() {
   const items = cart?.items ?? [];
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = items.reduce(
-    (sum, item) => sum + item.quantity * (item.variant?.salePrice ?? item.variant?.price ?? 0),
+    (sum, item) => sum + item.quantity * getEffectivePrice(item.variant),
     0
   );
 
@@ -155,7 +156,7 @@ export default function CartPage() {
                   {items.map((item) => {
                     const variant = item.variant;
                     const product = variant?.product;
-                    const unitPrice = variant?.salePrice ?? variant?.price ?? 0;
+                    const unitPrice = getEffectivePrice(variant);
                     const itemTotal = unitPrice * item.quantity;
 
                     let imgUrl = "/products/default.jpg";

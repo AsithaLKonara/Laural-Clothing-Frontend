@@ -4,14 +4,15 @@ import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { TicketPercent, CreditCard, Banknote, ShieldCheck, Award, ChevronDown } from "lucide-react";
-import PhoneInput from "react-phone-number-input";
-import "react-phone-number-input/style.css";
+
 import LoyaltyPointsModal from "@/components/LoyaltyPointsModal";
 import OtpVerificationModal from "@/components/OtpVerificationModal";
 import { useAuthStore } from "@/store/auth.store";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { checkoutSchema, CheckoutFormData } from "@/lib/validations";
+import { useProducts } from "@/hooks/useProducts";
+import { getEffectivePrice } from "@/lib/pricing";
 import { useCartStore } from "@/store/useCartStore";
 import { useCart } from "@/hooks/useCart";
 import { useInitiateCheckout } from "@/hooks/useCheckout";
@@ -19,14 +20,15 @@ import { useRouter } from "next/navigation";
 import { useAddresses, useAddAddress, MOCK_CUSTOMER_ID } from "@/hooks/useAddress";
 import { globalDialog } from "@/store/dialog.store";
 import { generateDeviceFingerprint, isLikelyBot } from "@/lib/fingerprint";
-import { Turnstile } from "@marsidev/react-turnstile";
+import { Turnstile, TurnstileInstance } from "@marsidev/react-turnstile";
 import { paymentService } from "@/services/payment.service";
+import slAddress from "sl-address";
+import { allFardarCities } from "@/lib/fardarCities";
 
 export default function CheckoutPage() {
   const {
     register,
     handleSubmit,
-    control,
     watch,
     setValue,
     formState: { errors },
@@ -40,10 +42,22 @@ export default function CheckoutPage() {
 
   const billingSameAsShipping = watch("billingSameAsShipping");
   const paymentMethod = watch("paymentMethod");
+  const district = watch("district");
+
+  useEffect(() => {
+    const currentCity = watch("city");
+    if (district && currentCity) {
+      const validCities = slAddress.getCitiesByDistrict(district);
+      if (validCities && !validCities.includes(currentCity)) {
+        setValue("city", "");
+      }
+    }
+  }, [district, setValue, watch]);
 
   const [discountCode, setDiscountCode] = useState("");
   const [isLoyaltyModalOpen, setIsLoyaltyModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const turnstileRef = useRef<TurnstileInstance>(null);
   const [availablePaymentMethods, setAvailablePaymentMethods] = useState<any[]>([]);
 
   useEffect(() => {
@@ -70,25 +84,49 @@ export default function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState("");
 
   const cartItems = cart?.items || [];
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.quantity * (item.variant.salePrice ?? item.variant.price)), 0);
+  const subtotal = cartItems.reduce((sum, item) => sum + (item.quantity * getEffectivePrice(item.variant)), 0);
   const shippingFee = 400; // Flat fee for now
   const total = subtotal + shippingFee - appliedLoyaltyPoints;
+
+  const filteredPaymentMethods = React.useMemo(() => {
+    if (!availablePaymentMethods.length) return [];
+    if (!cartItems.length) return availablePaymentMethods;
+
+    // A method is only available if EVERY product in the cart allows it.
+    return availablePaymentMethods.filter(method => {
+      return cartItems.every((item: any) => {
+        const allowedMethods = item.variant?.product?.allowedPaymentMethods;
+        if (!allowedMethods) return true; // Fallback only if undefined
+        return allowedMethods.some((m: string) => m.toLowerCase() === method.id.toLowerCase());
+      });
+    });
+  }, [availablePaymentMethods, cartItems]);
 
   const hasFiredPixel = useRef(false);
   useEffect(() => {
     if (!isCartPending && cartItems.length > 0 && !hasFiredPixel.current) {
       if (typeof window !== 'undefined' && window.fbq) {
         window.fbq('track', 'InitiateCheckout', {
-          content_ids: cartItems.map(item => item.variant.product.id),
+          content_ids: cartItems.map((item: any) => item.variant.product.id),
           content_type: 'product',
           num_items: cartItems.length,
           value: total,
           currency: 'LKR'
         });
+        hasFiredPixel.current = true;
       }
-      hasFiredPixel.current = true;
     }
-  }, [isCartPending, cartItems, total]);
+  }, [cartItems, isCartPending, total]);
+
+  useEffect(() => {
+    // Select first available payment method if current is not in list
+    if (filteredPaymentMethods.length > 0) {
+      const isCurrentValid = filteredPaymentMethods.some(m => m.id === paymentMethod);
+      if (!isCurrentValid) {
+        setValue("paymentMethod", filteredPaymentMethods[0].id);
+      }
+    }
+  }, [filteredPaymentMethods, paymentMethod, setValue]);
 
   const handleSelectAddress = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = e.target.value;
@@ -99,7 +137,10 @@ export default function CheckoutPage() {
       setValue("fullName", `${addr.firstName} ${addr.lastName}`);
       setValue("addressLine1", addr.addressLine1);
       setValue("addressLine2", addr.addressLine2 || "");
+      setValue("addressLine3", addr.addressLine3 || "");
+      setValue("district", addr.district || "");
       setValue("city", addr.city);
+      setValue("nearestCity", addr.nearestCity || "");
       setValue("phone", addr.phone);
     }
   };
@@ -113,7 +154,10 @@ export default function CheckoutPage() {
         lastName: data.fullName.split(' ').slice(1).join(' '),
         addressLine1: data.addressLine1,
         addressLine2: data.addressLine2 || null,
+        addressLine3: data.addressLine3 || null,
+        district: data.district || null,
         city: data.city,
+        nearestCity: data.nearestCity || null,
         postalCode: null,
         phone: data.phone,
         type: "SHIPPING",
@@ -136,7 +180,10 @@ export default function CheckoutPage() {
           lastName: data.fullName.split(' ').slice(1).join(' '),
           addressLine1: data.addressLine1,
           addressLine2: data.addressLine2,
+          addressLine3: data.addressLine3,
+          district: data.district,
           city: data.city,
+          nearestCity: data.nearestCity,
           phone: data.phone,
         },
         paymentMethod: data.paymentMethod,
@@ -150,14 +197,37 @@ export default function CheckoutPage() {
           const { order, payment } = data;
           
           if (data.paymentMethod !== 'cod' && payment?.redirectUrl) {
-            window.location.href = payment.redirectUrl;
+            if (payment.isFormRedirect && payment.formData) {
+              const form = document.createElement('form');
+              form.method = 'POST';
+              form.action = payment.redirectUrl;
+              
+              Object.keys(payment.formData).forEach(key => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = payment.formData[key];
+                form.appendChild(input);
+              });
+              
+              useCartStore.getState().clearSession();
+              document.body.appendChild(form);
+              form.submit();
+            } else {
+              useCartStore.getState().clearSession();
+              window.location.href = payment.redirectUrl;
+            }
           } else {
-            router.push(`/checkout/success?orderNumber=${order.orderNumber}`);
+            useCartStore.getState().clearSession();
+            window.location.href = `/checkout/success?orderNumber=${order.orderNumber}`;
           }
         },
-        onError: (error) => {
+        onError: (error: any) => {
           console.error("Checkout failed:", error);
-          globalDialog.alert("Checkout failed. Please try again.");
+          const serverMsg = error.response?.data?.error?.message || error.response?.data?.error || error.response?.data?.message;
+          const errMsg = serverMsg || (error.isAxiosError ? "Network error or server unreachable." : error.message) || "Checkout failed. Please try again.";
+          globalDialog.alert(errMsg);
+          turnstileRef.current?.reset();
         }
       }
     );
@@ -175,7 +245,7 @@ export default function CheckoutPage() {
       return;
     }
 
-    if (!isAuthenticated && !isPhoneVerified) {
+    if (!isAuthenticated && !isPhoneVerified && data.paymentMethod !== 'koko' && data.paymentMethod !== 'cod') {
       setPendingCheckoutData(data);
       setIsOtpModalOpen(true);
       return;
@@ -189,7 +259,7 @@ export default function CheckoutPage() {
 
   return (
     <main className="flex flex-col items-center w-full min-h-screen bg-background pt-[83px]">
-      <div className="flex flex-col lg:flex-row w-full max-w-[1280px] mx-auto py-[60px] px-4 md:px-[80px] lg:px-[120px] gap-12 lg:gap-[60px]">
+      <div className="flex flex-col-reverse lg:flex-row w-full max-w-[1280px] mx-auto py-[60px] px-4 md:px-[80px] lg:px-[120px] gap-12 lg:gap-[60px]">
         
         {/* Left Column: Forms */}
         <div className="flex flex-col flex-1 w-full lg:pr-[60px] lg:border-r lg:border-stone-200 gap-10">
@@ -264,24 +334,82 @@ export default function CheckoutPage() {
                   
                   <input 
                     type="text" 
-                    placeholder="Address Line 2 (Optional)"
+                    placeholder="Address Line 2"
                     {...register("addressLine2")}
-                    className="w-full h-[52px] px-[20px] border border-stone-200 rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400"
+                    className={`w-full h-[52px] px-[20px] border ${errors.addressLine2 ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400 mb-2`}
                   />
-                </div>
-
-                {/* City */}
-                <div className="flex flex-col gap-2 w-full">
-                  <label className="font-poppins font-medium text-xs uppercase tracking-wider text-stone-500">
-                    City <span className="text-accent">*</span>
-                  </label>
+                  {errors.addressLine2 && <span className="text-red-500 text-xs mt-0 mb-2 pl-4">{errors.addressLine2.message}</span>}
+                  
                   <input 
                     type="text" 
-                    placeholder="Enter city"
-                    {...register("city")}
-                    className={`w-full h-[52px] px-[20px] border ${errors.city ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400`}
+                    placeholder="Address Line 3"
+                    {...register("addressLine3")}
+                    className={`w-full h-[52px] px-[20px] border ${errors.addressLine3 ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400`}
                   />
-                  {errors.city && <span className="text-red-500 text-xs mt-1 pl-4">{errors.city.message}</span>}
+                  {errors.addressLine3 && <span className="text-red-500 text-xs mt-0 pl-4">{errors.addressLine3.message}</span>}
+                </div>
+
+                {/* District and City */}
+                <div className="flex flex-col md:flex-row gap-5 w-full">
+                  {/* District */}
+                  <div className="flex flex-col gap-2 w-full flex-1">
+                    <label className="font-poppins font-medium text-xs uppercase tracking-wider text-stone-500">
+                      District <span className="text-accent">*</span>
+                    </label>
+                    <div className="relative">
+                      <select 
+                        {...register("district")}
+                        className={`w-full h-[52px] px-[20px] appearance-none border ${errors.district ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all`}
+                      >
+                        <option value="">Select district</option>
+                        {slAddress.getDistricts().map((d: string) => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" size={18} />
+                    </div>
+                    {errors.district && <span className="text-red-500 text-xs mt-1 pl-4">{errors.district.message}</span>}
+                  </div>
+
+                  {/* City */}
+                  <div className="flex flex-col gap-2 w-full flex-1">
+                    <label className="font-poppins font-medium text-xs uppercase tracking-wider text-stone-500">
+                      City <span className="text-accent">*</span>
+                    </label>
+                    <div className="relative">
+                      <select 
+                        {...register("city")}
+                        className={`w-full h-[52px] px-[20px] appearance-none border ${errors.city ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all`}
+                      >
+                        <option value="">Select city</option>
+                        {(district ? slAddress.getCitiesByDistrict(district) : []).map((c: string) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" size={18} />
+                    </div>
+                    {errors.city && <span className="text-red-500 text-xs mt-1 pl-4">{errors.city.message}</span>}
+                  </div>
+                </div>
+
+                {/* Nearest City */}
+                <div className="flex flex-col gap-2 w-full">
+                  <label className="font-poppins font-medium text-xs uppercase tracking-wider text-stone-500">
+                    Nearest City (For Courier) <span className="text-accent">*</span>
+                  </label>
+                  <div className="relative">
+                    <select 
+                      {...register("nearestCity")}
+                      className={`w-full h-[52px] px-[20px] appearance-none border ${errors.nearestCity ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all`}
+                    >
+                      <option value="">Select nearest city</option>
+                      {allFardarCities.map((c: string) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" size={18} />
+                  </div>
+                  {errors.nearestCity && <span className="text-red-500 text-xs mt-1 pl-4">{errors.nearestCity.message}</span>}
                 </div>
 
                 {/* Phone & Email (Row on Desktop) */}
@@ -291,23 +419,17 @@ export default function CheckoutPage() {
                     <label className="font-poppins font-medium text-xs uppercase tracking-wider text-stone-500">
                       Phone number <span className="text-accent">*</span>
                     </label>
-                    <Controller
-                      name="phone"
-                      control={control}
-                      render={({ field }) => (
-                        <PhoneInput 
-                          placeholder="Enter phone number"
-                          value={field.value}
-                          onChange={field.onChange}
-                          defaultCountry="LK"
-                          className={`w-full h-[52px] px-[20px] border ${errors.phone ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-all`}
-                          numberInputProps={{
-                            className: "w-full h-full bg-transparent border-none outline-none text-primary font-poppins text-sm placeholder:text-stone-400 pl-4",
-                          }}
-                        />
-                      )}
+                    <input 
+                      type="tel"
+                      placeholder="e.g. 0712345678"
+                      {...register("phone")}
+                      className={`w-full h-[52px] px-[20px] border ${errors.phone ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400`}
                     />
-                    {errors.phone && <span className="text-red-500 text-xs mt-1 pl-4">{errors.phone.message}</span>}
+                    {errors.phone ? (
+                      <span className="text-red-500 text-xs mt-1 pl-4">{errors.phone.message}</span>
+                    ) : (
+                      <span className="text-stone-400 text-xs mt-1 pl-4">Format: 0712345678</span>
+                    )}
                   </div>
 
                   {/* Email */}
@@ -431,44 +553,84 @@ export default function CheckoutPage() {
                     <label className="font-poppins font-medium text-xs uppercase tracking-wider text-stone-500">
                       Phone <span className="text-accent">*</span>
                     </label>
-                    <Controller
-                      name="billingPhone"
-                      control={control}
-                      render={({ field }) => (
-                        <PhoneInput 
-                          placeholder="Enter phone number"
-                          value={field.value}
-                          onChange={field.onChange}
-                          defaultCountry="LK"
-                          className={`w-full h-[52px] px-[20px] border ${errors.billingPhone ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-all`}
-                          numberInputProps={{
-                            className: "w-full h-full bg-transparent border-none outline-none text-primary font-poppins text-sm placeholder:text-stone-400 pl-4",
-                          }}
-                        />
-                      )}
+                    <input 
+                      type="tel"
+                      placeholder="e.g. 0712345678"
+                      {...register("billingPhone")}
+                      className={`w-full h-[52px] px-[20px] border ${errors.billingPhone ? 'border-red-500' : 'border-stone-200'} rounded-full bg-white font-poppins text-sm text-primary outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-stone-400`}
                     />
-                    {errors.billingPhone && <span className="text-red-500 text-xs mt-1 pl-4">{errors.billingPhone.message}</span>}
+                    {errors.billingPhone ? (
+                      <span className="text-red-500 text-xs mt-1 pl-4">{errors.billingPhone.message}</span>
+                    ) : (
+                      <span className="text-stone-400 text-xs mt-1 pl-4">Format: 0712345678</span>
+                    )}
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Turnstile CAPTCHA */}
-            <div className="flex justify-center w-full my-4">
-              {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
-                <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} onSuccess={(token) => setValue("turnstileToken", token)} />
-              )}
-            </div>
+            {mounted && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+              <div className="w-full flex justify-center mt-2 mb-2">
+                <Turnstile 
+                  ref={turnstileRef}
+                  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} 
+                  onSuccess={(token) => setValue("turnstileToken", token)}
+                />
+              </div>
+            )}
+            {/* Payment Methods */}
+            <div className="flex flex-col gap-3 w-full pt-4">
+              <h3 className="font-poppins font-medium text-xl text-primary">
+                Payment Method <span className="text-accent">*</span>
+              </h3>
+              
+              <div className="flex flex-col border border-stone-200 rounded-[24px] overflow-hidden bg-white shadow-sm">
+                
+                {filteredPaymentMethods.length === 0 ? (
+                  <div className="p-8 text-center text-stone-500">No payment methods available for the selected items.</div>
+                ) : (
+                  filteredPaymentMethods.map((method, index) => (
+                    <label key={method.id} className={`flex flex-col p-4 cursor-pointer hover:bg-stone-50 transition-colors ${index !== filteredPaymentMethods.length - 1 ? 'border-b border-stone-200' : ''} ${paymentMethod === method.id ? 'bg-stone-50/50' : ''}`}>
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === method.id ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
+                            {paymentMethod === method.id && <div className="w-2 h-2 rounded-full bg-white" />}
+                          </div>
+                          <input type="radio" value={method.id} {...register("paymentMethod")} className="hidden" />
+                          <div className="flex items-center gap-2">
+                            {method.id === 'cod' && <Banknote size={18} className="text-stone-500" />}
+                            {method.id === 'onepay' && <CreditCard size={18} className="text-stone-500" />}
+                            <span className="font-poppins text-sm text-primary font-medium">{method.name}</span>
+                          </div>
+                        </div>
+                        {method.badge && (
+                          <span className="font-poppins text-[11px] font-semibold tracking-wider uppercase text-emerald-600 bg-emerald-50 px-2 py-1 rounded-sm">{method.badge}</span>
+                        )}
+                      </div>
+                      
+                      {method.id === 'onepay' && paymentMethod === 'onepay' && (
+                        <div className="ml-9 mt-4 flex flex-col gap-3 animate-in slide-in-from-top-2 duration-300">
+                          <div className="flex items-center gap-2 text-stone-500 bg-white p-3 rounded-lg border border-stone-200 shadow-sm text-sm font-poppins">
+                            <ShieldCheck size={18} className="text-emerald-600" />
+                            Secure checkout powered by OnePay
+                          </div>
+                        </div>
+                      )}
+                    </label>
+                  ))
+                )}
+              </div>
 
-            {/* Mobile Place Order Button (Shows above cart on mobile) */}
-            <div className="flex lg:hidden w-full pt-4">
-               <button 
-                type="submit"
-                disabled={initiateCheckout.isPending || cartItems.length === 0}
-                className="w-full h-[54px] flex justify-center items-center bg-primary hover:bg-stone-800 transition-colors rounded-full font-poppins font-semibold text-sm text-white uppercase tracking-widest disabled:opacity-50"
-              >
-                {initiateCheckout.isPending ? "Processing..." : "Place Order"}
-              </button>
+              {/* Place Order Button */}
+              <div className="flex w-full pt-6">
+                 <button 
+                  type="submit"
+                  disabled={initiateCheckout.isPending || cartItems.length === 0}
+                  className="w-full h-[54px] flex justify-center items-center bg-primary hover:bg-stone-800 transition-colors rounded-full font-poppins font-semibold text-sm text-white uppercase tracking-widest shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {initiateCheckout.isPending ? "Processing..." : "Place Order"}
+                </button>
+              </div>
             </div>
             
           </form>
@@ -516,7 +678,7 @@ export default function CheckoutPage() {
                     </h4>
                     <div className="flex items-center justify-between mt-1">
                       <span className="font-poppins text-xs text-stone-500">{item.variant.name}</span>
-                      <span className="font-poppins font-medium text-xs text-primary">{item.quantity} × Rs: {(item.variant.salePrice ?? item.variant.price).toLocaleString()}</span>
+                      <span className="font-poppins font-medium text-xs text-primary">{item.quantity} × Rs: {getEffectivePrice(item.variant).toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
@@ -572,66 +734,6 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* Payment Methods */}
-          <div className="flex flex-col gap-3 w-full pb-[100px]">
-            <h3 className="font-poppins font-medium text-sm text-primary uppercase tracking-wider mb-2">
-              Payment Method
-            </h3>
-            
-            <div className="flex flex-col border border-stone-200 rounded-[24px] overflow-hidden bg-white shadow-sm">
-              
-              {availablePaymentMethods.length === 0 ? (
-                <div className="p-8 text-center text-stone-500">Loading payment methods...</div>
-              ) : (
-                availablePaymentMethods.map((method, index) => (
-                  <label key={method.id} className={`flex flex-col p-4 cursor-pointer hover:bg-stone-50 transition-colors ${index !== availablePaymentMethods.length - 1 ? 'border-b border-stone-200' : ''} ${paymentMethod === method.id ? 'bg-stone-50/50' : ''}`}>
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-4">
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border-2 transition-colors ${paymentMethod === method.id ? 'border-primary bg-primary' : 'border-stone-300 bg-white'}`}>
-                          {paymentMethod === method.id && <div className="w-2 h-2 rounded-full bg-white" />}
-                        </div>
-                        <input type="radio" value={method.id} {...register("paymentMethod")} className="hidden" />
-                        <div className="flex items-center gap-2">
-                          {method.id === 'cod' && <Banknote size={18} className="text-stone-500" />}
-                          {method.id === 'onepay' && <CreditCard size={18} className="text-stone-500" />}
-                          <span className="font-poppins text-sm text-primary font-medium">{method.name}</span>
-                        </div>
-                      </div>
-                      {method.badge && (
-                        <span className="font-poppins text-[11px] font-semibold tracking-wider uppercase text-emerald-600 bg-emerald-50 px-2 py-1 rounded-sm">{method.badge}</span>
-                      )}
-                    </div>
-                    
-                    {method.id === 'onepay' && paymentMethod === 'onepay' && (
-                      <div className="ml-9 mt-4 flex flex-col gap-3 animate-in slide-in-from-top-2 duration-300">
-                        <div className="flex items-center gap-2 text-stone-500 bg-white p-3 rounded-lg border border-stone-200 shadow-sm text-sm font-poppins">
-                          <ShieldCheck size={18} className="text-emerald-600" />
-                          Secure checkout powered by OnePay
-                        </div>
-                      </div>
-                    )}
-                  </label>
-                ))
-              )}
-            </div>
-
-            {/* Desktop Place Order Button */}
-            <div className="hidden lg:flex w-full pt-6">
-               <button 
-                type="button"
-                onClick={(e) => {
-                  const form = document.getElementById('checkout-form') as HTMLFormElement;
-                  if (form) {
-                    form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-                  }
-                }}
-                className="w-full h-[54px] flex justify-center items-center bg-primary hover:bg-stone-800 transition-colors rounded-full font-poppins font-semibold text-sm text-white uppercase tracking-widest shadow-lg hover:shadow-xl"
-              >
-                Place Order
-              </button>
-            </div>
-
-          </div>
         </div>
 
       </div>

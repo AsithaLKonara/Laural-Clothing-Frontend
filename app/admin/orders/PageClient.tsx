@@ -7,23 +7,30 @@ import PageHeader from "@/components/dashboard/PageHeader";
 import FilterBar from "@/components/dashboard/FilterBar";
 import DataTable from "@/components/dashboard/DataTable";
 import { OrderStatusBadge, BranchBadge, PaymentGatewayBadge } from "@/components/dashboard/Badges";
-import CourierLabelModal from "@/components/admin/CourierLabelModal";
+import ShippingLabelModal from "@/app/admin/shipping/components/ShippingLabelModal";
 import FardarDispatchModal from "@/components/admin/FardarDispatchModal";
 import { Printer, Truck, Plus } from "lucide-react";
 import { useOrders } from "@/hooks/useOrders";
 import Link from "next/link";
+import AdminStatCards from "@/components/admin/AdminStatCards";
+import OrderSidePanel from "@/components/admin/OrderSidePanel";
+import { useBranches } from "@/hooks/useInventory";
 
 export default function OrdersPage() {
   const router = useRouter();
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [showLabelModal, setShowLabelModal] = useState(false);
   const [showFardarModal, setShowFardarModal] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [status, setStatus] = useState<string>("");
   const [branchId, setBranchId] = useState<string>("");
   const [paymentGateway, setPaymentGateway] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [type, setType] = useState<string>("");
   const [page, setPage] = useState<number>(1);
 
   const { data: ordersData, isLoading: ordersLoading } = useOrders({
@@ -31,6 +38,9 @@ export default function OrdersPage() {
     status: status || undefined,
     branchId: branchId || undefined,
     paymentGateway: paymentGateway || undefined,
+    type: type || undefined,
+    startDate: startDate || undefined,
+    endDate: endDate || undefined,
     page: page
   });
 
@@ -71,8 +81,22 @@ export default function OrdersPage() {
     },
   ];
 
+  const { data: branchesData } = useBranches();
+  const branches = branchesData?.data || [];
+
   const filters = (
     <>
+      <select 
+        value={branchId}
+        onChange={e => { setBranchId(e.target.value); setPage(1); }}
+        className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400 max-w-[140px]"
+      >
+        <option value="">All Branches</option>
+        {branches.map((b: any) => (
+          <option key={b.id} value={b.id}>{b.name}</option>
+        ))}
+      </select>
+
       <select 
         value={status} 
         onChange={e => { setStatus(e.target.value); setPage(1); }}
@@ -99,6 +123,94 @@ export default function OrdersPage() {
         <option value="COD">COD</option>
         <option value="BANK_TRANSFER">Bank Transfer</option>
       </select>
+
+      <select 
+        value={type}
+        onChange={e => { setType(e.target.value); setPage(1); }}
+        className="bg-stone-50 border border-stone-200 rounded-lg py-2 px-3 text-sm font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400"
+      >
+        <option value="">All Types</option>
+        <option value="ECOMMERCE">Online Store</option>
+        <option value="POS">In-Store (POS)</option>
+        <option value="MANUAL">Manual</option>
+      </select>
+    </>
+  );
+
+  const handleDateQuickSelect = (option: string) => {
+    const today = new Date();
+    let start = "";
+    let end = today.toISOString().split("T")[0];
+
+    switch (option) {
+      case "today":
+        start = end;
+        break;
+      case "7days":
+        const last7 = new Date(today);
+        last7.setDate(today.getDate() - 7);
+        start = last7.toISOString().split("T")[0];
+        break;
+      case "30days":
+        const last30 = new Date(today);
+        last30.setDate(today.getDate() - 30);
+        start = last30.toISOString().split("T")[0];
+        break;
+      case "90days":
+        const last90 = new Date(today);
+        last90.setDate(today.getDate() - 90);
+        start = last90.toISOString().split("T")[0];
+        break;
+      case "all":
+        start = "";
+        end = "";
+        break;
+    }
+
+    setStartDate(start);
+    setEndDate(end);
+    setPage(1);
+  };
+
+  const getQuickSelectVariant = (rangeStart: string, rangeEnd: string) => {
+    return startDate === rangeStart && endDate === rangeEnd ? "bg-stone-900 text-white" : "bg-stone-100 text-stone-600 hover:bg-stone-200";
+  };
+  
+  const todayStr = new Date().toISOString().split("T")[0];
+  const last7Str = new Date(new Date().setDate(new Date().getDate() - 7)).toISOString().split("T")[0];
+  const last30Str = new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split("T")[0];
+  const last90Str = new Date(new Date().setDate(new Date().getDate() - 90)).toISOString().split("T")[0];
+
+  const bottomRow = (
+    <>
+      <div className="flex items-center gap-2 flex-wrap flex-1">
+        <button onClick={() => handleDateQuickSelect("all")} className={`px-3 py-1.5 rounded-md text-xs font-inter font-medium transition-colors ${getQuickSelectVariant("", "")}`}>All Time</button>
+        <button onClick={() => handleDateQuickSelect("today")} className={`px-3 py-1.5 rounded-md text-xs font-inter font-medium transition-colors ${getQuickSelectVariant(todayStr, todayStr)}`}>Today</button>
+        <button onClick={() => handleDateQuickSelect("7days")} className={`px-3 py-1.5 rounded-md text-xs font-inter font-medium transition-colors ${getQuickSelectVariant(last7Str, todayStr)}`}>Last 7 Days</button>
+        <button onClick={() => handleDateQuickSelect("30days")} className={`px-3 py-1.5 rounded-md text-xs font-inter font-medium transition-colors ${getQuickSelectVariant(last30Str, todayStr)}`}>Last 30 Days</button>
+        <button onClick={() => handleDateQuickSelect("90days")} className={`px-3 py-1.5 rounded-md text-xs font-inter font-medium transition-colors ${getQuickSelectVariant(last90Str, todayStr)}`}>Last 90 Days</button>
+      </div>
+
+      <div className="flex items-center gap-3 bg-stone-50 p-1.5 rounded-lg border border-stone-200 w-full md:w-auto">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-inter text-stone-500 font-medium whitespace-nowrap pl-2">Custom Range:</span>
+          <input 
+            type="date" 
+            value={startDate} 
+            onChange={e => { setStartDate(e.target.value); setPage(1); }}
+            className="bg-white border border-stone-200 rounded-md py-1.5 px-2 text-xs font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400"
+          />
+        </div>
+        <span className="text-stone-300">-</span>
+        <div className="flex items-center gap-2">
+          <input 
+            type="date" 
+            value={endDate} 
+            onChange={e => { setEndDate(e.target.value); setPage(1); }}
+            className="bg-white border border-stone-200 rounded-md py-1.5 px-2 text-xs font-inter text-stone-700 outline-none focus:ring-1 focus:ring-stone-400"
+          />
+        </div>
+      </div>
     </>
   );
 
@@ -117,18 +229,35 @@ export default function OrdersPage() {
         </Link>
       </div>
 
+      <AdminStatCards 
+        metrics={[
+          { title: "Total Revenue", value: `Rs. ${orders.reduce((sum: number, o: any) => sum + (o.total || 0), 0).toLocaleString()}`, theme: "red", progress: 100 },
+          { title: "Total Orders", value: meta.totalCount || orders.length, theme: "white-stone" },
+          { title: "Completed", value: orders.filter((o: any) => o.status === 'DELIVERED').length, theme: "white-blue" },
+          { title: "Pending", value: orders.filter((o: any) => o.status === 'PENDING').length, theme: "orange" }
+        ]}
+        statuses={[
+          { label: "Pending", value: orders.filter((o: any) => o.status === 'PENDING').length, colorClass: "bg-orange-50 text-orange-700" },
+          { label: "Processing", value: orders.filter((o: any) => o.status === 'PROCESSING').length, colorClass: "bg-blue-50 text-blue-700" },
+          { label: "Dispatched", value: orders.filter((o: any) => o.status === 'DISPATCHED').length, colorClass: "bg-indigo-50 text-indigo-700" },
+          { label: "Delivered", value: orders.filter((o: any) => o.status === 'DELIVERED').length, colorClass: "bg-emerald-50 text-emerald-700" },
+          { label: "Cancelled", value: orders.filter((o: any) => o.status === 'CANCELLED').length, colorClass: "bg-stone-100 text-stone-700" }
+        ]}
+      />
+
       <FilterBar 
         placeholder="Search order, phone, customer, tracking..." 
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        filters={filters} 
+        filters={filters}
+        bottomRow={bottomRow}
       />
 
       <DataTable 
         data={orders}
         columns={columns}
         keyExtractor={(row) => row.id}
-        onRowClick={(row) => router.push(`/admin/orders/${row.id}`)}
+        onRowClick={(row) => setSelectedOrderId(row.id)}
         pagination={{ 
           currentPage: meta.page, 
           totalPages: meta.totalPages || 1,
@@ -151,22 +280,9 @@ export default function OrdersPage() {
       )}
 
       {showLabelModal && (
-        <CourierLabelModal 
-          orders={orders.filter((o: any) => selectedOrders.includes(o.id)).map((o: any) => {
-            const customerName = o.customer ? `${o.customer.firstName} ${o.customer.lastName || ''}` : o.shippingAddress?.firstName ? `${o.shippingAddress.firstName} ${o.shippingAddress.lastName || ''}` : 'Guest';
-            const address = o.shippingAddress ? `${o.shippingAddress.addressLine1}, ${o.shippingAddress.city}, ${o.shippingAddress.postalCode || ''}` : 'No Address Provided';
-            const phone = o.shippingAddress?.phone || o.customer?.phone || 'No Phone';
-            const itemsCount = o._count?.items || 1;
-            
-            return {
-              id: o.orderNumber || o.id,
-              customer: customerName,
-              address: address,
-              phone: phone,
-              itemsCount: itemsCount,
-              weight: "Standard"
-            };
-          })}
+        <ShippingLabelModal 
+          orderIds={selectedOrders}
+          isOpen={showLabelModal}
           onClose={() => setShowLabelModal(false)}
         />
       )}
@@ -181,6 +297,12 @@ export default function OrdersPage() {
           }}
         />
       )}
+
+      <OrderSidePanel 
+        orderId={selectedOrderId} 
+        isOpen={!!selectedOrderId} 
+        onClose={() => setSelectedOrderId(null)} 
+      />
     </div>
   );
 }

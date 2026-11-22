@@ -743,7 +743,6 @@ const TABS = [
   { id: "hero", label: "Hero Slides", icon: ImageIcon },
   { id: "banners", label: "Promo Banners", icon: Megaphone },
   { id: "homepage", label: "Homepage Layout", icon: Layout },
-  { id: "pages", label: "Static Pages", icon: FileText },
 ];
 
 export default function AdminCMSPage() {
@@ -784,7 +783,6 @@ export default function AdminCMSPage() {
         {activeTab === "hero" && <HeroTab/>}
         {activeTab === "banners" && <BannersTab/>}
         {activeTab === "homepage" && <HomepageTab/>}
-        {activeTab === "pages" && <PagesTab/>}
       </div>
     </div>
   );

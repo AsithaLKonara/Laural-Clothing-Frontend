@@ -30,6 +30,21 @@ export default function CheckoutFailedClient() {
       if (response.success && response.payment) {
         if (selectedMethod === "cod" || !response.payment.redirectUrl) {
           router.push(`/checkout/success?orderNumber=${orderNumber}`);
+        } else if (response.payment.isFormRedirect && response.payment.formData) {
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = response.payment.redirectUrl;
+          
+          Object.keys(response.payment.formData).forEach(key => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = response.payment.formData[key];
+            form.appendChild(input);
+          });
+          
+          document.body.appendChild(form);
+          form.submit();
         } else {
           window.location.href = response.payment.redirectUrl;
         }

@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { Search, X, Check, Loader2, Upload, CheckCircle2 } from "lucide-react";
 import { useMedia, useUploadMedia } from "@/hooks/useMedia";
+import { toast } from "@/store/toast.store";
 import Image from "next/image";
 
 export interface MediaFile {
@@ -32,6 +33,7 @@ export default function MediaPickerModal({ onSelect, onClose, title = "Pick from
   const [page, setPage] = useState(1);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -55,23 +57,49 @@ export default function MediaPickerModal({ onSelect, onClose, title = "Pick from
 
   const filtered = files.filter((f: any) => {
     const matchSearch = !search || f.name.toLowerCase().includes(search.toLowerCase());
-    return matchSearch && f.type === "image";
+    return matchSearch && f.type.startsWith("image");
   });
 
   const handleUploadFiles = async (chosenFiles: File[]) => {
-    if (chosenFiles.length === 0) return;
+    if (!chosenFiles.length) return;
     setIsUploading(true);
+    setUploadProgress(0);
+    
+    const fileProgresses = new Map<string, number>();
     
     try {
-      for (const file of chosenFiles) {
-        await uploadMedia({ file, folder: folder !== "All" ? folder : "Uncategorized" });
-      }
+      const uploadPromises = chosenFiles.map(async (file) => {
+        const toastId = toast.loading(`Uploading ${file.name}...`);
+        try {
+          await uploadMedia({ 
+            file, 
+            folder: folder !== "All" ? folder : "Uncategorized",
+            onProgress: (progress) => {
+              fileProgresses.set(file.name, progress);
+              const totalProgress = Array.from(fileProgresses.values()).reduce((a, b) => a + b, 0) / chosenFiles.length;
+              setUploadProgress(Math.round(totalProgress));
+              toast.update(toastId, `Uploading ${file.name}... (${progress}%)`, "info");
+            }
+          });
+          toast.update(toastId, `${file.name} uploaded successfully!`, "success");
+          setTimeout(() => toast.dismiss(toastId), 3000);
+        } catch (error) {
+          console.error(`Failed to upload ${file.name}`, error);
+          toast.update(toastId, `Failed to upload ${file.name}`, "error");
+        }
+      });
+      
+      await Promise.all(uploadPromises);
+      
       setUploadSuccess(true);
+      setUploadProgress(100);
       setTimeout(() => setUploadSuccess(false), 3000);
+      
     } catch (error) {
-      console.error("Upload failed", error);
+      console.error("Batch upload failed", error);
     } finally {
       setIsUploading(false);
+      setTimeout(() => setUploadProgress(0), 1000);
     }
   };
 
@@ -112,7 +140,12 @@ export default function MediaPickerModal({ onSelect, onClose, title = "Pick from
               {isUploading ? <Loader2 size={20} className="animate-spin text-stone-900" /> : <Upload size={20} />}
             </div>
             <div className="text-center sm:text-left flex-1">
-              <p className="font-inter font-bold text-stone-800 text-sm">{isUploading ? "Uploading..." : "Drag & drop files here to upload directly to this folder"}</p>
+              <p className="font-inter font-bold text-stone-800 text-sm">{isUploading ? `Uploading... ${uploadProgress}%` : "Drag & drop files here to upload directly to this folder"}</p>
+              {isUploading && (
+                <div className="w-full bg-stone-200 rounded-full h-2 mt-2">
+                  <div className="bg-stone-900 h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                </div>
+              )}
             </div>
             <button 
               className="bg-white border border-stone-200 text-stone-700 px-4 py-2 rounded-lg font-inter text-sm font-medium hover:bg-stone-50 transition-colors shadow-sm shrink-0 disabled:opacity-50"

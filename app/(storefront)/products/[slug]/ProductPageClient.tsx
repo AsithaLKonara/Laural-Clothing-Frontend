@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight, LayoutGrid, Info, ArrowLeftRight, Heart, Ruler, Send, MessageCircle } from "lucide-react";
 import CategoryBar from "@/components/CategoryBar";
 import ProductGallery from "@/components/ProductGallery";
+import { getEffectivePrice } from "@/lib/pricing";
 import ProductTabs from "@/components/ProductTabs";
 import SizeGuideModal from "@/components/SizeGuideModal";
 import ProductCard from "@/components/ProductCard";
@@ -124,7 +125,16 @@ export default function ProductPageClient({
            (uniqueSizes.length === 0 || vSizeSanitized === selectedSize);
   }) || variants[0];
 
-  const currentPriceObj = selectedVariant?.price || 0;
+  const basePrice = selectedVariant?.price || 0;
+  let effectivePrice = getEffectivePrice(selectedVariant);
+
+  const currentPriceObj = effectivePrice;
+  const originalPriceObj = basePrice;
+  
+  const discountPercentage = basePrice > effectivePrice 
+    ? Math.round(((basePrice - effectivePrice) / basePrice) * 100)
+    : 0;
+
   const currentPrice = currentPriceObj.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const installment = (currentPriceObj / 3).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -203,7 +213,7 @@ export default function ProductPageClient({
         
         {/* Left: Gallery */}
         <div className="flex-shrink-0 flex justify-center lg:justify-start w-full lg:w-auto">
-          <ProductGallery images={images} />
+          <ProductGallery images={images} discountPercentage={discountPercentage} />
         </div>
 
         {/* Right: Product Info */}
@@ -215,7 +225,14 @@ export default function ProductPageClient({
               {product.name}
             </h1>
             <div className="flex items-center gap-4 mt-2">
-              <span className="font-poppins text-[22px] md:text-[26px] font-bold text-primary">Rs {currentPrice}</span>
+              {discountPercentage > 0 ? (
+                <div className="flex items-center gap-3">
+                  <span className="font-poppins text-lg text-[#79716B] line-through">Rs {originalPriceObj.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span className="font-poppins text-[22px] md:text-[26px] font-bold text-red-500">Rs {currentPrice}</span>
+                </div>
+              ) : (
+                <span className="font-poppins text-[22px] md:text-[26px] font-bold text-primary">Rs {currentPrice}</span>
+              )}
               {!inStock && <span className="font-poppins text-sm text-red-500 font-medium">Out of Stock</span>}
             </div>
           </div>
@@ -395,19 +412,19 @@ export default function ProductPageClient({
       {/* Related Products */}
       <div className="flex flex-col items-center w-full max-w-[1280px] mx-auto px-4 md:px-[120px] py-16 md:py-[80px]">
         <h2 className="font-poppins text-2xl md:text-4xl text-primary mb-8">Related Products</h2>
-        <div className="w-full max-w-[1040px] overflow-hidden" ref={emblaRef}>
-          <div className="flex gap-[20px]">
-            {relatedProducts.length > 0 ? (
-              relatedProducts.map((rp: Product) => (
-                <div key={rp.id} className="flex-[0_0_245px] min-w-[245px]">
-                  <ProductCard product={rp} />
+        <div className="w-full max-w-[1040px] overflow-hidden" ref={relatedProducts.length > 4 ? emblaRef : undefined}>
+          <div className={`flex ${relatedProducts.length > 4 ? '-ml-[20px]' : 'justify-center flex-wrap gap-5'}`}>
+            {relatedProducts.length === 0 ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex-[0_0_265px] min-w-[265px] pl-[20px]">
+                  <div className="w-full h-[380px] bg-stone-100 animate-pulse rounded-lg"></div>
                 </div>
               ))
-            ) : (
-              [1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
-                <div key={item} className="flex-[0_0_245px] min-w-[245px] h-[380px] bg-stone-100 animate-pulse rounded-lg"></div>
-              ))
-            )}
+            ) : relatedProducts.slice(0, 8).map((product: Product) => (
+              <div key={product.id} className={relatedProducts.length > 4 ? "flex-[0_0_265px] min-w-[265px] pl-[20px]" : "flex justify-center w-full max-w-[245px]"}>
+                <ProductCard product={product} />
+              </div>
+            ))}
           </div>
         </div>
         <Link href="/shop" className="font-poppins text-base text-primary border-b border-primary mt-8 pb-1">
@@ -415,7 +432,7 @@ export default function ProductPageClient({
         </Link>
       </div>
 
-      <SizeGuideModal isOpen={isSizeGuideOpen} onClose={() => setIsSizeGuideOpen(false)} />
+      <SizeGuideModal isOpen={isSizeGuideOpen} onClose={() => setIsSizeGuideOpen(false)} sizeGuideContent={product.sizeGuideContent} sizeGuideImageUrl={product.sizeGuideImageUrl} />
 
       {/* Floating WhatsApp Widget */}
       <div className="fixed bottom-6 right-6 flex items-center gap-2 z-50">

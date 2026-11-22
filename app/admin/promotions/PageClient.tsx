@@ -1,4 +1,5 @@
 "use client";
+import AdminStatCards from "@/components/admin/AdminStatCards";
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -223,6 +224,11 @@ export default function PromotionsPage() {
         </button>
       </div>
 
+      <div className="mb-6"><AdminStatCards metrics={[
+  { title: "Total", value: "---", theme: "white-blue" },
+  { title: "Active", value: "---", theme: "white-stone" },
+  { title: "Pending", value: "---", theme: "orange" }
+]} /></div>
       <FilterBar 
         placeholder={`Search by ${activeTab === 'coupons' ? 'coupon' : 'flash sale'} name or code...`} 
         searchQuery={searchQuery}

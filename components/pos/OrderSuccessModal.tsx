@@ -27,7 +27,10 @@ export default function OrderSuccessModal({
     total: orderData?.total || 0,
     paymentMethod: orderData?.paymentMethod || "Cash",
     tendered: orderData?.tendered || undefined,
-    change: orderData?.change || undefined
+    change: orderData?.change || undefined,
+    branchName: orderData?.branchName,
+    branchAddress: orderData?.branchAddress,
+    branchPhone: orderData?.branchPhone
   };
 
   return (

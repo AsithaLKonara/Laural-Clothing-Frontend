@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 
-let apiOrigin = 'http://localhost:5000';
+let apiOrigin = 'http://127.0.0.1:5000';
 try {
-  apiOrigin = new URL(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000').origin;
+  apiOrigin = new URL(process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000').origin;
 } catch (e) {
   // fallback if URL is invalid
 }
@@ -33,14 +33,14 @@ const securityHeaders = [
       "frame-src https://challenges.cloudflare.com",
       "object-src 'none'",
       "base-uri 'self'",
-      "form-action 'self'",
+      "form-action 'self' https://*.paykoko.com https://*.onepay.lk",
     ].join('; '),
   },
 ];
 
 const nextConfig = {
   async rewrites() {
-    const apiDest = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+    const apiDest = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000/api/v1';
     return [
       {
         source: '/api/v1/:path*',
@@ -65,6 +65,12 @@ const nextConfig = {
       {
         protocol: 'http',
         hostname: '**',
+      },
+    ],
+    localPatterns: [
+      {
+        pathname: '/**',
+        search: '',
       },
     ],
   },

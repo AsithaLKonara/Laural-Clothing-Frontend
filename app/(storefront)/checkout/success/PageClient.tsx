@@ -4,13 +4,13 @@ import React, { Suspense, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle2, ChevronRight, Package, Loader2 } from "lucide-react";
-import { useOrderById } from "@/hooks/useOrders";
+import { useOrderConfirmation } from "@/hooks/useOrders";
 
 function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
-  const orderId = searchParams.get("orderId");
+  const orderNumber = searchParams.get("orderNumber");
 
-  const { data: order, isLoading, isError } = useOrderById(orderId || "");
+  const { data: order, isLoading, isError } = useOrderConfirmation(orderNumber || "");
 
   const hasFiredPixel = useRef(false);
   useEffect(() => {
@@ -19,11 +19,31 @@ function CheckoutSuccessContent() {
         window.fbq('track', 'Purchase', {
           value: order.total,
           currency: 'LKR',
-          content_ids: order.items?.map((item: any) => item.productVariant?.product?.id) || [],
+          content_ids: order.items?.map((item: any) => item.variant?.product?.id) || [],
           content_type: 'product',
         });
       }
       hasFiredPixel.current = true;
+    }
+  }, [order]);
+
+  useEffect(() => {
+    if (!order) return;
+    
+    // Check if we need to poll for payment status
+    if (order.paymentMethod?.toUpperCase() !== 'COD' && (order.paymentStatus === 'UNPAID' || order.paymentStatus === 'PENDING')) {
+      const interval = setInterval(async () => {
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/payments/status/${order.orderNumber}`);
+          const data = await res.json();
+          if (data.success && (data.paymentStatus === 'PAID' || data.paymentStatus === 'FAILED' || data.paymentStatus === 'COD_PENDING')) {
+            window.location.reload();
+          }
+        } catch (e) {
+          console.error('Failed to poll payment status:', e);
+        }
+      }, 5000);
+      return () => clearInterval(interval);
     }
   }, [order]);
 
@@ -32,6 +52,18 @@ function CheckoutSuccessContent() {
       <div className="flex flex-col items-center justify-center py-20 min-h-[400px]">
         <Loader2 className="animate-spin text-stone-400 mb-4" size={40} />
         <p className="font-poppins text-stone-500">Retrieving your order details...</p>
+      </div>
+    );
+  }
+
+  if (order && order.paymentMethod?.toUpperCase() !== 'COD' && (order.paymentStatus === 'UNPAID' || order.paymentStatus === 'PENDING')) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 min-h-[400px]">
+        <Loader2 className="animate-spin text-stone-400 mb-4" size={40} />
+        <h2 className="font-poppins font-medium text-xl text-primary mb-2">Verifying Payment...</h2>
+        <p className="font-poppins text-sm text-stone-500 text-center max-w-md">
+          Please wait while we confirm your payment with the gateway. This might take a few moments.
+        </p>
       </div>
     );
   }

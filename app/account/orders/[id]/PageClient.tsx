@@ -138,7 +138,7 @@ export default function CustomerOrderDetailPage({ params }: { params: Promise<{ 
             
             <div className="flex flex-col gap-6">
               {order.items.map((item: any) => {
-                const variantName = item.variant?.name || '';
+                const variantName = item.variant?.name || [item.variant?.color, item.variant?.size].filter(Boolean).join(" - ") || '';
                 const productName = item.variant?.product?.name || 'Unknown Product';
                 let imageUrl = '';
                 if (item.variant?.featuredImage) imageUrl = item.variant.featuredImage;

@@ -10,7 +10,7 @@ export default function LoginPage() {
       <div className="absolute inset-0 z-0">
         <Image
           src="/auth/bg.jpeg?v=2"
-          alt="Laural Clothing Collection"
+          alt="SERAMAADUWEN.LK Collection"
           fill
           sizes="100vw"
           className="object-cover object-top scale-105"
@@ -33,11 +33,11 @@ export default function LoginPage() {
             </h1>
             
             <p className="font-poppins font-light text-base lg:text-lg leading-[1.6] text-stone-300 max-w-[400px]">
-              At Laural Clothing, we believe fashion is more than just clothing—it's a form of self-expression. Discover pieces edited for absolute perfection.
+              At SERAMAADUWEN.LK, we believe fashion is more than just clothing—it's a form of self-expression. Discover pieces edited for absolute perfection.
             </p>
 
             <div className="relative w-[180px] h-[34px]">
-              <Image src="/logo-white.png" alt="Laural Clothing" fill sizes="200px" className="object-contain" />
+              <Image src="/logo-white.png" alt="SERAMAADUWEN.LK" fill sizes="200px" className="object-contain" />
             </div>
 
             <div className="h-[1px] w-[120px] bg-stone-50/20 mt-4" />

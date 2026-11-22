@@ -3,8 +3,8 @@ import ClientContent from "./ClientContent";
 export const dynamic = 'force-static';
 
 export const metadata = {
-  title: "About - Laural Clothing",
-  description: "About page for Laural Clothing."
+  title: "About - SERAMAADUWEN.LK",
+  description: "About page for SERAMAADUWEN.LK."
 };
 
 export default function Page() {
